@@ -69,15 +69,15 @@ var INTERNAL_KEYBINDINGS = {
     'toggle-help': "Show help"
 };
 
-var OTHER_SHORTCUTS = {
-    "Draw": "Left click",
-    "Draw by filling in": "Right click",
-    "Toggle shape": "Center click",
-    "Increment/decrement line width": "Scroll",
-    "Select color": "Ctrl+1...9",
-    "Select eraser": "Shift key held",
-    "Leave and erase all drawings": "Escape key"
-};
+var OTHER_SHORTCUTS = [
+    { desc: "Draw", shortcut: "Left click" },
+    { desc: "Draw by filling in", shortcut: "Right click" },
+    { desc: "Toggle shape", shortcut: "Center click" },
+    { desc: "Increment/decrement line width", shortcut: "Scroll" },
+    { desc: "Select color", shortcut: "Ctrl+1...9" },
+    { desc: "Select eraser", shortcut: "Shift key held" },
+    { desc: "Leave and erase all drawings", shortcut: "Escape key" }
+];
 
 function init() {
     Convenience.initTranslations();
@@ -133,15 +133,15 @@ const PrefsPage = new GObject.Class({
         
         listBox.add(new Gtk.Box({ margin_top: MARGIN/2, margin_left: MARGIN, margin_right: MARGIN }));
         
-        for (let desc in OTHER_SHORTCUTS) {
-            if (desc.indexOf('-separator-') != -1) {
+        for (let i = 0; i < OTHER_SHORTCUTS.length; i++) {
+            if (OTHER_SHORTCUTS[i].desc.indexOf('-separator-') != -1) {
                 listBox.add(new Gtk.Box({ margin_top: MARGIN, margin_left: MARGIN, margin_right: MARGIN }));
                 continue;
             }
             let otherBox = new Gtk.Box({ margin_left: MARGIN, margin_right: MARGIN });
-            let otherLabel = new Gtk.Label({ label: _(desc) });
+            let otherLabel = new Gtk.Label({ label: _(OTHER_SHORTCUTS[i].desc) });
             otherLabel.set_halign(1);
-            let otherLabel2 = new Gtk.Label({ label: _(OTHER_SHORTCUTS[desc]) });
+            let otherLabel2 = new Gtk.Label({ label: _(OTHER_SHORTCUTS[i].shortcut) });
             otherBox.pack_start(otherLabel, true, true, 4);
             otherBox.pack_start(otherLabel2, false, false, 4);
             listBox.add(otherBox);

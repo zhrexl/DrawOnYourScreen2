@@ -661,14 +661,14 @@ var DrawingHelper = new Lang.Class({
         
         this.vbox.add(new St.Label({ text: _("Internal") }));
         
-        for (let desc in Prefs.OTHER_SHORTCUTS) {
-            if (desc.indexOf('-separator-') != -1) {
+        for (let i = 0; i < Prefs.OTHER_SHORTCUTS.length; i++) {
+            if (Prefs.OTHER_SHORTCUTS[i].desc.indexOf('-separator-') != -1) {
                 this.vbox.add(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-separator' }));
                 continue;
             }
             let hbox = new St.BoxLayout({ vertical: false });
-            hbox.add(new St.Label({ text: _(desc) }));
-            hbox.add(new St.Label({ text: _(Prefs.OTHER_SHORTCUTS[desc]) }), { expand: true });
+            hbox.add(new St.Label({ text: _(Prefs.OTHER_SHORTCUTS[i].desc) }));
+            hbox.add(new St.Label({ text: _(Prefs.OTHER_SHORTCUTS[i].shortcut) }), { expand: true });
             this.vbox.add(hbox);
         }
         
