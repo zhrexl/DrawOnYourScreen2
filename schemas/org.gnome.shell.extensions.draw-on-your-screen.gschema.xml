@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extensions">
+  <schema path="/org/gnome/shell/extensions/draw-on-your-screen/" id="org.gnome.shell.extensions.draw-on-your-screen">
+    <key type="as" name="toggle-drawing">
+      <default>["&lt;Alt&gt;&lt;Super&gt;d"]</default>
+      <summary>toggle drawing</summary>
+      <description>enter or leave drawing mode</description>
+    </key>
+    <key type="as" name="erase-drawing">
+      <default>["&lt;Alt&gt;&lt;Super&gt;e"]</default>
+      <summary>erase drawing</summary>
+      <description>erase drawing</description>
+    </key>
+    <key type="as" name="undo">
+      <default>["&lt;Primary&gt;z"]</default>
+      <summary>undo</summary>
+      <description>undo</description>
+    </key>
+    <key type="as" name="redo">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;z"]</default>
+      <summary>redo</summary>
+      <description>redo</description>
+    </key>
+    <key type="as" name="delete-last-element">
+      <default>["Delete"]</default>
+      <summary>delete last element</summary>
+      <description>delete last element</description>
+    </key>
+    <key type="as" name="toggle-background">
+      <default>["&lt;Primary&gt;b"]</default>
+      <summary>toggle background</summary>
+      <description>toggle background</description>
+    </key>
+    <key type="as" name="toggle-panel-and-dock-visibility">
+      <default>["&lt;Primary&gt;h"]</default>
+      <summary>hide or show panel and dock</summary>
+      <description>hide or show panel and dock</description>
+    </key>
+    <key type="as" name="select-ellipse-shape">
+      <default>["&lt;Primary&gt;e"]</default>
+      <summary>select cercle</summary>
+      <description>select a cercle</description>
+    </key>
+    <key type="as" name="select-rectangle-shape">
+      <default>["&lt;Primary&gt;r"]</default>
+      <summary>select rectangle</summary>
+      <description>select rectangle</description>
+    </key>
+    <key type="as" name="select-line-shape">
+      <default>["&lt;Primary&gt;l"]</default>
+      <summary>select line</summary>
+      <description>select a line</description>
+    </key>
+    <key type="as" name="select-text-shape">
+      <default>["&lt;Primary&gt;t"]</default>
+      <summary>select text</summary>
+      <description>select text</description>
+    </key>
+    <key type="as" name="select-none-shape">
+      <default>["&lt;Primary&gt;u"]</default>
+      <summary>unselect shape (free drawing)</summary>
+      <description>unselect shape (free drawing)</description>
+    </key>
+    <key type="as" name="increment-line-width">
+      <default>["&lt;Primary&gt;KP_Add"]</default>
+      <summary>increment the line width</summary>
+      <description>increment the line width</description>
+    </key>
+    <key type="as" name="decrement-line-width">
+      <default>["&lt;Primary&gt;KP_Subtract"]</default>
+      <summary>decrement the line width</summary>
+      <description>decrement the line width</description>
+    </key>
+    <key type="as" name="increment-line-width-more">
+      <default>["&lt;Primary&gt;Page_Up"]</default>
+      <summary>increment the line width even more</summary>
+      <description>increment the line width even more</description>
+    </key>
+    <key type="as" name="decrement-line-width-more">
+      <default>["&lt;Primary&gt;Page_Down"]</default>
+      <summary>decrement the line width even more</summary>
+      <description>decrement the line width even more</description>
+    </key>
+    <key type="as" name="toggle-linejoin">
+      <default>["&lt;Primary&gt;j"]</default>
+      <summary>toggle linejoin</summary>
+      <description>toggle linejoin</description>
+    </key>
+    <key type="as" name="toggle-linecap">
+      <default>["&lt;Primary&gt;k"]</default>
+      <summary>toggle linecap</summary>
+      <description>toggle linecap</description>
+    </key>
+    <key type="as" name="toggle-dash">
+      <default>["&lt;Primary&gt;a"]</default>
+      <summary>toggle dash</summary>
+      <description>toggle dash</description>
+    </key>
+    <key type="as" name="select-color1">
+      <default><![CDATA[['<Primary>KP_1','<Primary>1']]]></default>
+      <summary>select color1</summary>
+      <description>select color1</description>
+    </key>
+    <key type="as" name="select-color2">
+      <default><![CDATA[['<Primary>KP_2','<Primary>2']]]></default>
+      <summary>select color2</summary>
+      <description>select color2</description>
+    </key>
+    <key type="as" name="select-color3">
+      <default><![CDATA[['<Primary>KP_3','<Primary>3']]]></default>
+      <summary>select color3</summary>
+      <description>select color3</description>
+    </key>
+    <key type="as" name="select-color4">
+      <default><![CDATA[['<Primary>KP_4','<Primary>4']]]></default>
+      <summary>select color4</summary>
+      <description>select color4</description>
+    </key>
+    <key type="as" name="select-color5">
+      <default><![CDATA[['<Primary>KP_5','<Primary>5']]]></default>
+      <summary>select color5</summary>
+      <description>select color5</description>
+    </key>
+    <key type="as" name="select-color6">
+      <default><![CDATA[['<Primary>KP_6','<Primary>6']]]></default>
+      <summary>select color6</summary>
+      <description>select color6</description>
+    </key>
+    <key type="as" name="select-color7">
+      <default><![CDATA[['<Primary>KP_7','<Primary>7']]]></default>
+      <summary>select color7</summary>
+      <description>select color7</description>
+    </key>
+    <key type="as" name="select-color8">
+      <default><![CDATA[['<Primary>KP_8','<Primary>8']]]></default>
+      <summary>select color8</summary>
+      <description>select color8</description>
+    </key>
+    <key type="as" name="select-color9">
+      <default><![CDATA[['<Primary>KP_9','<Primary>9']]]></default>
+      <summary>select color9</summary>
+      <description>select color9</description>
+    </key>
+    <key type="as" name="toggle-font-family">
+      <default>["&lt;Primary&gt;f"]</default>
+      <summary>toggle font family</summary>
+      <description>toggle font family</description>
+    </key>
+    <key type="as" name="toggle-font-weight">
+      <default>["&lt;Primary&gt;w"]</default>
+      <summary>toggle font weight</summary>
+      <description>toggle font weight</description>
+    </key>
+    <key type="as" name="toggle-font-style">
+      <default>["&lt;Primary&gt;i"]</default>
+      <summary>toggle font style</summary>
+      <description>toggle font style</description>
+    </key>
+    <key type="as" name="open-stylesheet">
+      <default>["&lt;Primary&gt;o"]</default>
+      <summary>open stylesheet</summary>
+      <description>open stylesheet</description>
+    </key>
+    <key type="as" name="save-as-svg">
+      <default>["&lt;Primary&gt;s"]</default>
+      <summary>Save drawing as a svg file</summary>
+      <description>Save drawing as a svg file</description>
+    </key>
+    <key type="as" name="toggle-help">
+      <default>["&lt;Primary&gt;F1"]</default>
+      <summary>toggle help</summary>
+      <description>toggle help</description>
+    </key>
+  </schema>
+</schemalist>

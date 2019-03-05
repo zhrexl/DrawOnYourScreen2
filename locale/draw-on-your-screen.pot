@@ -1,0 +1,208 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-03-04 16:40+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: extension.js
+msgid "Leaving drawing mode"
+msgstr ""
+
+msgid "Press Ctrl + F1 for help"
+msgstr ""
+
+msgid "Entering drawing mode"
+msgstr ""
+
+#: draw.js
+msgid "Free drawing"
+msgstr ""
+
+msgid "Line"
+msgstr ""
+
+msgid "Circle"
+msgstr ""
+
+msgid "Rectangle"
+msgstr ""
+
+msgid "Text"
+msgstr ""
+
+msgid "Dashed line"
+msgstr ""
+
+msgid "Full line"
+msgstr ""
+
+msgid ""
+"Type your text\n"
+"and press Enter"
+msgstr ""
+
+#: prefs.js
+msgid "Enter/leave drawing mode"
+msgstr ""
+
+msgid "Erase all drawings"
+msgstr ""
+
+msgid "Undo last brushstroke"
+msgstr ""
+
+msgid "Redo last brushstroke"
+msgstr ""
+
+msgid "Erase last brushstroke"
+msgstr ""
+
+msgid "Increment line width"
+msgstr ""
+
+msgid "Decrement line width"
+msgstr ""
+
+msgid "Increment line width even more"
+msgstr ""
+
+msgid "Decrement line width even more"
+msgstr ""
+
+msgid "Change linejoin"
+msgstr ""
+
+msgid "Change linecap"
+msgstr ""
+
+msgid "Dashed line"
+msgstr ""
+
+msgid "Select line"
+msgstr ""
+
+msgid "Select circle"
+msgstr ""
+
+msgid "Select rectangle"
+msgstr ""
+
+msgid "Select text"
+msgstr ""
+
+msgid "Unselect shape (free drawing)"
+msgstr ""
+
+msgid "Change font family (generic name)"
+msgstr ""
+
+msgid "Change font weight"
+msgstr ""
+
+msgid "Change font style"
+msgstr ""
+
+msgid "Hide panel and dock"
+msgstr ""
+
+msgid "Add a drawing background"
+msgstr ""
+
+msgid "Save drawing as a SVG file"
+msgstr ""
+
+msgid "Open stylesheet.css"
+msgstr ""
+
+msgid "Show help"
+msgstr ""
+
+msgid "Draw"
+msgstr ""
+
+msgid "Left click"
+msgstr ""
+
+msgid "Draw by filling in"
+msgstr ""
+
+msgid "Right click"
+msgstr ""
+
+msgid "Toggle shape"
+msgstr ""
+
+msgid "Center click"
+msgstr ""
+
+msgid "Increment/decrement line width"
+msgstr ""
+
+msgid "Scroll"
+msgstr ""
+
+msgid "Select color"
+msgstr ""
+
+msgid "Ctrl+1...9"
+msgstr ""
+
+msgid "Select eraser"
+msgstr ""
+
+msgid "Shift key held"
+msgstr ""
+
+msgid "Leave and erase all drawings"
+msgstr ""
+
+msgid "Escape key"
+msgstr ""
+
+msgid ""
+"Start drawing with Super+Alt+D\n"
+"Then save your beautiful work by taking a screenshot"
+msgstr ""
+
+msgid "Global"
+msgstr ""
+
+msgid "Internal"
+msgstr ""
+
+msgid "(in drawing mode)"
+msgstr ""
+
+msgid "Change the style"
+msgstr ""
+
+msgid "See stylesheet.css"
+msgstr ""
+
+msgid ""
+"<u>Note</u>: When you save elements made with eraser in a SVG file,\n"
+"they are colored with background color, transparent if it is disabled.\n"
+"(See \"Add a drawing background\" or edit the SVG file afterwards)"
+msgstr ""
+
+msgid ""
+"<span size=\"small\">This program comes with ABSOLUTELY NO WARRANTY.\n"
+"See the <a href=\"https://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
+"\">GNU General Public License, version 2 or later</a> for details.</span>"
+msgstr ""
+
+msgid "Credits"
+msgstr ""
