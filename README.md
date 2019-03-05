@@ -1,5 +1,7 @@
 __Draw On Your Screen__
 =======================
+Start drawing with Super+Alt+D.
+Then save your beautiful work by taking a screenshot.
 
 ![](https://framagit.org/abakkk/DrawOnYourScreen/raw/ressources/screenshot.jpg)
 
