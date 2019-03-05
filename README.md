@@ -5,7 +5,14 @@ Then save your beautiful work by taking a screenshot.
 
 ![](https://framagit.org/abakkk/DrawOnYourScreen/raw/ressources/screenshot.jpg)
 
-To install :
+Features :
+----------
+
+1. Basic shapes and text
+2. Smooth stroke
+3. Export to SVG
+
+Install :
 ----------
 
 1. Download and decompress or clone the repository
