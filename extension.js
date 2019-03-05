@@ -117,6 +117,7 @@ var AreaManager = new Lang.Class({
             'undo': this.activeArea.undo.bind(this.activeArea),
             'redo': this.activeArea.redo.bind(this.activeArea),
             'delete-last-element': this.activeArea.deleteLastElement.bind(this.activeArea),
+            'smooth-last-element': this.activeArea.smoothLastElement.bind(this.activeArea),
             'save-as-svg': this.activeArea.save.bind(this.activeArea),
             'toggle-background': this.activeArea.toggleBackground.bind(this.activeArea),
             'increment-line-width': () => this.activeArea.incrementLineWidth(1),

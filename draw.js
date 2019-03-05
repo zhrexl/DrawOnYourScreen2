@@ -60,6 +60,7 @@ var DrawingArea = new Lang.Class({
         this.connect('style-changed', this._onStyleChanged.bind(this));
         this.connect('repaint', this._repaint.bind(this));
         
+        this.settings = Convenience.getSettings();
         this.emitter = new DrawingAreaEmitter();
         this.helper = helper;
         
@@ -217,6 +218,8 @@ var DrawingArea = new Lang.Class({
             this._stopDrawing();
         });
         
+        this.smoothedStroke = this.settings.get_boolean('smoothed-stroke');
+        
         this.currentElement = new DrawingElement ({
             color: this.currentColor,
             line: { lineWidth: this.currentLineWidth, lineJoin: this.currentLineJoin, lineCap: this.currentLineCap },
@@ -269,7 +272,7 @@ var DrawingArea = new Lang.Class({
         if (!this.currentElement)
             return;
         if (this.currentElement.shape == Shapes.NONE)
-            this.currentElement.points.push([x, y]);
+            this.currentElement.addPoint(x, y, this.smoothedStroke);
         else
             this.currentElement.points[1] = [x, y];
         this._redisplay();
@@ -334,6 +337,13 @@ var DrawingArea = new Lang.Class({
         if (this.undoneElements.length > 0)
             this.elements.push(this.undoneElements.pop());
         this._redisplay();
+    },
+    
+    smoothLastElement: function() {
+        if (this.elements.length > 0 && this.elements[this.elements.length - 1].shape == Shapes.NONE) {
+            this.elements[this.elements.length - 1].smoothAll();
+            this._redisplay();
+        }
     },
     
     toggleBackground: function() {
@@ -598,7 +608,25 @@ var DrawingElement = new Lang.Class({
         }
         
         return row;
-    }
+    },
+    
+    addPoint: function(x, y, smoothedStroke) {
+        this.points.push([x, y]);
+        if (smoothedStroke)
+            this.smooth(this.points.length - 1);
+    },
+    
+    smooth: function(i) {
+        if (i < 2)
+            return;
+        this.points[i-1] = [(this.points[i-2][0] + this.points[i][0]) / 2, (this.points[i-2][1] + this.points[i][1]) / 2];
+    },
+    
+    smoothAll: function() {
+        for (let i = 0; i < this.points.length; i++) {
+            this.smooth(i);
+        }
+    },
 });
 
 var HELPER_ANIMATION_TIME = 0.25;

@@ -70,6 +70,9 @@ msgstr ""
 msgid "Erase last brushstroke"
 msgstr ""
 
+msgid "Smooth last brushstroke"
+msgstr ""
+
 msgid "Increment line width"
 msgstr ""
 
@@ -184,6 +187,12 @@ msgid "Internal"
 msgstr ""
 
 msgid "(in drawing mode)"
+msgstr ""
+
+msgid "Smooth stroke during the drawing process"
+msgstr ""
+
+msgid "You can smooth the stroke afterward\nSee"
 msgstr ""
 
 msgid "Change the style"

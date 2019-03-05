@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="gnome-shell-extensions">
   <schema path="/org/gnome/shell/extensions/draw-on-your-screen/" id="org.gnome.shell.extensions.draw-on-your-screen">
+    <key type="b" name="smoothed-stroke">
+      <default>false</default>
+      <summary>smoothed stroke</summary>
+      <description>smoothed stroke</description>
+    </key>
     <key type="as" name="toggle-drawing">
       <default>["&lt;Alt&gt;&lt;Super&gt;d"]</default>
       <summary>toggle drawing</summary>
@@ -25,6 +30,11 @@
       <default>["Delete"]</default>
       <summary>delete last element</summary>
       <description>delete last element</description>
+    </key>
+    <key type="as" name="smooth-last-element">
+      <default>["&lt;Primary&gt;equal"]</default>
+      <summary>smooth last brushstroke</summary>
+      <description>smooth last brushstroke</description>
     </key>
     <key type="as" name="toggle-background">
       <default>["&lt;Primary&gt;b"]</default>
@@ -57,7 +67,7 @@
       <description>select text</description>
     </key>
     <key type="as" name="select-none-shape">
-      <default>["&lt;Primary&gt;u"]</default>
+      <default>["&lt;Primary&gt;p"]</default>
       <summary>unselect shape (free drawing)</summary>
       <description>unselect shape (free drawing)</description>
     </key>
