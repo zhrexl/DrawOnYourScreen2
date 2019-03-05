@@ -10,7 +10,8 @@ Features :
 
 1. Basic shapes and text
 2. Smooth stroke
-3. Export to SVG
+3. Multi-monitor support
+4. Export to SVG
 
 Install :
 ----------
