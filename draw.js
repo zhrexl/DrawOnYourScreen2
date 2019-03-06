@@ -279,7 +279,8 @@ var DrawingArea = new Lang.Class({
     },
     
     _stopWriting: function() {
-        this.elements.push(this.currentElement);
+        if (this.currentElement.text.length > 0)
+            this.elements.push(this.currentElement);
         this.currentElement = null;
         this._stopCursorTimeout();
         this._redisplay();
