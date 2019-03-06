@@ -575,6 +575,7 @@ var DrawingElement = new Lang.Class({
         let color = this.eraser ? bgColor : this.color.to_string();
         let attributes = `fill="${this.fill ? color : 'transparent'}" ` +
                          `stroke="${this.fill ? 'transparent' : color}" ` +
+                         `${this.fill ? 'stroke-opacity="0"' : 'fill-opacity="0"'} ` +
                          `stroke-width="${this.line.lineWidth}" ` +
                          `stroke-linecap="${LineCapNames[this.line.lineCap].toLowerCase()}" ` +
                          `stroke-linejoin="${LineJoinNames[this.line.lineJoin].toLowerCase()}"`;
@@ -599,6 +600,7 @@ var DrawingElement = new Lang.Class({
         } else if (this.shape == Shapes.TEXT && points.length == 2) {
             attributes = `fill="${color}" ` +
                          `stroke="transparent" ` +
+                         `stroke-opacity="0" ` +
                          `font-family="${this.font.family}" ` +
                          `font-size="${Math.abs(points[1][1] - points[0][1])}" ` +
                          `font-weight="${FontWeightNames[this.font.weight].toLowerCase()}" ` +
