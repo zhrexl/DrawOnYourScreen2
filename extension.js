@@ -224,7 +224,11 @@ var AreaManager = new Lang.Class({
             this.activeArea.reactive = false;
             this.activeArea.leaveDrawingMode();
             this.activeArea = null;
-            global.display.set_cursor(Meta.Cursor.DEFAULT);
+            // check display or screen (API changes)
+            if (global.display.set_cursor)
+                global.display.set_cursor(Meta.Cursor.DEFAULT);
+            else if (global.screen && global.screen.set_cursor)
+                global.screen.set_cursor(Meta.Cursor.DEFAULT);
             Main.osdWindowManager.show(activeIndex, this.leaveGicon, _("Leaving drawing mode"), null);
         } else  {
             // avoid to deal with Meta changes (global.display/global.screen)
@@ -236,7 +240,11 @@ var AreaManager = new Lang.Class({
             this.addInternalKeybindings();
             this.activeArea.reactive = true;
             this.activeArea.enterDrawingMode();
-            global.display.set_cursor(Meta.Cursor.POINTING_HAND);
+            // check display or screen (API changes)
+            if (global.display.set_cursor)
+                global.display.set_cursor(Meta.Cursor.POINTING_HAND);
+            else if (global.screen && global.screen.set_cursor)
+                global.screen.set_cursor(Meta.Cursor.POINTING_HAND);
             // increase OSD display time
             let hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
             OsdWindow.HIDE_TIMEOUT = 2000;
