@@ -254,5 +254,5 @@ msgid ""
 "\">GNU General Public License, version 2 or later</a> for details.</span>"
 msgstr ""
 
-msgid "Credits"
+msgid "Author"
 msgstr ""

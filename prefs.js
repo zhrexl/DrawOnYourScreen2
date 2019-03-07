@@ -209,7 +209,7 @@ const PrefsPage = new GObject.Class({
         let creditBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
         let leftBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
         let rightBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let leftLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 2, justify: 1, use_markup: true, label: "<small><u>" + _("Credits") + ":</u></small>" });
+        let leftLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 2, justify: 1, use_markup: true, label: "<small><u>" + _("Author") + ":</u></small>" });
         let rightLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 1, justify: 0, use_markup: true, label: "<small>Abakkk</small>" });
         leftBox.pack_start(leftLabel, true, true, 0);
         rightBox.pack_start(rightLabel, true, true, 0);
