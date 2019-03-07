@@ -8,7 +8,7 @@ Then save your beautiful work by taking a screenshot.
 Features :
 ----------
 
-1. Basic shapes and text
+1. Basic shapes (rectangle, circle, ellipse, line, curve, text, free)
 2. Smooth stroke
 3. Multi-monitor support
 4. Export to SVG
