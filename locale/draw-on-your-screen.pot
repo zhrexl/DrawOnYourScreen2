@@ -54,6 +54,21 @@ msgid ""
 "and press Enter"
 msgstr ""
 
+msgid "Screenshot"
+msgstr ""
+
+msgid "Screenshot to clipboard"
+msgstr ""
+
+msgid "Area screenshot"
+msgstr ""
+
+msgid "Area screenshot to clipboard"
+msgstr ""
+
+msgid "System"
+msgstr ""
+
 #: prefs.js
 
 # GLOBAL_KEYBINDINGS

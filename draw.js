@@ -766,6 +766,13 @@ function getAngle(xO, yO, xA, yA, xB, yB) {
 }
 
 var HELPER_ANIMATION_TIME = 0.25;
+var MEDIA_KEYS_SCHEMA = 'org.gnome.settings-daemon.plugins.media-keys';
+var MEDIA_KEYS_KEYS = {
+    'screenshot': "Screenshot",
+    'screenshot-clip': "Screenshot to clipboard",
+    'area-screenshot': "Area screenshot",
+    'area-screenshot-clip': "Area screenshot to clipboard"
+};
 
 // DrawingHelper provides the "help osd" (Ctrl + F1)
 // It uses the same texts as in prefs
@@ -818,6 +825,20 @@ var DrawingHelper = new Lang.Class({
             let hbox = new St.BoxLayout({ vertical: false });
             let [keyval, mods] = Gtk.accelerator_parse(settings.get_strv(settingKey)[0]);
             hbox.add(new St.Label({ text: _(Prefs.INTERNAL_KEYBINDINGS[settingKey]) }));
+            hbox.add(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods) }), { expand: true });
+            this.vbox.add(hbox);
+        }
+        
+        let mediaKeysSettings;
+        try { mediaKeysSettings = Convenience.getSettings(MEDIA_KEYS_SCHEMA); } catch(e) { return; }
+        this.vbox.add(new St.Label({ text: _("System") }));
+        
+        for (let settingKey in MEDIA_KEYS_KEYS) {
+            if (!mediaKeysSettings.settings_schema.has_key(settingKey))
+                return;
+            let [keyval, mods] = Gtk.accelerator_parse(mediaKeysSettings.get_string(settingKey));
+            let hbox = new St.BoxLayout({ vertical: false });
+            hbox.add(new St.Label({ text: _(MEDIA_KEYS_KEYS[settingKey]) }));
             hbox.add(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods) }), { expand: true });
             this.vbox.add(hbox);
         }
