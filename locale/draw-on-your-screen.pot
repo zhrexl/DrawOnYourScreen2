@@ -130,6 +130,9 @@ msgstr ""
 msgid "Add a drawing background"
 msgstr ""
 
+msgid "Square drawing area"
+msgstr ""
+
 msgid "Save drawing as a SVG file"
 msgstr ""
 

@@ -52,7 +52,7 @@ var DrawingArea = new Lang.Class({
     Name: 'DrawingArea',
     Extends: St.DrawingArea,
 
-    _init: function(params, helper) {
+    _init: function(params, monitor, helper) {
         this.parent({ style_class: 'draw-on-your-screen', name: params && params.name ? params.name : ""});
         
         // 'style-changed' is emitted when 'this' is added to an actor
@@ -62,12 +62,14 @@ var DrawingArea = new Lang.Class({
         
         this.settings = Convenience.getSettings();
         this.emitter = new DrawingAreaEmitter();
+        this.monitor = monitor;
         this.helper = helper;
         
         this.elements = [];
         this.undoneElements = [];
         this.currentElement = null;
         this.currentShape = Shapes.NONE;
+        this.isSquareArea = false;
         this.hasBackground = false;
         this.textHasCursor = false;
         this.dashedLine = false;
@@ -360,6 +362,20 @@ var DrawingArea = new Lang.Class({
     toggleBackground: function() {
         this.hasBackground = !this.hasBackground;
         this.get_parent().set_background_color(this.hasBackground ? this.activeBackgroundColor : null);
+    },
+    
+    toggleSquareArea: function() {
+        this.isSquareArea = !this.isSquareArea;
+        if (this.isSquareArea) {
+            let squareWidth = Math.min(this.monitor.width, this.monitor.height) * 3 / 4;
+            this.set_position(Math.floor(this.monitor.width / 2 - squareWidth / 2), Math.floor(this.monitor.width / 2 - squareWidth / 2));
+            this.set_size(squareWidth, squareWidth);
+            this.add_style_class_name('draw-on-your-screen-square-area');
+        } else {
+            this.set_position(this.monitor.x, this.monitor.y);
+            this.set_size(this.monitor.width, this.monitor.height);
+            this.remove_style_class_name('draw-on-your-screen-square-area');
+        }
     },
     
     toggleColor: function() {

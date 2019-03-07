@@ -63,6 +63,7 @@ var INTERNAL_KEYBINDINGS = {
     '-separator-4': '',
     'toggle-panel-and-dock-visibility': "Hide panel and dock",
     'toggle-background': "Add a drawing background",
+    'toggle-square-area': "Square drawing area",
     '-separator-5': '',
     'save-as-svg': "Save drawing as a SVG file",
     'open-stylesheet': "Open stylesheet.css",

@@ -46,11 +46,18 @@
 
 /*********************************************/
 
-/*
- * The following styles don't affect the drawing,
- * but the "Ctrl + F1" on-screen-display
- *
- */
+/* square area */
+
+.draw-on-your-screen-square-area {
+    outline: 2px solid rgba(255, 0, 0, 0.7);
+}
+
+.draw-on-your-screen-square-area:insensitive {
+    outline: none;
+}
+
+/* The following styles don't affect the drawing,
+ * but the "Ctrl + F1" on-screen-display */
 
  .draw-on-your-screen-helper {
     margin: 0;

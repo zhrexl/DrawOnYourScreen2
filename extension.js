@@ -98,7 +98,7 @@ var AreaManager = new Lang.Class({
             let monitor = this.monitors[i];
             let helper = new Draw.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
             let bgContainer = new St.Bin({ name: 'drawOnYourSreenContainer' + i });
-            let area = new Draw.DrawingArea({ name: 'drawOnYourSreenArea' + i }, helper);
+            let area = new Draw.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper);
             bgContainer.set_child(area);
             Main.uiGroup.add_actor(bgContainer);
             Main.uiGroup.add_actor(helper);
@@ -120,6 +120,7 @@ var AreaManager = new Lang.Class({
             'smooth-last-element': this.activeArea.smoothLastElement.bind(this.activeArea),
             'save-as-svg': this.activeArea.save.bind(this.activeArea),
             'toggle-background': this.activeArea.toggleBackground.bind(this.activeArea),
+            'toggle-square-area': this.activeArea.toggleSquareArea.bind(this.activeArea),
             'increment-line-width': () => this.activeArea.incrementLineWidth(1),
             'decrement-line-width': () => this.activeArea.incrementLineWidth(-1),
             'increment-line-width-more': () => this.activeArea.incrementLineWidth(5),

@@ -46,6 +46,11 @@
       <summary>hide or show panel and dock</summary>
       <description>hide or show panel and dock</description>
     </key>
+    <key type="as" name="toggle-square-area">
+      <default>["&lt;Primary&gt;n"]</default>
+      <summary>toggle square area</summary>
+      <description>toggle square area</description>
+    </key>
     <key type="as" name="select-ellipse-shape">
       <default>["&lt;Primary&gt;e"]</default>
       <summary>select cercle</summary>
