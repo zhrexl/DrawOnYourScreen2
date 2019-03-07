@@ -38,7 +38,7 @@ const Prefs = Extension.imports.prefs;
 const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
 
 var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4 };
-var ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Circle", 3: "Rectangle", 4: "Text" };
+var ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text" };
 var LineCapNames = { 0: 'Butt', 1: 'Round', 2: 'Square' };
 var LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
 var FontWeightNames = { 0: 'Normal', 1: 'Bold' };
@@ -119,7 +119,9 @@ var DrawingArea = new Lang.Class({
         for (let i = 0; i < this.elements.length; i++) {
             this.elements[i].buildCairo(cr, false);
             
-            if (this.elements[i].fill && this.elements[i].shape != Shapes.LINE)
+            let isStraightLine = this.elements[i].shape == Shapes.LINE &&
+                                (this.elements[i].points.length < 3 || this.elements[i].points[2] == this.elements[i].points[1] || this.elements[i].points[2] == this.elements[i].points[0]);
+            if (this.elements[i].fill && !isStraightLine)
                 cr.fill();
             else
                 cr.stroke();
@@ -227,6 +229,7 @@ var DrawingArea = new Lang.Class({
             fill: fill,
             eraser: eraser,
             shape: this.currentShape == Shapes.TEXT ? Shapes.RECTANGLE : this.currentShape,
+            transform: { active: false, center: [0, 0], angle: 0, startAngle: 0, ratio: 1 },
             text: '',
             font: { family: (this.currentFontFamilyId == 0 ? this.fontFamily : FontFamilyNames[this.currentFontFamilyId]), weight: this.currentFontWeight, style: this.currentFontStyle },
             points: [[startX, startY]]
@@ -237,7 +240,8 @@ var DrawingArea = new Lang.Class({
             let [s, x, y] = this.transform_stage_point(coords[0], coords[1]);
             if (!s)
                 return;
-            this._updateDrawing(x, y);
+            let controlPressed = event.has_control_modifier();
+            this._updateDrawing(x, y, controlPressed);
         });
     },
     
@@ -268,11 +272,17 @@ var DrawingArea = new Lang.Class({
         this._redisplay();
     },
     
-    _updateDrawing: function(x, y) {
+    _updateDrawing: function(x, y, controlPressed) {
         if (!this.currentElement)
             return;
         if (this.currentElement.shape == Shapes.NONE)
             this.currentElement.addPoint(x, y, this.smoothedStroke);
+        else if (this.currentElement.shape == Shapes.RECTANGLE && (controlPressed || this.currentElement.transform.active))
+            this.currentElement.transformRectangle(x, y);
+        else if (this.currentElement.shape == Shapes.ELLIPSE && (controlPressed || this.currentElement.transform.active))
+            this.currentElement.transformEllipse(x, y);
+        else if (this.currentElement.shape == Shapes.LINE && (controlPressed || this.currentElement.transform.active))
+            this.currentElement.transformLine(x, y);
         else
             this.currentElement.points[1] = [x, y];
         this._redisplay();
@@ -549,24 +559,37 @@ var DrawingElement = new Lang.Class({
         
         Clutter.cairo_set_source_color(cr, this.color);
         
-        let [points, shape] = [this.points, this.shape];
+        let [points, shape, trans] = [this.points, this.shape, this.transform];
         
-        if (shape == Shapes.NONE || shape == Shapes.LINE) {
+        if (shape == Shapes.LINE && points.length == 3) {
+            cr.moveTo(points[0][0], points[0][1]);
+            cr.curveTo(points[0][0], points[0][1], points[1][0], points[1][1], points[2][0], points[2][1]);
+        } else if (shape == Shapes.NONE || shape == Shapes.LINE) {
             cr.moveTo(points[0][0], points[0][1]);
             for (let j = 1; j < points.length; j++) {
                 cr.lineTo(points[j][0], points[j][1]);
             }
+            
         } else if (shape == Shapes.ELLIPSE && points.length == 2) {
+            this.rotate(cr, trans.angle + trans.startAngle, trans.center[0], trans.center[1]);
+            this.scale(cr, trans.ratio, trans.center[0], trans.center[1]);
             let r = Math.hypot(points[1][0] - points[0][0], points[1][1] - points[0][1]);
             cr.arc(points[0][0], points[0][1], r, 0, 2 * Math.PI);
+            this.scale(cr, 1 / trans.ratio, trans.center[0], trans.center[1]);
+            this.rotate(cr, - (trans.angle + trans.startAngle), trans.center[0], trans.center[1]);
             
         } else if (shape == Shapes.RECTANGLE && points.length == 2) {
+            this.rotate(cr, trans.angle, trans.center[0], trans.center[1]);
             cr.rectangle(points[0][0], points[0][1], points[1][0] - points[0][0], points[1][1] - points[0][1]);
+            this.rotate(cr, - trans.angle, trans.center[0], trans.center[1]);
+            
         } else if (shape == Shapes.TEXT && points.length == 2) {
+            this.rotate(cr, trans.angle, trans.center[0], trans.center[1]);
             cr.selectFontFace(this.font.family, this.font.style, this.font.weight);
             cr.setFontSize(Math.abs(points[1][1] - points[0][1]));
             cr.moveTo(Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]));
             cr.showText((showTextCursor) ? (this.text + "_") : this.text);
+            this.rotate(cr, - trans.angle, trans.center[0], trans.center[1]);
         }
     },
     
@@ -574,9 +597,11 @@ var DrawingElement = new Lang.Class({
         let row = "\n  ";
         let points = this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100]);
         let color = this.eraser ? bgColor : this.color.to_string();
-        let attributes = `fill="${this.fill ? color : 'transparent'}" ` +
-                         `stroke="${this.fill ? 'transparent' : color}" ` +
-                         `${this.fill ? 'stroke-opacity="0"' : 'fill-opacity="0"'} ` +
+        let isStraightLine = this.shape == Shapes.LINE && (points.length < 3 || points[2] == points[1] || points[2] == points[0]);
+        let fill = this.fill && !isStraightLine;
+        let attributes = `fill="${fill ? color : 'transparent'}" ` +
+                         `stroke="${fill ? 'transparent' : color}" ` +
+                         `${fill ? 'stroke-opacity="0"' : 'fill-opacity="0"'} ` +
                          `stroke-width="${this.line.lineWidth}" ` +
                          `stroke-linecap="${LineCapNames[this.line.lineCap].toLowerCase()}" ` +
                          `stroke-linejoin="${LineJoinNames[this.line.lineJoin].toLowerCase()}"`;
@@ -584,21 +609,43 @@ var DrawingElement = new Lang.Class({
         if (this.dash.array[0] > 0 && this.dash.array[1] > 0)
             attributes += ` stroke-dasharray="${this.dash.array[0]} ${this.dash.array[1]}" stroke-dashoffset="${this.dash.offset}"`;
         
-        if (this.shape == Shapes.NONE || this.shape == Shapes.LINE) {
+        if (this.shape == Shapes.LINE && points.length == 3) {
             row += `<path ${attributes} d="M${points[0][0]} ${points[0][1]}`;
+            row += ` C ${points[0][0]} ${points[0][1]}, ${points[1][0]} ${points[1][1]}, ${points[2][0]} ${points[2][1]}`;
+            row += `${fill ? 'z' : ''}"/>`;
             
+        } else if (this.shape == Shapes.NONE || this.shape == Shapes.LINE) {
+            row += `<path ${attributes} d="M${points[0][0]} ${points[0][1]}`;
             for (let i = 1; i < points.length; i++) {
                 row += ` L ${points[i][0]} ${points[i][1]}`;
             }
+            row += `${fill ? 'z' : ''}"/>`;
             
-            row += `${this.fill ? 'z' : ''}"/>`;
+        } else if (this.shape == Shapes.ELLIPSE && points.length == 2 && this.transform.ratio != 1) {
+            let ry = Math.hypot(points[1][0] - points[0][0], points[1][1] - points[0][1]);
+            let rx = ry * this.transform.ratio;
+            let angle = (this.transform.angle + this.transform.startAngle) * 180 / Math.PI;
+            row += `<ellipse ${attributes} cx="${points[0][0]}" cy="${points[0][1]}" rx="${rx}" ry="${ry}" transform="rotate(${angle}, ${points[0][0]}, ${points[0][1]})"/>`;
+            
         } else if (this.shape == Shapes.ELLIPSE && points.length == 2) {
             let r = Math.hypot(points[1][0] - points[0][0], points[1][1] - points[0][1]);
             row += `<circle ${attributes} cx="${points[0][0]}" cy="${points[0][1]}" r="${r}"/>`;
+            
         } else if (this.shape == Shapes.RECTANGLE && points.length == 2) {
+            let transAttribute = "";
+            if (this.transform.angle != 0) {
+                let angle = this.transform.angle * 180 / Math.PI;
+                transAttribute = ` transform="rotate(${angle}, ${this.transform.center[0]}, ${this.transform.center[1]})"`;
+            }
             row += `<rect ${attributes} x="${Math.min(points[0][0], points[1][0])}" y="${Math.min(points[0][1], points[1][1])}" ` +
-                   `width="${Math.abs(points[1][0] - points[0][0])}" height="${Math.abs(points[1][1] - points[0][1])}"/>`;
+                   `width="${Math.abs(points[1][0] - points[0][0])}" height="${Math.abs(points[1][1] - points[0][1])}"${transAttribute}/>`;
+                   
         } else if (this.shape == Shapes.TEXT && points.length == 2) {
+            let transAttribute = "";
+            if (this.transform.angle != 0) {
+                let angle = this.transform.angle * 180 / Math.PI;
+                transAttribute = ` transform="rotate(${angle}, ${this.transform.center[0]}, ${this.transform.center[1]})"`;
+            }
             attributes = `fill="${color}" ` +
                          `stroke="transparent" ` +
                          `stroke-opacity="0" ` +
@@ -607,7 +654,7 @@ var DrawingElement = new Lang.Class({
                          `font-weight="${FontWeightNames[this.font.weight].toLowerCase()}" ` +
                          `font-style="${FontStyleNames[this.font.style].toLowerCase()}"`;
             
-            row += `<text ${attributes} x="${Math.min(points[0][0], points[1][0])}" y="${Math.max(points[0][1], points[1][1])}">${this.text}</text>`;
+            row += `<text ${attributes}${transAttribute} x="${Math.min(points[0][0], points[1][0])}" y="${Math.max(points[0][1], points[1][1])}">${this.text}</text>`;
         }
         
         return row;
@@ -630,7 +677,77 @@ var DrawingElement = new Lang.Class({
             this.smooth(i);
         }
     },
+    
+    rotate: function(cr, angle, x, y) {
+        if (angle == 0)
+            return;
+        cr.translate(x, y);
+        cr.rotate(angle);
+        cr.translate(-x, -y);
+    },
+    
+    scale: function(cr, ratio, x, y) {
+        if (ratio == 1)
+            return;
+        cr.translate(x, y);
+        cr.scale(ratio, 1);
+        cr.translate(-x, -y);
+    },
+    
+    transformRectangle: function(x, y) {
+        let points = this.points;
+        if (points.length < 2 || points[0][0] == points[1][0] || points[0][1] == points[1][1])
+            return;
+            
+        this.transform.center = [points[0][0] + (points[1][0] - points[0][0]) / 2, points[0][1] + (points[1][1] - points[0][1]) / 2];
+        
+        this.transform.angle = getAngle(this.transform.center[0], this.transform.center[1], points[1][0], points[1][1], x, y);
+        this.transform.active = true;
+    },
+    
+    transformEllipse: function(x, y) {
+        let points = this.points;
+        if (points.length < 2 || points[0][0] == points[1][0] || points[0][1] == points[1][1])
+            return;
+        
+        this.transform.center = [points[0][0], points[0][1]];
+        
+        let r1 = Math.hypot(points[1][0] - points[0][0], points[1][1] - points[0][1]);
+        let r2 = Math.hypot(x - points[0][0], y - points[0][1]);
+        this.transform.ratio = r2 / r1;
+        
+        this.transform.angle = getAngle(this.transform.center[0], this.transform.center[1], points[1][0], points[1][1], x, y);
+        if (!this.transform.startAngle)
+            // that is the angle between the direction when starting ellipticalizing, and the x-axis
+            this.transform.startAngle = getAngle(points[0][0], points[0][1], points[0][0] + 1, points[0][1], points[1][0], points[1][1]);
+        this.transform.active = true;
+    },
+    
+    transformLine: function(x, y) {
+        if (this.points.length < 2)
+            return;
+        if (this.points.length == 2)
+            this.points[2] = this.points[1];
+        this.points[1] = [x, y];
+        this.transform.active = true;
+    },
 });
+
+function getAngle(xO, yO, xA, yA, xB, yB) {
+    // calculate angle of rotation in absolute value
+    // cos(AOB) = (OA.OB)/(||OA||*||OB||) where OA.OB = (xA-xO)*(xB-xO) + (yA-yO)*(yB-yO)
+    let angle = Math.acos( ((xA - xO)*(xB - xO) + (yA - yO)*(yB - yO)) / (Math.hypot(xA - xO, yA - yO) * Math.hypot(xB - xO, yB - yO)) );
+    
+    // determine the sign of the angle
+    // equation of OA: y = ax + b
+    let a = (yA - yO) / (xA - xO);
+    let b = yA - a*xA;
+    if (yB < a*xB + b)
+        angle = - angle;
+    if (xA < xO)
+        angle = - angle;
+    return angle;
+}
 
 var HELPER_ANIMATION_TIME = 0.25;
 

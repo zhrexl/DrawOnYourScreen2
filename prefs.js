@@ -52,7 +52,7 @@ var INTERNAL_KEYBINDINGS = {
     'toggle-dash': "Dashed line",
     '-separator-2': '',
     'select-line-shape': "Select line",
-    'select-ellipse-shape': "Select circle",
+    'select-ellipse-shape': "Select ellipse",
     'select-rectangle-shape': "Select rectangle",
     'select-text-shape': "Select text",
     'select-none-shape': "Unselect shape (free drawing)",
@@ -73,6 +73,7 @@ var OTHER_SHORTCUTS = [
     { desc: "Draw", shortcut: "Left click" },
     { desc: "Draw by filling in", shortcut: "Right click" },
     { desc: "Toggle shape", shortcut: "Center click" },
+    { desc: "Transform shape (when drawing)", shortcut: "Ctrl key" },
     { desc: "Increment/decrement line width", shortcut: "Scroll" },
     { desc: "Select color", shortcut: "Ctrl+1...9" },
     { desc: "Select eraser", shortcut: "Shift key held" },
@@ -104,7 +105,7 @@ const PrefsPage = new GObject.Class({
         
         let textBox1 = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN });
         let text1 = new Gtk.Label({ wrap: true, justify: 2, use_markup: true,
-                                    label: _("Start drawing with Super+Alt+D\nThen save your beautiful work by taking a screenshot") });
+                                    label: "<big> " + _("Start drawing with Super+Alt+D\nThen save your beautiful work by taking a screenshot") + "</big>" });
         textBox1.pack_start(text1, false, false, 0);
         box.add(textBox1);
         
@@ -149,6 +150,16 @@ const PrefsPage = new GObject.Class({
         
         listBox.add(new Gtk.Box({ margin_top: MARGIN, margin_left: MARGIN, margin_right: MARGIN }));
         
+        let controlBox = new Gtk.Box({ margin_top: MARGIN, margin_left: MARGIN, margin_right: MARGIN, margin_bottom:MARGIN });
+        let controlLabel = new Gtk.Label({
+            use_markup: true,
+            label: _("By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you can:\n . rotate a rectangle or a text area\n . extend and rotate an ellipse\n . curve a line (cubic Bezier curve)")
+        });
+        controlLabel.set_halign(1);
+        controlLabel.get_style_context().add_class("dim-label");
+        controlBox.pack_start(controlLabel, true, true, 4);
+        listBox.add(controlBox);
+        
         let smoothBox = new Gtk.Box({ margin: MARGIN });
         let smoothLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
         let smoothLabel1 = new Gtk.Label({label: _("Smooth stroke during the drawing process")});
@@ -178,12 +189,11 @@ const PrefsPage = new GObject.Class({
         let noteBox = new Gtk.Box({ margin_top: MARGIN, margin_left: MARGIN, margin_right: MARGIN, margin_bottom:MARGIN });
         let noteLabel = new Gtk.Label({
             use_markup: true,
-            label: _("<u>Note</u>: When you save elements made with eraser in a SVG file,\nthey are colored with background color, transparent if it is disabled.\n(See \"Add a drawing background\" or edit the SVG file afterwards)")
+            label: _("<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file,\nthey are colored with background color, transparent if it is disabled.\n(See \"Add a drawing background\" or edit the SVG file afterwards)")
         });
         noteLabel.set_halign(1);
-        //let noteLabel2 = new Gtk.Label({ label: _("See notesheet.css") });
+        noteLabel.get_style_context().add_class("dim-label");
         noteBox.pack_start(noteLabel, true, true, 4);
-        //noteBox.pack_start(noteLabel2, false, false, 4);
         listBox.add(noteBox);
         
         this.addSeparator(listBox);

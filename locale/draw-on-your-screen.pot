@@ -34,7 +34,7 @@ msgstr ""
 msgid "Line"
 msgstr ""
 
-msgid "Circle"
+msgid "Ellipse"
 msgstr ""
 
 msgid "Rectangle"
@@ -55,11 +55,16 @@ msgid ""
 msgstr ""
 
 #: prefs.js
+
+# GLOBAL_KEYBINDINGS
+
 msgid "Enter/leave drawing mode"
 msgstr ""
 
 msgid "Erase all drawings"
 msgstr ""
+
+# INTERNAL_KEYBINDINGS
 
 msgid "Undo last brushstroke"
 msgstr ""
@@ -91,13 +96,14 @@ msgstr ""
 msgid "Change linecap"
 msgstr ""
 
+# already in draw.js
 #msgid "Dashed line"
 #msgstr ""
 
 msgid "Select line"
 msgstr ""
 
-msgid "Select circle"
+msgid "Select ellipse"
 msgstr ""
 
 msgid "Select rectangle"
@@ -133,6 +139,8 @@ msgstr ""
 msgid "Show help"
 msgstr ""
 
+# OTHER_SHORTCUTS
+
 msgid "Draw"
 msgstr ""
 
@@ -149,6 +157,12 @@ msgid "Toggle shape"
 msgstr ""
 
 msgid "Center click"
+msgstr ""
+
+msgid "Transform shape (when drawing)"
+msgstr ""
+
+msgid "Ctrl key"
 msgstr ""
 
 msgid "Increment/decrement line width"
@@ -175,6 +189,8 @@ msgstr ""
 msgid "Escape key"
 msgstr ""
 
+#
+
 msgid ""
 "Start drawing with Super+Alt+D\n"
 "Then save your beautiful work by taking a screenshot"
@@ -187,6 +203,13 @@ msgid "Internal"
 msgstr ""
 
 msgid "(in drawing mode)"
+msgstr ""
+
+msgid ""
+"By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you can:\n"
+" . rotate a rectangle or a text area\n"
+" . extend and rotate an ellipse\n"
+" . curve a line (cubic Bezier curve)"
 msgstr ""
 
 msgid "Smooth stroke during the drawing process"
