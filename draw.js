@@ -257,19 +257,23 @@ var DrawingArea = new Lang.Class({
             this.buttonReleasedHandler = null;
         }
         
-        // start writing
-        if (this.currentShape == Shapes.TEXT && this.currentElement) {
-            this.currentElement.shape = Shapes.TEXT;
-            this.currentElement.text = '';
-            this.emitter.emit('show-osd', _("Type your text\nand press Enter"), null);
-            this._updateCursorTimeout();
-            this._redisplay();
-            return;
-        }
+        // skip when the size is too small to be visible (3px)
+        if (this.currentElement && this.currentElement.points.length >= 2 &&
+            Math.hypot(this.currentElement.points[1][0] - this.currentElement.points[0][0], this.currentElement.points[1][1] - this.currentElement.points[0][1]) > 3) {
+            
+            // start writing
+            if (this.currentShape == Shapes.TEXT) {
+                this.currentElement.shape = Shapes.TEXT;
+                this.currentElement.text = '';
+                this.emitter.emit('show-osd', _("Type your text\nand press Enter"), null);
+                this._updateCursorTimeout();
+                this._redisplay();
+                return;
+            }
         
-        if (this.currentElement) {
             this.elements.push(this.currentElement);
         }
+        
         this.currentElement = null;
         this._redisplay();
     },
