@@ -257,9 +257,10 @@ var DrawingArea = new Lang.Class({
             this.buttonReleasedHandler = null;
         }
         
-        // skip when the size is too small to be visible (3px)
+        // skip when the size is too small to be visible (3px) (except for free drawing)
         if (this.currentElement && this.currentElement.points.length >= 2 &&
-            Math.hypot(this.currentElement.points[1][0] - this.currentElement.points[0][0], this.currentElement.points[1][1] - this.currentElement.points[0][1]) > 3) {
+            (this.currentShape == Shapes.NONE ||
+                Math.hypot(this.currentElement.points[1][0] - this.currentElement.points[0][0], this.currentElement.points[1][1] - this.currentElement.points[0][1]) > 3)) {
             
             // start writing
             if (this.currentShape == Shapes.TEXT) {
