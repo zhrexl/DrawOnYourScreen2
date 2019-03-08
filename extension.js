@@ -55,7 +55,6 @@ var AreaManager = new Lang.Class({
 
     _init: function() {
         this.areas = [];
-        this.drawingHandlers = [];
         this.activeArea = null;
         this.enterGicon = new Gio.ThemedIcon({ name: 'applications-graphics-symbolic' });
         this.leaveGicon = new Gio.ThemedIcon({ name: 'application-exit-symbolic' });
@@ -106,8 +105,8 @@ var AreaManager = new Lang.Class({
             bgContainer.set_size(monitor.width, monitor.height);
             area.set_position(monitor.x, monitor.y);
             area.set_size(monitor.width, monitor.height);
-            this.drawingHandlers.push(area.emitter.connect('stop-drawing', this.toggleDrawing.bind(this)));
-            this.drawingHandlers.push(area.emitter.connect('show-osd', this.showOsd.bind(this)));
+            area.emitter.stopDrawingHandler = area.emitter.connect('stop-drawing', this.toggleDrawing.bind(this));
+            area.emitter.showOsdHandler = area.emitter.connect('show-osd', this.showOsd.bind(this));
             this.areas.push(area);
         }
     },
@@ -263,13 +262,15 @@ var AreaManager = new Lang.Class({
     removeAreas: function() {
         for (let i = 0; i < this.areas.length; i++) {
             let area = this.areas[i];
+            Main.uiGroup.remove_actor(area.helper);
             Main.uiGroup.remove_actor(area.get_parent());
-            area.emitter.disconnect(this.drawingHandlers[i]);
+            area.emitter.disconnect(area.emitter.stopDrawingHandler);
+            area.emitter.disconnect(area.emitter.showOsdHandler);
             area.disable();
+            area.helper.destroy();
             area.get_parent().destroy();
         }
         this.areas = [];
-        this.drawingHandlers = [];
     },
     
     disable: function() {
@@ -277,6 +278,11 @@ var AreaManager = new Lang.Class({
             this.stylesheetMonitor.disconnect(this.stylesheetChangedHandler);
             this.stylesheetChangedHandler = null;
         }
+        if (this.monitorChangedHandler) {
+            Main.layoutManager.disconnect(this.monitorChangedHandler);
+            this.monitorChangedHandler = null;
+        }
+        
         if (this.activeArea)
             this.toggleDrawing();
         Main.wm.removeKeybinding('toggle-drawing');

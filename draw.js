@@ -534,10 +534,6 @@ var DrawingArea = new Lang.Class({
     },
     
     disable: function() {
-        if (this.theme && this.customStylesheetsChangedHandler) {
-            this.theme.disconnect(this.customStylesheetsChangedHandler);
-            this.customStylesheetsChangedHandler = null;
-        }
         this.erase();
     }
 });
