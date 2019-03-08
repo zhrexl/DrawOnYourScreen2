@@ -201,7 +201,7 @@ msgstr ""
 msgid "Shift key held"
 msgstr ""
 
-msgid "Leave and erase all drawings"
+msgid "Leave and hide the drawing"
 msgstr ""
 
 msgid "Escape key"

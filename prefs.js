@@ -78,7 +78,7 @@ var OTHER_SHORTCUTS = [
     { desc: "Increment/decrement line width", shortcut: "Scroll" },
     { desc: "Select color", shortcut: "Ctrl+1...9" },
     { desc: "Select eraser", shortcut: "Shift key held" },
-    { desc: "Leave and erase all drawings", shortcut: "Escape key" }
+    { desc: "Leave and hide the drawing", shortcut: "Escape key" }
 ];
 
 function init() {
