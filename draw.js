@@ -49,7 +49,7 @@ var FontFamilyNames = {  0: 'Default', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospac
 // It creates and manages a DrawingElement for each "brushstroke".
 // It handles pointer/mouse/(touch?) events and some keyboard events.
 var DrawingArea = new Lang.Class({
-    Name: 'DrawingArea',
+    Name: 'DrawOnYourScreenDrawingArea',
     Extends: St.DrawingArea,
 
     _init: function(params, monitor, helper) {
@@ -551,7 +551,7 @@ Signals.addSignalMethods(DrawingAreaEmitter.prototype);
 // It can be converted into a cairo path as well as a svg element.
 // See DrawingArea._startDrawing() to know its params.
 var DrawingElement = new Lang.Class({
-    Name: 'DrawingElement',
+    Name: 'DrawOnYourScreenDrawingElement',
     
     _init: function(params) {
         for (let key in params)
@@ -777,7 +777,7 @@ var MEDIA_KEYS_KEYS = {
 // DrawingHelper provides the "help osd" (Ctrl + F1)
 // It uses the same texts as in prefs
 var DrawingHelper = new Lang.Class({
-    Name: 'DrawingHelper',
+    Name: 'DrawOnYourScreenDrawingHelper',
     Extends: St.ScrollView,
     
     _init: function(params, monitor) {

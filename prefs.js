@@ -92,8 +92,8 @@ function buildPrefsWidget() {
 }
 
 const PrefsPage = new GObject.Class({
-    Name: 'PrefsPage',
-    GTypeName: 'PrefsPage',
+    Name: 'DrawOnYourScreenPrefsPage',
+    GTypeName: 'DrawOnYourScreenPrefsPage',
     Extends: Gtk.ScrolledWindow,
 
     _init: function(params) {
@@ -235,8 +235,8 @@ const PrefsPage = new GObject.Class({
 
 // this code comes from Sticky Notes View by Sam Bull, https://extensions.gnome.org/extension/568/notes/
 const KeybindingsWidget = new GObject.Class({
-    Name: 'Keybindings.Widget',
-    GTypeName: 'KeybindingsWidget',
+    Name: 'DrawOnYourScreenKeybindings.Widget',
+    GTypeName: 'DrawOnYourScreenKeybindingsWidget',
     Extends: Gtk.Box,
 
     _init: function(keybindings, settings) {

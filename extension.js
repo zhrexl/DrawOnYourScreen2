@@ -51,7 +51,7 @@ function disable() {
 // distributes keybinding callbacks to the active area
 // and handles stylesheet and monitor changes.
 var AreaManager = new Lang.Class({
-    Name: 'AreaManager',
+    Name: 'DrawOnYourScreenAreaManager',
 
     _init: function() {
         this.areas = [];
