@@ -103,7 +103,6 @@ var AreaManager = new Lang.Class({
             Main.uiGroup.insert_child_above(container, global.window_group);
             container.set_position(monitor.x, monitor.y);
             container.set_size(monitor.width, monitor.height);
-            area.set_position(monitor.x, monitor.y);
             area.set_size(monitor.width, monitor.height);
             area.emitter.stopDrawingHandler = area.emitter.connect('stop-drawing', this.toggleDrawing.bind(this));
             area.emitter.showOsdHandler = area.emitter.connect('show-osd', this.showOsd.bind(this));
@@ -275,13 +274,12 @@ var AreaManager = new Lang.Class({
     removeAreas: function() {
         for (let i = 0; i < this.areas.length; i++) {
             let area = this.areas[i];
-            Main.uiGroup.remove_actor(area.helper);
-            Main.uiGroup.remove_actor(area.get_parent());
+            let container = area.get_parent();
+            container.get_parent().remove_actor(container);
             area.emitter.disconnect(area.emitter.stopDrawingHandler);
             area.emitter.disconnect(area.emitter.showOsdHandler);
             area.disable();
-            area.helper.destroy();
-            area.get_parent().destroy();
+            container.destroy();
         }
         this.areas = [];
     },

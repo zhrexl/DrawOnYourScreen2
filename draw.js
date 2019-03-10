@@ -856,8 +856,8 @@ var DrawingHelper = new Lang.Class({
         else
             this.vscrollbar_policy = Gtk.PolicyType.NEVER;
         this.set_height(Math.min(this.height, maxHeight));
-        this.set_position(this.monitor.x + Math.floor(this.monitor.width / 2 - this.width / 2),
-                          this.monitor.y + Math.floor(this.monitor.height / 2 - this.height / 2));
+        this.set_position(Math.floor(this.monitor.width / 2 - this.width / 2),
+                          Math.floor(this.monitor.height / 2 - this.height / 2));
         
         Tweener.removeTweens(this);
         Tweener.addTween(this, { opacity: 255,
