@@ -6,6 +6,11 @@
       <summary>smoothed stroke</summary>
       <description>smoothed stroke</description>
     </key>
+    <key type="b" name="move-drawing-on-desktop">
+      <default>false</default>
+      <summary>move drawing on desktop</summary>
+      <description>move drawing on desktop</description>
+    </key>
     <key type="as" name="toggle-drawing">
       <default>["&lt;Alt&gt;&lt;Super&gt;d"]</default>
       <summary>toggle drawing</summary>

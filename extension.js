@@ -54,19 +54,20 @@ var AreaManager = new Lang.Class({
     Name: 'DrawOnYourScreenAreaManager',
 
     _init: function() {
+        this.settings = Convenience.getSettings();
         this.areas = [];
         this.activeArea = null;
         this.enterGicon = new Gio.ThemedIcon({ name: 'applications-graphics-symbolic' });
         this.leaveGicon = new Gio.ThemedIcon({ name: 'application-exit-symbolic' });
         
         Main.wm.addKeybinding('toggle-drawing',
-                              Convenience.getSettings(),
+                              this.settings,
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
                               this.toggleDrawing.bind(this));
         
         Main.wm.addKeybinding('erase-drawing',
-                              Convenience.getSettings(),
+                              this.settings,
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
                               this.eraseDrawing.bind(this));
@@ -100,7 +101,12 @@ var AreaManager = new Lang.Class({
             let area = new Draw.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper);
             container.add_child(area);
             container.add_child(helper);
-            Main.uiGroup.insert_child_above(container, global.window_group);
+            
+            if (this.settings.get_boolean("move-drawing-on-desktop"))
+                Main.layoutManager._backgroundGroup.insert_child_above(container, Main.layoutManager._bgManagers[i].backgroundActor);
+            else
+                Main.uiGroup.insert_child_above(container, global.window_group);
+            
             container.set_position(monitor.x, monitor.y);
             container.set_size(monitor.width, monitor.height);
             area.set_size(monitor.width, monitor.height);
@@ -141,7 +147,7 @@ var AreaManager = new Lang.Class({
         
         for (let key in this.internalKeybindings) {
             Main.wm.addKeybinding(key,
-                                  Convenience.getSettings(),
+                                  this.settings,
                                   Meta.KeyBindingFlags.NONE,
                                   256,
                                   this.internalKeybindings[key]);
@@ -149,7 +155,7 @@ var AreaManager = new Lang.Class({
         
         for (let i = 1; i < 10; i++) {
             Main.wm.addKeybinding('select-color' + i,
-                                  Convenience.getSettings(),
+                                  this.settings,
                                   Meta.KeyBindingFlags.NONE,
                                   256,
                                   () => this.activeArea.selectColor(i));
@@ -227,7 +233,11 @@ var AreaManager = new Lang.Class({
             this.activeArea.leaveDrawingMode();
             this.activeArea = null;
             
-            Main.uiGroup.set_child_above_sibling(activeContainer, global.window_group);
+            activeContainer.get_parent().remove_actor(activeContainer);
+            if (this.settings.get_boolean("move-drawing-on-desktop"))
+                Main.layoutManager._backgroundGroup.insert_child_above(activeContainer, Main.layoutManager._bgManagers[activeIndex].backgroundActor);
+            else
+                Main.uiGroup.insert_child_above(activeContainer, global.window_group);
             
             // check display or screen (API changes)
             if (global.display.set_cursor)
@@ -241,7 +251,8 @@ var AreaManager = new Lang.Class({
             let currentIndex = Main.layoutManager.monitors.indexOf(Main.layoutManager.currentMonitor);
             let activeContainer = this.areas[currentIndex].get_parent();
             
-            Main.uiGroup.set_child_above_sibling(activeContainer, null);
+            activeContainer.get_parent().remove_actor(activeContainer);
+            Main.uiGroup.add_child(activeContainer);
             
             // 256 is a custom Shell.ActionMode
             if (!Main.pushModal(this.areas[currentIndex], { actionMode: 256 | 1 }))

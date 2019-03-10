@@ -217,6 +217,12 @@ msgstr ""
 msgid "Global"
 msgstr ""
 
+msgid "Move drawing on the desktop when leaving drawing mode"
+msgstr ""
+
+msgid "Draw On Your Screen becomes Draw On Your Desktop"
+msgstr ""
+
 msgid "Internal"
 msgstr ""
 
