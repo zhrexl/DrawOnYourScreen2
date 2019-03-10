@@ -95,14 +95,14 @@ var AreaManager = new Lang.Class({
         
         for (let i = 0; i < this.monitors.length; i++) {
             let monitor = this.monitors[i];
+            let container = new St.Widget({ name: 'drawOnYourSreenContainer' + i });
             let helper = new Draw.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
-            let bgContainer = new St.Bin({ name: 'drawOnYourSreenContainer' + i });
             let area = new Draw.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper);
-            bgContainer.set_child(area);
-            Main.uiGroup.add_actor(bgContainer);
-            Main.uiGroup.add_actor(helper);
-            bgContainer.set_position(monitor.x, monitor.y);
-            bgContainer.set_size(monitor.width, monitor.height);
+            container.add_child(area);
+            container.add_child(helper);
+            Main.uiGroup.insert_child_above(container, global.window_group);
+            container.set_position(monitor.x, monitor.y);
+            container.set_size(monitor.width, monitor.height);
             area.set_position(monitor.x, monitor.y);
             area.set_size(monitor.width, monitor.height);
             area.emitter.stopDrawingHandler = area.emitter.connect('stop-drawing', this.toggleDrawing.bind(this));
@@ -216,23 +216,34 @@ var AreaManager = new Lang.Class({
     
     toggleDrawing: function() {
         if (this.activeArea) {
+            let activeIndex = this.areas.indexOf(this.activeArea);
+            let activeContainer = this.activeArea.get_parent();
+            
             if (this.hiddenList)
                 this.togglePanelAndDockOpacity();
+            
             Main.popModal(this.activeArea);
-            let activeIndex = this.areas.indexOf(this.activeArea);
             this.removeInternalKeybindings();
             this.activeArea.reactive = false;
             this.activeArea.leaveDrawingMode();
             this.activeArea = null;
+            
+            Main.uiGroup.set_child_above_sibling(activeContainer, global.window_group);
+            
             // check display or screen (API changes)
             if (global.display.set_cursor)
                 global.display.set_cursor(Meta.Cursor.DEFAULT);
             else if (global.screen && global.screen.set_cursor)
                 global.screen.set_cursor(Meta.Cursor.DEFAULT);
+            
             Main.osdWindowManager.show(activeIndex, this.leaveGicon, _("Leaving drawing mode"), null);
         } else  {
             // avoid to deal with Meta changes (global.display/global.screen)
             let currentIndex = Main.layoutManager.monitors.indexOf(Main.layoutManager.currentMonitor);
+            let activeContainer = this.areas[currentIndex].get_parent();
+            
+            Main.uiGroup.set_child_above_sibling(activeContainer, null);
+            
             // 256 is a custom Shell.ActionMode
             if (!Main.pushModal(this.areas[currentIndex], { actionMode: 256 | 1 }))
                 return;
@@ -240,11 +251,13 @@ var AreaManager = new Lang.Class({
             this.addInternalKeybindings();
             this.activeArea.reactive = true;
             this.activeArea.enterDrawingMode();
+            
             // check display or screen (API changes)
             if (global.display.set_cursor)
                 global.display.set_cursor(Meta.Cursor.POINTING_HAND);
             else if (global.screen && global.screen.set_cursor)
                 global.screen.set_cursor(Meta.Cursor.POINTING_HAND);
+            
             // increase OSD display time
             let hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
             OsdWindow.HIDE_TIMEOUT = 2000;
