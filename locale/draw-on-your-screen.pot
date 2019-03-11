@@ -201,7 +201,7 @@ msgstr ""
 msgid "Shift key held"
 msgstr ""
 
-msgid "Leave and hide the drawing"
+msgid "Leave"
 msgstr ""
 
 msgid "Escape key"
@@ -217,7 +217,7 @@ msgstr ""
 msgid "Global"
 msgstr ""
 
-msgid "Move drawing on the desktop when leaving drawing mode"
+msgid "Drawing on the desktop"
 msgstr ""
 
 msgid "Draw On Your Screen becomes Draw On Your Desktop"
@@ -226,7 +226,7 @@ msgstr ""
 msgid "Persistent"
 msgstr ""
 
-msgid "Persistent drawing through restart"
+msgid "Persistent drawing through session restart"
 msgstr ""
 
 msgid "Internal"

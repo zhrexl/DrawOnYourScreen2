@@ -171,7 +171,7 @@ var DrawingArea = new Lang.Class({
     
     _onKeyPressed: function(actor, event) {
         if (event.get_key_symbol() == Clutter.Escape) {
-            this.emitter.emit('stop-drawing', true);
+            this.emitter.emit('stop-drawing');
             return Clutter.EVENT_STOP;
             
         } else if (this.currentElement && this.currentElement.shape == Shapes.TEXT) {
@@ -464,10 +464,6 @@ var DrawingArea = new Lang.Class({
             this.helper.showHelp();
     },
     
-    get isEmpty() {
-        return this.elements.length == 0;
-    },
-    
     enterDrawingMode: function() {
         this.keyPressedHandler = this.connect('key-press-event', this._onKeyPressed.bind(this));        
         this.buttonPressedHandler = this.connect('button-press-event', this._onButtonPressed.bind(this));
@@ -507,7 +503,7 @@ var DrawingArea = new Lang.Class({
         this._redisplay();
         this.get_parent().set_background_color(null);
         if (save)
-            this._saveAsJson();
+            this.saveAsJson();
     },
     
     saveAsSvg: function() {
@@ -544,7 +540,7 @@ var DrawingArea = new Lang.Class({
         }
     },
     
-    _saveAsJson: function() {
+    saveAsJson: function() {
         let filename = `DrawOnYourScreen.json`;
         let dir = GLib.get_user_data_dir();
         let path = GLib.build_filenamev([dir, filename]);
@@ -555,6 +551,10 @@ var DrawingArea = new Lang.Class({
             if (oldContents instanceof Uint8Array)
                 oldContents = imports.byteArray.toString(oldContents);
         }
+        
+        // do not create a file to write just an empty array
+        if (!oldContents && this.elements.length == 0)
+            return;
         
         // do not use "content = JSON.stringify(this.elements, null, 2);", neither "content = JSON.stringify(this.elements);"
         // because of compromise between disk usage and human readability

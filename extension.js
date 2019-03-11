@@ -75,6 +75,9 @@ var AreaManager = new Lang.Class({
         this.updateAreas();
         this.monitorChangedHandler = Main.layoutManager.connect('monitors-changed', this.updateAreas.bind(this));
         
+        this.desktopSettingHandler = this.settings.connect('changed::drawing-on-desktop', this.onDesktopSettingChanged.bind(this));
+        this.persistentSettingHandler = this.settings.connect('changed::persistent-drawing', this.onPersistentSettingChanged.bind(this));
+        
         if (Extension.stylesheet) {
             this.stylesheetMonitor = Extension.stylesheet.monitor(Gio.FileMonitorFlags.NONE, null);
             this.stylesheetChangedHandler = this.stylesheetMonitor.connect('changed', (monitor, file, otherFile, eventType) => {
@@ -85,6 +88,18 @@ var AreaManager = new Lang.Class({
                 theme.load_stylesheet(Extension.stylesheet);
             });
         }
+    },
+    
+    onDesktopSettingChanged: function() {
+        if (this.settings.get_boolean("drawing-on-desktop"))
+            this.areas.forEach(area => area.get_parent().show());
+        else
+            this.areas.forEach(area => area.get_parent().hide());
+    },
+    
+    onPersistentSettingChanged: function() {
+        if (this.settings.get_boolean('persistent-drawing'))
+            this.areas[Main.layoutManager.primaryIndex].saveAsJson();
     },
     
     updateAreas: function() {
@@ -103,16 +118,13 @@ var AreaManager = new Lang.Class({
             container.add_child(area);
             container.add_child(helper);
             
-            if (this.settings.get_boolean("move-drawing-on-desktop"))
-                Main.layoutManager._backgroundGroup.insert_child_above(container, Main.layoutManager._bgManagers[i].backgroundActor);
-            else
-                Main.uiGroup.insert_child_above(container, global.window_group);
+            Main.layoutManager._backgroundGroup.insert_child_above(container, Main.layoutManager._bgManagers[i].backgroundActor);
+            if (!this.settings.get_boolean("drawing-on-desktop")) 
+                container.hide();
             
             container.set_position(monitor.x, monitor.y);
             container.set_size(monitor.width, monitor.height);
             area.set_size(monitor.width, monitor.height);
-            if (area.isEmpty)
-               container.hide(); 
             area.emitter.stopDrawingHandler = area.emitter.connect('stop-drawing', this.toggleDrawing.bind(this));
             area.emitter.showOsdHandler = area.emitter.connect('show-osd', this.showOsd.bind(this));
             this.areas.push(area);
@@ -183,10 +195,8 @@ var AreaManager = new Lang.Class({
     },
     
     eraseDrawing: function() {
-        for (let i = 0; i < this.areas.length; i++) {
+        for (let i = 0; i < this.areas.length; i++)
             this.areas[i].erase();
-            this.areas[i].get_parent().hide();
-        }
     },
     
     togglePanelAndDockOpacity: function() {
@@ -223,12 +233,11 @@ var AreaManager = new Lang.Class({
         }
     },
     
-    toggleDrawing: function(emitter, hide) {
+    toggleDrawing: function() {
         if (this.activeArea) {
             let activeIndex = this.areas.indexOf(this.activeArea);
             let activeContainer = this.activeArea.get_parent();
             let save = activeIndex == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
-            hide = hide || this.activeArea.isEmpty;
             
             if (this.hiddenList)
                 this.togglePanelAndDockOpacity();
@@ -240,12 +249,8 @@ var AreaManager = new Lang.Class({
             this.activeArea = null;
             
             activeContainer.get_parent().remove_actor(activeContainer);
-            if (this.settings.get_boolean("move-drawing-on-desktop"))
-                Main.layoutManager._backgroundGroup.insert_child_above(activeContainer, Main.layoutManager._bgManagers[activeIndex].backgroundActor);
-            else
-                Main.uiGroup.insert_child_above(activeContainer, global.window_group);
-            
-            if (hide) 
+            Main.layoutManager._backgroundGroup.insert_child_above(activeContainer, Main.layoutManager._bgManagers[activeIndex].backgroundActor);
+            if (!this.settings.get_boolean("drawing-on-desktop")) 
                 activeContainer.hide();
             
             // check display or screen (API changes)
@@ -312,6 +317,14 @@ var AreaManager = new Lang.Class({
         if (this.monitorChangedHandler) {
             Main.layoutManager.disconnect(this.monitorChangedHandler);
             this.monitorChangedHandler = null;
+        }
+        if (this.desktopSettingHandler) {
+            this.settings.disconnect(this.desktopSettingHandler);
+            this.desktopSettingHandler = null;
+        }
+        if (this.persistentSettingHandler) {
+            this.settings.disconnect(this.persistentSettingHandler);
+            this.persistentSettingHandler = null;
         }
         
         if (this.activeArea)

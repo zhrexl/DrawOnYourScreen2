@@ -78,7 +78,7 @@ var OTHER_SHORTCUTS = [
     { desc: "Increment/decrement line width", shortcut: "Scroll" },
     { desc: "Select color", shortcut: "Ctrl+1...9" },
     { desc: "Select eraser", shortcut: "Shift key held" },
-    { desc: "Leave and hide the drawing", shortcut: "Escape key" }
+    { desc: "Leave", shortcut: "Escape key" }
 ];
 
 function init() {
@@ -128,14 +128,14 @@ const PrefsPage = new GObject.Class({
         
         let desktopBox = new Gtk.Box({ margin: MARGIN });
         let desktopLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let desktopLabel1 = new Gtk.Label({label: _("Move drawing on the desktop when leaving drawing mode")});
+        let desktopLabel1 = new Gtk.Label({label: _("Drawing on the desktop")});
         let desktopLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("Draw On Your Screen becomes Draw On Your Desktop") + "</small>" });
         desktopLabel1.set_halign(1);
         desktopLabel2.get_style_context().add_class("dim-label");
         desktopLabelBox.pack_start(desktopLabel1, true, true, 0);
         desktopLabelBox.pack_start(desktopLabel2, true, true, 0);
         let desktopSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind("move-drawing-on-desktop", desktopSwitch, "active", 0);
+        this.settings.bind("drawing-on-desktop", desktopSwitch, "active", 0);
         desktopBox.pack_start(desktopLabelBox, true, true, 4);
         desktopBox.pack_start(desktopSwitch, false, false, 4);
         listBox.add(desktopBox);
@@ -143,7 +143,7 @@ const PrefsPage = new GObject.Class({
         let persistentBox = new Gtk.Box({ margin: MARGIN });
         let persistentLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
         let persistentLabel1 = new Gtk.Label({label: _("Persistent")});
-        let persistentLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("Persistent drawing through restart") + "</small>" });
+        let persistentLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("Persistent drawing through session restart") + "</small>" });
         persistentLabel1.set_halign(1);
         persistentLabel2.get_style_context().add_class("dim-label");
         persistentLabelBox.pack_start(persistentLabel1, true, true, 0);
