@@ -376,11 +376,11 @@ var DrawingArea = new Lang.Class({
         this.isSquareArea = !this.isSquareArea;
         if (this.isSquareArea) {
             let squareWidth = Math.min(this.monitor.width, this.monitor.height) * 3 / 4;
-            this.set_position(Math.floor(this.monitor.width / 2 - squareWidth / 2), Math.floor(this.monitor.width / 2 - squareWidth / 2));
+            this.set_position(Math.floor(this.monitor.width / 2 - squareWidth / 2), Math.floor(this.monitor.height / 2 - squareWidth / 2));
             this.set_size(squareWidth, squareWidth);
             this.add_style_class_name('draw-on-your-screen-square-area');
         } else {
-            this.set_position(this.monitor.x, this.monitor.y);
+            this.set_position(0, 0);
             this.set_size(this.monitor.width, this.monitor.height);
             this.remove_style_class_name('draw-on-your-screen-square-area');
         }
