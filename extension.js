@@ -111,6 +111,8 @@ var AreaManager = new Lang.Class({
             container.set_position(monitor.x, monitor.y);
             container.set_size(monitor.width, monitor.height);
             area.set_size(monitor.width, monitor.height);
+            if (area.isEmpty)
+               container.hide(); 
             area.emitter.stopDrawingHandler = area.emitter.connect('stop-drawing', this.toggleDrawing.bind(this));
             area.emitter.showOsdHandler = area.emitter.connect('show-osd', this.showOsd.bind(this));
             this.areas.push(area);
@@ -183,6 +185,7 @@ var AreaManager = new Lang.Class({
     eraseDrawing: function() {
         for (let i = 0; i < this.areas.length; i++) {
             this.areas[i].erase();
+            this.areas[i].get_parent().hide();
         }
     },
     
@@ -220,11 +223,12 @@ var AreaManager = new Lang.Class({
         }
     },
     
-    toggleDrawing: function() {
+    toggleDrawing: function(emitter, hide) {
         if (this.activeArea) {
             let activeIndex = this.areas.indexOf(this.activeArea);
             let activeContainer = this.activeArea.get_parent();
             let save = activeIndex == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
+            hide = hide || this.activeArea.isEmpty;
             
             if (this.hiddenList)
                 this.togglePanelAndDockOpacity();
@@ -240,6 +244,9 @@ var AreaManager = new Lang.Class({
                 Main.layoutManager._backgroundGroup.insert_child_above(activeContainer, Main.layoutManager._bgManagers[activeIndex].backgroundActor);
             else
                 Main.uiGroup.insert_child_above(activeContainer, global.window_group);
+            
+            if (hide) 
+                activeContainer.hide();
             
             // check display or screen (API changes)
             if (global.display.set_cursor)

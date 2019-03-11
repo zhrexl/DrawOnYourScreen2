@@ -171,9 +171,9 @@ var DrawingArea = new Lang.Class({
     
     _onKeyPressed: function(actor, event) {
         if (event.get_key_symbol() == Clutter.Escape) {
-            this.hide();
-            this.emitter.emit('stop-drawing');
+            this.emitter.emit('stop-drawing', true);
             return Clutter.EVENT_STOP;
+            
         } else if (this.currentElement && this.currentElement.shape == Shapes.TEXT) {
             if (event.get_key_symbol() == Clutter.KEY_BackSpace) {
                 this.currentElement.text = this.currentElement.text.slice(0, -1);
@@ -197,6 +197,7 @@ var DrawingArea = new Lang.Class({
             }
             this._redisplay();
             return Clutter.EVENT_STOP;
+            
         } else {
             return Clutter.EVENT_PROPAGATE;
         }
@@ -463,8 +464,11 @@ var DrawingArea = new Lang.Class({
             this.helper.showHelp();
     },
     
+    get isEmpty() {
+        return this.elements.length == 0;
+    },
+    
     enterDrawingMode: function() {
-        this.show();
         this.keyPressedHandler = this.connect('key-press-event', this._onKeyPressed.bind(this));        
         this.buttonPressedHandler = this.connect('button-press-event', this._onButtonPressed.bind(this));
         this.scrollHandler = this.connect('scroll-event', this._onScroll.bind(this));
