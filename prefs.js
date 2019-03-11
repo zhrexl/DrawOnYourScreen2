@@ -139,6 +139,20 @@ const PrefsPage = new GObject.Class({
         desktopBox.pack_start(desktopLabelBox, true, true, 4);
         desktopBox.pack_start(desktopSwitch, false, false, 4);
         listBox.add(desktopBox);
+        
+        let persistentBox = new Gtk.Box({ margin: MARGIN });
+        let persistentLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
+        let persistentLabel1 = new Gtk.Label({label: _("Persistent")});
+        let persistentLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("Persistent drawing through restart") + "</small>" });
+        persistentLabel1.set_halign(1);
+        persistentLabel2.get_style_context().add_class("dim-label");
+        persistentLabelBox.pack_start(persistentLabel1, true, true, 0);
+        persistentLabelBox.pack_start(persistentLabel2, true, true, 0);
+        let persistentSwitch = new Gtk.Switch({valign: 3});
+        this.settings.bind("persistent-drawing", persistentSwitch, "active", 0);
+        persistentBox.pack_start(persistentLabelBox, true, true, 4);
+        persistentBox.pack_start(persistentSwitch, false, false, 4);
+        listBox.add(persistentBox);
         this.addSeparator(listBox);
         
         let internalTitleBox = new Gtk.Box({ margin: MARGIN });

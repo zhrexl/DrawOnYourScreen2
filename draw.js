@@ -52,7 +52,7 @@ var DrawingArea = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingArea',
     Extends: St.DrawingArea,
 
-    _init: function(params, monitor, helper) {
+    _init: function(params, monitor, helper, loadJson) {
         this.parent({ style_class: 'draw-on-your-screen', name: params && params.name ? params.name : ""});
         
         // 'style-changed' is emitted when 'this' is added to an actor
@@ -74,6 +74,9 @@ var DrawingArea = new Lang.Class({
         this.textHasCursor = false;
         this.dashedLine = false;
         this.colors = [Clutter.Color.new(0, 0, 0, 255)];
+        
+        if (loadJson)
+            this._loadJson();
     },
     
     _redisplay: function() {
@@ -225,12 +228,12 @@ var DrawingArea = new Lang.Class({
         this.smoothedStroke = this.settings.get_boolean('smoothed-stroke');
         
         this.currentElement = new DrawingElement ({
-            color: this.currentColor,
+            shape: this.currentShape == Shapes.TEXT ? Shapes.RECTANGLE : this.currentShape,
+            color: this.currentColor.to_string(),
             line: { lineWidth: this.currentLineWidth, lineJoin: this.currentLineJoin, lineCap: this.currentLineCap },
             dash: { array: this.dashedLine ? this.dashArray : [0, 0] , offset: this.dashedLine ? this.dashOffset : 0 },
             fill: fill,
             eraser: eraser,
-            shape: this.currentShape == Shapes.TEXT ? Shapes.RECTANGLE : this.currentShape,
             transform: { active: false, center: [0, 0], angle: 0, startAngle: 0, ratio: 1 },
             text: '',
             font: { family: (this.currentFontFamilyId == 0 ? this.fontFamily : FontFamilyNames[this.currentFontFamilyId]), weight: this.currentFontWeight, style: this.currentFontStyle },
@@ -390,7 +393,7 @@ var DrawingArea = new Lang.Class({
     selectColor: function(index) {
         this.currentColor = this.colors[index];
         if (this.currentElement) {
-            this.currentElement.color = this.currentColor;
+            this.currentElement.color = this.currentColor.to_string();
             this._redisplay();
         }
         this.emitter.emit('show-osd', this.currentColor.to_string(), null);
@@ -469,7 +472,7 @@ var DrawingArea = new Lang.Class({
         this.get_parent().set_background_color(this.hasBackground ? this.activeBackgroundColor : null);
     },
     
-    leaveDrawingMode: function() {
+    leaveDrawingMode: function(save) {
         if (this.keyPressedHandler) {
             this.disconnect(this.keyPressedHandler);
             this.keyPressedHandler = null;
@@ -499,9 +502,11 @@ var DrawingArea = new Lang.Class({
         this.dashedLine = false;
         this._redisplay();
         this.get_parent().set_background_color(null);
+        if (save)
+            this._saveAsJson();
     },
     
-    save: function() {
+    saveAsSvg: function() {
         // stop drawing or writing
         if (this.currentElement && this.currentElement.shape == Shapes.TEXT) {
             this._stopWriting();
@@ -535,6 +540,41 @@ var DrawingArea = new Lang.Class({
         }
     },
     
+    _saveAsJson: function() {
+        let filename = `DrawOnYourScreen.json`;
+        let dir = GLib.get_user_data_dir();
+        let path = GLib.build_filenamev([dir, filename]);
+        
+        let oldContents;
+        if (GLib.file_test(path, GLib.FileTest.EXISTS)) {
+            oldContents = GLib.file_get_contents(path)[1];
+            if (oldContents instanceof Uint8Array)
+                oldContents = imports.byteArray.toString(oldContents);
+        }
+        
+        // do not use "content = JSON.stringify(this.elements, null, 2);", neither "content = JSON.stringify(this.elements);"
+        // because of compromise between disk usage and human readability
+        let contents = `[\n  ` + new Array(...this.elements.map(element => JSON.stringify(element))).join(`,\n\n  `) + `\n]`;
+        
+        if (contents != oldContents)
+            GLib.file_set_contents(path, contents);
+    },
+    
+    _loadJson: function() {
+        let filename = `DrawOnYourScreen.json`;
+        let dir = GLib.get_user_data_dir();
+        let path = GLib.build_filenamev([dir, filename]);
+        
+        if (!GLib.file_test(path, GLib.FileTest.EXISTS))
+            return;
+        let [success, contents] = GLib.file_get_contents(path);
+        if (!success)
+            return;
+        if (contents instanceof Uint8Array)
+            contents = imports.byteArray.toString(contents);
+        this.elements.push(...JSON.parse(contents).map(object => new DrawingElement(object)));
+    },
+    
     disable: function() {
         this.erase();
     }
@@ -560,6 +600,22 @@ var DrawingElement = new Lang.Class({
             this[key] = params[key];
     },
     
+    // toJSON is called by JSON.stringify
+    toJSON: function() {
+        return {
+            shape: this.shape,
+            color: this.color,
+            line: this.line,
+            dash: this.dash,
+            fill: this.fill,
+            eraser: this.eraser,
+            transform: this.transform,
+            text: this.text,
+            font: this.font,
+            points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
+        };
+    },
+    
     buildCairo: function(cr, showTextCursor) {
         cr.setLineCap(this.line.lineCap);
         cr.setLineJoin(this.line.lineJoin);
@@ -575,7 +631,9 @@ var DrawingElement = new Lang.Class({
         else
             cr.setOperator(Cairo.Operator.OVER);
         
-        Clutter.cairo_set_source_color(cr, this.color);
+        let [success, color] = Clutter.Color.from_string(this.color);
+        if (success)
+            Clutter.cairo_set_source_color(cr, color);
         
         let [points, shape, trans] = [this.points, this.shape, this.transform];
         
@@ -614,7 +672,7 @@ var DrawingElement = new Lang.Class({
     buildSVG: function(bgColor) {
         let row = "\n  ";
         let points = this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100]);
-        let color = this.eraser ? bgColor : this.color.to_string();
+        let color = this.eraser ? bgColor : this.color;
         let isStraightLine = this.shape == Shapes.LINE && (points.length < 3 || points[2] == points[1] || points[2] == points[0]);
         let fill = this.fill && !isStraightLine;
         let attributes = `fill="${fill ? color : 'transparent'}" ` +

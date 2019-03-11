@@ -223,6 +223,12 @@ msgstr ""
 msgid "Draw On Your Screen becomes Draw On Your Desktop"
 msgstr ""
 
+msgid "Persistent"
+msgstr ""
+
+msgid "Persistent drawing through restart"
+msgstr ""
+
 msgid "Internal"
 msgstr ""
 

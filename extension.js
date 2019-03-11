@@ -98,7 +98,8 @@ var AreaManager = new Lang.Class({
             let monitor = this.monitors[i];
             let container = new St.Widget({ name: 'drawOnYourSreenContainer' + i });
             let helper = new Draw.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
-            let area = new Draw.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper);
+            let load = i == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
+            let area = new Draw.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, load);
             container.add_child(area);
             container.add_child(helper);
             
@@ -122,7 +123,7 @@ var AreaManager = new Lang.Class({
             'redo': this.activeArea.redo.bind(this.activeArea),
             'delete-last-element': this.activeArea.deleteLastElement.bind(this.activeArea),
             'smooth-last-element': this.activeArea.smoothLastElement.bind(this.activeArea),
-            'save-as-svg': this.activeArea.save.bind(this.activeArea),
+            'save-as-svg': this.activeArea.saveAsSvg.bind(this.activeArea),
             'toggle-background': this.activeArea.toggleBackground.bind(this.activeArea),
             'toggle-square-area': this.activeArea.toggleSquareArea.bind(this.activeArea),
             'increment-line-width': () => this.activeArea.incrementLineWidth(1),
@@ -223,6 +224,7 @@ var AreaManager = new Lang.Class({
         if (this.activeArea) {
             let activeIndex = this.areas.indexOf(this.activeArea);
             let activeContainer = this.activeArea.get_parent();
+            let save = activeIndex == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
             
             if (this.hiddenList)
                 this.togglePanelAndDockOpacity();
@@ -230,7 +232,7 @@ var AreaManager = new Lang.Class({
             Main.popModal(this.activeArea);
             this.removeInternalKeybindings();
             this.activeArea.reactive = false;
-            this.activeArea.leaveDrawingMode();
+            this.activeArea.leaveDrawingMode(save);
             this.activeArea = null;
             
             activeContainer.get_parent().remove_actor(activeContainer);
