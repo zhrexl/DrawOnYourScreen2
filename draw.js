@@ -397,7 +397,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.color = this.currentColor.to_string();
             this._redisplay();
         }
-        this.emitter.emit('show-osd', this.currentColor.to_string(), null);
+        this.emitter.emit('show-osd', `<span foreground="${this.currentColor.to_string()}">${this.currentColor.to_string()}</span>`, null);
     },
     
     selectShape: function(shape) {
@@ -435,7 +435,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.weight = this.currentFontWeight;
             this._redisplay();
         }
-        this.emitter.emit('show-osd', FontWeightNames[this.currentFontWeight], null);
+        this.emitter.emit('show-osd', `<span font_weight="${FontWeightNames[this.currentFontWeight].toLowerCase()}">${FontWeightNames[this.currentFontWeight]}</span>`, null);
     },
     
     toggleFontStyle: function() {
@@ -444,7 +444,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.style = this.currentFontStyle;
             this._redisplay();
         }
-        this.emitter.emit('show-osd', FontStyleNames[this.currentFontStyle], null);
+        this.emitter.emit('show-osd', `<span font_style="${FontStyleNames[this.currentFontStyle].toLowerCase()}">${FontStyleNames[this.currentFontStyle]}</span>`, null);
     },
     
     toggleFontFamily: function() {
@@ -454,7 +454,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.family = currentFontFamily;
             this._redisplay();
         }
-        this.emitter.emit('show-osd',currentFontFamily , null);
+        this.emitter.emit('show-osd', `<span font_family="${currentFontFamily}">${currentFontFamily}</span>`, null);
     },
     
     toggleHelp: function() {

@@ -292,8 +292,10 @@ var AreaManager = new Lang.Class({
     
     showOsd: function(emitter, label, level, maxLevel) {
         let activeIndex = this.areas.indexOf(this.activeArea);
-        if (activeIndex != -1)
+        if (activeIndex != -1) {
             Main.osdWindowManager.show(activeIndex, this.enterGicon, label, level, maxLevel);
+            Main.osdWindowManager._osdWindows[activeIndex]._label.get_clutter_text().set_use_markup(true);
+        }
     },
     
     removeAreas: function() {
