@@ -8,10 +8,11 @@ Then save your beautiful work by taking a screenshot.
 Features :
 ----------
 
-1. Basic shapes (rectangle, circle, ellipse, line, curve, text, free)
-2. Smooth stroke
-3. Multi-monitor support
-4. Export to SVG
+* Basic shapes (rectangle, circle, ellipse, line, curve, text, free)
+* Smooth stroke
+* Drawing on desktop and persistence
+* Multi-monitor support
+* Export to SVG
 
 Install :
 ----------
