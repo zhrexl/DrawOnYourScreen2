@@ -197,6 +197,8 @@ var AreaManager = new Lang.Class({
     eraseDrawing: function() {
         for (let i = 0; i < this.areas.length; i++)
             this.areas[i].erase();
+        if (this.settings.get_boolean('persistent-drawing'))
+            this.areas[Main.layoutManager.primaryIndex].saveAsJson();
     },
     
     togglePanelAndDockOpacity: function() {
