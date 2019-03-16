@@ -534,7 +534,12 @@ var DrawingArea = new Lang.Class({
             // pass the parent (bgContainer) to Flashspot because coords of this are relative
             let flashspot = new Screenshot.Flashspot(this.get_parent());
             flashspot.fire();
-            global.play_theme_sound(0, 'screen-capture', "Save as SVG", null);
+            if (global.play_theme_sound) {
+                global.play_theme_sound(0, 'screen-capture', "Save as SVG", null);
+            } else if (global.display && global.display.get_sound_player) {
+                let player = global.display.get_sound_player();
+                player.play_from_theme('screen-capture', "Save as SVG", null);
+            }
         }
     },
     
