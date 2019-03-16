@@ -55,9 +55,6 @@ var DrawingArea = new Lang.Class({
     _init: function(params, monitor, helper, loadJson) {
         this.parent({ style_class: 'draw-on-your-screen', name: params && params.name ? params.name : ""});
         
-        // 'style-changed' is emitted when 'this' is added to an actor
-        // ('this' needs to be in the stage to query theme_node)
-        this.connect('style-changed', this._onStyleChanged.bind(this));
         this.connect('repaint', this._repaint.bind(this));
         
         this.settings = Convenience.getSettings();
@@ -84,7 +81,7 @@ var DrawingArea = new Lang.Class({
         this.queue_repaint();
     },
     
-    _onStyleChanged: function() {
+    _updateStyle: function() {
         try {
             let themeNode = this.get_theme_node();
             for (let i = 1; i < 10; i++) {
@@ -470,6 +467,7 @@ var DrawingArea = new Lang.Class({
         this.scrollHandler = this.connect('scroll-event', this._onScroll.bind(this));
         this.selectShape(Shapes.NONE);
         this.get_parent().set_background_color(this.hasBackground ? this.activeBackgroundColor : null);
+        this._updateStyle();
     },
     
     leaveDrawingMode: function(save) {
