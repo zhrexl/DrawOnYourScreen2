@@ -140,7 +140,8 @@ var DrawingArea = new Lang.Class({
     },
     
     _onTouchEvent: function(actor, event) {
-        if (event.type() != Clutter.EventType.TOUCH_BEGIN) 
+        if (event.type() != Clutter.EventType.TOUCH_BEGIN ||
+            !global.display.is_pointer_emulating_sequence(event.get_event_sequence())) 
             return Clutter.EVENT_PROPAGATE;
         if (this.touchSequence || this.buttonPressed)
             return Clutter.EVENT_STOP;
@@ -159,6 +160,7 @@ var DrawingArea = new Lang.Class({
     },
     
     _onBeginEvent: function(actor, event, button) {
+        imports.ui.main.notify("begin");
         let [x, y] = event.get_coords();
         let shiftPressed = event.has_shift_modifier();
         
@@ -264,7 +266,8 @@ var DrawingArea = new Lang.Class({
         
         } else if (this.touchSequence) {
             this.motionHandler = this.connect('touch-event', (actor, event) => {
-                if (event.type() != Clutter.EventType.TOUCH_UPDATE) 
+                if (event.type() != Clutter.EventType.TOUCH_UPDATE ||
+                    !global.display.is_pointer_emulating_sequence(event.get_event_sequence())) 
                     return Clutter.EVENT_PROPAGATE;
                 if (event.get_event_sequence() != this.touchSequence)
                     return Clutter.EVENT_STOP;
@@ -273,7 +276,8 @@ var DrawingArea = new Lang.Class({
             });
             
             this.releaseHandler = this.connect('touch-event', (actor, event) => {
-                if (event.type() != Clutter.EventType.TOUCH_END && event.type() != Clutter.EventType.TOUCH_CANCEL) 
+                if (event.type() != Clutter.EventType.TOUCH_END ||
+                    !global.display.is_pointer_emulating_sequence(event.get_event_sequence())) 
                     return Clutter.EVENT_PROPAGATE;
                 if (event.get_event_sequence() != this.touchSequence)
                     return Clutter.EVENT_STOP;
