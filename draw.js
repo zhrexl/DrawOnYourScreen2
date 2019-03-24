@@ -65,6 +65,8 @@ var DrawingArea = new Lang.Class({
         this.elements = [];
         this.undoneElements = [];
         this.currentElement = null;
+        this.touchSequence = null;
+        this.buttonPressed = false;
         this.currentShape = Shapes.NONE;
         this.isSquareArea = false;
         this.hasBackground = false;
@@ -137,8 +139,26 @@ var DrawingArea = new Lang.Class({
         cr.$dispose();
     },
     
+    _onTouchEvent: function(actor, event) {
+        if (event.type() != Clutter.EventType.TOUCH_BEGIN) 
+            return Clutter.EVENT_PROPAGATE;
+        if (this.touchSequence || this.buttonPressed)
+            return Clutter.EVENT_STOP;
+        
+        this.touchSequence = event.get_event_sequence();
+        return this._onBeginEvent(actor, event, 1);
+    },
+    
     _onButtonPressed: function(actor, event) {
+        if (this.touchSequence)
+            return Clutter.EVENT_STOP;
+        
+        this.buttonPressed = true;
         let button = event.get_button();
+        return this._onBeginEvent(actor, event, button);
+    },
+    
+    _onBeginEvent: function(actor, event, button) {
         let [x, y] = event.get_coords();
         let shiftPressed = event.has_shift_modifier();
         
@@ -219,10 +239,6 @@ var DrawingArea = new Lang.Class({
         if (!success)
             return;
         
-        this.buttonReleasedHandler = this.connect('button-release-event', (actor, event) => {
-            this._stopDrawing();
-        });
-        
         this.smoothedStroke = this.settings.get_boolean('smoothed-stroke');
         
         this.currentElement = new DrawingElement ({
@@ -238,14 +254,44 @@ var DrawingArea = new Lang.Class({
             points: [[startX, startY]]
         });
         
-        this.motionHandler = this.connect('motion-event', (actor, event) => {
-            let coords = event.get_coords();
-            let [s, x, y] = this.transform_stage_point(coords[0], coords[1]);
-            if (!s)
-                return;
-            let controlPressed = event.has_control_modifier();
-            this._updateDrawing(x, y, controlPressed);
-        });
+        if (this.buttonPressed) {
+            this.motionHandler = this.connect('motion-event', this._onMotionEvent.bind(this));
+            
+            this.releaseHandler = this.connect('button-release-event', (actor, event) => {
+                this._stopDrawing();
+                return Clutter.EVENT_STOP;
+            });
+        
+        } else if (this.touchSequence) {
+            this.motionHandler = this.connect('touch-event', (actor, event) => {
+                if (event.type() != Clutter.EventType.TOUCH_UPDATE) 
+                    return Clutter.EVENT_PROPAGATE;
+                if (event.get_event_sequence() != this.touchSequence)
+                    return Clutter.EVENT_STOP;
+                
+                return this._onMotionEvent(actor, event);
+            });
+            
+            this.releaseHandler = this.connect('touch-event', (actor, event) => {
+                if (event.type() != Clutter.EventType.TOUCH_END && event.type() != Clutter.EventType.TOUCH_CANCEL) 
+                    return Clutter.EVENT_PROPAGATE;
+                if (event.get_event_sequence() != this.touchSequence)
+                    return Clutter.EVENT_STOP;
+                
+                this._stopDrawing();
+                return Clutter.EVENT_STOP;
+            });
+        }
+    },
+    
+    _onMotionEvent: function(actor, event) {
+        let coords = event.get_coords();
+        let [s, x, y] = this.transform_stage_point(coords[0], coords[1]);
+        if (!s)
+            return Clutter.EVENT_STOP;
+        let controlPressed = event.has_control_modifier();
+        this._updateDrawing(x, y, controlPressed);
+        return Clutter.EVENT_STOP;
     },
     
     _stopDrawing: function() {
@@ -253,10 +299,12 @@ var DrawingArea = new Lang.Class({
             this.disconnect(this.motionHandler);
             this.motionHandler = null;
         }
-        if (this.buttonReleasedHandler) {
-            this.disconnect(this.buttonReleasedHandler);
-            this.buttonReleasedHandler = null;
+        if (this.releaseHandler) {
+            this.disconnect(this.releaseHandler);
+            this.releaseHandler = null;
         }
+        this.touchSequence = null;
+        this.buttonPressed = false;
         
         // skip when the size is too small to be visible (3px) (except for free drawing)
         if (this.currentElement && this.currentElement.points.length >= 2 &&
@@ -334,9 +382,9 @@ var DrawingArea = new Lang.Class({
                 this.disconnect(this.motionHandler);
                 this.motionHandler = null;
             }
-            if (this.buttonReleasedHandler) {
-                this.disconnect(this.buttonReleasedHandler);
-                this.buttonReleasedHandler = null;
+            if (this.releaseHandler) {
+                this.disconnect(this.releaseHandler);
+                this.releaseHandler = null;
             }
             this.currentElement = null;
             this._stopCursorTimeout();
@@ -464,6 +512,7 @@ var DrawingArea = new Lang.Class({
     enterDrawingMode: function() {
         this.keyPressedHandler = this.connect('key-press-event', this._onKeyPressed.bind(this));        
         this.buttonPressedHandler = this.connect('button-press-event', this._onButtonPressed.bind(this));
+        this.touchEventHandler = this.connect('touch-event', this._onTouchEvent.bind(this));
         this.scrollHandler = this.connect('scroll-event', this._onScroll.bind(this));
         this.selectShape(Shapes.NONE);
         this.get_parent().set_background_color(this.hasBackground ? this.activeBackgroundColor : null);
@@ -479,13 +528,17 @@ var DrawingArea = new Lang.Class({
             this.disconnect(this.buttonPressedHandler);
             this.buttonPressedHandler = null;
         }
+        if (this.touchEventHandler) {
+            this.disconnect(this.touchEventHandler);
+            this.touchEventHandler = null;
+        }
         if (this.motionHandler) {
             this.disconnect(this.motionHandler);
             this.motionHandler = null;
         }
-        if (this.buttonReleasedHandler) {
-            this.disconnect(this.buttonReleasedHandler);
-            this.buttonReleasedHandler = null;
+        if (this.releaseHandler) {
+            this.disconnect(this.releaseHandler);
+            this.releaseHandler = null;
         }
         if (this.scrollHandler) {
             this.disconnect(this.scrollHandler);
@@ -495,6 +548,8 @@ var DrawingArea = new Lang.Class({
         if (this.helper.visible)
             this.helper.hideHelp();
         
+        this.touchSequence = null;
+        this.buttonPressed = false;
         this.currentElement = null;
         this._stopCursorTimeout();
         this.dashedLine = false;
