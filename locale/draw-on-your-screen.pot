@@ -43,6 +43,12 @@ msgstr ""
 msgid "Text"
 msgstr ""
 
+msgid "Fill"
+msgstr ""
+
+msgid "Stroke"
+msgstr ""
+
 msgid "Dashed line"
 msgstr ""
 
@@ -79,9 +85,6 @@ msgid "Erase"
 msgstr ""
 
 msgid "Smooth"
-msgstr ""
-
-msgid "Fill"
 msgstr ""
 
 msgid "Dashed"
@@ -146,6 +149,9 @@ msgid "Select text"
 msgstr ""
 
 msgid "Unselect shape (free drawing)"
+msgstr ""
+
+msgid "Select fill/stroke"
 msgstr ""
 
 msgid "Change font family (generic name)"

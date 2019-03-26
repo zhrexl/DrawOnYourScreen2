@@ -170,13 +170,11 @@ var DrawingArea = new Lang.Class({
         }
         
         if (button == 1) {
-            this._startDrawing(x, y, false, shiftPressed);
+            this._startDrawing(x, y, shiftPressed);
             return Clutter.EVENT_STOP;
         } else if (button == 2) {
             this.toggleShape();
         } else if (button == 3) {
-            /*this._startDrawing(x, y, true, shiftPressed);
-            return Clutter.EVENT_STOP;*/
             this.menu.open(x, y);
             return Clutter.EVENT_STOP;
         }
@@ -231,7 +229,7 @@ var DrawingArea = new Lang.Class({
         return Clutter.EVENT_STOP;
     },
     
-    _startDrawing: function(stageX, stageY, fill, eraser) {
+    _startDrawing: function(stageX, stageY, eraser) {
         let [success, startX, startY] = this.transform_stage_point(stageX, stageY);
         
         if (!success)
@@ -248,7 +246,7 @@ var DrawingArea = new Lang.Class({
             color: this.currentColor.to_string(),
             line: { lineWidth: this.currentLineWidth, lineJoin: this.currentLineJoin, lineCap: this.currentLineCap },
             dash: { array: this.dashedLine ? this.dashArray : [0, 0] , offset: this.dashedLine ? this.dashOffset : 0 },
-            fill: fill,
+            fill: this.fill,
             eraser: eraser,
             transform: { active: false, center: [0, 0], angle: 0, startAngle: 0, ratio: 1 },
             text: '',
@@ -422,6 +420,11 @@ var DrawingArea = new Lang.Class({
     
     toggleShape: function() {
         this.selectShape((this.currentShape == Object.keys(Shapes).length - 1) ? 0 : this.currentShape + 1);
+    },
+    
+    toggleFill: function() {
+        this.fill = !this.fill;
+        this.emitter.emit('show-osd', this.fill ? _("Fill") : _("Stroke"), null);
     },
     
     toggleDash: function() {

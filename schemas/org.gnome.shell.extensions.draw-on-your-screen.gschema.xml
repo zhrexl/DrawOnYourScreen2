@@ -117,9 +117,14 @@
       <description>toggle linecap</description>
     </key>
     <key type="as" name="toggle-dash">
-      <default>["&lt;Primary&gt;a"]</default>
+      <default>["&lt;Primary&gt;period"]</default>
       <summary>toggle dash</summary>
       <description>toggle dash</description>
+    </key>
+    <key type="as" name="toggle-fill">
+      <default>["&lt;Primary&gt;a"]</default>
+      <summary>toggle fill</summary>
+      <description>toggle fill</description>
     </key>
     <key type="as" name="select-color1">
       <default><![CDATA[['<Primary>KP_1','<Primary>1']]]></default>

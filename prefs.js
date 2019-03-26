@@ -56,6 +56,7 @@ var INTERNAL_KEYBINDINGS = {
     'select-rectangle-shape': "Select rectangle",
     'select-text-shape': "Select text",
     'select-none-shape': "Unselect shape (free drawing)",
+    'toggle-fill': "Select fill/stroke",
     '-separator-3': '',
     'toggle-font-family': "Change font family (generic name)",
     'toggle-font-weight': "Change font weight",
