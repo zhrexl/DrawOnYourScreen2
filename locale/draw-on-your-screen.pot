@@ -69,6 +69,24 @@ msgstr ""
 msgid "System"
 msgstr ""
 
+msgid "Undo"
+msgstr ""
+
+msgid "Redo"
+msgstr ""
+
+msgid "Erase"
+msgstr ""
+
+msgid "Smooth"
+msgstr ""
+
+msgid "Fill"
+msgstr ""
+
+msgid "Dashed"
+msgstr ""
+
 #: prefs.js
 
 # GLOBAL_KEYBINDINGS

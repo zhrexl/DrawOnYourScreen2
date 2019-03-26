@@ -22,20 +22,34 @@
 
 const Cairo = imports.cairo;
 const Clutter = imports.gi.Clutter;
+const GdkPixbuf = imports.gi.GdkPixbuf;
 const GLib = imports.gi.GLib;
+const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const Mainloop = imports.mainloop;
+const Shell = imports.gi.Shell;
 const Signals = imports.signals;
 const St = imports.gi.St;
+
+const BoxPointer = imports.ui.boxpointer;
+const Main = imports.ui.main;
+const PopupMenu = imports.ui.popupMenu;
+const Slider = imports.ui.slider;
 const Screenshot = imports.ui.screenshot;
 const Tweener = imports.ui.tweener;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
 const Convenience = Extension.imports.convenience;
+const ExtensionJs = Extension.imports.extension;
 const Prefs = Extension.imports.prefs;
 const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
+
+const FILL_ICON_PATH = Extension.dir.get_child('icons').get_child('fill-symbolic.svg').get_path();
+const LINEJOIN_ICON_PATH = Extension.dir.get_child('icons').get_child('linejoin-symbolic.svg').get_path();
+const LINECAP_ICON_PATH = Extension.dir.get_child('icons').get_child('linecap-symbolic.svg').get_path();
+const DASHED_LINE_ICON_PATH = Extension.dir.get_child('icons').get_child('dashed-line-symbolic.svg').get_path();
 
 var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4 };
 var ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text" };
@@ -60,6 +74,7 @@ var DrawingArea = new Lang.Class({
         this.settings = Convenience.getSettings();
         this.emitter = new DrawingAreaEmitter();
         this.monitor = monitor;
+        this.menu = new DrawingMenu(this);
         this.helper = helper;
         
         this.elements = [];
@@ -70,6 +85,7 @@ var DrawingArea = new Lang.Class({
         this.hasBackground = false;
         this.textHasCursor = false;
         this.dashedLine = false;
+        this.fill = false;
         this.colors = [Clutter.Color.new(0, 0, 0, 255)];
         
         if (loadJson)
@@ -159,7 +175,9 @@ var DrawingArea = new Lang.Class({
         } else if (button == 2) {
             this.toggleShape();
         } else if (button == 3) {
-            this._startDrawing(x, y, true, shiftPressed);
+            /*this._startDrawing(x, y, true, shiftPressed);
+            return Clutter.EVENT_STOP;*/
+            this.menu.open(x, y);
             return Clutter.EVENT_STOP;
         }
 
@@ -941,3 +959,174 @@ var DrawingHelper = new Lang.Class({
         
     },
 });
+
+var DrawingMenu = new Lang.Class({
+    Name: 'DrawOnYourScreenDrawingMenu',
+    
+    _init: function(area) {
+        this.area = area;
+        let side = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? St.Side.RIGHT : St.Side.LEFT;
+        this.menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor, 0.25, side);
+        this.menuManager = new PopupMenu.PopupMenuManager({ actor: this.area });
+        this.menuManager.addMenu(this.menu);
+        
+        Main.layoutManager.uiGroup.add_actor(this.menu.actor);
+        this.menu.actor.add_style_class_name('background-menu draw-on-your-screen-menu');
+        this.menu.actor.hide();
+        
+        // do not close the menu on item activated
+        this.menu.itemActivated = () => {};
+        this.menu.connect('open-state-changed', this._onMenuOpenStateChanged.bind(this));
+    },
+    
+    _onMenuOpenStateChanged: function(menu, open) {
+        if (!open)
+            // actionMode has changed, set previous actionMode in order to keep internal shortcuts working
+            Main.actionMode = ExtensionJs.DRAWING_ACTION_MODE | Shell.ActionMode.NORMAL;
+    },
+    
+    open: function(x, y) {
+        this._redisplay();
+        Main.layoutManager.setDummyCursorGeometry(x, y, 0, 0);
+        let monitor = this.area.monitor;
+        this.menu._arrowAlignment = (y - monitor.y) / monitor.height;
+        this.menu.open(BoxPointer.PopupAnimation.NONE);
+        this.menuManager.ignoreRelease();
+    },
+    
+    _redisplay: function() {
+        this.menu.removeAll();
+        
+        this.menu.addAction(_("Undo"), this.area.undo.bind(this.area), 'edit-undo-symbolic');
+        this.menu.addAction(_("Redo"), this.area.redo.bind(this.area), 'edit-redo-symbolic');
+        this.menu.addAction(_("Erase"), this.area.deleteLastElement.bind(this.area), 'edit-clear-all-symbolic');
+        this.menu.addAction(_("Smooth"), this.area.smoothLastElement.bind(this.area), 'format-text-strikethrough-symbolic');
+        this._addSeparator();
+        
+        this._addSubMenuItem(null, null, ShapeNames, this.area, 'currentShape');
+        this._addColorSubMenuItem();
+        let fillIcon = GdkPixbuf.Pixbuf.new_from_file_at_size(FILL_ICON_PATH, 24, 24);
+        this._addSwitchItem(_("Fill"), fillIcon, this.area, 'fill');
+        this._addSeparator();
+        
+        this._addSliderItem(this.area, 'currentLineWidth');
+        let linejoinIcon = GdkPixbuf.Pixbuf.new_from_file_at_size(LINEJOIN_ICON_PATH, 24, 24);
+        this._addSubMenuItem(null, linejoinIcon, LineJoinNames, this.area, 'currentLineJoin');
+        let linecapIcon = GdkPixbuf.Pixbuf.new_from_file_at_size(LINECAP_ICON_PATH, 24, 24);
+        this._addSubMenuItem(null, linecapIcon, LineCapNames, this.area, 'currentLineCap');
+        let dashedLineIcon = GdkPixbuf.Pixbuf.new_from_file_at_size(DASHED_LINE_ICON_PATH, 24, 24);
+        this._addSwitchItem(_("Dashed"), dashedLineIcon, this.area, 'dashedLine');
+        this._addSeparator();
+        
+        let FontFamilyNamesCopy = Object.create(FontFamilyNames);
+        FontFamilyNamesCopy[0] = this.area.fontFamily;
+        this._addSubMenuItem(null, 'font-x-generic-symbolic', FontFamilyNamesCopy, this.area, 'currentFontFamilyId');
+        this._addSubMenuItem(null, 'format-text-bold-symbolic', FontWeightNames, this.area, 'currentFontWeight');
+        this._addSubMenuItem(null, 'format-text-italic-symbolic', FontStyleNames, this.area, 'currentFontStyle');
+        this._addSeparator();
+        
+        let manager = ExtensionJs.manager;
+        this._addSwitchItemWithCallback(_("Hide panel and dock"), manager.hiddenList ? true : false, manager.togglePanelAndDockOpacity.bind(manager));
+        this._addSwitchItemWithCallback(_("Add a drawing background"), this.area.hasBackground, this.area.toggleBackground.bind(this.area));
+        this._addSwitchItemWithCallback(_("Square drawing area"), this.area.isSquareArea, this.area.toggleSquareArea.bind(this.area));
+        this._addSeparator();
+        
+        this.menu.addAction(_("Save drawing as a SVG file"), this.area.saveAsSvg.bind(this.area), 'document-save-symbolic');
+        this.menu.addAction(_("Open stylesheet.css"), manager.openStylesheetFile.bind(manager), 'document-open-symbolic');
+        this.menu.addAction(_("Show help"), this.area.toggleHelp.bind(this.area), 'preferences-desktop-keyboard-shortcuts-symbolic');
+    },
+    
+    _addSwitchItem: function(label, icon, target, targetProperty) {
+        let item = new PopupMenu.PopupSwitchMenuItem(label, target[targetProperty]);
+        
+        if (icon) {
+            item.icon = new St.Icon({ style_class: 'popup-menu-icon' });
+            item.actor.insert_child_at_index(item.icon, 1);
+            if (icon instanceof GObject.Object && GObject.type_is_a(icon, GdkPixbuf.Pixbuf))
+                item.icon.set_gicon(icon);
+            else
+                item.icon.set_icon_name(icon);
+        }
+        
+        item.connect('toggled', (item, state) => {
+            target[targetProperty] = state;
+        });
+        this.menu.addMenuItem(item);
+    },
+    
+    _addSwitchItemWithCallback: function(label, active, onToggled) {
+        let item = new PopupMenu.PopupSwitchMenuItem(label, active);
+        item.connect('toggled', onToggled);
+        this.menu.addMenuItem(item);
+    },
+    
+    _addSliderItem: function(target, targetProperty) {
+        let item = new PopupMenu.PopupBaseMenuItem({ activate: false });
+        let label = new St.Label({ text: target[targetProperty] + " px", style_class: 'draw-on-your-screen-menu-slider-label' });
+        let slider = new Slider.Slider(target[targetProperty] / 50);
+        
+        slider.connect('value-changed', (slider, value, property) => {
+            target[targetProperty] = Math.max(Math.round(value * 50), 1);
+            label.set_text(target[targetProperty] + " px");
+        });
+        
+        item.actor.add(slider.actor, { expand: true });
+        item.actor.add(label);
+        item.actor.connect('key-press-event', slider.onKeyPressEvent.bind(slider));
+        this.menu.addMenuItem(item);
+    },
+    
+    _addSubMenuItem: function(label, icon, obj, target, targetProperty) {
+        let text = label ? label + _(obj[target[targetProperty]]).toLowerCase() : _(obj[target[targetProperty]]);
+        let item = new PopupMenu.PopupSubMenuMenuItem(text, icon ? true : false);
+        if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, GdkPixbuf.Pixbuf))
+            item.icon.set_gicon(icon);
+        else if (icon)
+            item.icon.set_icon_name(icon);
+        
+        item.menu.itemActivated = () => {
+            item.menu.close();
+        };
+        
+        Mainloop.timeout_add(0, () => {
+            for (let i in obj) {
+                item.menu.addAction(_(obj[i]), () => {
+                    let text = label ? label + _(obj[i]).toLowerCase() : _(obj[i]);
+                    item.label.set_text(text);
+                    target[targetProperty] = i;
+                });
+            }
+            return GLib.SOURCE_REMOVE;
+        });
+        this.menu.addMenuItem(item);
+    },
+    
+    _addColorSubMenuItem: function() {
+        let item = new PopupMenu.PopupSubMenuMenuItem(_("Color"), true);
+        item.icon.set_icon_name('document-edit-symbolic');
+        item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
+        
+        item.menu.itemActivated = () => {
+            item.menu.close();
+        };
+        
+        Mainloop.timeout_add(0, () => {
+            for (let i = 1; i < this.area.colors.length; i++) {
+                let text = `<span foreground="${this.area.colors[i].to_string()}">${this.area.colors[i].to_string()}</span>`;
+                let colorItem = item.menu.addAction(text, () => {
+                    this.area.currentColor = this.area.colors[i];
+                    item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
+                });
+                colorItem.label.get_clutter_text().set_use_markup(true);
+            }
+            return GLib.SOURCE_REMOVE;
+        });
+        this.menu.addMenuItem(item);
+    },
+    
+    _addSeparator: function() {
+        let separator = new PopupMenu.PopupSeparatorMenuItem();
+        this.menu.addMenuItem(separator);
+    }
+});
+
