@@ -77,4 +77,24 @@
     min-height: 0.6em;
  }
  
+ /* context menu */
+ 
+ .draw-on-your-screen-menu {
+    font-size: 0.98em; /* default: 1em */
+ }
+ 
+ .draw-on-your-screen-menu .popup-menu-item {
+    padding-top: .37em; /* default: .4em */
+    padding-bottom: .37em;
+}
+ 
+  .draw-on-your-screen-menu-separator StLabel {
+    font-size: 0;
+ }
+ 
+ .draw-on-your-screen-menu-slider-label {
+    min-width: 3em;
+    text-align: right;
+ }
+ 
  

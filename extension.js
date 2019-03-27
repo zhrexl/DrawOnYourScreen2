@@ -32,6 +32,9 @@ const Convenience = Extension.imports.convenience;
 const Draw = Extension.imports.draw;
 const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
 
+// DRAWING_ACTION_MODE is a custom Shell.ActionMode
+var DRAWING_ACTION_MODE = Math.pow(2,14);
+
 let manager;
 
 function init() {
@@ -147,6 +150,7 @@ var AreaManager = new Lang.Class({
             'toggle-linejoin': this.activeArea.toggleLineJoin.bind(this.activeArea),
             'toggle-linecap': this.activeArea.toggleLineCap.bind(this.activeArea),
             'toggle-dash' : this.activeArea.toggleDash.bind(this.activeArea),
+            'toggle-fill' : this.activeArea.toggleFill.bind(this.activeArea),
             'select-none-shape': () => this.activeArea.selectShape(Draw.Shapes.NONE),
             'select-line-shape': () => this.activeArea.selectShape(Draw.Shapes.LINE),
             'select-ellipse-shape': () => this.activeArea.selectShape(Draw.Shapes.ELLIPSE),
@@ -164,7 +168,7 @@ var AreaManager = new Lang.Class({
             Main.wm.addKeybinding(key,
                                   this.settings,
                                   Meta.KeyBindingFlags.NONE,
-                                  256,
+                                  DRAWING_ACTION_MODE,
                                   this.internalKeybindings[key]);
         }
         
@@ -172,7 +176,7 @@ var AreaManager = new Lang.Class({
             Main.wm.addKeybinding('select-color' + i,
                                   this.settings,
                                   Meta.KeyBindingFlags.NONE,
-                                  256,
+                                  DRAWING_ACTION_MODE,
                                   () => this.activeArea.selectColor(i));
         }
     },
@@ -270,8 +274,8 @@ var AreaManager = new Lang.Class({
             activeContainer.get_parent().remove_actor(activeContainer);
             Main.uiGroup.add_child(activeContainer);
             
-            // 256 is a custom Shell.ActionMode
-            if (!Main.pushModal(this.areas[currentIndex], { actionMode: 256 | 1 }))
+            // add Shell.ActionMode.NORMAL to keep system keybindings enabled (e.g. Alt + F2 ...)
+            if (!Main.pushModal(this.areas[currentIndex], { actionMode: DRAWING_ACTION_MODE | Shell.ActionMode.NORMAL }))
                 return;
             this.activeArea = this.areas[currentIndex];
             this.addInternalKeybindings();
