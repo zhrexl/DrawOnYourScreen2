@@ -114,6 +114,24 @@ msgstr ""
 msgid "Smooth last brushstroke"
 msgstr ""
 
+msgid "Select line"
+msgstr ""
+
+msgid "Select ellipse"
+msgstr ""
+
+msgid "Select rectangle"
+msgstr ""
+
+msgid "Select text"
+msgstr ""
+
+msgid "Unselect shape (free drawing)"
+msgstr ""
+
+msgid "Select fill/stroke"
+msgstr ""
+
 msgid "Increment line width"
 msgstr ""
 
@@ -135,24 +153,6 @@ msgstr ""
 # already in draw.js
 #msgid "Dashed line"
 #msgstr ""
-
-msgid "Select line"
-msgstr ""
-
-msgid "Select ellipse"
-msgstr ""
-
-msgid "Select rectangle"
-msgstr ""
-
-msgid "Select text"
-msgstr ""
-
-msgid "Unselect shape (free drawing)"
-msgstr ""
-
-msgid "Select fill/stroke"
-msgstr ""
 
 msgid "Change font family (generic name)"
 msgstr ""
