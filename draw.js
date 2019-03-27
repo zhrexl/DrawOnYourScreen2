@@ -533,6 +533,7 @@ var DrawingArea = new Lang.Class({
         this.currentElement = null;
         this._stopCursorTimeout();
         this.dashedLine = false;
+        this.fill = false;
         this._redisplay();
         this.menu.close();
         this.get_parent().set_background_color(null);
