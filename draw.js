@@ -175,11 +175,20 @@ var DrawingArea = new Lang.Class({
         } else if (button == 2) {
             this.toggleShape();
         } else if (button == 3) {
+            this._stopDrawing();
             this.menu.open(x, y);
             return Clutter.EVENT_STOP;
         }
 
         return Clutter.EVENT_PROPAGATE;
+    },
+    
+    _onKeyboardPopupMenu: function() {
+        this._stopDrawing();
+        if (this.helper.visible)
+            this.helper.hideHelp();
+        this.menu.popup();
+        return Clutter.EVENT_STOP;
     },
     
     _onKeyPressed: function(actor, event) {
@@ -485,6 +494,7 @@ var DrawingArea = new Lang.Class({
     enterDrawingMode: function() {
         this.keyPressedHandler = this.connect('key-press-event', this._onKeyPressed.bind(this));        
         this.buttonPressedHandler = this.connect('button-press-event', this._onButtonPressed.bind(this));
+        this._onKeyboardPopupMenuHandler = this.connect('popup-menu', this._onKeyboardPopupMenu.bind(this));
         this.scrollHandler = this.connect('scroll-event', this._onScroll.bind(this));
         this.selectShape(Shapes.NONE);
         this.get_parent().set_background_color(this.hasBackground ? this.activeBackgroundColor : null);
@@ -499,6 +509,10 @@ var DrawingArea = new Lang.Class({
         if (this.buttonPressedHandler) {
             this.disconnect(this.buttonPressedHandler);
             this.buttonPressedHandler = null;
+        }
+        if (this._onKeyboardPopupMenuHandler) {
+            this.disconnect(this._onKeyboardPopupMenuHandler);
+            this._onKeyboardPopupMenuHandler = null;
         }
         if (this.motionHandler) {
             this.disconnect(this.motionHandler);
@@ -520,6 +534,7 @@ var DrawingArea = new Lang.Class({
         this._stopCursorTimeout();
         this.dashedLine = false;
         this._redisplay();
+        this.menu.close();
         this.get_parent().set_background_color(null);
         if (save)
             this.saveAsJson();
@@ -605,6 +620,7 @@ var DrawingArea = new Lang.Class({
     
     disable: function() {
         this.erase();
+        this.menu.disable();
     }
 });
 
@@ -982,19 +998,43 @@ var DrawingMenu = new Lang.Class({
         this.menu.connect('open-state-changed', this._onMenuOpenStateChanged.bind(this));
     },
     
+    disable: function() {
+        this.menuManager.removeMenu(this.menu);
+        Main.layoutManager.uiGroup.remove_actor(this.menu.actor);
+        this.menu.actor.destroy();
+    },
+    
     _onMenuOpenStateChanged: function(menu, open) {
         if (!open)
             // actionMode has changed, set previous actionMode in order to keep internal shortcuts working
             Main.actionMode = ExtensionJs.DRAWING_ACTION_MODE | Shell.ActionMode.NORMAL;
     },
     
+    popup: function() {
+        if (this.menu.isOpen) {
+            this.close();
+        } else {
+            this.open();
+            this.menu.actor.navigate_focus(null, Gtk.DirectionType.TAB_FORWARD, false);
+        }
+    },
+    
     open: function(x, y) {
+        if (this.menu.isOpen)
+            return;
+        if (x === undefined || y === undefined)
+            [x, y] = [this.area.monitor.x + this.area.monitor.width / 2, this.area.monitor.y + this.area.monitor.height / 2];
         this._redisplay();
         Main.layoutManager.setDummyCursorGeometry(x, y, 0, 0);
         let monitor = this.area.monitor;
         this.menu._arrowAlignment = (y - monitor.y) / monitor.height;
         this.menu.open(BoxPointer.PopupAnimation.NONE);
         this.menuManager.ignoreRelease();
+    },
+    
+    close: function() {
+        if (this.menu.isOpen)
+            this.menu.close();
     },
     
     _redisplay: function() {
