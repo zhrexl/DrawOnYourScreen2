@@ -1044,42 +1044,62 @@ var DrawingMenu = new Lang.Class({
         this.menu.addAction(_("Redo"), this.area.redo.bind(this.area), 'edit-redo-symbolic');
         this.menu.addAction(_("Erase"), this.area.deleteLastElement.bind(this.area), 'edit-clear-all-symbolic');
         this.menu.addAction(_("Smooth"), this.area.smoothLastElement.bind(this.area), 'format-text-strikethrough-symbolic');
-        this._addSeparator();
+        this._addSeparator(this.menu);
         
-        this._addSubMenuItem(null, null, ShapeNames, this.area, 'currentShape');
-        this._addColorSubMenuItem();
+        this._addSubMenuItem(this.menu, null, ShapeNames, this.area, 'currentShape', this.updateSectionVisibility.bind(this));
+        this._addColorSubMenuItem(this.menu);
         let fillIcon = GdkPixbuf.Pixbuf.new_from_file_at_size(FILL_ICON_PATH, 24, 24);
-        this._addSwitchItem(_("Fill"), fillIcon, this.area, 'fill');
-        this._addSeparator();
+        this._addSwitchItem(this.menu, _("Fill"), fillIcon, this.area, 'fill', this.updateSectionVisibility.bind(this));
+        this._addSeparator(this.menu);
         
-        this._addSliderItem(this.area, 'currentLineWidth');
+        let lineSection = new PopupMenu.PopupMenuSection();
+        this._addSliderItem(lineSection, this.area, 'currentLineWidth');
         let linejoinIcon = GdkPixbuf.Pixbuf.new_from_file_at_size(LINEJOIN_ICON_PATH, 24, 24);
-        this._addSubMenuItem(null, linejoinIcon, LineJoinNames, this.area, 'currentLineJoin');
+        this._addSubMenuItem(lineSection, linejoinIcon, LineJoinNames, this.area, 'currentLineJoin');
         let linecapIcon = GdkPixbuf.Pixbuf.new_from_file_at_size(LINECAP_ICON_PATH, 24, 24);
-        this._addSubMenuItem(null, linecapIcon, LineCapNames, this.area, 'currentLineCap');
+        this._addSubMenuItem(lineSection, linecapIcon, LineCapNames, this.area, 'currentLineCap');
         let dashedLineIcon = GdkPixbuf.Pixbuf.new_from_file_at_size(DASHED_LINE_ICON_PATH, 24, 24);
-        this._addSwitchItem(_("Dashed"), dashedLineIcon, this.area, 'dashedLine');
-        this._addSeparator();
+        this._addSwitchItem(lineSection, _("Dashed"), dashedLineIcon, this.area, 'dashedLine');
+        this._addSeparator(lineSection);
+        this.menu.addMenuItem(lineSection);
+        this.lineSection = lineSection;
         
+        let fontSection = new PopupMenu.PopupMenuSection();
         let FontFamilyNamesCopy = Object.create(FontFamilyNames);
         FontFamilyNamesCopy[0] = this.area.fontFamily;
-        this._addSubMenuItem(null, 'font-x-generic-symbolic', FontFamilyNamesCopy, this.area, 'currentFontFamilyId');
-        this._addSubMenuItem(null, 'format-text-bold-symbolic', FontWeightNames, this.area, 'currentFontWeight');
-        this._addSubMenuItem(null, 'format-text-italic-symbolic', FontStyleNames, this.area, 'currentFontStyle');
-        this._addSeparator();
+        this._addSubMenuItem(fontSection, 'font-x-generic-symbolic', FontFamilyNamesCopy, this.area, 'currentFontFamilyId');
+        this._addSubMenuItem(fontSection, 'format-text-bold-symbolic', FontWeightNames, this.area, 'currentFontWeight');
+        this._addSubMenuItem(fontSection, 'format-text-italic-symbolic', FontStyleNames, this.area, 'currentFontStyle');
+        this._addSeparator(fontSection);
+        this.menu.addMenuItem(fontSection);
+        this.fontSection = fontSection;
         
         let manager = ExtensionJs.manager;
-        this._addSwitchItemWithCallback(_("Hide panel and dock"), manager.hiddenList ? true : false, manager.togglePanelAndDockOpacity.bind(manager));
-        this._addSwitchItemWithCallback(_("Add a drawing background"), this.area.hasBackground, this.area.toggleBackground.bind(this.area));
-        this._addSwitchItemWithCallback(_("Square drawing area"), this.area.isSquareArea, this.area.toggleSquareArea.bind(this.area));
-        this._addSeparator();
+        this._addSwitchItemWithCallback(this.menu, _("Hide panel and dock"), manager.hiddenList ? true : false, manager.togglePanelAndDockOpacity.bind(manager));
+        this._addSwitchItemWithCallback(this.menu, _("Add a drawing background"), this.area.hasBackground, this.area.toggleBackground.bind(this.area));
+        this._addSwitchItemWithCallback(this.menu, _("Square drawing area"), this.area.isSquareArea, this.area.toggleSquareArea.bind(this.area));
+        this._addSeparator(this.menu);
         
         this.menu.addAction(_("Save drawing as a SVG file"), this.area.saveAsSvg.bind(this.area), 'document-save-symbolic');
         this.menu.addAction(_("Open stylesheet.css"), manager.openStylesheetFile.bind(manager), 'document-open-symbolic');
         this.menu.addAction(_("Show help"), this.area.toggleHelp.bind(this.area), 'preferences-desktop-keyboard-shortcuts-symbolic');
+        
+        this.updateSectionVisibility();
     },
     
-    _addSwitchItem: function(label, icon, target, targetProperty) {
+    updateSectionVisibility: function() {
+        if (this.area.fill || this.area.currentShape == Shapes.TEXT)
+            this.lineSection.actor.hide();
+        else
+            this.lineSection.actor.show();
+        
+        if (this.area.currentShape != Shapes.TEXT)
+            this.fontSection.actor.hide();
+        else
+            this.fontSection.actor.show();
+    },
+    
+    _addSwitchItem: function(menu, label, icon, target, targetProperty, callback) {
         let item = new PopupMenu.PopupSwitchMenuItem(label, target[targetProperty]);
         
         if (icon) {
@@ -1093,17 +1113,19 @@ var DrawingMenu = new Lang.Class({
         
         item.connect('toggled', (item, state) => {
             target[targetProperty] = state;
+            if (callback)
+                callback();
         });
-        this.menu.addMenuItem(item);
+        menu.addMenuItem(item);
     },
     
-    _addSwitchItemWithCallback: function(label, active, onToggled) {
+    _addSwitchItemWithCallback: function(menu, label, active, onToggled) {
         let item = new PopupMenu.PopupSwitchMenuItem(label, active);
         item.connect('toggled', onToggled);
-        this.menu.addMenuItem(item);
+        menu.addMenuItem(item);
     },
     
-    _addSliderItem: function(target, targetProperty) {
+    _addSliderItem: function(menu, target, targetProperty) {
         let item = new PopupMenu.PopupBaseMenuItem({ activate: false });
         let label = new St.Label({ text: target[targetProperty] + " px", style_class: 'draw-on-your-screen-menu-slider-label' });
         let slider = new Slider.Slider(target[targetProperty] / 50);
@@ -1116,12 +1138,11 @@ var DrawingMenu = new Lang.Class({
         item.actor.add(slider.actor, { expand: true });
         item.actor.add(label);
         item.actor.connect('key-press-event', slider.onKeyPressEvent.bind(slider));
-        this.menu.addMenuItem(item);
+        menu.addMenuItem(item);
     },
     
-    _addSubMenuItem: function(label, icon, obj, target, targetProperty) {
-        let text = label ? label + _(obj[target[targetProperty]]).toLowerCase() : _(obj[target[targetProperty]]);
-        let item = new PopupMenu.PopupSubMenuMenuItem(text, icon ? true : false);
+    _addSubMenuItem: function(menu, icon, obj, target, targetProperty, callback) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(_(obj[target[targetProperty]]), icon ? true : false);
         if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, GdkPixbuf.Pixbuf))
             item.icon.set_gicon(icon);
         else if (icon)
@@ -1134,17 +1155,18 @@ var DrawingMenu = new Lang.Class({
         Mainloop.timeout_add(0, () => {
             for (let i in obj) {
                 item.menu.addAction(_(obj[i]), () => {
-                    let text = label ? label + _(obj[i]).toLowerCase() : _(obj[i]);
-                    item.label.set_text(text);
+                    item.label.set_text(_(obj[i]));
                     target[targetProperty] = i;
+                    if (callback)
+                        callback();
                 });
             }
             return GLib.SOURCE_REMOVE;
         });
-        this.menu.addMenuItem(item);
+        menu.addMenuItem(item);
     },
     
-    _addColorSubMenuItem: function() {
+    _addColorSubMenuItem: function(menu) {
         let item = new PopupMenu.PopupSubMenuMenuItem(_("Color"), true);
         item.icon.set_icon_name('document-edit-symbolic');
         item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
@@ -1164,12 +1186,13 @@ var DrawingMenu = new Lang.Class({
             }
             return GLib.SOURCE_REMOVE;
         });
-        this.menu.addMenuItem(item);
+        menu.addMenuItem(item);
     },
     
-    _addSeparator: function() {
-        let separator = new PopupMenu.PopupSeparatorMenuItem();
-        this.menu.addMenuItem(separator);
+    _addSeparator: function(menu) {
+        let separator = new PopupMenu.PopupSeparatorMenuItem(' ');
+        separator.actor.add_style_class_name('draw-on-your-screen-menu-separator');
+        menu.addMenuItem(separator);
     }
 });
 

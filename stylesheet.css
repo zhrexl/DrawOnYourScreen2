@@ -80,17 +80,16 @@
  /* context menu */
  
  .draw-on-your-screen-menu {
-    font-size: 95%;
+    font-size: 0.98em; /* default: 1em */
  }
  
  .draw-on-your-screen-menu .popup-menu-item {
-    padding-top: .35em;
-    padding-bottom: .35em;
+    padding-top: .37em; /* default: .4em */
+    padding-bottom: .37em;
 }
  
- .draw-on-your-screen-menu .popup-separator-menu-item {
-    margin-top: 0;
-    margin-bottom: 0;
+  .draw-on-your-screen-menu-separator StLabel {
+    font-size: 0;
  }
  
  .draw-on-your-screen-menu-slider-label {
