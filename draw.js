@@ -52,6 +52,7 @@ const LINECAP_ICON_PATH = Extension.dir.get_child('icons').get_child('linecap-sy
 const DASHED_LINE_ICON_PATH = Extension.dir.get_child('icons').get_child('dashed-line-symbolic.svg').get_path();
 
 var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4 };
+var TextState = { DRAWING: 0, WRITING: 1 };
 var ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text" };
 var LineCapNames = { 0: 'Butt', 1: 'Round', 2: 'Square' };
 var LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
@@ -159,12 +160,12 @@ var DrawingArea = new Lang.Class({
         let shiftPressed = event.has_shift_modifier();
         
         // stop writing
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT) {
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING ) {
             this._stopWriting();
         }
         
         // hide helper
-        if (this.helper.visible && button != 2) {
+        if (this.helper.visible) {
             this.helper.hideHelp();
             return Clutter.EVENT_STOP;
         }
@@ -173,7 +174,7 @@ var DrawingArea = new Lang.Class({
             this._startDrawing(x, y, shiftPressed);
             return Clutter.EVENT_STOP;
         } else if (button == 2) {
-            this.toggleShape();
+            this.toggleFill();
         } else if (button == 3) {
             this._stopDrawing();
             this.menu.open(x, y);
@@ -196,7 +197,7 @@ var DrawingArea = new Lang.Class({
             this.emitter.emit('stop-drawing');
             return Clutter.EVENT_STOP;
             
-        } else if (this.currentElement && this.currentElement.shape == Shapes.TEXT) {
+        } else if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING) {
             if (event.get_key_symbol() == Clutter.KEY_BackSpace) {
                 this.currentElement.text = this.currentElement.text.slice(0, -1);
                 this._updateCursorTimeout();
@@ -251,7 +252,7 @@ var DrawingArea = new Lang.Class({
         this.smoothedStroke = this.settings.get_boolean('smoothed-stroke');
         
         this.currentElement = new DrawingElement ({
-            shape: this.currentShape == Shapes.TEXT ? Shapes.RECTANGLE : this.currentShape,
+            shape: this.currentShape,
             color: this.currentColor.to_string(),
             line: { lineWidth: this.currentLineWidth, lineJoin: this.currentLineJoin, lineCap: this.currentLineCap },
             dash: { array: this.dashedLine ? this.dashArray : [0, 0] , offset: this.dashedLine ? this.dashOffset : 0 },
@@ -262,6 +263,14 @@ var DrawingArea = new Lang.Class({
             font: { family: (this.currentFontFamilyId == 0 ? this.fontFamily : FontFamilyNames[this.currentFontFamilyId]), weight: this.currentFontWeight, style: this.currentFontStyle },
             points: [[startX, startY]]
         });
+        
+        if (this.currentShape == Shapes.TEXT) {
+            this.currentElement.line = { lineWidth: 1, lineJoin: 0, lineCap: 0 };
+            this.currentElement.dash = { array: [1, 1] , offset: 0 };
+            this.currentElement.fill = false;
+            this.currentElement.text = _("Text");
+            this.currentElement.state = TextState.DRAWING;
+        }
         
         this.motionHandler = this.connect('motion-event', (actor, event) => {
             let coords = event.get_coords();
@@ -289,11 +298,12 @@ var DrawingArea = new Lang.Class({
                 Math.hypot(this.currentElement.points[1][0] - this.currentElement.points[0][0], this.currentElement.points[1][1] - this.currentElement.points[0][1]) > 3)) {
             
             // start writing
-            if (this.currentShape == Shapes.TEXT) {
-                this.currentElement.shape = Shapes.TEXT;
+            if (this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.DRAWING) {
+                this.currentElement.state = TextState.WRITING;
                 this.currentElement.text = '';
                 this.emitter.emit('show-osd', _("Type your text\nand press Enter"), null);
                 this._updateCursorTimeout();
+                this.textHasCursor = true;
                 this._redisplay();
                 return;
             }
@@ -310,7 +320,7 @@ var DrawingArea = new Lang.Class({
             return;
         if (this.currentElement.shape == Shapes.NONE)
             this.currentElement.addPoint(x, y, this.smoothedStroke);
-        else if (this.currentElement.shape == Shapes.RECTANGLE && (controlPressed || this.currentElement.transform.active))
+        else if ((this.currentElement.shape == Shapes.RECTANGLE || this.currentElement.shape == Shapes.TEXT) && (controlPressed || this.currentElement.transform.active))
             this.currentElement.transformRectangle(x, y);
         else if (this.currentElement.shape == Shapes.ELLIPSE && (controlPressed || this.currentElement.transform.active))
             this.currentElement.transformEllipse(x, y);
@@ -427,10 +437,6 @@ var DrawingArea = new Lang.Class({
         this.emitter.emit('show-osd', _(ShapeNames[shape]), null);
     },
     
-    toggleShape: function() {
-        this.selectShape((this.currentShape == Object.keys(Shapes).length - 1) ? 0 : this.currentShape + 1);
-    },
-    
     toggleFill: function() {
         this.fill = !this.fill;
         this.emitter.emit('show-osd', this.fill ? _("Fill") : _("Stroke"), null);
@@ -443,17 +449,17 @@ var DrawingArea = new Lang.Class({
     
     incrementLineWidth: function(increment) {
         this.currentLineWidth = Math.max(this.currentLineWidth + increment, 1);
-        this.emitter.emit('show-osd', this.currentLineWidth + "px", this.currentLineWidth);
+        this.emitter.emit('show-osd', this.currentLineWidth + " " + _("px"), this.currentLineWidth);
     },
     
     toggleLineJoin: function() {
         this.currentLineJoin = this.currentLineJoin == 2 ? 0 : this.currentLineJoin + 1;
-        this.emitter.emit('show-osd', LineJoinNames[this.currentLineJoin], null);
+        this.emitter.emit('show-osd', _(LineJoinNames[this.currentLineJoin]), null);
     },
     
     toggleLineCap: function() {
         this.currentLineCap = this.currentLineCap == 2 ? 0 : this.currentLineCap + 1;
-        this.emitter.emit('show-osd', LineCapNames[this.currentLineCap], null);
+        this.emitter.emit('show-osd', _(LineCapNames[this.currentLineCap]), null);
     },
     
     toggleFontWeight: function() {
@@ -462,7 +468,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.weight = this.currentFontWeight;
             this._redisplay();
         }
-        this.emitter.emit('show-osd', `<span font_weight="${FontWeightNames[this.currentFontWeight].toLowerCase()}">${FontWeightNames[this.currentFontWeight]}</span>`, null);
+        this.emitter.emit('show-osd', `<span font_weight="${FontWeightNames[this.currentFontWeight].toLowerCase()}">${_(FontWeightNames[this.currentFontWeight])}</span>`, null);
     },
     
     toggleFontStyle: function() {
@@ -471,7 +477,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.style = this.currentFontStyle;
             this._redisplay();
         }
-        this.emitter.emit('show-osd', `<span font_style="${FontStyleNames[this.currentFontStyle].toLowerCase()}">${FontStyleNames[this.currentFontStyle]}</span>`, null);
+        this.emitter.emit('show-osd', `<span font_style="${FontStyleNames[this.currentFontStyle].toLowerCase()}">${_(FontStyleNames[this.currentFontStyle])}</span>`, null);
     },
     
     toggleFontFamily: function() {
@@ -481,7 +487,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.family = currentFontFamily;
             this._redisplay();
         }
-        this.emitter.emit('show-osd', `<span font_family="${currentFontFamily}">${currentFontFamily}</span>`, null);
+        this.emitter.emit('show-osd', `<span font_family="${currentFontFamily}">${_(currentFontFamily)}</span>`, null);
     },
     
     toggleHelp: function() {
@@ -496,7 +502,6 @@ var DrawingArea = new Lang.Class({
         this.buttonPressedHandler = this.connect('button-press-event', this._onButtonPressed.bind(this));
         this._onKeyboardPopupMenuHandler = this.connect('popup-menu', this._onKeyboardPopupMenu.bind(this));
         this.scrollHandler = this.connect('scroll-event', this._onScroll.bind(this));
-        this.selectShape(Shapes.NONE);
         this.get_parent().set_background_color(this.hasBackground ? this.activeBackgroundColor : null);
         this._updateStyle();
     },
@@ -532,6 +537,7 @@ var DrawingArea = new Lang.Class({
         
         this.currentElement = null;
         this._stopCursorTimeout();
+        this.currentShape = Shapes.NONE;
         this.dashedLine = false;
         this.fill = false;
         this._redisplay();
@@ -543,9 +549,9 @@ var DrawingArea = new Lang.Class({
     
     saveAsSvg: function() {
         // stop drawing or writing
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT) {
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING) {
             this._stopWriting();
-        } else if (this.currentElement && this.currentShape != Shapes.TEXT) {
+        } else if (this.currentElement && this.currentElement.shape != Shapes.TEXT) {
             this._stopDrawing();
         }
         
@@ -706,6 +712,8 @@ var DrawingElement = new Lang.Class({
             
         } else if (shape == Shapes.TEXT && points.length == 2) {
             this.rotate(cr, trans.angle, trans.center[0], trans.center[1]);
+            if (this.state == TextState.DRAWING)
+                cr.rectangle(points[0][0], points[0][1], points[1][0] - points[0][0], points[1][1] - points[0][1]);
             cr.selectFontFace(this.font.family, this.font.style, this.font.weight);
             cr.setFontSize(Math.abs(points[1][1] - points[0][1]));
             cr.moveTo(Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]));
@@ -1063,6 +1071,7 @@ var DrawingMenu = new Lang.Class({
         this._addSwitchItem(lineSection, _("Dashed"), dashedLineIcon, this.area, 'dashedLine');
         this._addSeparator(lineSection);
         this.menu.addMenuItem(lineSection);
+        lineSection.itemActivated = () => {};
         this.lineSection = lineSection;
         
         let fontSection = new PopupMenu.PopupMenuSection();
@@ -1128,7 +1137,7 @@ var DrawingMenu = new Lang.Class({
     
     _addSliderItem: function(menu, target, targetProperty) {
         let item = new PopupMenu.PopupBaseMenuItem({ activate: false });
-        let label = new St.Label({ text: target[targetProperty] + " px", style_class: 'draw-on-your-screen-menu-slider-label' });
+        let label = new St.Label({ text: target[targetProperty] + " " + _("px"), style_class: 'draw-on-your-screen-menu-slider-label' });
         let slider = new Slider.Slider(target[targetProperty] / 50);
         
         slider.connect('value-changed', (slider, value, property) => {
