@@ -1,7 +1,7 @@
 {
     "name": "Draw On You Screen",
     "description": "Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot",
-    "version": 3,
+    "version": 4,
     "uuid": "drawOnYourScreen@abakkk.framagit.org",
     "url": "https://framagit.org/abakkk/DrawOnYourScreen",
     "settings-schema": "org.gnome.shell.extensions.draw-on-your-screen",
