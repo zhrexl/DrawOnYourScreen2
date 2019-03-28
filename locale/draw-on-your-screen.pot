@@ -206,13 +206,13 @@ msgstr ""
 msgid "Left click"
 msgstr ""
 
-msgid "Draw by filling in"
+msgid "Menu"
 msgstr ""
 
 msgid "Right click"
 msgstr ""
 
-msgid "Toggle shape"
+msgid "Toggle fill/stroke"
 msgstr ""
 
 msgid "Center click"
@@ -299,7 +299,7 @@ msgstr ""
 msgid "Smooth stroke during the drawing process"
 msgstr ""
 
-msgid "You can smooth the stroke afterward\nSee"
+msgid "You can also smooth the stroke afterward\nSee"
 msgstr ""
 
 msgid "Change the style"

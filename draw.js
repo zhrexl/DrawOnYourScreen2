@@ -165,7 +165,7 @@ var DrawingArea = new Lang.Class({
         }
         
         // hide helper
-        if (this.helper.visible && button != 2) {
+        if (this.helper.visible) {
             this.helper.hideHelp();
             return Clutter.EVENT_STOP;
         }
@@ -174,7 +174,7 @@ var DrawingArea = new Lang.Class({
             this._startDrawing(x, y, shiftPressed);
             return Clutter.EVENT_STOP;
         } else if (button == 2) {
-            this.toggleShape();
+            this.toggleFill();
         } else if (button == 3) {
             this._stopDrawing();
             this.menu.open(x, y);
@@ -435,10 +435,6 @@ var DrawingArea = new Lang.Class({
     selectShape: function(shape) {
         this.currentShape = shape;
         this.emitter.emit('show-osd', _(ShapeNames[shape]), null);
-    },
-    
-    toggleShape: function() {
-        this.selectShape((this.currentShape == Object.keys(Shapes).length - 1) ? 0 : this.currentShape + 1);
     },
     
     toggleFill: function() {

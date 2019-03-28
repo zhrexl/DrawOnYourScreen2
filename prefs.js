@@ -75,8 +75,8 @@ var INTERNAL_KEYBINDINGS = {
 
 var OTHER_SHORTCUTS = [
     { desc: "Draw", shortcut: "Left click" },
-    { desc: "Draw by filling in", shortcut: "Right click" },
-    { desc: "Toggle shape", shortcut: "Center click" },
+    { desc: "Menu", shortcut: "Right click" },
+    { desc: "Toggle fill/stroke", shortcut: "Center click" },
     { desc: "Transform shape (when drawing)", shortcut: "Ctrl key" },
     { desc: "Increment/decrement line width", shortcut: "Scroll" },
     { desc: "Select color", shortcut: "Ctrl+1...9" },
@@ -287,7 +287,7 @@ var PrefsPage = new GObject.Class({
         let smoothBox = new Gtk.Box({ margin: MARGIN });
         let smoothLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
         let smoothLabel1 = new Gtk.Label({label: _("Smooth stroke during the drawing process")});
-        let smoothLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("You can smooth the stroke afterward\nSee") + " \"" + _("Smooth last brushstroke") + "\"</small>" });
+        let smoothLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("You can also smooth the stroke afterward\nSee") + " \"" + _("Smooth last brushstroke") + "\"</small>" });
         smoothLabel1.set_halign(1);
         smoothLabel2.get_style_context().add_class("dim-label");
         smoothLabelBox.pack_start(smoothLabel1, true, true, 0);
