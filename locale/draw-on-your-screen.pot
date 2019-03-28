@@ -17,6 +17,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+# add your name here, for example:
+# "Aïssata\n"
+# "<a href=\"mailto:ali@mail.org\">Ali</a>\n"
+# "<a href=\"https://...\">丽</a>"
+# It will be displayed in About page
+msgid "Translators"
+msgstr ""
+
 #: extension.js
 msgid "Leaving drawing mode"
 msgstr ""
@@ -90,7 +98,16 @@ msgstr ""
 msgid "Dashed"
 msgstr ""
 
+msgid "Color"
+msgstr ""
+
 #: prefs.js
+
+msgid "Preferences"
+msgstr ""
+
+msgid "About"
+msgstr ""
 
 # GLOBAL_KEYBINDINGS
 
@@ -231,12 +248,19 @@ msgstr ""
 msgid "Escape key"
 msgstr ""
 
-#
+# About page
 
-msgid ""
-"Start drawing with Super+Alt+D\n"
-"Then save your beautiful work by taking a screenshot"
+# you are free to translate the extension name
+#msgid "Draw On You Screen"
+#msgstr ""
+
+msgid "Version %s"
 msgstr ""
+
+msgid "Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot"
+msgstr ""
+
+# Prefs page
 
 msgid "Global"
 msgstr ""
@@ -284,11 +308,4 @@ msgid ""
 "(See \"Add a drawing background\" or edit the SVG file afterwards)"
 msgstr ""
 
-msgid ""
-"<span size=\"small\">This program comes with ABSOLUTELY NO WARRANTY.\n"
-"See the <a href=\"https://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
-"\">GNU General Public License, version 2 or later</a> for details.</span>"
-msgstr ""
 
-msgid "Author"
-msgstr ""

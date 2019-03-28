@@ -23,12 +23,14 @@
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
+const Mainloop = imports.mainloop;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
 const Convenience = Extension.imports.convenience;
 const Metadata = Extension.metadata;
 const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
+const _GTK = imports.gettext.domain('gtk30').gettext;
 
 const MARGIN = 10;
 
@@ -92,6 +94,82 @@ function buildPrefsWidget() {
     return prefsPage;
 }
 
+function buildPrefsWidget() {
+    let topStack = new TopStack();
+    let switcher = new Gtk.StackSwitcher({halign: Gtk.Align.CENTER, visible: true, stack: topStack});
+    Mainloop.timeout_add(0, () => {
+        let window = topStack.get_toplevel();
+        window.resize(720,500);
+        let headerBar = window.get_titlebar();
+        headerBar.custom_title = switcher;
+        return false;
+    });
+    
+    topStack.show_all();
+    return topStack;
+}
+
+const TopStack = new GObject.Class({
+    Name: 'DrawOnYourScreenTopStack',
+    GTypeName: 'DrawOnYourScreenTopStack',
+    Extends: Gtk.Stack,
+    
+    _init: function(params) {
+        this.parent({ transition_type: 1, transition_duration: 500, expand: true });
+        this.prefsPage = new PrefsPage();
+        this.add_titled(this.prefsPage, 'prefs', _("Preferences"));
+        this.aboutPage = new AboutPage();
+        this.add_titled(this.aboutPage, 'about', _("About"));
+    }
+});
+
+const AboutPage = new GObject.Class({
+    Name: 'DrawOnYourScreenAboutPage',
+    GTypeName: 'DrawOnYourScreenAboutPage',
+    Extends: Gtk.ScrolledWindow,
+
+    _init: function(params) {
+        this.parent();
+
+        let vbox= new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN*3 });
+        this.add(vbox);
+        
+        let name = "<b> " + _(Metadata.name) + "</b>";
+        let version = _("Version %s").format(Metadata.version.toString());
+        let description = _(Metadata.description);
+        let link = "<span><a href=\"" + Metadata.url + "\">" + Metadata.url + "</a></span>";
+        let licenceName = _GTK("GNU General Public License, version 2 or later");
+        let licenceLink = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html";
+        let licence = "<small>" + _GTK("This program comes with absolutely no warranty.\nSee the <a href=\"%s\">%s</a> for details.").format(licenceLink, licenceName) + "</small>";
+        
+        let aboutLabel = new Gtk.Label({ wrap: true, justify: 2, use_markup: true, label:
+            name + "\n\n" + version + "\n\n" + description + "\n\n" + link + "\n\n" + licence + "\n" });
+        
+        vbox.add(aboutLabel);
+        
+        let creditBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, margin: 2*MARGIN });
+        let leftBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
+        let rightBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
+        let leftLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 2, justify: 1, use_markup: true, label: "<small>" + _GTK("Created by") + "</small>" });
+        let rightLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 1, justify: 0, use_markup: true, label: "<small><a href=\"https://framagit.org/abakkk\">Abakkk</a></small>" });
+        leftBox.pack_start(leftLabel, true, true, 0);
+        rightBox.pack_start(rightLabel, true, true, 0);
+        creditBox.pack_start(leftBox, true, true, 5);
+        creditBox.pack_start(rightBox, true, true, 5);
+        vbox.add(creditBox);
+        
+        if (_("Translators") != "Translators") {
+            leftBox.pack_start(new Gtk.Label(), true, true, 0);
+            rightBox.pack_start(new Gtk.Label(), true, true, 0);
+            leftLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 2, justify: 1, use_markup: true, label: "<small>" + _GTK("Translated by") + "</small>" });
+            rightLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 1, justify: 0, use_markup: true, label: "<small>" + _("Translators") + "</small>" });
+            leftBox.pack_start(leftLabel, true, true, 0);
+            rightBox.pack_start(rightLabel, true, true, 0);
+        }
+    }
+    
+});
+
 const PrefsPage = new GObject.Class({
     Name: 'DrawOnYourScreenPrefsPage',
     GTypeName: 'DrawOnYourScreenPrefsPage',
@@ -105,13 +183,7 @@ const PrefsPage = new GObject.Class({
         let box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, margin: MARGIN*3 });
         this.add(box);
         
-        let textBox1 = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN });
-        let text1 = new Gtk.Label({ wrap: true, justify: 2, use_markup: true,
-                                    label: "<big> " + _("Start drawing with Super+Alt+D\nThen save your beautiful work by taking a screenshot") + "</big>" });
-        textBox1.pack_start(text1, false, false, 0);
-        box.add(textBox1);
-        
-        let listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: 2*MARGIN, margin_bottom: 2*MARGIN });
+        let listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true });
         box.add(listBox);
         
         let styleContext = listBox.get_style_context();
@@ -225,28 +297,6 @@ const PrefsPage = new GObject.Class({
         noteLabel.get_style_context().add_class("dim-label");
         noteBox.pack_start(noteLabel, true, true, 4);
         listBox.add(noteBox);
-        
-        this.addSeparator(listBox);
-        
-        let licence = _("<span size=\"small\">This program comes with ABSOLUTELY NO WARRANTY.\nSee the <a href=\"https://www.gnu.org/licenses/old-licenses/gpl-2.0.html\">GNU General Public License, version 2 or later</a> for details.</span>");
-        
-        let textBox2 = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let text2 = new Gtk.Label({ wrap: true, justify: 2, use_markup: true,
-                                  label: "<small>Version" + " " + Metadata.version +"</small>\n\n" + "<span><a href=\"" + Metadata.url + "\">" + Metadata.url + "</a></span>" + "\n\n" + licence + "\n" });
-        textBox2.pack_start(text2, false, false, 0);
-        
-        let creditBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
-        let leftBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let rightBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let leftLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 2, justify: 1, use_markup: true, label: "<small><u>" + _("Author") + ":</u></small>" });
-        let rightLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 1, justify: 0, use_markup: true, label: "<small>Abakkk</small>" });
-        leftBox.pack_start(leftLabel, true, true, 0);
-        rightBox.pack_start(rightLabel, true, true, 0);
-        creditBox.pack_start(leftBox, true, true, 5);
-        creditBox.pack_start(rightBox, true, true, 5);
-        textBox2.pack_start(creditBox, false, false, 0);
-        
-        box.add(textBox2);
         
         let children = listBox.get_children();
         for (let i = 0; i < children.length; i++) {
