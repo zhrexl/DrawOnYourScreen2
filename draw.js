@@ -52,6 +52,7 @@ const LINECAP_ICON_PATH = Extension.dir.get_child('icons').get_child('linecap-sy
 const DASHED_LINE_ICON_PATH = Extension.dir.get_child('icons').get_child('dashed-line-symbolic.svg').get_path();
 
 var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4 };
+var TextState = { DRAWING: 0, WRITING: 1 };
 var ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text" };
 var LineCapNames = { 0: 'Butt', 1: 'Round', 2: 'Square' };
 var LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
@@ -159,7 +160,7 @@ var DrawingArea = new Lang.Class({
         let shiftPressed = event.has_shift_modifier();
         
         // stop writing
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT) {
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING ) {
             this._stopWriting();
         }
         
@@ -196,7 +197,7 @@ var DrawingArea = new Lang.Class({
             this.emitter.emit('stop-drawing');
             return Clutter.EVENT_STOP;
             
-        } else if (this.currentElement && this.currentElement.shape == Shapes.TEXT) {
+        } else if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING) {
             if (event.get_key_symbol() == Clutter.KEY_BackSpace) {
                 this.currentElement.text = this.currentElement.text.slice(0, -1);
                 this._updateCursorTimeout();
@@ -251,7 +252,7 @@ var DrawingArea = new Lang.Class({
         this.smoothedStroke = this.settings.get_boolean('smoothed-stroke');
         
         this.currentElement = new DrawingElement ({
-            shape: this.currentShape == Shapes.TEXT ? Shapes.RECTANGLE : this.currentShape,
+            shape: this.currentShape,
             color: this.currentColor.to_string(),
             line: { lineWidth: this.currentLineWidth, lineJoin: this.currentLineJoin, lineCap: this.currentLineCap },
             dash: { array: this.dashedLine ? this.dashArray : [0, 0] , offset: this.dashedLine ? this.dashOffset : 0 },
@@ -262,6 +263,14 @@ var DrawingArea = new Lang.Class({
             font: { family: (this.currentFontFamilyId == 0 ? this.fontFamily : FontFamilyNames[this.currentFontFamilyId]), weight: this.currentFontWeight, style: this.currentFontStyle },
             points: [[startX, startY]]
         });
+        
+        if (this.currentShape == Shapes.TEXT) {
+            this.currentElement.line = { lineWidth: 1, lineJoin: 0, lineCap: 0 };
+            this.currentElement.dash = { array: [1, 1] , offset: 0 };
+            this.currentElement.fill = false;
+            this.currentElement.text = _("Text");
+            this.currentElement.state = TextState.DRAWING;
+        }
         
         this.motionHandler = this.connect('motion-event', (actor, event) => {
             let coords = event.get_coords();
@@ -289,11 +298,12 @@ var DrawingArea = new Lang.Class({
                 Math.hypot(this.currentElement.points[1][0] - this.currentElement.points[0][0], this.currentElement.points[1][1] - this.currentElement.points[0][1]) > 3)) {
             
             // start writing
-            if (this.currentShape == Shapes.TEXT) {
-                this.currentElement.shape = Shapes.TEXT;
+            if (this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.DRAWING) {
+                this.currentElement.state = TextState.WRITING;
                 this.currentElement.text = '';
                 this.emitter.emit('show-osd', _("Type your text\nand press Enter"), null);
                 this._updateCursorTimeout();
+                this.textHasCursor = true;
                 this._redisplay();
                 return;
             }
@@ -310,7 +320,7 @@ var DrawingArea = new Lang.Class({
             return;
         if (this.currentElement.shape == Shapes.NONE)
             this.currentElement.addPoint(x, y, this.smoothedStroke);
-        else if (this.currentElement.shape == Shapes.RECTANGLE && (controlPressed || this.currentElement.transform.active))
+        else if ((this.currentElement.shape == Shapes.RECTANGLE || this.currentElement.shape == Shapes.TEXT) && (controlPressed || this.currentElement.transform.active))
             this.currentElement.transformRectangle(x, y);
         else if (this.currentElement.shape == Shapes.ELLIPSE && (controlPressed || this.currentElement.transform.active))
             this.currentElement.transformEllipse(x, y);
@@ -543,9 +553,9 @@ var DrawingArea = new Lang.Class({
     
     saveAsSvg: function() {
         // stop drawing or writing
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT) {
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING) {
             this._stopWriting();
-        } else if (this.currentElement && this.currentShape != Shapes.TEXT) {
+        } else if (this.currentElement && this.currentElement.shape != Shapes.TEXT) {
             this._stopDrawing();
         }
         
@@ -706,6 +716,8 @@ var DrawingElement = new Lang.Class({
             
         } else if (shape == Shapes.TEXT && points.length == 2) {
             this.rotate(cr, trans.angle, trans.center[0], trans.center[1]);
+            if (this.state == TextState.DRAWING)
+                cr.rectangle(points[0][0], points[0][1], points[1][0] - points[0][0], points[1][1] - points[0][1]);
             cr.selectFontFace(this.font.family, this.font.style, this.font.weight);
             cr.setFontSize(Math.abs(points[1][1] - points[0][1]));
             cr.moveTo(Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]));
