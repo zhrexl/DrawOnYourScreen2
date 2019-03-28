@@ -25,8 +25,11 @@ const Lang = imports.lang;
 const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
 const St = imports.gi.St;
+
 const Main = imports.ui.main;
 const OsdWindow = imports.ui.osdWindow;
+const PanelMenu = imports.ui.panelMenu;
+
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const Convenience = Extension.imports.convenience;
 const Draw = Extension.imports.draw;
@@ -78,6 +81,9 @@ var AreaManager = new Lang.Class({
         this.updateAreas();
         this.monitorChangedHandler = Main.layoutManager.connect('monitors-changed', this.updateAreas.bind(this));
         
+        this.updateIndicator();
+        this.indicatorSettingHandler = this.settings.connect('changed::indicator-disabled', this.updateIndicator.bind(this));
+        
         this.desktopSettingHandler = this.settings.connect('changed::drawing-on-desktop', this.onDesktopSettingChanged.bind(this));
         this.persistentSettingHandler = this.settings.connect('changed::persistent-drawing', this.onPersistentSettingChanged.bind(this));
         
@@ -103,6 +109,15 @@ var AreaManager = new Lang.Class({
     onPersistentSettingChanged: function() {
         if (this.settings.get_boolean('persistent-drawing'))
             this.areas[Main.layoutManager.primaryIndex].saveAsJson();
+    },
+    
+    updateIndicator: function() {
+        if (this.indicator) {
+            this.indicator.disable();
+            this.indicator = null;
+        }
+        if (!this.settings.get_boolean('indicator-disabled'))
+            this.indicator = new DrawingIndicator();
     },
     
     updateAreas: function() {
@@ -264,8 +279,8 @@ var AreaManager = new Lang.Class({
                 global.display.set_cursor(Meta.Cursor.DEFAULT);
             else if (global.screen && global.screen.set_cursor)
                 global.screen.set_cursor(Meta.Cursor.DEFAULT);
-            
-            Main.osdWindowManager.show(activeIndex, this.leaveGicon, _("Leaving drawing mode"), null);
+            if (!this.osdDisabled)
+                Main.osdWindowManager.show(activeIndex, this.leaveGicon, _("Leaving drawing mode"), null);
         } else  {
             // avoid to deal with Meta changes (global.display/global.screen)
             let currentIndex = Main.layoutManager.monitors.indexOf(Main.layoutManager.currentMonitor);
@@ -287,16 +302,24 @@ var AreaManager = new Lang.Class({
                 global.display.set_cursor(Meta.Cursor.POINTING_HAND);
             else if (global.screen && global.screen.set_cursor)
                 global.screen.set_cursor(Meta.Cursor.POINTING_HAND);
-            
-            // increase OSD display time
-            let hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
-            OsdWindow.HIDE_TIMEOUT = 2000;
-            Main.osdWindowManager.show(currentIndex, this.enterGicon, _("Press Ctrl + F1 for help") + "\n\n" + _("Entering drawing mode"), null);
-            OsdWindow.HIDE_TIMEOUT = hideTimeoutSave;
+                
+            this.osdDisabled = this.settings.get_boolean('osd-disabled');
+            if (!this.osdDisabled) {
+                // increase OSD display time
+                let hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
+                OsdWindow.HIDE_TIMEOUT = 2000;
+                Main.osdWindowManager.show(currentIndex, this.enterGicon, _("Press Ctrl + F1 for help") + "\n\n" + _("Entering drawing mode"), null);
+                OsdWindow.HIDE_TIMEOUT = hideTimeoutSave;
+            }
         }
+        
+        if (this.indicator)
+            this.indicator.sync(this.activeArea != null);
     },
     
     showOsd: function(emitter, label, level, maxLevel) {
+        if (this.osdDisabled)
+            return;
         let activeIndex = this.areas.indexOf(this.activeArea);
         if (activeIndex != -1) {
             Main.osdWindowManager.show(activeIndex, this.enterGicon, label, level, maxLevel);
@@ -326,6 +349,10 @@ var AreaManager = new Lang.Class({
             Main.layoutManager.disconnect(this.monitorChangedHandler);
             this.monitorChangedHandler = null;
         }
+        if (this.indicatorSettingHandler) {
+            this.settings.disconnect(this.indicatorSettingHandler);
+            this.indicatorSettingHandler = null;
+        }
         if (this.desktopSettingHandler) {
             this.settings.disconnect(this.desktopSettingHandler);
             this.desktopSettingHandler = null;
@@ -340,6 +367,31 @@ var AreaManager = new Lang.Class({
         Main.wm.removeKeybinding('toggle-drawing');
         Main.wm.removeKeybinding('erase-drawing');
         this.removeAreas();
+        if (this.indicator)
+            this.indicator.disable();
+    }
+});
+
+var DrawingIndicator = new Lang.Class({
+    Name: 'DrawOnYourScreenIndicator',
+
+    _init: function() {
+        let [menuAlignment, dontCreateMenu] = [0, true];
+        this.button = new PanelMenu.Button(menuAlignment, "Drawing Indicator", dontCreateMenu);
+        Main.panel.addToStatusArea('draw-on-your-screen-indicator', this.button);
+        
+        this.icon = new St.Icon({ icon_name: 'applications-graphics-symbolic',
+                                  style_class: 'system-status-icon screencast-indicator' });
+        this.button.actor.add_child(this.icon);
+        this.button.actor.visible = false;
+    },
+
+    sync: function(visible) {
+        this.button.actor.visible = visible;
+    },
+    
+    disable: function() {
+        this.button.destroy();
     }
 });
 

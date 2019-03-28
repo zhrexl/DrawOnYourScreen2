@@ -277,6 +277,12 @@ msgstr ""
 msgid "Persistent drawing through session restart"
 msgstr ""
 
+msgid "Disable on-screen notifications"
+msgstr ""
+
+msgid "Disable panel indicator"
+msgstr ""
+
 msgid "Internal"
 msgstr ""
 

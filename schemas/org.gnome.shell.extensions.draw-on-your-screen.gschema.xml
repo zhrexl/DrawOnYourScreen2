@@ -16,6 +16,16 @@
       <summary>persistent drawing</summary>
       <description>persistent drawing</description>
     </key>
+    <key type="b" name="osd-disabled">
+      <default>false</default>
+      <summary>disable OSD notifications</summary>
+      <description>disable on-screen notifications</description>
+    </key>
+    <key type="b" name="indicator-disabled">
+      <default>false</default>
+      <summary>disable panel indicator</summary>
+      <description>disable panel indicator</description>
+    </key>
     <key type="as" name="toggle-drawing">
       <default>["&lt;Alt&gt;&lt;Super&gt;d"]</default>
       <summary>toggle drawing</summary>

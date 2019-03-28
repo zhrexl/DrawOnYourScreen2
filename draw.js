@@ -506,7 +506,6 @@ var DrawingArea = new Lang.Class({
         this.buttonPressedHandler = this.connect('button-press-event', this._onButtonPressed.bind(this));
         this._onKeyboardPopupMenuHandler = this.connect('popup-menu', this._onKeyboardPopupMenu.bind(this));
         this.scrollHandler = this.connect('scroll-event', this._onScroll.bind(this));
-        this.selectShape(Shapes.NONE);
         this.get_parent().set_background_color(this.hasBackground ? this.activeBackgroundColor : null);
         this._updateStyle();
     },
@@ -542,6 +541,7 @@ var DrawingArea = new Lang.Class({
         
         this.currentElement = null;
         this._stopCursorTimeout();
+        this.currentShape = Shapes.NONE;
         this.dashedLine = false;
         this.fill = false;
         this._redisplay();

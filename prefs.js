@@ -109,7 +109,7 @@ function buildPrefsWidget() {
     return topStack;
 }
 
-const TopStack = new GObject.Class({
+var TopStack = new GObject.Class({
     Name: 'DrawOnYourScreenTopStack',
     GTypeName: 'DrawOnYourScreenTopStack',
     Extends: Gtk.Stack,
@@ -123,7 +123,7 @@ const TopStack = new GObject.Class({
     }
 });
 
-const AboutPage = new GObject.Class({
+var AboutPage = new GObject.Class({
     Name: 'DrawOnYourScreenAboutPage',
     GTypeName: 'DrawOnYourScreenAboutPage',
     Extends: Gtk.ScrolledWindow,
@@ -170,7 +170,7 @@ const AboutPage = new GObject.Class({
     
 });
 
-const PrefsPage = new GObject.Class({
+var PrefsPage = new GObject.Class({
     Name: 'DrawOnYourScreenPrefsPage',
     GTypeName: 'DrawOnYourScreenPrefsPage',
     Extends: Gtk.ScrolledWindow,
@@ -226,6 +226,28 @@ const PrefsPage = new GObject.Class({
         persistentBox.pack_start(persistentLabelBox, true, true, 4);
         persistentBox.pack_start(persistentSwitch, false, false, 4);
         listBox.add(persistentBox);
+        
+        let osdBox = new Gtk.Box({ margin: MARGIN });
+        let osdLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
+        let osdLabel1 = new Gtk.Label({label: _("Disable on-screen notifications")});
+        osdLabel1.set_halign(1);
+        osdLabelBox.pack_start(osdLabel1, true, true, 0);
+        let osdSwitch = new Gtk.Switch({valign: 3});
+        this.settings.bind("osd-disabled", osdSwitch, "active", 0);
+        osdBox.pack_start(osdLabelBox, true, true, 4);
+        osdBox.pack_start(osdSwitch, false, false, 4);
+        listBox.add(osdBox);
+        
+        let indicatorBox = new Gtk.Box({ margin: MARGIN });
+        let indicatorLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
+        let indicatorLabel1 = new Gtk.Label({label: _("Disable panel indicator")});
+        indicatorLabel1.set_halign(1);
+        indicatorLabelBox.pack_start(indicatorLabel1, true, true, 0);
+        let indicatorSwitch = new Gtk.Switch({valign: 3});
+        this.settings.bind("indicator-disabled", indicatorSwitch, "active", 0);
+        indicatorBox.pack_start(indicatorLabelBox, true, true, 4);
+        indicatorBox.pack_start(indicatorSwitch, false, false, 4);
+        listBox.add(indicatorBox);
         this.addSeparator(listBox);
         
         let internalTitleBox = new Gtk.Box({ margin: MARGIN });
@@ -313,7 +335,7 @@ const PrefsPage = new GObject.Class({
 });
 
 // this code comes from Sticky Notes View by Sam Bull, https://extensions.gnome.org/extension/568/notes/
-const KeybindingsWidget = new GObject.Class({
+var KeybindingsWidget = new GObject.Class({
     Name: 'DrawOnYourScreenKeybindings.Widget',
     GTypeName: 'DrawOnYourScreenKeybindingsWidget',
     Extends: Gtk.Box,
