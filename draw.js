@@ -453,17 +453,17 @@ var DrawingArea = new Lang.Class({
     
     incrementLineWidth: function(increment) {
         this.currentLineWidth = Math.max(this.currentLineWidth + increment, 1);
-        this.emitter.emit('show-osd', this.currentLineWidth + "px", this.currentLineWidth);
+        this.emitter.emit('show-osd', this.currentLineWidth + " " + _("px"), this.currentLineWidth);
     },
     
     toggleLineJoin: function() {
         this.currentLineJoin = this.currentLineJoin == 2 ? 0 : this.currentLineJoin + 1;
-        this.emitter.emit('show-osd', LineJoinNames[this.currentLineJoin], null);
+        this.emitter.emit('show-osd', _(LineJoinNames[this.currentLineJoin]), null);
     },
     
     toggleLineCap: function() {
         this.currentLineCap = this.currentLineCap == 2 ? 0 : this.currentLineCap + 1;
-        this.emitter.emit('show-osd', LineCapNames[this.currentLineCap], null);
+        this.emitter.emit('show-osd', _(LineCapNames[this.currentLineCap]), null);
     },
     
     toggleFontWeight: function() {
@@ -472,7 +472,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.weight = this.currentFontWeight;
             this._redisplay();
         }
-        this.emitter.emit('show-osd', `<span font_weight="${FontWeightNames[this.currentFontWeight].toLowerCase()}">${FontWeightNames[this.currentFontWeight]}</span>`, null);
+        this.emitter.emit('show-osd', `<span font_weight="${FontWeightNames[this.currentFontWeight].toLowerCase()}">${_(FontWeightNames[this.currentFontWeight])}</span>`, null);
     },
     
     toggleFontStyle: function() {
@@ -481,7 +481,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.style = this.currentFontStyle;
             this._redisplay();
         }
-        this.emitter.emit('show-osd', `<span font_style="${FontStyleNames[this.currentFontStyle].toLowerCase()}">${FontStyleNames[this.currentFontStyle]}</span>`, null);
+        this.emitter.emit('show-osd', `<span font_style="${FontStyleNames[this.currentFontStyle].toLowerCase()}">${_(FontStyleNames[this.currentFontStyle])}</span>`, null);
     },
     
     toggleFontFamily: function() {
@@ -491,7 +491,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.family = currentFontFamily;
             this._redisplay();
         }
-        this.emitter.emit('show-osd', `<span font_family="${currentFontFamily}">${currentFontFamily}</span>`, null);
+        this.emitter.emit('show-osd', `<span font_family="${currentFontFamily}">${_(currentFontFamily)}</span>`, null);
     },
     
     toggleHelp: function() {
@@ -1075,6 +1075,7 @@ var DrawingMenu = new Lang.Class({
         this._addSwitchItem(lineSection, _("Dashed"), dashedLineIcon, this.area, 'dashedLine');
         this._addSeparator(lineSection);
         this.menu.addMenuItem(lineSection);
+        lineSection.itemActivated = () => {};
         this.lineSection = lineSection;
         
         let fontSection = new PopupMenu.PopupMenuSection();
@@ -1140,7 +1141,7 @@ var DrawingMenu = new Lang.Class({
     
     _addSliderItem: function(menu, target, targetProperty) {
         let item = new PopupMenu.PopupBaseMenuItem({ activate: false });
-        let label = new St.Label({ text: target[targetProperty] + " px", style_class: 'draw-on-your-screen-menu-slider-label' });
+        let label = new St.Label({ text: target[targetProperty] + " " + _("px"), style_class: 'draw-on-your-screen-menu-slider-label' });
         let slider = new Slider.Slider(target[targetProperty] / 50);
         
         slider.connect('value-changed', (slider, value, property) => {

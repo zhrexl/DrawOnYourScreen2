@@ -309,3 +309,51 @@ msgid ""
 msgstr ""
 
 
+# The following words refer to SVG attributes.
+# You have the choice to translate or not
+
+#msgid "Butt"
+#msgstr ""
+
+#msgid "Round"
+#msgstr ""
+
+#msgid "Square"
+#msgstr ""
+
+#msgid "Miter"
+#msgstr ""
+
+#msgid "Bevel"
+#msgstr ""
+
+#msgid "Normal"
+#msgstr ""
+
+#msgid "Bold"
+#msgstr ""
+
+#msgid "Italic"
+#msgstr ""
+
+#msgid "Oblique"
+#msgstr ""
+
+#msgid "Sans-Serif"
+#msgstr ""
+
+#msgid "Serif"
+#msgstr ""
+
+#msgid "Monospace"
+#msgstr ""
+
+#msgid "Cursive"
+#msgstr ""
+
+#msgid "Fantasy"
+#msgstr ""
+
+#msgid "px"
+#msgstr ""
+
