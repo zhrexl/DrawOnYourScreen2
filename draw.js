@@ -1126,7 +1126,7 @@ var DrawingMenu = new Lang.Class({
     _addSwitchItem: function(menu, label, iconFalse, iconTrue, target, targetProperty) {
         let item = new PopupMenu.PopupSwitchMenuItem(label, target[targetProperty]);
         
-        item.icon = new St.Icon({ style_class: 'popup-menu-icon blabla' });
+        item.icon = new St.Icon({ style_class: 'popup-menu-icon' });
         item.actor.insert_child_at_index(item.icon, 1);
         item.icon.set_gicon(target[targetProperty] ? iconTrue : iconFalse);
         

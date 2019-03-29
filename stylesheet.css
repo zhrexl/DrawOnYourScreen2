@@ -59,42 +59,50 @@
 /* The following styles don't affect the drawing,
  * but the "Ctrl + F1" on-screen-display */
 
- .draw-on-your-screen-helper {
+.draw-on-your-screen-helper {
     margin: 0;
     spacing: 0.5em;
- }
- 
- .draw-on-your-screen-helper StBoxLayout {
+}
+
+.draw-on-your-screen-helper StBoxLayout {
     spacing: 7em;
- }
- 
- .draw-on-your-screen-helper StBoxLayout StLabel {
+}
+
+.draw-on-your-screen-helper StBoxLayout StLabel {
     text-align: right;
     font-weight: normal;
- }
- 
- .draw-on-your-screen-separator {
+}
+
+.draw-on-your-screen-separator {
     min-height: 0.6em;
- }
- 
- /* context menu */
- 
- .draw-on-your-screen-menu {
-    font-size: 0.98em; /* default: 1em */
- }
- 
- .draw-on-your-screen-menu .popup-menu-item {
+}
+
+/* context menu */
+
+.draw-on-your-screen-menu {
+   font-size: 0.98em; /* default: 1em */
+}
+
+.draw-on-your-screen-menu .popup-menu-item {
     padding-top: .37em; /* default: .4em */
     padding-bottom: .37em;
 }
- 
-  .draw-on-your-screen-menu-separator StLabel {
+
+.draw-on-your-screen-menu .popup-menu-icon {
+    icon-size: 1.04em; /* default: 1.09 */
+}
+
+.draw-on-your-screen-menu .toggle-switch {
+    height: 20px; /* default: 22px */
+} 
+
+.draw-on-your-screen-menu-separator StLabel {
     font-size: 0;
- }
- 
- .draw-on-your-screen-menu-slider-label {
+}
+
+.draw-on-your-screen-menu-slider-label {
     min-width: 3em;
     text-align: right;
- }
+}
  
  
