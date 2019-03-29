@@ -138,14 +138,22 @@ var DrawingArea = new Lang.Class({
         let cr = area.get_context();
         
         for (let i = 0; i < this.elements.length; i++) {
-            this.elements[i].buildCairo(cr, false);
-            
             let isStraightLine = this.elements[i].shape == Shapes.LINE &&
                                 (this.elements[i].points.length < 3 || this.elements[i].points[2] == this.elements[i].points[1] || this.elements[i].points[2] == this.elements[i].points[0]);
-            if (this.elements[i].fill && !isStraightLine)
-                cr.fill();
-            else
+            
+            if (this.elements[i].fill && !isStraightLine) {
+                // first paint stroke
+                this.elements[i].buildCairo(cr, false);
+                if (this.elements[i].shape == Shapes.NONE || this.elements[i].shape == Shapes.LINE)
+                    cr.closePath();
                 cr.stroke();
+                // secondly paint fill
+                this.elements[i].buildCairo(cr, false);
+                cr.fill();
+            } else {
+                this.elements[i].buildCairo(cr, false);
+                cr.stroke();
+            }
         }
         
         if (this.currentElement) {
@@ -731,8 +739,8 @@ var DrawingElement = new Lang.Class({
         let isStraightLine = this.shape == Shapes.LINE && (points.length < 3 || points[2] == points[1] || points[2] == points[0]);
         let fill = this.fill && !isStraightLine;
         let attributes = `fill="${fill ? color : 'transparent'}" ` +
-                         `stroke="${fill ? 'transparent' : color}" ` +
-                         `${fill ? 'stroke-opacity="0"' : 'fill-opacity="0"'} ` +
+                         `stroke="${color}" ` +
+                         `${fill ? '' : 'fill-opacity="0"'} ` +
                          `stroke-width="${this.line.lineWidth}" ` +
                          `stroke-linecap="${LineCapNames[this.line.lineCap].toLowerCase()}" ` +
                          `stroke-linejoin="${LineJoinNames[this.line.lineJoin].toLowerCase()}"`;
@@ -1067,7 +1075,7 @@ var DrawingMenu = new Lang.Class({
         
         this._addSubMenuItem(this.menu, null, ShapeNames, this.area, 'currentShape', this.updateSectionVisibility.bind(this));
         this._addColorSubMenuItem(this.menu);
-        this.fillItem = this._addSwitchItem(this.menu, _("Fill"), this.strokeIcon, this.fillIcon, this.area, 'fill', this.updateSectionVisibility.bind(this));
+        this.fillItem = this._addSwitchItem(this.menu, _("Fill"), this.strokeIcon, this.fillIcon, this.area, 'fill');
         this._addSeparator(this.menu);
         
         let lineSection = new PopupMenu.PopupMenuSection();
@@ -1104,21 +1112,18 @@ var DrawingMenu = new Lang.Class({
     },
     
     updateSectionVisibility: function() {
-        if (this.area.fill || this.area.currentShape == Shapes.TEXT)
-            this.lineSection.actor.hide();
-        else
-            this.lineSection.actor.show();
-        
         if (this.area.currentShape != Shapes.TEXT) {
+            this.lineSection.actor.show();
             this.fontSection.actor.hide();
             this.fillItem.setSensitive(true);
         } else {
+            this.lineSection.actor.hide();
             this.fontSection.actor.show();
             this.fillItem.setSensitive(false);
         }
     },
     
-    _addSwitchItem: function(menu, label, iconFalse, iconTrue, target, targetProperty, callback) {
+    _addSwitchItem: function(menu, label, iconFalse, iconTrue, target, targetProperty) {
         let item = new PopupMenu.PopupSwitchMenuItem(label, target[targetProperty]);
         
         item.icon = new St.Icon({ style_class: 'popup-menu-icon blabla' });
@@ -1128,8 +1133,6 @@ var DrawingMenu = new Lang.Class({
         item.connect('toggled', (item, state) => {
             target[targetProperty] = state;
             item.icon.set_gicon(target[targetProperty] ? iconTrue : iconFalse);
-            if (callback)
-                callback();
         });
         menu.addMenuItem(item);
         return item;
@@ -1170,12 +1173,24 @@ var DrawingMenu = new Lang.Class({
         
         Mainloop.timeout_add(0, () => {
             for (let i in obj) {
-                item.menu.addAction(_(obj[i]), () => {
+                let text;
+                if (targetProperty == 'currentFontFamilyId')
+                    text = `<span font_family="${obj[i]}">${_(obj[i])}</span>`;
+                else if (targetProperty == 'currentFontWeight')
+                    text = `<span font_weight="${obj[i].toLowerCase()}">${_(obj[i])}</span>`;
+                else if (targetProperty == 'currentFontStyle')
+                    text = `<span font_style="${obj[i].toLowerCase()}">${_(obj[i])}</span>`;
+                else
+                    text = _(obj[i]);
+                
+                let subItem = item.menu.addAction(text, () => {
                     item.label.set_text(_(obj[i]));
                     target[targetProperty] = i;
                     if (callback)
                         callback();
                 });
+                
+                subItem.label.get_clutter_text().set_use_markup(true);
             }
             return GLib.SOURCE_REMOVE;
         });
