@@ -22,7 +22,7 @@
 
 const Cairo = imports.cairo;
 const Clutter = imports.gi.Clutter;
-const GdkPixbuf = imports.gi.GdkPixbuf;
+const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
@@ -47,9 +47,11 @@ const Prefs = Extension.imports.prefs;
 const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
 
 const FILL_ICON_PATH = Extension.dir.get_child('icons').get_child('fill-symbolic.svg').get_path();
+const STROKE_ICON_PATH = Extension.dir.get_child('icons').get_child('stroke-symbolic.svg').get_path();
 const LINEJOIN_ICON_PATH = Extension.dir.get_child('icons').get_child('linejoin-symbolic.svg').get_path();
 const LINECAP_ICON_PATH = Extension.dir.get_child('icons').get_child('linecap-symbolic.svg').get_path();
 const DASHED_LINE_ICON_PATH = Extension.dir.get_child('icons').get_child('dashed-line-symbolic.svg').get_path();
+const FULL_LINE_ICON_PATH = Extension.dir.get_child('icons').get_child('full-line-symbolic.svg').get_path();
 
 var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4 };
 var TextState = { DRAWING: 0, WRITING: 1 };
@@ -1005,6 +1007,14 @@ var DrawingMenu = new Lang.Class({
         // do not close the menu on item activated
         this.menu.itemActivated = () => {};
         this.menu.connect('open-state-changed', this._onMenuOpenStateChanged.bind(this));
+        
+        this.strokeIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(STROKE_ICON_PATH) });
+        this.fillIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FILL_ICON_PATH) });
+        this.linejoinIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(LINEJOIN_ICON_PATH) });
+        this.linecapIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(LINECAP_ICON_PATH) });
+        this.fullLineIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FULL_LINE_ICON_PATH) });
+        this.dashedLineIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(DASHED_LINE_ICON_PATH) });
+        
     },
     
     disable: function() {
@@ -1057,18 +1067,14 @@ var DrawingMenu = new Lang.Class({
         
         this._addSubMenuItem(this.menu, null, ShapeNames, this.area, 'currentShape', this.updateSectionVisibility.bind(this));
         this._addColorSubMenuItem(this.menu);
-        let fillIcon = GdkPixbuf.Pixbuf.new_from_file_at_size(FILL_ICON_PATH, 24, 24);
-        this._addSwitchItem(this.menu, _("Fill"), fillIcon, this.area, 'fill', this.updateSectionVisibility.bind(this));
+        this.fillItem = this._addSwitchItem(this.menu, _("Fill"), this.strokeIcon, this.fillIcon, this.area, 'fill', this.updateSectionVisibility.bind(this));
         this._addSeparator(this.menu);
         
         let lineSection = new PopupMenu.PopupMenuSection();
         this._addSliderItem(lineSection, this.area, 'currentLineWidth');
-        let linejoinIcon = GdkPixbuf.Pixbuf.new_from_file_at_size(LINEJOIN_ICON_PATH, 24, 24);
-        this._addSubMenuItem(lineSection, linejoinIcon, LineJoinNames, this.area, 'currentLineJoin');
-        let linecapIcon = GdkPixbuf.Pixbuf.new_from_file_at_size(LINECAP_ICON_PATH, 24, 24);
-        this._addSubMenuItem(lineSection, linecapIcon, LineCapNames, this.area, 'currentLineCap');
-        let dashedLineIcon = GdkPixbuf.Pixbuf.new_from_file_at_size(DASHED_LINE_ICON_PATH, 24, 24);
-        this._addSwitchItem(lineSection, _("Dashed"), dashedLineIcon, this.area, 'dashedLine');
+        this._addSubMenuItem(lineSection, this.linejoinIcon, LineJoinNames, this.area, 'currentLineJoin');
+        this._addSubMenuItem(lineSection, this.linecapIcon, LineCapNames, this.area, 'currentLineCap');
+        this._addSwitchItem(lineSection, _("Dashed"), this.fullLineIcon, this.dashedLineIcon, this.area, 'dashedLine');
         this._addSeparator(lineSection);
         this.menu.addMenuItem(lineSection);
         lineSection.itemActivated = () => {};
@@ -1103,30 +1109,30 @@ var DrawingMenu = new Lang.Class({
         else
             this.lineSection.actor.show();
         
-        if (this.area.currentShape != Shapes.TEXT)
+        if (this.area.currentShape != Shapes.TEXT) {
             this.fontSection.actor.hide();
-        else
+            this.fillItem.setSensitive(true);
+        } else {
             this.fontSection.actor.show();
+            this.fillItem.setSensitive(false);
+        }
     },
     
-    _addSwitchItem: function(menu, label, icon, target, targetProperty, callback) {
+    _addSwitchItem: function(menu, label, iconFalse, iconTrue, target, targetProperty, callback) {
         let item = new PopupMenu.PopupSwitchMenuItem(label, target[targetProperty]);
         
-        if (icon) {
-            item.icon = new St.Icon({ style_class: 'popup-menu-icon' });
-            item.actor.insert_child_at_index(item.icon, 1);
-            if (icon instanceof GObject.Object && GObject.type_is_a(icon, GdkPixbuf.Pixbuf))
-                item.icon.set_gicon(icon);
-            else
-                item.icon.set_icon_name(icon);
-        }
+        item.icon = new St.Icon({ style_class: 'popup-menu-icon blabla' });
+        item.actor.insert_child_at_index(item.icon, 1);
+        item.icon.set_gicon(target[targetProperty] ? iconTrue : iconFalse);
         
         item.connect('toggled', (item, state) => {
             target[targetProperty] = state;
+            item.icon.set_gicon(target[targetProperty] ? iconTrue : iconFalse);
             if (callback)
                 callback();
         });
         menu.addMenuItem(item);
+        return item;
     },
     
     _addSwitchItemWithCallback: function(menu, label, active, onToggled) {
@@ -1153,7 +1159,7 @@ var DrawingMenu = new Lang.Class({
     
     _addSubMenuItem: function(menu, icon, obj, target, targetProperty, callback) {
         let item = new PopupMenu.PopupSubMenuMenuItem(_(obj[target[targetProperty]]), icon ? true : false);
-        if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, GdkPixbuf.Pixbuf))
+        if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, Gio.Icon))
             item.icon.set_gicon(icon);
         else if (icon)
             item.icon.set_icon_name(icon);

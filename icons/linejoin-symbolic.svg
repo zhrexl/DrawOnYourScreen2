@@ -1,4 +1,3 @@
-<svg viewBox="0 0 576 576" xmlns="http://www.w3.org/2000/svg">
-  <path fill="transparent" stroke="#eeeeec" stroke-width="110" stroke-linecap="round" stroke-linejoin="round" d="M288 90 L 55 512"/>
-  <path fill="transparent" stroke="#eeeeec" stroke-width="110" stroke-linecap="round" stroke-linejoin="round" d="M288 90 L 514 512"/>
+<svg viewBox="-50 -50 676 676" xmlns="http://www.w3.org/2000/svg">
+  <path fill="#555" stroke="transparent" d="M -13 518 L288 0 L589 518 L500 576 L288 217 L76 576z"/>
 </svg>

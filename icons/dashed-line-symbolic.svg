@@ -1,3 +1,5 @@
 <svg viewBox="0 0 576 576" xmlns="http://www.w3.org/2000/svg">
-  <path fill="transparent" stroke="#eeeeec" stroke-width="110" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="25 150.5" stroke-dashoffset="0" d="M100 288 L 476 288"/>
+  <rect fill="#555" stroke="transparent" x="228" y="228" width="120" height="120"/>
+  <rect fill="#555" stroke="transparent" x="50" y="228" width="120" height="120"/>
+  <rect fill="#555" stroke="transparent" x="406" y="228" width="120" height="120"/>
 </svg>
