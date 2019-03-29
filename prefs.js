@@ -50,7 +50,7 @@ var INTERNAL_KEYBINDINGS = {
     'select-rectangle-shape': "Select rectangle",
     'select-text-shape': "Select text",
     'select-none-shape': "Unselect shape (free drawing)",
-    'toggle-fill': "Select fill/stroke",
+    'toggle-fill': "Toggle fill/stroke",
     '-separator-2': '',
     'increment-line-width': "Increment line width",
     'decrement-line-width': "Decrement line width",
