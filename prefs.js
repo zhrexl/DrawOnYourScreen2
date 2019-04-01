@@ -152,19 +152,19 @@ var AboutPage = new GObject.Class({
         let rightBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
         let leftLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 2, justify: 1, use_markup: true, label: "<small>" + _GTK("Created by") + "</small>" });
         let rightLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 1, justify: 0, use_markup: true, label: "<small><a href=\"https://framagit.org/abakkk\">Abakkk</a></small>" });
-        leftBox.pack_start(leftLabel, true, true, 0);
-        rightBox.pack_start(rightLabel, true, true, 0);
+        leftBox.pack_start(leftLabel, false, false, 0);
+        rightBox.pack_start(rightLabel, false, false, 0);
         creditBox.pack_start(leftBox, true, true, 5);
         creditBox.pack_start(rightBox, true, true, 5);
         vbox.add(creditBox);
         
         if (_("Translators") != "Translators") {
-            leftBox.pack_start(new Gtk.Label(), true, true, 0);
-            rightBox.pack_start(new Gtk.Label(), true, true, 0);
+            leftBox.pack_start(new Gtk.Label(), false, false, 0);
+            rightBox.pack_start(new Gtk.Label(), false, false, 0);
             leftLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 2, justify: 1, use_markup: true, label: "<small>" + _GTK("Translated by") + "</small>" });
             rightLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 1, justify: 0, use_markup: true, label: "<small>" + _("Translators") + "</small>" });
-            leftBox.pack_start(leftLabel, true, true, 0);
-            rightBox.pack_start(rightLabel, true, true, 0);
+            leftBox.pack_start(leftLabel, false, false, 0);
+            rightBox.pack_start(rightLabel, false, false, 0);
         }
     }
     
@@ -287,7 +287,7 @@ var PrefsPage = new GObject.Class({
         let smoothBox = new Gtk.Box({ margin: MARGIN });
         let smoothLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
         let smoothLabel1 = new Gtk.Label({label: _("Smooth stroke during the drawing process")});
-        let smoothLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("You can also smooth the stroke afterward\nSee") + " \"" + _("Smooth last brushstroke") + "\"</small>" });
+        let smoothLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("You can also smooth the stroke afterward\nSee “%s”").format(_("Smooth last brushstroke")) + "</small>" });
         smoothLabel1.set_halign(1);
         smoothLabel2.get_style_context().add_class("dim-label");
         smoothLabelBox.pack_start(smoothLabel1, true, true, 0);
@@ -313,7 +313,7 @@ var PrefsPage = new GObject.Class({
         let noteBox = new Gtk.Box({ margin_top: MARGIN, margin_left: MARGIN, margin_right: MARGIN, margin_bottom:MARGIN });
         let noteLabel = new Gtk.Label({
             use_markup: true,
-            label: _("<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file,\nthey are colored with background color, transparent if it is disabled.\n(See \"Add a drawing background\" or edit the SVG file afterwards)")
+            label: _("<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file,\nthey are colored with background color, transparent if it is disabled.\n(See “%s” or edit the SVG file afterwards)").format(_("Add a drawing background"))
         });
         noteLabel.set_halign(1);
         noteLabel.get_style_context().add_class("dim-label");

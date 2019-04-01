@@ -296,7 +296,9 @@ msgstr ""
 msgid "Smooth stroke during the drawing process"
 msgstr ""
 
-msgid "You can also smooth the stroke afterward\nSee"
+msgid ""
+"You can also smooth the stroke afterward\n"
+"See “%s”"
 msgstr ""
 
 msgid "Change the style"
@@ -306,9 +308,9 @@ msgid "See stylesheet.css"
 msgstr ""
 
 msgid ""
-"<u>Note</u>: When you save elements made with eraser in a SVG file,\n"
+"<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file,\n"
 "they are colored with background color, transparent if it is disabled.\n"
-"(See \"Add a drawing background\" or edit the SVG file afterwards)"
+"(See “%s” or edit the SVG file afterwards)"
 msgstr ""
 
 
