@@ -135,7 +135,7 @@ var AboutPage = new GObject.Class({
         this.add(vbox);
         
         let name = "<b> " + _(Metadata.name) + "</b>";
-        let version = _("Version %s").format(Metadata.version.toString());
+        let version = _("Version %d").format(Metadata.version);
         let description = _(Metadata.description);
         let link = "<span><a href=\"" + Metadata.url + "\">" + Metadata.url + "</a></span>";
         let licenceName = _GTK("GNU General Public License, version 2 or later");

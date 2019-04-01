@@ -251,7 +251,7 @@ msgstr ""
 #msgid "Draw On You Screen"
 #msgstr ""
 
-msgid "Version %s"
+msgid "Version %d"
 msgstr ""
 
 msgid "Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot"
