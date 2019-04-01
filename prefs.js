@@ -158,7 +158,7 @@ var AboutPage = new GObject.Class({
         creditBox.pack_start(rightBox, true, true, 5);
         vbox.add(creditBox);
         
-        if (_("Translators") != "Translators") {
+        if (_("Translators") != "Translators" && _("Translators") != "") {
             leftBox.pack_start(new Gtk.Label(), false, false, 0);
             rightBox.pack_start(new Gtk.Label(), false, false, 0);
             leftLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 2, justify: 1, use_markup: true, label: "<small>" + _GTK("Translated by") + "</small>" });
