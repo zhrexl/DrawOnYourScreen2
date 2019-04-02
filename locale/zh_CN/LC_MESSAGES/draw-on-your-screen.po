@@ -1,0 +1,318 @@
+# <language> translations for Draw On Your Screen.
+# Copyright (C) 2019 Listed translators
+#
+# This file is distributed under the same license as Draw On Your Screen.
+# Aerowolf <aerowolf@tom.com>, 2019.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Draw On Your Screen version 4\n"
+"Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues/5\n"
+"POT-Creation-Date: 2019-03-04 16:40+0100\n"
+"PO-Revision-Date: 2019-04-01 10:09+0800\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.0.6\n"
+"Last-Translator: Aerowolf <aerowolf@tom.com>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: zh_CN\n"
+
+msgid "Translators"
+msgstr "<a href=\"mailto:aerowolf@tom.com\">Aerowolf</a>"
+
+#: extension.js
+msgid "Leaving drawing mode"
+msgstr "离开绘画模式"
+
+msgid "Press Ctrl + F1 for help"
+msgstr "按Ctrl + F1获取帮助"
+
+msgid "Entering drawing mode"
+msgstr "进入绘画模式"
+
+#: draw.js
+msgid "Free drawing"
+msgstr "随意绘画"
+
+msgid "Line"
+msgstr "线条"
+
+msgid "Ellipse"
+msgstr "圆形"
+
+msgid "Rectangle"
+msgstr "矩形"
+
+msgid "Text"
+msgstr "文字"
+
+msgid "Fill"
+msgstr "色块"
+
+msgid "Stroke"
+msgstr "笔划"
+
+msgid "Dashed line"
+msgstr "虚线"
+
+msgid "Full line"
+msgstr "实线"
+
+msgid ""
+"Type your text\n"
+"and press Enter"
+msgstr ""
+"输入文字\n"
+"然后按回车键"
+
+msgid "Screenshot"
+msgstr "屏幕截图"
+
+msgid "Screenshot to clipboard"
+msgstr "截取屏幕到剪切板"
+
+msgid "Area screenshot"
+msgstr "区域截图"
+
+msgid "Area screenshot to clipboard"
+msgstr "截取区域到剪切板"
+
+msgid "System"
+msgstr "系统快捷键"
+
+msgid "Undo"
+msgstr "撤消"
+
+msgid "Redo"
+msgstr "重做"
+
+msgid "Erase"
+msgstr "擦除"
+
+msgid "Smooth"
+msgstr "平滑"
+
+msgid "Dashed"
+msgstr "虚线"
+
+msgid "Color"
+msgstr "色彩"
+
+#: prefs.js
+msgid "Preferences"
+msgstr "参数"
+
+msgid "About"
+msgstr "关于"
+
+# GLOBAL_KEYBINDINGS
+msgid "Enter/leave drawing mode"
+msgstr "进入/离开绘画模式"
+
+msgid "Erase all drawings"
+msgstr "擦除所有绘画"
+
+# INTERNAL_KEYBINDINGS
+msgid "Undo last brushstroke"
+msgstr "撤消上一笔"
+
+msgid "Redo last brushstroke"
+msgstr "重做上一笔"
+
+msgid "Erase last brushstroke"
+msgstr "擦除上一笔"
+
+msgid "Smooth last brushstroke"
+msgstr "平滑上一笔"
+
+msgid "Select line"
+msgstr "选择线条"
+
+msgid "Select ellipse"
+msgstr "选择圆形"
+
+msgid "Select rectangle"
+msgstr "选择矩形"
+
+msgid "Select text"
+msgstr "选择文字"
+
+msgid "Unselect shape (free drawing)"
+msgstr "不选择形状（随意绘画）"
+
+msgid "Toggle fill/stroke"
+msgstr "切换色块/线条"
+
+msgid "Increment line width"
+msgstr "增加线宽"
+
+msgid "Decrement line width"
+msgstr "减小线宽"
+
+msgid "Increment line width even more"
+msgstr "大幅增加线宽"
+
+msgid "Decrement line width even more"
+msgstr "大幅减小线宽"
+
+msgid "Change linejoin"
+msgstr "修改笔锋形状"
+
+msgid "Change linecap"
+msgstr "修改端点样式"
+
+# already in draw.js
+# msgid "Dashed line"
+# msgstr ""
+msgid "Change font family (generic name)"
+msgstr "修改字体（通用名称）"
+
+msgid "Change font weight"
+msgstr "修改字体大小"
+
+msgid "Change font style"
+msgstr "修改字体样式"
+
+msgid "Hide panel and dock"
+msgstr "隐藏面板和Dock"
+
+msgid "Add a drawing background"
+msgstr "添加绘画背景"
+
+msgid "Square drawing area"
+msgstr "规整绘画区域（修正为矩形）"
+
+msgid "Save drawing as a SVG file"
+msgstr "将绘画保存为SVG文件"
+
+msgid "Open stylesheet.css"
+msgstr "打开stylesheet.css"
+
+msgid "Show help"
+msgstr "显示帮助"
+
+# OTHER_SHORTCUTS
+msgid "Draw"
+msgstr "绘画"
+
+msgid "Left click"
+msgstr "点击左键"
+
+msgid "Menu"
+msgstr "菜单"
+
+msgid "Right click"
+msgstr "点击右键"
+
+msgid "Center click"
+msgstr "点击中键"
+
+msgid "Transform shape (when drawing)"
+msgstr "改变形状（绘画期间）"
+
+msgid "Ctrl key"
+msgstr "Ctrl键"
+
+msgid "Increment/decrement line width"
+msgstr "增加/减小线宽"
+
+msgid "Scroll"
+msgstr "滚动"
+
+msgid "Select color"
+msgstr "选择色彩"
+
+msgid "Ctrl+1...9"
+msgstr "Ctrl+1...9"
+
+msgid "Select eraser"
+msgstr "选择橡皮擦"
+
+msgid "Shift key held"
+msgstr "按住Shift键"
+
+msgid "Leave"
+msgstr "离开"
+
+msgid "Escape key"
+msgstr "Esc键"
+
+# About page
+# you are free to translate the extension name
+# msgid "Draw On You Screen"
+# msgstr ""
+
+msgid "Version %d"
+msgstr "版本 %d"
+
+msgid ""
+"Start drawing with Super+Alt+D and save your beautiful work by taking a "
+"screenshot"
+msgstr "使用Super+Alt+D键开始绘画，使用屏幕截图保存您的作品"
+
+# Prefs page
+msgid "Global"
+msgstr "全局快捷键"
+
+msgid "Drawing on the desktop"
+msgstr "在桌面上绘画"
+
+msgid "Draw On Your Screen becomes Draw On Your Desktop"
+msgstr "从在屏幕上绘画改为在桌面上绘画"
+
+msgid "Persistent"
+msgstr "持续"
+
+msgid "Persistent drawing through session restart"
+msgstr "在进程重启期间中断绘画"
+
+msgid "Disable on-screen notifications"
+msgstr "禁止屏幕提示"
+
+msgid "Disable panel indicator"
+msgstr "不显示面板图标"
+
+msgid "Internal"
+msgstr "内部快捷键"
+
+msgid "(in drawing mode)"
+msgstr "（在绘画模式中）"
+
+msgid ""
+"By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you "
+"can:\n"
+" . rotate a rectangle or a text area\n"
+" . extend and rotate an ellipse\n"
+" . curve a line (cubic Bezier curve)"
+msgstr ""
+"在绘画<b>期间</b>按<b>Ctrl</b>键，您可以：\n"
+" . 旋转矩形或文字区域\n"
+" . 拉伸和旋转圆形\n"
+" . 平滑线条（三次贝塞尔曲线）"
+
+msgid "Smooth stroke during the drawing process"
+msgstr "在绘画过程中平滑笔划"
+
+msgid ""
+"You can also smooth the stroke afterward\n"
+"See “%s”"
+msgstr ""
+"您也可以事后再平滑笔划\n"
+"请参见“%s”"
+
+msgid "Change the style"
+msgstr "修改样式"
+
+msgid "See stylesheet.css"
+msgstr "参见stylesheet.css"
+
+msgid ""
+"<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file,\n"
+"they are colored with background color, transparent if it is disabled.\n"
+"(See “%s” or edit the SVG file afterwards)"
+msgstr ""
+"<u>注意</u>：当您保存<b>SVG</b>文件时，如果其中有<b>橡皮擦</b>生成的元素（擦除形成的轨\n"
+"迹），它们将被以背景色着色。如果背景色被禁用，则显示为透明。（请参见“%s或”\n"
+"事后编辑SVG文件）"
