@@ -7,9 +7,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen version 4\n"
-"Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues/5\n"
+"Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/"
+"issues/5\n"
 "POT-Creation-Date: 2019-03-04 16:40+0100\n"
-"PO-Revision-Date: 2019-04-01 10:09+0800\n"
+"PO-Revision-Date: 2019-04-03 14:17+0800\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -37,7 +38,7 @@ msgid "Free drawing"
 msgstr "随意绘画"
 
 msgid "Line"
-msgstr "线条"
+msgstr "直线"
 
 msgid "Ellipse"
 msgstr "圆形"
@@ -119,7 +120,7 @@ msgid "Undo last brushstroke"
 msgstr "撤消上一笔"
 
 msgid "Redo last brushstroke"
-msgstr "重做上一笔"
+msgstr "重画上一笔"
 
 msgid "Erase last brushstroke"
 msgstr "擦除上一笔"
@@ -128,7 +129,7 @@ msgid "Smooth last brushstroke"
 msgstr "平滑上一笔"
 
 msgid "Select line"
-msgstr "选择线条"
+msgstr "选择直线"
 
 msgid "Select ellipse"
 msgstr "选择圆形"
@@ -182,7 +183,7 @@ msgid "Add a drawing background"
 msgstr "添加绘画背景"
 
 msgid "Square drawing area"
-msgstr "规整绘画区域（修正为矩形）"
+msgstr "将画布修整为正方形"
 
 msgid "Save drawing as a SVG file"
 msgstr "将绘画保存为SVG文件"
@@ -219,7 +220,7 @@ msgid "Increment/decrement line width"
 msgstr "增加/减小线宽"
 
 msgid "Scroll"
-msgstr "滚动"
+msgstr "滚动中键"
 
 msgid "Select color"
 msgstr "选择色彩"
@@ -243,14 +244,13 @@ msgstr "Esc键"
 # you are free to translate the extension name
 # msgid "Draw On You Screen"
 # msgstr ""
-
 msgid "Version %d"
 msgstr "版本 %d"
 
 msgid ""
 "Start drawing with Super+Alt+D and save your beautiful work by taking a "
 "screenshot"
-msgstr "使用Super+Alt+D键开始绘画，使用屏幕截图保存您的作品"
+msgstr "按Super+Alt+D键开始绘画，以屏幕截图保存您的作品"
 
 # Prefs page
 msgid "Global"
@@ -272,13 +272,13 @@ msgid "Disable on-screen notifications"
 msgstr "禁止屏幕提示"
 
 msgid "Disable panel indicator"
-msgstr "不显示面板图标"
+msgstr "禁止托盘图标"
 
 msgid "Internal"
 msgstr "内部快捷键"
 
 msgid "(in drawing mode)"
-msgstr "（在绘画模式中）"
+msgstr "（在绘画模式中有效）"
 
 msgid ""
 "By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you "
@@ -309,10 +309,12 @@ msgid "See stylesheet.css"
 msgstr "参见stylesheet.css"
 
 msgid ""
-"<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file,\n"
+"<u>Note</u>: When you save elements made with <b>eraser</b> in a "
+"<b>SVG</b> file,\n"
 "they are colored with background color, transparent if it is disabled.\n"
 "(See “%s” or edit the SVG file afterwards)"
 msgstr ""
-"<u>注意</u>：当您保存<b>SVG</b>文件时，如果其中有<b>橡皮擦</b>生成的元素（擦除形成的轨\n"
-"迹），它们将被以背景色着色。如果背景色被禁用，则显示为透明。（请参见“%s或”\n"
-"事后编辑SVG文件）"
+"<u>注意</u>：当您保存<b>SVG</b>文件时，如果其中有<b>橡皮擦</b>生成的元素"
+"（擦除形成的轨迹），它们将被以背\n"
+"景色着色。如果背景色被禁用，则显示为透明。（请参见“%s”或事后编辑SVG文"
+"件）"
