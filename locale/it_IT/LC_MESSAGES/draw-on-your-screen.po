@@ -1,0 +1,325 @@
+# Copyright (C) 2019 Listed translators
+#
+# This file is distributed under the same license as Draw On Your Screen.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Draw On Your Screen VERSION\n"
+"Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
+"POT-Creation-Date: 2019-06-15 08:47+0200\n"
+"PO-Revision-Date: 2019-06-15 09:52+0200\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.7.1\n"
+"Last-Translator: albano battistella <albano_battistella@hotmail.com>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: it_IT\n"
+
+# add your name here, for example:
+# "Albano Battistella\n"
+# "<a href=\"mailto:ali@mail.org\">Ali</a>\n"
+# "<a href=\"https://...\">丽</a>"
+# It will be displayed in About page
+msgid "Translators"
+msgstr "Albano Battistella"
+
+#: extension.js
+msgid "Leaving drawing mode"
+msgstr "Lascia la modalità di disegno"
+
+msgid "Press Ctrl + F1 for help"
+msgstr "Premi Ctrl + F1 per aiuto"
+
+msgid "Entering drawing mode"
+msgstr "Entra in  modalità disegno"
+
+#: draw.js
+msgid "Free drawing"
+msgstr "Disegno libero"
+
+msgid "Line"
+msgstr "Linea"
+
+msgid "Ellipse"
+msgstr "Ellisse"
+
+msgid "Rectangle"
+msgstr "Rettangolo"
+
+msgid "Text"
+msgstr "Testo"
+
+msgid "Fill"
+msgstr "Riempi"
+
+msgid "Stroke"
+msgstr "Tratto"
+
+msgid "Dashed line"
+msgstr "Linea tratteggiata"
+
+msgid "Full line"
+msgstr "Linea piena"
+
+msgid ""
+"Type your text\n"
+"and press Enter"
+msgstr ""
+"Digita il tuo testo\n"
+"e premere Invio"
+
+msgid "Screenshot"
+msgstr "Screenshot"
+
+msgid "Screenshot to clipboard"
+msgstr "Screenshot negli appunti"
+
+msgid "Area screenshot"
+msgstr "Area screenshot"
+
+msgid "Area screenshot to clipboard"
+msgstr "Area screenshot negli appunti"
+
+msgid "System"
+msgstr "Sistema"
+
+msgid "Undo"
+msgstr "Annulla"
+
+msgid "Redo"
+msgstr "Ripeti"
+
+msgid "Erase"
+msgstr "Cancella"
+
+msgid "Smooth"
+msgstr "Liscio"
+
+msgid "Dashed"
+msgstr "tratteggiato"
+
+msgid "Color"
+msgstr "Colore"
+
+#: prefs.js
+msgid "Preferences"
+msgstr "Preferenze"
+
+msgid "About"
+msgstr "Informazioni su"
+
+# GLOBAL_KEYBINDINGS
+msgid "Enter/leave drawing mode"
+msgstr "Entra/esci dalla modalità disegno"
+
+msgid "Erase all drawings"
+msgstr "Cancella tutti i disegni"
+
+# INTERNAL_KEYBINDINGS
+msgid "Undo last brushstroke"
+msgstr "Annulla l'ultima pennellata"
+
+msgid "Redo last brushstroke"
+msgstr "Ripeti l'ultima pennellata"
+
+msgid "Erase last brushstroke"
+msgstr "Cancella l'ultima pennellata"
+
+msgid "Smooth last brushstroke"
+msgstr "Liscia l'ultima pennellata"
+
+msgid "Select line"
+msgstr "Seleziona la linea"
+
+msgid "Select ellipse"
+msgstr "Seleziona l'ellisse"
+
+msgid "Select rectangle"
+msgstr "Seleziona il rettangolo"
+
+msgid "Select text"
+msgstr "Seleziona il testo"
+
+msgid "Unselect shape (free drawing)"
+msgstr "Deseleziona forma (disegno libero)"
+
+msgid "Toggle fill/stroke"
+msgstr "Attiva / disattiva riempimento / tratto"
+
+msgid "Increment line width"
+msgstr "Incrementa la larghezza della linea"
+
+msgid "Decrement line width"
+msgstr "Decrementa la larghezza della linea"
+
+msgid "Increment line width even more"
+msgstr "Aumentare la larghezza della linea ancora di più"
+
+msgid "Decrement line width even more"
+msgstr "Decrementa la larghezza della linea ancora di più"
+
+msgid "Change linejoin"
+msgstr "Cambia linejoin"
+
+msgid "Change linecap"
+msgstr "Cambia il limite di riga"
+
+# already in draw.js
+# msgid "Dashed line"
+# msgstr ""
+msgid "Change font family (generic name)"
+msgstr "Cambia la famiglia del font (nome generico)"
+
+msgid "Change font weight"
+msgstr "Cambiare spessore del font"
+
+msgid "Change font style"
+msgstr "Cambia stile del font"
+
+msgid "Hide panel and dock"
+msgstr "Nascondi pannello e dock"
+
+msgid "Add a drawing background"
+msgstr "Aggiungi uno sfondo di disegno"
+
+msgid "Square drawing area"
+msgstr "Area di disegno quadrata"
+
+msgid "Save drawing as a SVG file"
+msgstr "Salva disegno come file SVG"
+
+msgid "Open stylesheet.css"
+msgstr "Apri stylesheet.css"
+
+msgid "Show help"
+msgstr "Mostra aiuto"
+
+# OTHER_SHORTCUTS
+msgid "Draw"
+msgstr "Disegna"
+
+msgid "Left click"
+msgstr "Clic sinistro"
+
+msgid "Menu"
+msgstr "Menu"
+
+msgid "Right click"
+msgstr "Clic destro"
+
+msgid "Center click"
+msgstr "clic centro"
+
+msgid "Transform shape (when drawing)"
+msgstr "Trasforma la forma (quando si disegna)"
+
+msgid "Ctrl key"
+msgstr "Tasto Ctrl"
+
+msgid "Increment/decrement line width"
+msgstr "Incrementa/decrementa larghezza della linea"
+
+msgid "Scroll"
+msgstr "Scorri"
+
+msgid "Select color"
+msgstr "Seleziona colore"
+
+msgid "Ctrl+1...9"
+msgstr "Ctrl+1...9"
+
+msgid "Select eraser"
+msgstr "Seleziona gomma"
+
+msgid "Shift key held"
+msgstr "Tasto MAIUSC premuto"
+
+msgid "Leave"
+msgstr "Lascia"
+
+msgid "Escape key"
+msgstr "tasto Esc"
+
+# About page
+# you are free to translate the extension name
+# msgid "Draw On You Screen"
+# msgstr ""
+msgid "Version %d"
+msgstr "Versione %d"
+
+msgid ""
+"Start drawing with Super+Alt+D and save your beautiful work by taking a "
+"screenshot"
+msgstr ""
+"Inizia a disegnare con Super + Alt + D e salva il tuo bellissimo lavoro "
+"scattando uno screenshot"
+
+# Prefs page
+msgid "Global"
+msgstr "Globale"
+
+msgid "Drawing on the desktop"
+msgstr "Disegno sul desktop"
+
+msgid "Draw On Your Screen becomes Draw On Your Desktop"
+msgstr "Draw On Your Screen diventa Draw On Your Desktop"
+
+msgid "Persistent"
+msgstr "Persistente"
+
+msgid "Persistent drawing through session restart"
+msgstr "Disegno persistente attraverso il riavvio della sessione"
+
+msgid "Disable on-screen notifications"
+msgstr "Disabilita le notifiche sullo schermo"
+
+msgid "Disable panel indicator"
+msgstr "Disabilita indicatore del pannello"
+
+msgid "Internal"
+msgstr "Interno"
+
+msgid "(in drawing mode)"
+msgstr "(in modalità disegno)"
+
+msgid ""
+"By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you can:\n"
+" . rotate a rectangle or a text area\n"
+" . extend and rotate an ellipse\n"
+" . curve a line (cubic Bezier curve)"
+msgstr ""
+"Premendo il tasto <b> Ctrl </ b> <b> durante </ b> del processo di disegno, "
+"puoi:\n"
+"  . ruotare un rettangolo o un'area di testo\n"
+"  . estendere e ruotare un'ellisse\n"
+"  . curvare una linea (curva Bezier cubica)"
+
+msgid "Smooth stroke during the drawing process"
+msgstr "Colpo liscio durante il processo di disegno"
+
+msgid ""
+"You can also smooth the stroke afterward\n"
+"See “%s”"
+msgstr ""
+"Puoi anche lisciare il tratto in seguito\n"
+"Vedi \"% s\""
+
+msgid "Change the style"
+msgstr "Cambia lo stile"
+
+msgid "See stylesheet.css"
+msgstr "Vedi stylesheet.css"
+
+msgid ""
+"<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> "
+"file,\n"
+"they are colored with background color, transparent if it is disabled.\n"
+"(See “%s” or edit the SVG file afterwards)"
+msgstr ""
+"<u> Nota </ u>: quando salvi gli elementi creati con <b> gomma da "
+"cancellare </ b> in un file <b> SVG </ b>,\n"
+"questi sono colorati con il colore di sfondo, trasparente se disabilitati.\n"
+"(Vedi \"% s\" o modifica il file SVG in seguito)"
