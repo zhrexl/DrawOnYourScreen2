@@ -33,6 +33,7 @@ const Signals = imports.signals;
 const St = imports.gi.St;
 
 const BoxPointer = imports.ui.boxpointer;
+const Config = imports.misc.config;
 const Main = imports.ui.main;
 const PopupMenu = imports.ui.popupMenu;
 const Slider = imports.ui.slider;
@@ -45,6 +46,8 @@ const Convenience = Extension.imports.convenience;
 const ExtensionJs = Extension.imports.extension;
 const Prefs = Extension.imports.prefs;
 const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
+
+const GS_VERSION = Config.PACKAGE_VERSION;
 
 const FILL_ICON_PATH = Extension.dir.get_child('icons').get_child('fill-symbolic.svg').get_path();
 const STROKE_ICON_PATH = Extension.dir.get_child('icons').get_child('stroke-symbolic.svg').get_path();
@@ -77,7 +80,6 @@ var DrawingArea = new Lang.Class({
         this.settings = Convenience.getSettings();
         this.emitter = new DrawingAreaEmitter();
         this.monitor = monitor;
-        this.menu = new DrawingMenu(this);
         this.helper = helper;
         
         this.elements = [];
@@ -93,6 +95,12 @@ var DrawingArea = new Lang.Class({
         
         if (loadJson)
             this._loadJson();
+    },
+    
+    get menu() {
+        if (!this._menu)
+            this._menu = new DrawingMenu(this);
+        return this._menu;
     },
     
     _redisplay: function() {
@@ -458,8 +466,8 @@ var DrawingArea = new Lang.Class({
     },
     
     incrementLineWidth: function(increment) {
-        this.currentLineWidth = Math.max(this.currentLineWidth + increment, 1);
-        this.emitter.emit('show-osd', this.currentLineWidth + " " + _("px"), this.currentLineWidth);
+        this.currentLineWidth = Math.max(this.currentLineWidth + increment, 0);
+        this.emitter.emit('show-osd', this.currentLineWidth + " " + _("px"), 2 * this.currentLineWidth);
     },
     
     toggleLineJoin: function() {
@@ -919,6 +927,8 @@ var DrawingHelper = new Lang.Class({
                 this.vbox.add(hbox);
                 continue;
             }
+            if (!settings.get_strv(settingKey)[0])
+                continue;
             let [keyval, mods] = Gtk.accelerator_parse(settings.get_strv(settingKey)[0]);
             hbox.add(new St.Label({ text: _(Prefs.GLOBAL_KEYBINDINGS[settingKey]) }));
             hbox.add(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods) }), { expand: true });
@@ -946,6 +956,8 @@ var DrawingHelper = new Lang.Class({
                 continue;
             }
             let hbox = new St.BoxLayout({ vertical: false });
+            if (!settings.get_strv(settingKey)[0])
+                continue;
             let [keyval, mods] = Gtk.accelerator_parse(settings.get_strv(settingKey)[0]);
             hbox.add(new St.Label({ text: _(Prefs.INTERNAL_KEYBINDINGS[settingKey]) }));
             hbox.add(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods) }), { expand: true });
@@ -958,8 +970,9 @@ var DrawingHelper = new Lang.Class({
         
         for (let settingKey in MEDIA_KEYS_KEYS) {
             if (!mediaKeysSettings.settings_schema.has_key(settingKey))
-                return;
-            let [keyval, mods] = Gtk.accelerator_parse(mediaKeysSettings.get_string(settingKey));
+                continue;
+            let shortcut = GS_VERSION < '3.33.0' ? mediaKeysSettings.get_string(settingKey) : mediaKeysSettings.get_strv(settingKey)[0];
+            let [keyval, mods] = Gtk.accelerator_parse(shortcut);
             let hbox = new St.BoxLayout({ vertical: false });
             hbox.add(new St.Label({ text: _(MEDIA_KEYS_KEYS[settingKey]) }));
             hbox.add(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods) }), { expand: true });
@@ -1005,7 +1018,7 @@ var DrawingMenu = new Lang.Class({
         this.area = area;
         let side = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? St.Side.RIGHT : St.Side.LEFT;
         this.menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor, 0.25, side);
-        this.menuManager = new PopupMenu.PopupMenuManager({ actor: this.area });
+        this.menuManager = new PopupMenu.PopupMenuManager(GS_VERSION < '3.33.0' ? { actor: this.area } : this.area);
         this.menuManager.addMenu(this.menu);
         
         Main.layoutManager.uiGroup.add_actor(this.menu.actor);
@@ -1022,7 +1035,6 @@ var DrawingMenu = new Lang.Class({
         this.linecapIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(LINECAP_ICON_PATH) });
         this.fullLineIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FULL_LINE_ICON_PATH) });
         this.dashedLineIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(DASHED_LINE_ICON_PATH) });
-        
     },
     
     disable: function() {
@@ -1125,9 +1137,10 @@ var DrawingMenu = new Lang.Class({
     
     _addSwitchItem: function(menu, label, iconFalse, iconTrue, target, targetProperty) {
         let item = new PopupMenu.PopupSwitchMenuItem(label, target[targetProperty]);
+        let itemActor = GS_VERSION < '3.33.0' ? item.actor : item;
         
         item.icon = new St.Icon({ style_class: 'popup-menu-icon' });
-        item.actor.insert_child_at_index(item.icon, 1);
+        itemActor.insert_child_at_index(item.icon, 1);
         item.icon.set_gicon(target[targetProperty] ? iconTrue : iconFalse);
         
         item.connect('toggled', (item, state) => {
@@ -1146,17 +1159,34 @@ var DrawingMenu = new Lang.Class({
     
     _addSliderItem: function(menu, target, targetProperty) {
         let item = new PopupMenu.PopupBaseMenuItem({ activate: false });
+        let itemActor = GS_VERSION < '3.33.0' ? item.actor : item;
         let label = new St.Label({ text: target[targetProperty] + " " + _("px"), style_class: 'draw-on-your-screen-menu-slider-label' });
         let slider = new Slider.Slider(target[targetProperty] / 50);
+        let sliderActor = GS_VERSION < '3.33.0' ? slider.actor : slider;
         
-        slider.connect('value-changed', (slider, value, property) => {
-            target[targetProperty] = Math.max(Math.round(value * 50), 1);
-            label.set_text(target[targetProperty] + " px");
-        });
+        if (GS_VERSION < '3.33.0') {
+            slider.connect('value-changed', (slider, value, property) => {
+                target[targetProperty] = Math.max(Math.round(value * 50), 0);
+                label.set_text(target[targetProperty] + " px");
+                if (target[targetProperty] === 0)
+                    label.add_style_class_name(ExtensionJs.WARNING_COLOR_STYLE_CLASS_NAME);
+                else
+                    label.remove_style_class_name(ExtensionJs.WARNING_COLOR_STYLE_CLASS_NAME);
+            });
+        } else {
+            slider.connect('notify::value', () => {
+                target[targetProperty] = Math.max(Math.round(slider.value * 50), 0);
+                label.set_text(target[targetProperty] + " px");
+                if (target[targetProperty] === 0)
+                    label.add_style_class_name(ExtensionJs.WARNING_COLOR_STYLE_CLASS_NAME);
+                else
+                    label.remove_style_class_name(ExtensionJs.WARNING_COLOR_STYLE_CLASS_NAME);
+            });
+        }
         
-        item.actor.add(slider.actor, { expand: true });
-        item.actor.add(label);
-        item.actor.connect('key-press-event', slider.onKeyPressEvent.bind(slider));
+        itemActor.add(sliderActor, { expand: true });
+        itemActor.add(label);
+        itemActor.connect('key-press-event', slider.onKeyPressEvent.bind(slider));
         menu.addMenuItem(item);
     },
     
@@ -1222,7 +1252,8 @@ var DrawingMenu = new Lang.Class({
     
     _addSeparator: function(menu) {
         let separator = new PopupMenu.PopupSeparatorMenuItem(' ');
-        separator.actor.add_style_class_name('draw-on-your-screen-menu-separator');
+        let separatorActor = GS_VERSION < '3.33.0' ? separator.actor : separator;
+        separatorActor.add_style_class_name('draw-on-your-screen-menu-separator');
         menu.addMenuItem(separator);
     }
 });

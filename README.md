@@ -10,7 +10,8 @@ Features :
 
 * Basic shapes (rectangle, circle, ellipse, line, curve, text, free)
 * Smooth stroke
-* Drawing on desktop and persistence
+* Draw over applications
+* Keep drawings on desktop background with persistence (notes, children's art ...)
 * Multi-monitor support
 * Export to SVG
 

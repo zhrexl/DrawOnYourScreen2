@@ -26,6 +26,7 @@ const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 
+const Config = imports.misc.config;
 const Main = imports.ui.main;
 const OsdWindow = imports.ui.osdWindow;
 const PanelMenu = imports.ui.panelMenu;
@@ -35,8 +36,12 @@ const Convenience = Extension.imports.convenience;
 const Draw = Extension.imports.draw;
 const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
 
+const GS_VERSION = Config.PACKAGE_VERSION;
+
 // DRAWING_ACTION_MODE is a custom Shell.ActionMode
 var DRAWING_ACTION_MODE = Math.pow(2,14);
+// use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
+var WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
 
 let manager;
 
@@ -322,8 +327,21 @@ var AreaManager = new Lang.Class({
             return;
         let activeIndex = this.areas.indexOf(this.activeArea);
         if (activeIndex != -1) {
+            // GS 3.32- : bar from 0 to 100
+            // GS 3.34+ : bar from 0 to 1
+            if (level && GS_VERSION > '3.33.0')
+                level = level / 100;
             Main.osdWindowManager.show(activeIndex, this.enterGicon, label, level, maxLevel);
             Main.osdWindowManager._osdWindows[activeIndex]._label.get_clutter_text().set_use_markup(true);
+            
+            if (level === 0) {
+                Main.osdWindowManager._osdWindows[activeIndex]._label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
+                // the same label is shared by all GS OSD so the style must be removed after being used
+                let osdLabelChangedHandler = Main.osdWindowManager._osdWindows[activeIndex]._label.connect('notify::text', () => {
+                    Main.osdWindowManager._osdWindows[activeIndex]._label.remove_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
+                    Main.osdWindowManager._osdWindows[activeIndex]._label.disconnect(osdLabelChangedHandler);
+                });
+            }
         }
     },
     
@@ -378,16 +396,17 @@ var DrawingIndicator = new Lang.Class({
     _init: function() {
         let [menuAlignment, dontCreateMenu] = [0, true];
         this.button = new PanelMenu.Button(menuAlignment, "Drawing Indicator", dontCreateMenu);
+        this.buttonActor = GS_VERSION < '3.33.0' ? this.button.actor: this.button;
         Main.panel.addToStatusArea('draw-on-your-screen-indicator', this.button);
         
         this.icon = new St.Icon({ icon_name: 'applications-graphics-symbolic',
                                   style_class: 'system-status-icon screencast-indicator' });
-        this.button.actor.add_child(this.icon);
-        this.button.actor.visible = false;
+        this.buttonActor.add_child(this.icon);
+        this.buttonActor.visible = false;
     },
 
     sync: function(visible) {
-        this.button.actor.visible = visible;
+        this.buttonActor.visible = visible;
     },
     
     disable: function() {
