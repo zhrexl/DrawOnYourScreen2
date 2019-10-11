@@ -466,8 +466,8 @@ var DrawingArea = new Lang.Class({
     },
     
     incrementLineWidth: function(increment) {
-        this.currentLineWidth = Math.max(this.currentLineWidth + increment, 1);
-        this.emitter.emit('show-osd', this.currentLineWidth + " " + _("px"), this.currentLineWidth);
+        this.currentLineWidth = Math.max(this.currentLineWidth + increment, 0);
+        this.emitter.emit('show-osd', this.currentLineWidth + " " + _("px"), 2 * this.currentLineWidth);
     },
     
     toggleLineJoin: function() {
@@ -1166,13 +1166,21 @@ var DrawingMenu = new Lang.Class({
         
         if (GS_VERSION < '3.33.0') {
             slider.connect('value-changed', (slider, value, property) => {
-                target[targetProperty] = Math.max(Math.round(value * 50), 1);
+                target[targetProperty] = Math.max(Math.round(value * 50), 0);
                 label.set_text(target[targetProperty] + " px");
+                if (target[targetProperty] === 0)
+                    label.add_style_class_name(ExtensionJs.WARNING_COLOR_STYLE_CLASS_NAME);
+                else
+                    label.remove_style_class_name(ExtensionJs.WARNING_COLOR_STYLE_CLASS_NAME);
             });
         } else {
             slider.connect('notify::value', () => {
-                target[targetProperty] = Math.max(Math.round(slider.value * 50), 1);
+                target[targetProperty] = Math.max(Math.round(slider.value * 50), 0);
                 label.set_text(target[targetProperty] + " px");
+                if (target[targetProperty] === 0)
+                    label.add_style_class_name(ExtensionJs.WARNING_COLOR_STYLE_CLASS_NAME);
+                else
+                    label.remove_style_class_name(ExtensionJs.WARNING_COLOR_STYLE_CLASS_NAME);
             });
         }
         

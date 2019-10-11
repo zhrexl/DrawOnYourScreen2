@@ -40,6 +40,8 @@ const GS_VERSION = Config.PACKAGE_VERSION;
 
 // DRAWING_ACTION_MODE is a custom Shell.ActionMode
 var DRAWING_ACTION_MODE = Math.pow(2,14);
+// use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
+var WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
 
 let manager;
 
@@ -325,8 +327,21 @@ var AreaManager = new Lang.Class({
             return;
         let activeIndex = this.areas.indexOf(this.activeArea);
         if (activeIndex != -1) {
+            // GS 3.32- : bar from 0 to 100
+            // GS 3.34+ : bar from 0 to 1
+            if (level && GS_VERSION > '3.33.0')
+                level = level / 100;
             Main.osdWindowManager.show(activeIndex, this.enterGicon, label, level, maxLevel);
             Main.osdWindowManager._osdWindows[activeIndex]._label.get_clutter_text().set_use_markup(true);
+            
+            if (level === 0) {
+                Main.osdWindowManager._osdWindows[activeIndex]._label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
+                // the same label is shared by all GS OSD so the style must be removed after being used
+                let osdLabelChangedHandler = Main.osdWindowManager._osdWindows[activeIndex]._label.connect('notify::text', () => {
+                    Main.osdWindowManager._osdWindows[activeIndex]._label.remove_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
+                    Main.osdWindowManager._osdWindows[activeIndex]._label.disconnect(osdLabelChangedHandler);
+                });
+            }
         }
     },
     
