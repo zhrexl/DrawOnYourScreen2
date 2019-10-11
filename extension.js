@@ -26,6 +26,7 @@ const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 
+const Config = imports.misc.config;
 const Main = imports.ui.main;
 const OsdWindow = imports.ui.osdWindow;
 const PanelMenu = imports.ui.panelMenu;
@@ -34,6 +35,8 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const Convenience = Extension.imports.convenience;
 const Draw = Extension.imports.draw;
 const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
+
+const GS_VERSION = Config.PACKAGE_VERSION;
 
 // DRAWING_ACTION_MODE is a custom Shell.ActionMode
 var DRAWING_ACTION_MODE = Math.pow(2,14);
@@ -378,16 +381,17 @@ var DrawingIndicator = new Lang.Class({
     _init: function() {
         let [menuAlignment, dontCreateMenu] = [0, true];
         this.button = new PanelMenu.Button(menuAlignment, "Drawing Indicator", dontCreateMenu);
+        this.buttonActor = GS_VERSION < '3.33.0' ? this.button.actor: this.button;
         Main.panel.addToStatusArea('draw-on-your-screen-indicator', this.button);
         
         this.icon = new St.Icon({ icon_name: 'applications-graphics-symbolic',
                                   style_class: 'system-status-icon screencast-indicator' });
-        this.button.actor.add_child(this.icon);
-        this.button.actor.visible = false;
+        this.buttonActor.add_child(this.icon);
+        this.buttonActor.visible = false;
     },
 
     sync: function(visible) {
-        this.button.actor.visible = visible;
+        this.buttonActor.visible = visible;
     },
     
     disable: function() {
