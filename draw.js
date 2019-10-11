@@ -80,7 +80,6 @@ var DrawingArea = new Lang.Class({
         this.settings = Convenience.getSettings();
         this.emitter = new DrawingAreaEmitter();
         this.monitor = monitor;
-        this.menu = new DrawingMenu(this);
         this.helper = helper;
         
         this.elements = [];
@@ -96,6 +95,12 @@ var DrawingArea = new Lang.Class({
         
         if (loadJson)
             this._loadJson();
+    },
+    
+    get menu() {
+        if (!this._menu)
+            this._menu = new DrawingMenu(this);
+        return this._menu;
     },
     
     _redisplay: function() {
