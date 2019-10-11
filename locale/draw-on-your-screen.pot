@@ -17,11 +17,18 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-# add your name here, for example:
-# "Aïssata\n"
-# "<a href=\"mailto:ali@mail.org\">Ali</a>\n"
-# "<a href=\"https://...\">丽</a>"
-# It will be displayed in About page
+# Add your name here, for example:
+# (add "\n" as separator if there is many translators)
+# msgid "Translators"
+# msgstr "Me"
+# or, with mail:
+# msgid "Translators"
+# msgstr "<a href=\"mailto:me@mail.org\">Me</a>"
+# or, with page:
+# msgid "Translators"
+# msgstr "<a href=\"https://...\">Me</a>"
+# else keep it empty.
+# It will be displayed in about page
 msgid "Translators"
 msgstr ""
 
