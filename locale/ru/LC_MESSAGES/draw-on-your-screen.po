@@ -1,0 +1,318 @@
+# <language> translations for Draw On Your Screen.
+# Copyright (C) 2019 Listed translators
+#
+# This file is distributed under the same license as Draw On Your Screen.
+# Andrew Sazonow <sazonow1980.@gmail.com>, 2019.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Draw On Your Screen VERSION\n"
+"Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
+"POT-Creation-Date: 2019-03-04 16:40+0100\n"
+"PO-Revision-Date: 2019-10-17 17:54+0300\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.2.1\n"
+"Last-Translator: Andrew Sazonow <sazonow1980.@gmail.com>\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"Language: ru_RU\n"
+
+msgid "Translators"
+msgstr "<a href=\"mailto:sazonow1980.@gmail.com\">Andrew Sazonow</a>"
+
+#: extension.js
+msgid "Leaving drawing mode"
+msgstr "ÐÑÑÐ¾Ð´Ñ Ð¸Ð· ÑÐµÐ¶Ð¸Ð¼Ð° ÑÐ¸ÑÐ¾Ð²Ð°Ð½Ð¸Ñ"
+
+msgid "Press Ctrl + F1 for help"
+msgstr "ÐÐ°Ð¶Ð¼Ð¸ÑÐµ Ctrl + F1 Ð´Ð»Ñ ÑÐ¿ÑÐ°Ð²ÐºÐ¸"
+
+msgid "Entering drawing mode"
+msgstr "ÐÑÐ¾Ð´ Ð² ÑÐµÐ¶Ð¸Ð¼ ÑÐ¸ÑÐ¾Ð²Ð°Ð½Ð¸Ñ"
+
+#: draw.js
+msgid "Free drawing"
+msgstr "Ð¡Ð²Ð¾Ð±Ð¾Ð´Ð½ÑÐ¹ ÑÐ¸ÑÑÐ½Ð¾Ðº"
+
+msgid "Line"
+msgstr "ÐÐ¸Ð½Ð¸Ñ"
+
+msgid "Ellipse"
+msgstr "Ð­Ð»Ð»Ð¸Ð¿Ñ"
+
+msgid "Rectangle"
+msgstr "ÐÑÑÐ¼Ð¾ÑÐ³Ð¾Ð»ÑÐ½Ð¸Ðº"
+
+msgid "Text"
+msgstr "Ð¢ÐµÐºÑÑ"
+
+msgid "Fill"
+msgstr "ÐÐ°Ð¿Ð¾Ð»Ð½Ð¸ÑÑ"
+
+msgid "Stroke"
+msgstr "Ð¥Ð¾Ð´"
+
+msgid "Dashed line"
+msgstr "ÐÑÐ½ÐºÑÐ¸ÑÐ½Ð°Ñ Ð»Ð¸Ð½Ð¸Ñ"
+
+msgid "Full line"
+msgstr "ÐÐ¾Ð»Ð½Ð°Ñ Ð»Ð¸Ð½Ð¸Ñ"
+
+msgid ""
+"Type your text\n"
+"and press Enter"
+msgstr "ÐÐ²ÐµÐ´Ð¸ÑÐµ ÑÐµÐºÑÑ\n"
+"Ð¸ Ð½Ð°Ð¶Ð¼Ð¸ÑÐµ Enter"
+
+msgid "Screenshot"
+msgstr "Ð¡ÐºÑÐ¸Ð½ÑÐ¾Ñ"
+
+msgid "Screenshot to clipboard"
+msgstr "Ð¡ÐºÑÐ¸Ð½ÑÐ¾Ñ Ð² Ð±ÑÑÐµÑ Ð¾Ð±Ð¼ÐµÐ½Ð°"
+
+msgid "Area screenshot"
+msgstr "Ð¡ÐºÑÐ¸Ð½ÑÐ¾Ñ Ð¾Ð±Ð»Ð°ÑÑÐ¸"
+
+msgid "Area screenshot to clipboard"
+msgstr "Ð¡ÐºÑÐ¸Ð½ÑÐ¾Ñ Ð¾Ð±Ð»Ð°ÑÑÐ¸ Ð² Ð±ÑÑÐµÑ Ð¾Ð±Ð¼ÐµÐ½Ð°"
+
+msgid "System"
+msgstr "Ð¡Ð¸ÑÑÐµÐ¼Ð°"
+
+msgid "Undo"
+msgstr "ÐÑÐ¼ÐµÐ½Ð¸ÑÑ"
+
+msgid "Redo"
+msgstr "ÐÐ¾Ð²ÑÐ¾Ñ"
+
+msgid "Erase"
+msgstr "Ð¡ÑÐµÑÐµÑÑ"
+
+msgid "Smooth"
+msgstr "ÐÐ»Ð°Ð´ÐºÐ°Ñ"
+
+msgid "Dashed"
+msgstr "ÐÑÐ½ÐºÑÐ¸ÑÐ½Ð°Ñ"
+
+msgid "Color"
+msgstr "Ð¦Ð²ÐµÑ"
+
+#: prefs.js
+msgid "Preferences"
+msgstr "ÐÐ°ÑÑÑÐ¾Ð¹ÐºÐ¸"
+
+msgid "About"
+msgstr "Ð Ð¿ÑÐ¾Ð³ÑÐ°Ð¼Ð¼Ðµ"
+
+# GLOBAL_KEYBINDINGS
+msgid "Enter/leave drawing mode"
+msgstr "ÐÑÐ¾Ð´/Ð²ÑÑÐ¾Ð´ Ð² ÑÐµÐ¶Ð¸Ð¼ ÑÐ¸ÑÐ¾Ð²Ð°Ð½Ð¸Ñ"
+
+msgid "Erase all drawings"
+msgstr "Ð¡ÑÐµÑÐµÑÑ Ð²ÑÐµ ÑÐ¸ÑÑÐ½ÐºÐ¸"
+
+# INTERNAL_KEYBINDINGS
+msgid "Undo last brushstroke"
+msgstr "ÐÑÐ¼ÐµÐ½Ð¸ÑÑ Ð¿Ð¾ÑÐ»ÐµÐ´Ð½Ð¸Ð¹ Ð¼Ð°Ð·Ð¾Ðº"
+
+msgid "Redo last brushstroke"
+msgstr "ÐÐ¾Ð²ÑÐ¾Ñ Ð¿Ð¾ÑÐ»ÐµÐ´Ð½ÐµÐ³Ð¾ Ð¼Ð°Ð·ÐºÐ°"
+
+msgid "Erase last brushstroke"
+msgstr "Ð¡ÑÐµÑÐµÑÑ Ð¿Ð¾ÑÐ»ÐµÐ´Ð½Ð¸Ð¹ Ð¼Ð°Ð·Ð¾Ðº"
+
+msgid "Smooth last brushstroke"
+msgstr "ÐÐ»Ð°Ð´ÐºÐ°Ñ Ð¿Ð¾ÑÐ»ÐµÐ´Ð½ÐµÐ³Ð¾ Ð¼Ð°Ð·ÐºÐ°"
+
+msgid "Select line"
+msgstr "ÐÑÐ±ÐµÑÐ¸ÑÐµ Ð»Ð¸Ð½Ð¸Ð¸"
+
+msgid "Select ellipse"
+msgstr "ÐÑÐ±ÐµÑÐ¸ÑÐµ ÑÐ»Ð»Ð¸Ð¿Ñ"
+
+msgid "Select rectangle"
+msgstr "ÐÑÐ±ÐµÑÐ¸ÑÐµ Ð¿ÑÑÐ¼Ð¾ÑÐ³Ð¾Ð»ÑÐ½Ð¸Ðº"
+
+msgid "Select text"
+msgstr "ÐÑÐ±ÐµÑÐ¸ÑÐµ ÑÐµÐºÑÑ"
+
+msgid "Unselect shape (free drawing)"
+msgstr "Ð¡Ð½Ð¸Ð¼Ð¸ÑÐµ ÑÐ¾ÑÐ¼Ñ (ÑÐ²Ð¾Ð±Ð¾Ð´Ð½ÑÐ¹ ÑÐ¸ÑÑÐ½Ð¾Ðº)"
+
+msgid "Toggle fill/stroke"
+msgstr "ÐÐµÑÐµÐºÐ»ÑÑÐµÐ½Ð¸Ðµ Ð·Ð°Ð»Ð¸Ð²ÐºÐ¸/Ð¾Ð±Ð²Ð¾Ð´ÐºÐ¸"
+
+msgid "Increment line width"
+msgstr "ÐÑÐ¸ÑÐ°ÑÐµÐ½Ð¸Ðµ ÑÐ¸ÑÐ¸Ð½Ñ Ð»Ð¸Ð½Ð¸Ð¸"
+
+msgid "Decrement line width"
+msgstr "Ð¨Ð¸ÑÐ¸Ð½Ð° Ð»Ð¸Ð½Ð¸Ð¸ ÑÐ¼ÐµÐ½ÑÑÐ°ÐµÑÑÑ"
+
+msgid "Increment line width even more"
+msgstr "ÐÑÐ¸ÑÐ°ÑÐµÐ½Ð¸Ðµ ÑÐ¸ÑÐ¸Ð½Ñ Ð´Ð°Ð¶Ðµ Ð±Ð¾Ð»ÐµÐµ"
+
+msgid "Decrement line width even more"
+msgstr "Ð£Ð¼ÐµÐ½ÑÑÐµÐ½Ð¸Ðµ ÑÐ¸ÑÐ¸Ð½Ñ Ð»Ð¸Ð½Ð¸Ð¸ ÐµÑÐµ Ð±Ð¾Ð»ÑÑÐµ"
+
+msgid "Change linejoin"
+msgstr "ÐÐ·Ð¼ÐµÐ½Ð¸ÑÑ Ð»Ð¸Ð½Ð¸Ñ ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ"
+
+msgid "Change linecap"
+msgstr "ÐÐ·Ð¼ÐµÐ½Ð¸ÑÑ Ð»Ð¸Ð½Ð¸Ñ ÐºÑÑÑÐºÐ¸"
+
+# already in draw.js
+# msgid "Dashed line"
+# msgstr ""
+msgid "Change font family (generic name)"
+msgstr "ÐÐ·Ð¼ÐµÐ½ÑÑÑ Ð¸Ð¼Ñ ÑÑÐ¸ÑÑÐ°"
+
+msgid "Change font weight"
+msgstr "ÐÐ·Ð¼ÐµÐ½ÐµÐ½Ð¸Ðµ ÑÐ°Ð·Ð¼ÐµÑ ÑÑÐ¸ÑÑÐ°"
+
+msgid "Change font style"
+msgstr "ÐÐ·Ð¼ÐµÐ½Ð¸ÑÑ ÑÑÐ¸Ð»Ñ ÑÑÐ¸ÑÑÐ°"
+
+msgid "Hide panel and dock"
+msgstr "Ð¡ÐºÑÑÑÑ Ð¿Ð°Ð½ÐµÐ»Ñ Ð¸ Ð´Ð¾Ðº"
+
+msgid "Add a drawing background"
+msgstr "ÐÐ¾Ð±Ð°Ð²Ð¸ÑÑ ÑÐ¾Ð½ Ð´Ð»Ñ ÑÐ¸ÑÐ¾Ð²Ð°Ð½Ð¸Ñ"
+
+msgid "Square drawing area"
+msgstr "ÐÐ»Ð¾ÑÐ°Ð´Ñ ÑÐ¸ÑÐ¾Ð²Ð°Ð½Ð¸Ñ"
+
+msgid "Save drawing as a SVG file"
+msgstr "Ð¡Ð¾ÑÑÐ°Ð½Ð¸ÑÑ ÑÐ¸ÑÑÐ½Ð¾Ðº Ð² SVG"
+
+msgid "Open stylesheet.css"
+msgstr "ÐÑÐºÑÑÑÑ stylesheet.css"
+
+msgid "Show help"
+msgstr "ÐÐ¾ÐºÐ°Ð·Ð°ÑÑ ÑÐ¿ÑÐ°Ð²ÐºÑ"
+
+# OTHER_SHORTCUTS
+msgid "Draw"
+msgstr "Ð Ð¸ÑÐ¾Ð²Ð°ÑÑ"
+
+msgid "Left click"
+msgstr "ÐÐµÐ²ÑÐ¹ ÐºÐ»Ð¸Ðº"
+
+msgid "Menu"
+msgstr "ÐÐµÐ½Ñ"
+
+msgid "Right click"
+msgstr "ÐÑÐ°Ð²ÑÐ¹ ÐºÐ»Ð¸Ðº"
+
+msgid "Center click"
+msgstr "Ð¦ÐµÐ½ÑÑÐ°Ð»ÑÐ½ÑÐ¹ ÐºÐ»Ð¸Ðº"
+
+msgid "Transform shape (when drawing)"
+msgstr "ÐÑÐµÐ¾Ð±ÑÐ°Ð·Ð¾Ð²Ð°ÑÑ ÑÐ¸Ð³ÑÑÑ (Ð¿ÑÐ¸ ÑÐ¸ÑÐ¾Ð²Ð°Ð½Ð¸Ð¸)"
+
+msgid "Ctrl key"
+msgstr "ÐÐ»Ð°Ð²Ð¸ÑÐ° Ctrl"
+
+msgid "Increment/decrement line width"
+msgstr "Ð£Ð²ÐµÐ»Ð¸ÑÐµÐ½Ð¸Ðµ/ÑÐ¼ÐµÐ½ÑÑÐµÐ½Ð¸Ðµ ÑÐ¸ÑÐ¸Ð½Ñ Ð»Ð¸Ð½Ð¸Ð¸"
+
+msgid "Scroll"
+msgstr "ÐÑÐ¾ÐºÑÑÑÐºÐ°"
+
+msgid "Select color"
+msgstr "ÐÑÐ±ÐµÑÐ¸ÑÐµ ÑÐ²ÐµÑ"
+
+msgid "Ctrl+1...9"
+msgstr ""
+
+msgid "Select eraser"
+msgstr "ÐÑÐ±ÐµÑÐ¸ÑÐµ Ð»Ð°ÑÑÐ¸Ðº"
+
+msgid "Shift key held"
+msgstr "ÐÐ»Ð°Ð²Ð¸ÑÐ° Shift ÑÐ´ÐµÑÐ¶Ð¸Ð²Ð°ÐµÑÑÑ"
+
+msgid "Leave"
+msgstr "ÐÐ¾ÐºÐ¸Ð½ÑÑÑ"
+
+msgid "Escape key"
+msgstr "ÐÐ»Ð°Ð²Ð¸ÑÐ° Escape"
+
+# About page
+# you are free to translate the extension name
+# msgid "Draw On You Screen"
+# msgstr ""
+msgid "Version %d"
+msgstr "ÐÐµÑÑÐ¸Ñ %d"
+
+msgid ""
+"Start drawing with Super+Alt+D and save your beautiful work by taking a "
+"screenshot"
+msgstr "ÐÐ°ÑÐ½Ð¸ÑÐµ ÑÐ¸ÑÐ¾Ð²Ð°ÑÑ Super+Alt+D Ð¸ ÑÐ¾ÑÑÐ°Ð½Ð¸ÑÑ, Ð²Ð·ÑÐ² ÑÐºÑÐ¸Ð½ÑÐ¾Ñ"
+
+# Prefs page
+msgid "Global"
+msgstr "ÐÐ»Ð¾Ð±Ð°Ð»ÑÐ½ÑÐµ"
+
+msgid "Drawing on the desktop"
+msgstr "Ð Ð¸ÑÑÐ½Ð¾Ðº Ð½Ð° ÑÐ°Ð±Ð¾ÑÐµÐ¼ ÑÑÐ¾Ð»Ðµ"
+
+msgid "Draw On Your Screen becomes Draw On Your Desktop"
+msgstr "Draw On Your Screen Ð±ÑÐ´ÐµÑ ÑÐ¸ÑÐ¾Ð²Ð°ÑÑ Ð½Ð° ÑÐ°Ð±Ð¾ÑÐµÐ¼ ÑÑÐ¾Ð»Ðµ"
+
+msgid "Persistent"
+msgstr "ÐÐ°ÑÑÐ¾Ð¹ÑÐ¸Ð²ÑÐ¹"
+
+msgid "Persistent drawing through session restart"
+msgstr "ÐÐ¾ÑÑÐ¾ÑÐ½Ð½Ð¾Ðµ ÑÐ¸ÑÐ¾Ð²Ð°Ð½Ð¸Ðµ ÑÐµÑÐµÐ· Ð¿ÐµÑÐµÐ·Ð°Ð¿ÑÑÐº ÑÐµÐ°Ð½ÑÐ°"
+
+msgid "Disable on-screen notifications"
+msgstr "ÐÑÐºÐ»ÑÑÐ¸ÑÑ ÑÐºÑÐ°Ð½Ð½ÑÐµ ÑÐ²ÐµÐ´Ð¾Ð¼Ð»ÐµÐ½Ð¸Ñ"
+
+msgid "Disable panel indicator"
+msgstr "ÐÑÐºÐ»ÑÑÐ¸ÑÑ Ð¸Ð½Ð´Ð¸ÐºÐ°ÑÐ¾Ñ Ð¿Ð°Ð½ÐµÐ»Ð¸"
+
+msgid "Internal"
+msgstr "ÐÐ½ÑÑÑÐµÐ½Ð½Ð¸Ð¹"
+
+msgid "(in drawing mode)"
+msgstr "(Ð² ÑÐµÐ¶Ð¸Ð¼Ðµ ÑÐ¸ÑÐ¾Ð²Ð°Ð½Ð¸Ñ)"
+
+msgid ""
+"By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you can:\n"
+" . rotate a rectangle or a text area\n"
+" . extend and rotate an ellipse\n"
+" . curve a line (cubic Bezier curve)"
+msgstr ""
+"ÐÐ°Ð¶Ð°ÑÐ¸ÐµÐ¼ <b>Ctrl</b> ÐºÐ»Ð°Ð²Ð¸ÑÐ¸ <b>Ð² ÑÐµÑÐµÐ½Ð¸Ðµ</b> Ð¿ÑÐ¾ÑÐµÑÑ ÑÐ¸ÑÐ¾Ð²Ð°Ð½Ð¸Ñ, Ð²Ñ Ð¼Ð¾Ð¶ÐµÑÐµ:\n"
+" . Ð¿Ð¾Ð²ÐµÑÐ½ÑÑÑ Ð¿ÑÑÐ¼Ð¾ÑÐ³Ð¾Ð»ÑÐ½Ð¸Ðº Ð¸Ð»Ð¸ ÑÐµÐºÑÑÐ¾Ð²Ð¾Ð¹ Ð¾Ð±Ð»Ð°ÑÑÐ¸\n"
+" . ÑÐ°ÑÑÐ¸ÑÐ¸ÑÑ Ð¸ Ð²ÑÐ°ÑÐ°ÑÑ ÑÐ»Ð»Ð¸Ð¿Ñ\n"
+" . ÐºÑÐ¸Ð²Ð°Ñ Ð»Ð¸Ð½Ð¸Ñ (ÐºÑÐ±Ð¸ÑÐµÑÐºÐ°Ñ ÐºÑÐ¸Ð²Ð°Ñ ÐÐµÐ·ÑÐµ)"
+
+msgid "Smooth stroke during the drawing process"
+msgstr "ÐÐ»Ð°Ð²Ð½ÑÐ¹ ÑÐ¾Ð´ Ð²Ð¾ Ð²ÑÐµÐ¼Ñ Ð¿ÑÐ¾ÑÐµÑÑÐ° ÑÐ¸ÑÐ¾Ð²Ð°Ð½Ð¸Ñ"
+
+msgid ""
+"You can also smooth the stroke afterward\n"
+"See â%sâ"
+msgstr ""
+"ÐÑ ÑÐ°ÐºÐ¶Ðµ Ð¼Ð¾Ð¶ÐµÑÐµ ÑÐ³Ð»Ð°Ð´Ð¸ÑÑ ÑÐ¾Ð´ Ð¿Ð¾Ð·Ð¶Ðµ\n"
+"ÐÐ¸Ð´ÐµÑÑ â%sâ"
+
+msgid "Change the style"
+msgstr "ÐÐ·Ð¼ÐµÐ½Ð¸ÑÑ ÑÑÐ¸Ð»Ñ"
+
+msgid "See stylesheet.css"
+msgstr "Ð¡Ð¼Ð¾ÑÑÐ¸ÑÐµ stylesheet.css"
+
+msgid ""
+"<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> "
+"file,\n"
+"they are colored with background color, transparent if it is disabled.\n"
+"(See â%sâ or edit the SVG file afterwards)"
+msgstr ""
+"<u>ÐÑÐ¸Ð¼ÐµÑÐ°Ð½Ð¸Ðµ</u>: ÐÑÐ¸ ÑÐ¾ÑÑÐ°Ð½ÐµÐ½Ð¸Ð¸ ÑÐ»ÐµÐ¼ÐµÐ½ÑÐ¾Ð², ÑÐ´ÐµÐ»Ð°Ð½Ð½ÑÐµ Ñ Ð¿Ð¾Ð¼Ð¾ÑÑÑ <b>Ð»Ð°ÑÑÐ¸ÐºÐ°</b> Ð² <b>SVG</b> "
+"ÑÐ°Ð¹Ð»,\n"
+"Ð¾Ð½Ð¸ Ð¾ÐºÑÐ°ÑÐµÐ½Ñ Ð² ÑÐ²ÐµÑ ÑÐ¾Ð½Ð°, Ð¿ÑÐ¾Ð·ÑÐ°ÑÐ½ÑÐ¹, ÐµÑÐ»Ð¸ Ð¾Ð½ Ð¾ÑÐºÐ»ÑÑÐµÐ½.\n"
+"(Ð¡Ð¼Ð¾ÑÑÐ¸ÑÐµ â%sâ Ð¸Ð»Ð¸ ÑÐµÐ´Ð°ÐºÑÐ¸ÑÑÐ¹ÑÐµ ÑÐ°Ð¹Ð» SVG)"
