@@ -231,6 +231,9 @@ var DrawingArea = new Lang.Class({
             // stop writing
             // Clutter.KEY_Return is "Enter" and 65421 is KP_Enter
                 this._stopWriting();
+            } else if (event.has_control_modifier()){
+            // it's a shortcut, do not write text
+                return Clutter.EVENT_PROPAGATE;
             } else {
                 let unicode = event.get_key_unicode();
                 this.currentElement.text += unicode;
