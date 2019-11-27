@@ -326,6 +326,7 @@ var DrawingArea = new Lang.Class({
                 this._updateCursorTimeout();
                 this.textHasCursor = true;
                 this._redisplay();
+                this.updatePointerCursor();
                 return;
             }
         
@@ -334,6 +335,7 @@ var DrawingArea = new Lang.Class({
         
         this.currentElement = null;
         this._redisplay();
+        this.updatePointerCursor();
     },
     
     _updateDrawing: function(x, y, controlPressed) {
@@ -349,7 +351,9 @@ var DrawingArea = new Lang.Class({
             this.currentElement.transformLine(x, y);
         else
             this.currentElement.points[1] = [x, y];
+        
         this._redisplay();
+        this.updatePointerCursor(controlPressed);
     },
     
     _stopWriting: function() {
@@ -358,6 +362,20 @@ var DrawingArea = new Lang.Class({
         this.currentElement = null;
         this._stopCursorTimeout();
         this._redisplay();
+    },
+    
+    setPointerCursor: function(pointerCursorName) {
+        if (!this.currentPointerCursorName || this.currentPointerCursorName != pointerCursorName) {
+            this.currentPointerCursorName = pointerCursorName;
+            ExtensionJs.setCursor(pointerCursorName);
+        }
+    },
+    
+    updatePointerCursor: function(controlPressed) {
+        if (!this.currentElement || (this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING))
+            this.setPointerCursor(this.currentShape == Shapes.NONE ? 'POINTING_HAND' : 'CROSSHAIR');
+        else if (this.currentElement.shape != Shapes.NONE && controlPressed)
+            this.setPointerCursor('MOVE_OR_RESIZE_WINDOW');
     },
     
     _stopCursorTimeout: function() {
@@ -456,6 +474,7 @@ var DrawingArea = new Lang.Class({
     selectShape: function(shape) {
         this.currentShape = shape;
         this.emitter.emit('show-osd', _(ShapeNames[shape]), null);
+        this.updatePointerCursor();
     },
     
     toggleFill: function() {
@@ -1047,9 +1066,13 @@ var DrawingMenu = new Lang.Class({
     },
     
     _onMenuOpenStateChanged: function(menu, open) {
-        if (!open)
+        if (open) {
+            this.area.setPointerCursor('DEFAULT');
+        } else {
+            this.area.updatePointerCursor();
             // actionMode has changed, set previous actionMode in order to keep internal shortcuts working
             Main.actionMode = ExtensionJs.DRAWING_ACTION_MODE | Shell.ActionMode.NORMAL;
+        }
     },
     
     popup: function() {

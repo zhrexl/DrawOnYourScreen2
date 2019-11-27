@@ -279,11 +279,7 @@ var AreaManager = new Lang.Class({
             if (!this.settings.get_boolean("drawing-on-desktop")) 
                 activeContainer.hide();
             
-            // check display or screen (API changes)
-            if (global.display.set_cursor)
-                global.display.set_cursor(Meta.Cursor.DEFAULT);
-            else if (global.screen && global.screen.set_cursor)
-                global.screen.set_cursor(Meta.Cursor.DEFAULT);
+            setCursor('DEFAULT');
             if (!this.osdDisabled)
                 Main.osdWindowManager.show(activeIndex, this.leaveGicon, _("Leaving drawing mode"), null);
         } else  {
@@ -302,12 +298,7 @@ var AreaManager = new Lang.Class({
             this.activeArea.reactive = true;
             this.activeArea.enterDrawingMode();
             
-            // check display or screen (API changes)
-            if (global.display.set_cursor)
-                global.display.set_cursor(Meta.Cursor.POINTING_HAND);
-            else if (global.screen && global.screen.set_cursor)
-                global.screen.set_cursor(Meta.Cursor.POINTING_HAND);
-                
+            setCursor('POINTING_HAND');
             this.osdDisabled = this.settings.get_boolean('osd-disabled');
             if (!this.osdDisabled) {
                 // increase OSD display time
@@ -413,5 +404,13 @@ var DrawingIndicator = new Lang.Class({
         this.button.destroy();
     }
 });
+
+function setCursor(cursorName) {
+    // check display or screen (API changes)
+    if (global.display.set_cursor)
+        global.display.set_cursor(Meta.Cursor[cursorName]);
+    else if (global.screen && global.screen.set_cursor)
+        global.screen.set_cursor(Meta.Cursor[cursorName]);
+}
 
 
