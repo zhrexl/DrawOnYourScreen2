@@ -148,8 +148,8 @@ var AreaManager = new Lang.Class({
             container.set_position(monitor.x, monitor.y);
             container.set_size(monitor.width, monitor.height);
             area.set_size(monitor.width, monitor.height);
-            area.emitter.stopDrawingHandler = area.emitter.connect('stop-drawing', this.toggleDrawing.bind(this));
-            area.emitter.showOsdHandler = area.emitter.connect('show-osd', this.showOsd.bind(this));
+            area.stopDrawingHandler = area.connect('stop-drawing', this.toggleDrawing.bind(this));
+            area.showOsdHandler = area.connect('show-osd', this.showOsd.bind(this));
             this.areas.push(area);
         }
     },
@@ -313,11 +313,17 @@ var AreaManager = new Lang.Class({
             this.indicator.sync(this.activeArea != null);
     },
     
+    // use level -1 to set no level (null)
     showOsd: function(emitter, label, level, maxLevel) {
         if (this.osdDisabled)
             return;
         let activeIndex = this.areas.indexOf(this.activeArea);
         if (activeIndex != -1) {
+            if (level == -1)
+                level = null;
+            else if (level > 100)
+                maxLevel = 2;
+            
             // GS 3.32- : bar from 0 to 100
             // GS 3.34+ : bar from 0 to 1
             if (level && GS_VERSION > '3.33.0')
@@ -341,8 +347,8 @@ var AreaManager = new Lang.Class({
             let area = this.areas[i];
             let container = area.get_parent();
             container.get_parent().remove_actor(container);
-            area.emitter.disconnect(area.emitter.stopDrawingHandler);
-            area.emitter.disconnect(area.emitter.showOsdHandler);
+            area.disconnect(area.stopDrawingHandler);
+            area.disconnect(area.showOsdHandler);
             area.disable();
             container.destroy();
         }

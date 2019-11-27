@@ -29,7 +29,6 @@ const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 const Shell = imports.gi.Shell;
-const Signals = imports.signals;
 const St = imports.gi.St;
 
 const BoxPointer = imports.ui.boxpointer;
@@ -71,6 +70,8 @@ var FontFamilyNames = {  0: 'Default', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospac
 var DrawingArea = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingArea',
     Extends: St.DrawingArea,
+    Signals: { 'show-osd': { param_types: [GObject.TYPE_STRING, GObject.TYPE_DOUBLE] },
+               'stop-drawing': {} },
 
     _init: function(params, monitor, helper, loadJson) {
         this.parent({ style_class: 'draw-on-your-screen', name: params && params.name ? params.name : ""});
@@ -78,7 +79,6 @@ var DrawingArea = new Lang.Class({
         this.connect('repaint', this._repaint.bind(this));
         
         this.settings = Convenience.getSettings();
-        this.emitter = new DrawingAreaEmitter();
         this.monitor = monitor;
         this.helper = helper;
         
@@ -212,7 +212,7 @@ var DrawingArea = new Lang.Class({
     
     _onKeyPressed: function(actor, event) {
         if (event.get_key_symbol() == Clutter.Escape) {
-            this.emitter.emit('stop-drawing');
+            this.emit('stop-drawing');
             return Clutter.EVENT_STOP;
             
         } else if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING) {
@@ -322,7 +322,7 @@ var DrawingArea = new Lang.Class({
             if (this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.DRAWING) {
                 this.currentElement.state = TextState.WRITING;
                 this.currentElement.text = '';
-                this.emitter.emit('show-osd', _("Type your text\nand press Enter"), null);
+                this.emit('show-osd', _("Type your text\nand press Enter"), -1);
                 this._updateCursorTimeout();
                 this.textHasCursor = true;
                 this._redisplay();
@@ -468,38 +468,38 @@ var DrawingArea = new Lang.Class({
             this.currentElement.color = this.currentColor.to_string();
             this._redisplay();
         }
-        this.emitter.emit('show-osd', `<span foreground="${this.currentColor.to_string()}">${this.currentColor.to_string()}</span>`, null);
+        this.emit('show-osd', `<span foreground="${this.currentColor.to_string()}">${this.currentColor.to_string()}</span>`, -1);
     },
     
     selectShape: function(shape) {
         this.currentShape = shape;
-        this.emitter.emit('show-osd', _(ShapeNames[shape]), null);
+        this.emit('show-osd', _(ShapeNames[shape]), -1);
         this.updatePointerCursor();
     },
     
     toggleFill: function() {
         this.fill = !this.fill;
-        this.emitter.emit('show-osd', this.fill ? _("Fill") : _("Stroke"), null);
+        this.emit('show-osd', this.fill ? _("Fill") : _("Stroke"), -1);
     },
     
     toggleDash: function() {
         this.dashedLine = !this.dashedLine;
-        this.emitter.emit('show-osd', this.dashedLine ? _("Dashed line") : _("Full line"), null);
+        this.emit('show-osd', this.dashedLine ? _("Dashed line") : _("Full line"), -1);
     },
     
     incrementLineWidth: function(increment) {
         this.currentLineWidth = Math.max(this.currentLineWidth + increment, 0);
-        this.emitter.emit('show-osd', this.currentLineWidth + " " + _("px"), 2 * this.currentLineWidth);
+        this.emit('show-osd', this.currentLineWidth + " " + _("px"), 2 * this.currentLineWidth);
     },
     
     toggleLineJoin: function() {
         this.currentLineJoin = this.currentLineJoin == 2 ? 0 : this.currentLineJoin + 1;
-        this.emitter.emit('show-osd', _(LineJoinNames[this.currentLineJoin]), null);
+        this.emit('show-osd', _(LineJoinNames[this.currentLineJoin]), -1);
     },
     
     toggleLineCap: function() {
         this.currentLineCap = this.currentLineCap == 2 ? 0 : this.currentLineCap + 1;
-        this.emitter.emit('show-osd', _(LineCapNames[this.currentLineCap]), null);
+        this.emit('show-osd', _(LineCapNames[this.currentLineCap]), -1);
     },
     
     toggleFontWeight: function() {
@@ -508,7 +508,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.weight = this.currentFontWeight;
             this._redisplay();
         }
-        this.emitter.emit('show-osd', `<span font_weight="${FontWeightNames[this.currentFontWeight].toLowerCase()}">${_(FontWeightNames[this.currentFontWeight])}</span>`, null);
+        this.emit('show-osd', `<span font_weight="${FontWeightNames[this.currentFontWeight].toLowerCase()}">${_(FontWeightNames[this.currentFontWeight])}</span>`, -1);
     },
     
     toggleFontStyle: function() {
@@ -517,7 +517,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.style = this.currentFontStyle;
             this._redisplay();
         }
-        this.emitter.emit('show-osd', `<span font_style="${FontStyleNames[this.currentFontStyle].toLowerCase()}">${_(FontStyleNames[this.currentFontStyle])}</span>`, null);
+        this.emit('show-osd', `<span font_style="${FontStyleNames[this.currentFontStyle].toLowerCase()}">${_(FontStyleNames[this.currentFontStyle])}</span>`, -1);
     },
     
     toggleFontFamily: function() {
@@ -527,7 +527,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.family = currentFontFamily;
             this._redisplay();
         }
-        this.emitter.emit('show-osd', `<span font_family="${currentFontFamily}">${_(currentFontFamily)}</span>`, null);
+        this.emit('show-osd', `<span font_family="${currentFontFamily}">${_(currentFontFamily)}</span>`, -1);
     },
     
     toggleHelp: function() {
@@ -670,15 +670,6 @@ var DrawingArea = new Lang.Class({
         this.menu.disable();
     }
 });
-
-var DrawingAreaEmitter = new Lang.Class({
-    Name: 'DrawingAreaEmitter',
-    
-    _init: function() {
-    }
-});
-Signals.addSignalMethods(DrawingAreaEmitter.prototype);
-
 
 // DrawingElement represents a "brushstroke".
 // It can be converted into a cairo path as well as a svg element.
