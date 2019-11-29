@@ -7,6 +7,7 @@
     "settings-schema": "org.gnome.shell.extensions.draw-on-your-screen",
     "gettext-domain": "draw-on-your-screen",
     "shell-version": [
+        "3.24",
         "3.26",
         "3.28",
         "3.30",

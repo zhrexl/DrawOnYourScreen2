@@ -1230,9 +1230,10 @@ var DrawingMenu = new Lang.Class({
                 else
                     text = _(obj[i]);
                 
+                let iCaptured = i;
                 let subItem = item.menu.addAction(text, () => {
-                    item.label.set_text(_(obj[i]));
-                    target[targetProperty] = i;
+                    item.label.set_text(_(obj[iCaptured]));
+                    target[targetProperty] = iCaptured;
                     if (callback)
                         callback();
                 });
@@ -1256,8 +1257,9 @@ var DrawingMenu = new Lang.Class({
         Mainloop.timeout_add(0, () => {
             for (let i = 1; i < this.area.colors.length; i++) {
                 let text = `<span foreground="${this.area.colors[i].to_string()}">${this.area.colors[i].to_string()}</span>`;
+                let iCaptured = i;
                 let colorItem = item.menu.addAction(text, () => {
-                    this.area.currentColor = this.area.colors[i];
+                    this.area.currentColor = this.area.colors[iCaptured];
                     item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
                 });
                 colorItem.label.get_clutter_text().set_use_markup(true);

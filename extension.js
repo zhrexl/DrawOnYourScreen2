@@ -43,7 +43,7 @@ var DRAWING_ACTION_MODE = Math.pow(2,14);
 // use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
 var WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
 
-let manager;
+var manager;
 
 function init() {
     Convenience.initTranslations();
@@ -193,11 +193,12 @@ var AreaManager = new Lang.Class({
         }
         
         for (let i = 1; i < 10; i++) {
+            let iCaptured = i;
             Main.wm.addKeybinding('select-color' + i,
                                   this.settings,
                                   Meta.KeyBindingFlags.NONE,
                                   DRAWING_ACTION_MODE,
-                                  () => this.activeArea.selectColor(i));
+                                  () => this.activeArea.selectColor(iCaptured));
         }
     },
     
@@ -303,9 +304,9 @@ var AreaManager = new Lang.Class({
             if (!this.osdDisabled) {
                 // increase OSD display time
                 let hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
-                OsdWindow.HIDE_TIMEOUT = 2000;
+                try { OsdWindow.HIDE_TIMEOUT = 2000; } catch(e) { /* HIDE_TIMEOUT is not exported with 'var' */ }
                 Main.osdWindowManager.show(currentIndex, this.enterGicon, _("Press Ctrl + F1 for help") + "\n\n" + _("Entering drawing mode"), null);
-                OsdWindow.HIDE_TIMEOUT = hideTimeoutSave;
+                try { OsdWindow.HIDE_TIMEOUT = hideTimeoutSave; } catch(e) {}
             }
         }
         

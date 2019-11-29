@@ -89,12 +89,6 @@ function init() {
 }
 
 function buildPrefsWidget() {
-    let prefsPage = new PrefsPage();
-    prefsPage.show_all();
-    return prefsPage;
-}
-
-function buildPrefsWidget() {
     let topStack = new TopStack();
     let switcher = new Gtk.StackSwitcher({halign: Gtk.Align.CENTER, visible: true, stack: topStack});
     Mainloop.timeout_add(0, () => {
