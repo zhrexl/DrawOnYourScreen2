@@ -43,7 +43,7 @@ var DRAWING_ACTION_MODE = Math.pow(2,14);
 // use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
 var WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
 
-let manager;
+var manager;
 
 function init() {
     Convenience.initTranslations();
@@ -148,8 +148,8 @@ var AreaManager = new Lang.Class({
             container.set_position(monitor.x, monitor.y);
             container.set_size(monitor.width, monitor.height);
             area.set_size(monitor.width, monitor.height);
-            area.emitter.stopDrawingHandler = area.emitter.connect('stop-drawing', this.toggleDrawing.bind(this));
-            area.emitter.showOsdHandler = area.emitter.connect('show-osd', this.showOsd.bind(this));
+            area.stopDrawingHandler = area.connect('stop-drawing', this.toggleDrawing.bind(this));
+            area.showOsdHandler = area.connect('show-osd', this.showOsd.bind(this));
             this.areas.push(area);
         }
     },
@@ -193,11 +193,12 @@ var AreaManager = new Lang.Class({
         }
         
         for (let i = 1; i < 10; i++) {
+            let iCaptured = i;
             Main.wm.addKeybinding('select-color' + i,
                                   this.settings,
                                   Meta.KeyBindingFlags.NONE,
                                   DRAWING_ACTION_MODE,
-                                  () => this.activeArea.selectColor(i));
+                                  () => this.activeArea.selectColor(iCaptured));
         }
     },
     
@@ -279,11 +280,7 @@ var AreaManager = new Lang.Class({
             if (!this.settings.get_boolean("drawing-on-desktop")) 
                 activeContainer.hide();
             
-            // check display or screen (API changes)
-            if (global.display.set_cursor)
-                global.display.set_cursor(Meta.Cursor.DEFAULT);
-            else if (global.screen && global.screen.set_cursor)
-                global.screen.set_cursor(Meta.Cursor.DEFAULT);
+            setCursor('DEFAULT');
             if (!this.osdDisabled)
                 Main.osdWindowManager.show(activeIndex, this.leaveGicon, _("Leaving drawing mode"), null);
         } else  {
@@ -302,19 +299,14 @@ var AreaManager = new Lang.Class({
             this.activeArea.reactive = true;
             this.activeArea.enterDrawingMode();
             
-            // check display or screen (API changes)
-            if (global.display.set_cursor)
-                global.display.set_cursor(Meta.Cursor.POINTING_HAND);
-            else if (global.screen && global.screen.set_cursor)
-                global.screen.set_cursor(Meta.Cursor.POINTING_HAND);
-                
+            setCursor('POINTING_HAND');
             this.osdDisabled = this.settings.get_boolean('osd-disabled');
             if (!this.osdDisabled) {
                 // increase OSD display time
                 let hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
-                OsdWindow.HIDE_TIMEOUT = 2000;
+                try { OsdWindow.HIDE_TIMEOUT = 2000; } catch(e) { /* HIDE_TIMEOUT is not exported with 'var' */ }
                 Main.osdWindowManager.show(currentIndex, this.enterGicon, _("Press Ctrl + F1 for help") + "\n\n" + _("Entering drawing mode"), null);
-                OsdWindow.HIDE_TIMEOUT = hideTimeoutSave;
+                try { OsdWindow.HIDE_TIMEOUT = hideTimeoutSave; } catch(e) {}
             }
         }
         
@@ -322,11 +314,17 @@ var AreaManager = new Lang.Class({
             this.indicator.sync(this.activeArea != null);
     },
     
+    // use level -1 to set no level (null)
     showOsd: function(emitter, label, level, maxLevel) {
         if (this.osdDisabled)
             return;
         let activeIndex = this.areas.indexOf(this.activeArea);
         if (activeIndex != -1) {
+            if (level == -1)
+                level = null;
+            else if (level > 100)
+                maxLevel = 2;
+            
             // GS 3.32- : bar from 0 to 100
             // GS 3.34+ : bar from 0 to 1
             if (level && GS_VERSION > '3.33.0')
@@ -350,8 +348,8 @@ var AreaManager = new Lang.Class({
             let area = this.areas[i];
             let container = area.get_parent();
             container.get_parent().remove_actor(container);
-            area.emitter.disconnect(area.emitter.stopDrawingHandler);
-            area.emitter.disconnect(area.emitter.showOsdHandler);
+            area.disconnect(area.stopDrawingHandler);
+            area.disconnect(area.showOsdHandler);
             area.disable();
             container.destroy();
         }
@@ -413,5 +411,13 @@ var DrawingIndicator = new Lang.Class({
         this.button.destroy();
     }
 });
+
+function setCursor(cursorName) {
+    // check display or screen (API changes)
+    if (global.display.set_cursor)
+        global.display.set_cursor(Meta.Cursor[cursorName]);
+    else if (global.screen && global.screen.set_cursor)
+        global.screen.set_cursor(Meta.Cursor[cursorName]);
+}
 
 
