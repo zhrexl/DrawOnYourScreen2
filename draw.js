@@ -581,7 +581,8 @@ var DrawingArea = new Lang.Class({
         this.dashedLine = false;
         this.fill = false;
         this._redisplay();
-        this.menu.close();
+        if (this._menu)
+            this._menu.close();
         this.get_parent().set_background_color(null);
         if (save)
             this.saveAsJson();
