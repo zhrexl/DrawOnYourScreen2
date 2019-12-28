@@ -3,7 +3,7 @@
 /*
  * Copyright 2019 Abakkk
  *
- * This file is part of DrowOnYourScreen, a drawing extension for GNOME Shell.
+ * This file is part of DrawOnYourScreen, a drawing extension for GNOME Shell.
  * https://framagit.org/abakkk/DrawOnYourScreen
  *
  * This program is free software: you can redistribute it and/or modify
