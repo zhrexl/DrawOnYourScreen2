@@ -73,28 +73,34 @@
     font-weight: normal;
 }
 
-.draw-on-your-screen-separator {
+.draw-on-your-screen-helper-separator {
     min-height: 0.6em;
 }
 
 /* context menu */
 
 .draw-on-your-screen-menu {
-   font-size: 0.98em; /* default: 1em */
+   font-size: 0.97em; /* default: 1em */
 }
 
 .draw-on-your-screen-menu .popup-menu-item {
-    padding-top: .37em; /* default: .4em */
-    padding-bottom: .37em;
+    padding-top: .32em; /* default: .4em */
+    padding-bottom: .32em;
 }
 
 .draw-on-your-screen-menu .popup-menu-icon {
-    icon-size: 1.04em; /* default: 1.09 */
+    icon-size: 1em; /* default: 1.09 */
+    padding-top: 0.03em;
 }
 
 .draw-on-your-screen-menu .toggle-switch {
-    height: 20px; /* default: 22px */
-} 
+    height: 1.4em; /* default: 22px */
+}
+
+.draw-on-your-screen-menu .popup-menu-item.draw-on-your-screen-menu-separator-item {
+    padding-top: 0.14em;
+    padding-bottom: 0.14em;
+}
 
 .draw-on-your-screen-menu-separator StLabel {
     font-size: 0;

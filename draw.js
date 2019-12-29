@@ -99,7 +99,7 @@ var DrawingArea = new Lang.Class({
     
     get menu() {
         if (!this._menu)
-            this._menu = new DrawingMenu(this);
+            this._menu = new DrawingMenu(this, this.monitor);
         return this._menu;
     },
     
@@ -953,7 +953,7 @@ var DrawingHelper = new Lang.Class({
         
         for (let i = 0; i < Prefs.OTHER_SHORTCUTS.length; i++) {
             if (Prefs.OTHER_SHORTCUTS[i].desc.indexOf('-separator-') != -1) {
-                this.vbox.add(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-separator' }));
+                this.vbox.add(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
                 continue;
             }
             let hbox = new St.BoxLayout({ vertical: false });
@@ -962,11 +962,11 @@ var DrawingHelper = new Lang.Class({
             this.vbox.add(hbox);
         }
         
-        this.vbox.add(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-separator' }));
+        this.vbox.add(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
         
         for (let settingKey in Prefs.INTERNAL_KEYBINDINGS) {
             if (settingKey.indexOf('-separator-') != -1) {
-                this.vbox.add(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-separator' }));
+                this.vbox.add(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
                 continue;
             }
             let hbox = new St.BoxLayout({ vertical: false });
@@ -1028,7 +1028,7 @@ var DrawingHelper = new Lang.Class({
 var DrawingMenu = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingMenu',
     
-    _init: function(area) {
+    _init: function(area, monitor) {
         this.area = area;
         let side = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? St.Side.RIGHT : St.Side.LEFT;
         this.menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor, 0.25, side);
@@ -1037,6 +1037,7 @@ var DrawingMenu = new Lang.Class({
         
         Main.layoutManager.uiGroup.add_actor(this.menu.actor);
         this.menu.actor.add_style_class_name('background-menu draw-on-your-screen-menu');
+        this.menu.actor.set_style('max-height:' + monitor.height + 'px;');
         this.menu.actor.hide();
         
         // do not close the menu on item activated
@@ -1271,10 +1272,10 @@ var DrawingMenu = new Lang.Class({
     },
     
     _addSeparator: function(menu) {
-        let separator = new PopupMenu.PopupSeparatorMenuItem(' ');
-        let separatorActor = GS_VERSION < '3.33.0' ? separator.actor : separator;
-        separatorActor.add_style_class_name('draw-on-your-screen-menu-separator');
-        menu.addMenuItem(separator);
+        let separatorItem = new PopupMenu.PopupSeparatorMenuItem(' ');
+        let separatorItemActor = GS_VERSION < '3.33.0' ? separatorItem.actor : separatorItem;
+        separatorItemActor.add_style_class_name('draw-on-your-screen-menu-separator-item');
+        menu.addMenuItem(separatorItem);
     }
 });
 
