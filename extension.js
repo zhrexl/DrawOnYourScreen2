@@ -315,11 +315,12 @@ var AreaManager = new Lang.Class({
     },
     
     // use level -1 to set no level (null)
-    showOsd: function(emitter, label, level, maxLevel) {
+    showOsd: function(emitter, iconName, label, level) {
         if (this.osdDisabled)
             return;
         let activeIndex = this.areas.indexOf(this.activeArea);
         if (activeIndex != -1) {
+            let maxLevel;
             if (level == -1)
                 level = null;
             else if (level > 100)
@@ -329,7 +330,9 @@ var AreaManager = new Lang.Class({
             // GS 3.34+ : bar from 0 to 1
             if (level && GS_VERSION > '3.33.0')
                 level = level / 100;
-            Main.osdWindowManager.show(activeIndex, this.enterGicon, label, level, maxLevel);
+            
+            let icon = iconName && new Gio.ThemedIcon({ name: iconName });
+            Main.osdWindowManager.show(activeIndex, icon || this.enterGicon, label, level, maxLevel);
             Main.osdWindowManager._osdWindows[activeIndex]._label.get_clutter_text().set_use_markup(true);
             
             if (level === 0) {
