@@ -97,13 +97,18 @@
     height: 1.4em; /* default: 22px */
 }
 
-.draw-on-your-screen-menu .popup-menu-item.draw-on-your-screen-menu-separator-item {
+.draw-on-your-screen-menu-separator-item {
     padding-top: 0.14em;
     padding-bottom: 0.14em;
 }
 
-.draw-on-your-screen-menu-separator StLabel {
+.draw-on-your-screen-menu-separator-item StLabel {
     font-size: 0;
+}
+
+.draw-on-your-screen-menu-separator-item .popup-separator-menu-item {
+    margin-top: 0.4em; /* default 6px */
+    margin-bottom: 0.4em; /* default 6px */
 }
 
 .draw-on-your-screen-menu-slider-label {
