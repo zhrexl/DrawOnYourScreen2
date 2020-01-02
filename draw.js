@@ -397,7 +397,7 @@ var DrawingArea = new Lang.Class({
         this.cursorTimeoutId = Mainloop.timeout_add(600, () => {
             this.textHasCursor = !this.textHasCursor;
             this._redisplay();
-            return true;
+            return GLib.SOURCE_CONTINUE;
         });
     },
     
