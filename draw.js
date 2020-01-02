@@ -47,6 +47,7 @@ const Prefs = Extension.imports.prefs;
 const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
+const DEFAULT_FILE_NAME = 'DrawOnYourScreen';
 
 const FILL_ICON_PATH = Extension.dir.get_child('icons').get_child('fill-symbolic.svg').get_path();
 const STROKE_ICON_PATH = Extension.dir.get_child('icons').get_child('stroke-symbolic.svg').get_path();
@@ -63,6 +64,11 @@ var LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
 var FontWeightNames = { 0: 'Normal', 1: 'Bold' };
 var FontStyleNames = { 0: 'Normal', 1: 'Italic', 2: 'Oblique' };
 var FontFamilyNames = {  0: 'Default', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
+
+function getDateString() {
+    let date = GLib.DateTime.new_now_local();
+    return `${date.format("%F")} ${date.format("%X")}`;
+}
 
 // DrawingArea is the widget in which we draw, thanks to Cairo.
 // It creates and manages a DrawingElement for each "brushstroke".
@@ -606,8 +612,7 @@ var DrawingArea = new Lang.Class({
         }
         content += "\n</svg>";
         
-        let date = GLib.DateTime.new_now_local();
-        let filename = `DrawOnYourScreen ${date.format("%F")} ${date.format("%X")}.svg`;
+        let filename = `${DEFAULT_FILE_NAME} ${getDateString()}.svg`;
         let dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES);
         let path = GLib.build_filenamev([dir, filename]);
         if (GLib.file_test(path, GLib.FileTest.EXISTS))
@@ -628,7 +633,7 @@ var DrawingArea = new Lang.Class({
     },
     
     saveAsJson: function() {
-        let filename = `DrawOnYourScreen.json`;
+        let filename = `${DEFAULT_FILE_NAME}.json`;
         let dir = GLib.get_user_data_dir();
         let path = GLib.build_filenamev([dir, filename]);
         
@@ -652,7 +657,7 @@ var DrawingArea = new Lang.Class({
     },
     
     _loadJson: function() {
-        let filename = `DrawOnYourScreen.json`;
+        let filename = `${DEFAULT_FILE_NAME}.json`;
         let dir = GLib.get_user_data_dir();
         let path = GLib.build_filenamev([dir, filename]);
         
