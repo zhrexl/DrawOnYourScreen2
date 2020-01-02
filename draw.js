@@ -1030,6 +1030,10 @@ var DrawingHelper = new Lang.Class({
     },
 });
 
+function getActor(object) {
+    return GS_VERSION < '3.33.0' ? object.actor : object;
+}
+
 var DrawingMenu = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingMenu',
     
@@ -1161,10 +1165,9 @@ var DrawingMenu = new Lang.Class({
     
     _addSwitchItem: function(menu, label, iconFalse, iconTrue, target, targetProperty) {
         let item = new PopupMenu.PopupSwitchMenuItem(label, target[targetProperty]);
-        let itemActor = GS_VERSION < '3.33.0' ? item.actor : item;
         
         item.icon = new St.Icon({ style_class: 'popup-menu-icon' });
-        itemActor.insert_child_at_index(item.icon, 1);
+        getActor(item).insert_child_at_index(item.icon, 1);
         item.icon.set_gicon(target[targetProperty] ? iconTrue : iconFalse);
         
         item.connect('toggled', (item, state) => {
@@ -1183,10 +1186,8 @@ var DrawingMenu = new Lang.Class({
     
     _addSliderItem: function(menu, target, targetProperty) {
         let item = new PopupMenu.PopupBaseMenuItem({ activate: false });
-        let itemActor = GS_VERSION < '3.33.0' ? item.actor : item;
         let label = new St.Label({ text: target[targetProperty] + " " + _("px"), style_class: 'draw-on-your-screen-menu-slider-label' });
         let slider = new Slider.Slider(target[targetProperty] / 50);
-        let sliderActor = GS_VERSION < '3.33.0' ? slider.actor : slider;
         
         if (GS_VERSION < '3.33.0') {
             slider.connect('value-changed', (slider, value, property) => {
@@ -1208,9 +1209,9 @@ var DrawingMenu = new Lang.Class({
             });
         }
         
-        itemActor.add(sliderActor, { expand: true });
-        itemActor.add(label);
-        itemActor.connect('key-press-event', slider.onKeyPressEvent.bind(slider));
+        getActor(item).add(getActor(slider), { expand: true });
+        getActor(item).add(label);
+        getActor(item).connect('key-press-event', slider.onKeyPressEvent.bind(slider));
         menu.addMenuItem(item);
     },
     
@@ -1278,8 +1279,7 @@ var DrawingMenu = new Lang.Class({
     
     _addSeparator: function(menu) {
         let separatorItem = new PopupMenu.PopupSeparatorMenuItem(' ');
-        let separatorItemActor = GS_VERSION < '3.33.0' ? separatorItem.actor : separatorItem;
-        separatorItemActor.add_style_class_name('draw-on-your-screen-menu-separator-item');
+        getActor(separatorItem).add_style_class_name('draw-on-your-screen-menu-separator-item');
         menu.addMenuItem(separatorItem);
     }
 });
