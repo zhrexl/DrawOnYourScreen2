@@ -115,5 +115,29 @@
     min-width: 3em;
     text-align: right;
 }
+
+.draw-on-your-screen-menu-entry-item {
+    padding-right: 1.15em; /* default 1.75em */
+    spacing: 0; /* default 12px */
+}
+
+.draw-on-your-screen-menu-entry {
+    border: none;
+    border-radius: 3px;
+    padding: 0.35em 0.57em;
+    width: 10em;
+}
+
+.draw-on-your-screen-menu-entry-error {
+    color: #f57900; /* upstream warning_color */
+}
+
+.draw-on-your-screen-menu-entry:focus {
+    padding: 0.35em 0.57em;
+}
+
+.draw-on-your-screen-menu-delete-button:hover {
+    color: #f57900;
+}
  
  

@@ -206,6 +206,21 @@
       <summary>Save drawing as a svg file</summary>
       <description>Save drawing as a svg file</description>
     </key>
+    <key type="as" name="save-as-json">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;s"]</default>
+      <summary>Save drawing as a json file</summary>
+      <description>Save drawing as a json file</description>
+    </key>
+    <key type="as" name="open-previous-json">
+      <default>["&lt;Primary&gt;Left"]</default>
+      <summary>Open previous json file</summary>
+      <description>Open previous json file</description>
+    </key>
+    <key type="as" name="open-next-json">
+      <default>["&lt;Primary&gt;Right"]</default>
+      <summary>Open next json file</summary>
+      <description>Open next json file</description>
+    </key>
     <key type="as" name="toggle-help">
       <default>["&lt;Primary&gt;F1"]</default>
       <summary>toggle help</summary>

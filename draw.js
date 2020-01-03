@@ -48,6 +48,7 @@ const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
 const DEFAULT_FILE_NAME = 'DrawOnYourScreen';
+const DATA_SUB_DIR = 'drawOnYourScreen'
 
 const FILL_ICON_PATH = Extension.dir.get_child('icons').get_child('fill-symbolic.svg').get_path();
 const STROKE_ICON_PATH = Extension.dir.get_child('icons').get_child('stroke-symbolic.svg').get_path();
@@ -70,6 +71,40 @@ function getDateString() {
     return `${date.format("%F")} ${date.format("%X")}`;
 }
 
+function getJsonFiles() {
+    let directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), DATA_SUB_DIR]));
+    if (!directory.query_exists(null))
+        return [];
+    
+    let jsonFiles = [];
+    let enumerator;
+    try {
+        enumerator = directory.enumerate_children('standard::name,standard::display-name,standard::content-type,time::modified', Gio.FileQueryInfoFlags.NONE, null);
+    } catch(e) {
+        return [];
+    }
+    
+    let i = 0;
+    let fileInfo = enumerator.next_file(null);
+    while (fileInfo) {
+        if (fileInfo.get_content_type().indexOf('json') != -1 && fileInfo.get_name() != `${DEFAULT_FILE_NAME}.json`) {
+            let file = enumerator.get_child(fileInfo);
+            jsonFiles.push({ name: fileInfo.get_name().slice(0, -5),
+                             displayName: fileInfo.get_display_name().slice(0, -5),
+                             modificationDateTime: fileInfo.get_modification_date_time(),
+                             delete: () => file.delete(null) });
+        }
+        fileInfo = enumerator.next_file(null);
+    }
+    enumerator.close(null);
+    
+    jsonFiles.sort((a, b) => {
+        return a.modificationDateTime.difference(b.modificationDateTime);
+    });
+    
+    return jsonFiles;
+}
+
 // DrawingArea is the widget in which we draw, thanks to Cairo.
 // It creates and manages a DrawingElement for each "brushstroke".
 // It handles pointer/mouse/(touch?) events and some keyboard events.
@@ -79,7 +114,7 @@ var DrawingArea = new Lang.Class({
     Signals: { 'show-osd': { param_types: [GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE] },
                'stop-drawing': {} },
 
-    _init: function(params, monitor, helper, loadJson) {
+    _init: function(params, monitor, helper, loadPersistent) {
         this.parent({ style_class: 'draw-on-your-screen', name: params && params.name ? params.name : ""});
         
         this.connect('repaint', this._repaint.bind(this));
@@ -99,8 +134,8 @@ var DrawingArea = new Lang.Class({
         this.fill = false;
         this.colors = [Clutter.Color.new(0, 0, 0, 255)];
         
-        if (loadJson)
-            this._loadJson();
+        if (loadPersistent)
+            this._loadPersistent();
     },
     
     get menu() {
@@ -591,7 +626,7 @@ var DrawingArea = new Lang.Class({
             this._menu.close();
         this.get_parent().set_background_color(null);
         if (save)
-            this.saveAsJson();
+            this.savePersistent();
     },
     
     saveAsSvg: function() {
@@ -632,10 +667,18 @@ var DrawingArea = new Lang.Class({
         }
     },
     
-    saveAsJson: function() {
-        let filename = `${DEFAULT_FILE_NAME}.json`;
-        let dir = GLib.get_user_data_dir();
-        let path = GLib.build_filenamev([dir, filename]);
+    _saveAsJson: function(name, notify) {
+        // stop drawing or writing
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING) {
+            this._stopWriting();
+        } else if (this.currentElement && this.currentElement.shape != Shapes.TEXT) {
+            this._stopDrawing();
+        }
+        
+        let dir = GLib.build_filenamev([GLib.get_user_data_dir(), DATA_SUB_DIR]);
+        if (!GLib.file_test(dir, GLib.FileTest.EXISTS))
+            GLib.mkdir_with_parents(dir, 0o700);
+        let path = GLib.build_filenamev([dir, `${name}.json`]);
         
         let oldContents;
         if (GLib.file_test(path, GLib.FileTest.EXISTS)) {
@@ -652,14 +695,30 @@ var DrawingArea = new Lang.Class({
         // because of compromise between disk usage and human readability
         let contents = `[\n  ` + new Array(...this.elements.map(element => JSON.stringify(element))).join(`,\n\n  `) + `\n]`;
         
-        if (contents != oldContents)
+        if (contents != oldContents) {
             GLib.file_set_contents(path, contents);
+            if (notify)
+                this.emit('show-osd', 'document-save-symbolic', name, -1);
+            if (name != DEFAULT_FILE_NAME)
+                this.jsonName = name;
+        }
     },
     
-    _loadJson: function() {
-        let filename = `${DEFAULT_FILE_NAME}.json`;
+    saveAsJsonWithName: function(name) {
+        this._saveAsJson(name);
+    },
+    
+    saveAsJson: function() {
+        this._saveAsJson(getDateString(), true);
+    },
+    
+    savePersistent: function() {
+        this._saveAsJson(DEFAULT_FILE_NAME);
+    },
+    
+    _loadJson: function(name, notify) {
         let dir = GLib.get_user_data_dir();
-        let path = GLib.build_filenamev([dir, filename]);
+        let path = GLib.build_filenamev([dir, DATA_SUB_DIR, `${name}.json`]);
         
         if (!GLib.file_test(path, GLib.FileTest.EXISTS))
             return;
@@ -669,6 +728,43 @@ var DrawingArea = new Lang.Class({
         if (contents instanceof Uint8Array)
             contents = imports.byteArray.toString(contents);
         this.elements.push(...JSON.parse(contents).map(object => new DrawingElement(object)));
+        
+        if (notify)
+            this.emit('show-osd', 'document-open-symbolic', name, -1);
+        if (name != DEFAULT_FILE_NAME)
+            this.jsonName = name;
+    },
+    
+    _loadPersistent: function() {
+        this._loadJson(DEFAULT_FILE_NAME);
+    },
+    
+    loadJson: function(name, notify) {
+        this.elements = [];
+        this.currentElement = null;
+        this._stopCursorTimeout();
+        this._loadJson(name, notify);
+        this._redisplay();
+    },
+    
+    loadNextJson: function() {
+        let names = getJsonFiles().map(file => file.name);
+        
+        if (!names.length)
+            return;
+        
+        let nextName = names[this.jsonName && names.indexOf(this.jsonName) != names.length - 1 ? names.indexOf(this.jsonName) + 1 : 0];
+        this.loadJson(nextName, true);
+    },
+    
+    loadPreviousJson: function() {
+        let names = getJsonFiles().map(file => file.name);
+        
+        if (!names.length)
+            return;
+        
+        let previousName = names[this.jsonName && names.indexOf(this.jsonName) > 0 ? names.indexOf(this.jsonName) - 1 : names.length - 1];
+        this.loadJson(previousName, true);
     },
     
     disable: function() {
@@ -1144,8 +1240,12 @@ var DrawingMenu = new Lang.Class({
         this._addSwitchItemWithCallback(this.menu, _("Square drawing area"), this.area.isSquareArea, this.area.toggleSquareArea.bind(this.area));
         this._addSeparator(this.menu);
         
-        this.menu.addAction(_("Save drawing as a SVG file"), this.area.saveAsSvg.bind(this.area), 'document-save-symbolic');
-        this.menu.addAction(_("Open stylesheet.css"), manager.openStylesheetFile.bind(manager), 'document-open-symbolic');
+        this._addDrawingNameItem(this.menu);
+        this._addOpenDrawingSubMenuItem(this.menu);
+        this._addSaveDrawingSubMenuItem(this.menu);
+        
+        this.menu.addAction(_("Save drawing as a SVG file"), this.area.saveAsSvg.bind(this.area), 'image-x-generic-symbolic');
+        this.menu.addAction(_("Open stylesheet.css"), manager.openStylesheetFile.bind(manager), 'document-page-setup-symbolic');
         this.menu.addAction(_("Show help"), this.area.toggleHelp.bind(this.area), 'preferences-desktop-keyboard-shortcuts-symbolic');
         
         this.updateSectionVisibility();
@@ -1277,10 +1377,193 @@ var DrawingMenu = new Lang.Class({
         menu.addMenuItem(item);
     },
     
+    _addDrawingNameItem: function(menu) {
+        this.drawingNameMenuItem = new PopupMenu.PopupMenuItem('', { reactive: false, activate: false });
+        this.drawingNameMenuItem.setSensitive(false);
+        menu.addMenuItem(this.drawingNameMenuItem);
+        this._updateDrawingNameMenuItem();
+    },
+    
+    _updateDrawingNameMenuItem: function() {
+        getActor(this.drawingNameMenuItem).visible = this.area.jsonName ? true : false;
+        if (this.area.jsonName) {
+            this.drawingNameMenuItem.label.set_text(`<i>${this.area.jsonName}</i>`);
+            this.drawingNameMenuItem.label.get_clutter_text().set_use_markup(true);
+        }
+    },
+    
+    _addOpenDrawingSubMenuItem: function(menu) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(_("Open drawing"), true);
+        this.openDrawingSubMenuItem = item;
+        this.openDrawingSubMenu = item.menu;
+        item.icon.set_icon_name('document-open-symbolic');
+        
+        item.menu.itemActivated = () => {
+            item.menu.close();
+        };
+        
+        Mainloop.timeout_add(0, () => {
+            this._populateOpenDrawingSubMenu();
+            return GLib.SOURCE_REMOVE;
+        });
+        menu.addMenuItem(item);
+    },
+    
+    _populateOpenDrawingSubMenu: function() {
+        this.openDrawingSubMenu.removeAll();
+        let jsonFiles = getJsonFiles();
+        jsonFiles.forEach(file => {
+            let item = this.openDrawingSubMenu.addAction(`<span font_family="Monospace"><i>${file.displayName}</i></span>`, () => {
+                this.area.loadJson(file.name);
+                this._updateDrawingNameMenuItem();
+                this._updateSaveDrawingSubMenuItemSensitivity();
+            });
+            item.label.get_clutter_text().set_use_markup(true);
+            
+            let expander = new St.Bin({
+                style_class: 'popup-menu-item-expander',
+                x_expand: true,
+            });
+            getActor(item).add_child(expander);
+            
+            let deleteButton = new St.Button({ style_class: 'draw-on-your-screen-menu-delete-button',
+                                               child: new St.Icon({ icon_name: 'edit-delete-symbolic',
+                                                                    style_class: 'popup-menu-icon',
+                                                                    x_align: Clutter.ActorAlign.END }) });
+            getActor(item).add_child(deleteButton);
+            
+            deleteButton.connect('clicked', () => {
+                file.delete();
+                this._populateOpenDrawingSubMenu();
+            });
+        });
+        
+        this.openDrawingSubMenuItem.setSensitive(!this.openDrawingSubMenu.isEmpty());
+    },
+    
+    _addSaveDrawingSubMenuItem: function(menu) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(_("Save drawing"), true);
+        this.saveDrawingSubMenuItem = item;
+        this._updateSaveDrawingSubMenuItemSensitivity();
+        this.saveDrawingSubMenu = item.menu;
+        item.icon.set_icon_name('document-save-symbolic');
+        
+        item.menu.itemActivated = () => {
+            item.menu.close();
+        };
+        
+        Mainloop.timeout_add(0, () => {
+            this._populateSaveDrawingSubMenu();
+            return GLib.SOURCE_REMOVE;
+        });
+        menu.addMenuItem(item);
+    },
+    
+    _updateSaveDrawingSubMenuItemSensitivity: function() {
+        this.saveDrawingSubMenuItem.setSensitive(this.area.elements.length > 0);
+    },
+    
+    _populateSaveDrawingSubMenu: function() {
+        this.saveEntry = new DrawingMenuEntry({ initialTextGetter: getDateString,
+                                                entryActivateCallback: (text) => {
+                                                    this.area.saveAsJsonWithName(text);
+                                                    this.saveDrawingSubMenu.toggle();
+                                                    this._updateDrawingNameMenuItem();
+                                                    this._populateOpenDrawingSubMenu();
+                                                },
+                                                invalidStrings: [DEFAULT_FILE_NAME, '/'],
+                                                primaryIconName: 'insert-text' });
+        this.saveDrawingSubMenu.addMenuItem(this.saveEntry.item);
+    },
+    
     _addSeparator: function(menu) {
         let separatorItem = new PopupMenu.PopupSeparatorMenuItem(' ');
         getActor(separatorItem).add_style_class_name('draw-on-your-screen-menu-separator-item');
         menu.addMenuItem(separatorItem);
     }
 });
+
+// based on searchItem.js, https://github.com/leonardo-bartoli/gnome-shell-extension-Recents
+var DrawingMenuEntry = new Lang.Class({
+    Name: 'DrawOnYourScreenDrawingMenuEntry',
+    
+    _init: function (params) {
+        this.params = params;
+        this.item = new PopupMenu.PopupBaseMenuItem({ style_class: 'draw-on-your-screen-menu-entry-item',
+                                                      activate: false,
+                                                      reactive: true,
+                                                      can_focus: false });
+        
+        this.itemActor = GS_VERSION < '3.33.0' ? this.item.actor : this.item;
+        
+        this.entry = new St.Entry({
+            style_class: 'search-entry draw-on-your-screen-menu-entry',
+            track_hover: true,
+            reactive: true,
+            can_focus: true
+        });
+        
+        this.entry.set_primary_icon(new St.Icon({ style_class: 'search-entry-icon',
+                                                  icon_name: this.params.primaryIconName }));
+        
+        this.entry.clutter_text.connect('text-changed', this._onTextChanged.bind(this));
+        this.entry.clutter_text.connect('activate', this._onTextActivated.bind(this));
+        
+        this.clearIcon = new St.Icon({
+            style_class: 'search-entry-icon',
+            icon_name: 'edit-clear-symbolic'
+        });
+        this.entry.connect('secondary-icon-clicked', this._reset.bind(this));
+        
+        getActor(this.item).add(this.entry, { expand: true });
+        getActor(this.item).connect('notify::mapped', (actor) => {
+            if (actor.mapped) {
+                this.entry.set_text(this.params.initialTextGetter());
+                this.entry.clutter_text.grab_key_focus();
+            }
+        });
+    },
+    
+    _setError: function(hasError) {
+        if (hasError)
+            this.entry.add_style_class_name('draw-on-your-screen-menu-entry-error');
+        else
+            this.entry.remove_style_class_name('draw-on-your-screen-menu-entry-error');
+    },
+    
+    _reset: function() {
+        this.entry.text = '';
+        this.entry.clutter_text.set_cursor_visible(true);
+        this.entry.clutter_text.set_selection(0, 0);
+        this._setError(false);
+    },
+    
+    _onTextActivated: function(clutterText) {
+        let text = clutterText.get_text();
+        if (text.length == 0)
+            return;
+        if (this._getIsInvalid())
+            return;
+        this._reset();
+        this.params.entryActivateCallback(text);
+    },
+    
+    _onTextChanged: function(clutterText) {
+        let text = clutterText.get_text();
+        this.entry.set_secondary_icon(text.length ? this.clearIcon : null);
+        
+        if (text.length)
+            this._setError(this._getIsInvalid());
+    },
+    
+    _getIsInvalid: function() {
+        for (let i = 0; i < this.params.invalidStrings.length; i++) {
+            if (this.entry.text.indexOf(this.params.invalidStrings[i]) != -1)
+                return true;
+        }
+        
+        return false;
+    }
+});
+
 

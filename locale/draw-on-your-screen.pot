@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen VERSION\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2019-03-04 16:40+0100\n"
+"POT-Creation-Date: 2020-01-03 08:00+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -108,6 +108,12 @@ msgstr ""
 msgid "Color"
 msgstr ""
 
+msgid "Open drawing"
+msgstr ""
+
+msgid "Save drawing"
+msgstr ""
+
 #: prefs.js
 
 msgid "Preferences"
@@ -195,6 +201,16 @@ msgstr ""
 
 msgid "Square drawing area"
 msgstr ""
+
+msgid "Open previous drawing"
+msgstr ""
+
+msgid "Open next drawing"
+msgstr ""
+
+# already in draw.js
+#msgid "Save drawing"
+#msgstr ""
 
 msgid "Save drawing as a SVG file"
 msgstr ""

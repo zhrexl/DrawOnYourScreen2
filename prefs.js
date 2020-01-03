@@ -68,6 +68,9 @@ var INTERNAL_KEYBINDINGS = {
     'toggle-background': "Add a drawing background",
     'toggle-square-area': "Square drawing area",
     '-separator-5': '',
+    'open-previous-json': "Open previous drawing",
+    'open-next-json': "Open next drawing",
+    'save-as-json': "Save drawing",
     'save-as-svg': "Save drawing as a SVG file",
     'open-stylesheet': "Open stylesheet.css",
     'toggle-help': "Show help"

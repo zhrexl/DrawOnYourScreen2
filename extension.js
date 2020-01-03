@@ -113,7 +113,7 @@ var AreaManager = new Lang.Class({
     
     onPersistentSettingChanged: function() {
         if (this.settings.get_boolean('persistent-drawing'))
-            this.areas[Main.layoutManager.primaryIndex].saveAsJson();
+            this.areas[Main.layoutManager.primaryIndex].savePersistent();
     },
     
     updateIndicator: function() {
@@ -136,8 +136,8 @@ var AreaManager = new Lang.Class({
             let monitor = this.monitors[i];
             let container = new St.Widget({ name: 'drawOnYourSreenContainer' + i });
             let helper = new Draw.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
-            let load = i == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
-            let area = new Draw.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, load);
+            let loadPersistent = i == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
+            let area = new Draw.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, loadPersistent);
             container.add_child(area);
             container.add_child(helper);
             
@@ -161,6 +161,9 @@ var AreaManager = new Lang.Class({
             'delete-last-element': this.activeArea.deleteLastElement.bind(this.activeArea),
             'smooth-last-element': this.activeArea.smoothLastElement.bind(this.activeArea),
             'save-as-svg': this.activeArea.saveAsSvg.bind(this.activeArea),
+            'save-as-json': this.activeArea.saveAsJson.bind(this.activeArea),
+            'open-previous-json': this.activeArea.loadPreviousJson.bind(this.activeArea),
+            'open-next-json': this.activeArea.loadNextJson.bind(this.activeArea),
             'toggle-background': this.activeArea.toggleBackground.bind(this.activeArea),
             'toggle-square-area': this.activeArea.toggleSquareArea.bind(this.activeArea),
             'increment-line-width': () => this.activeArea.incrementLineWidth(1),
@@ -223,7 +226,7 @@ var AreaManager = new Lang.Class({
         for (let i = 0; i < this.areas.length; i++)
             this.areas[i].erase();
         if (this.settings.get_boolean('persistent-drawing'))
-            this.areas[Main.layoutManager.primaryIndex].saveAsJson();
+            this.areas[Main.layoutManager.primaryIndex].savePersistent();
     },
     
     togglePanelAndDockOpacity: function() {
