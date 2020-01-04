@@ -701,6 +701,7 @@ var DrawingArea = new Lang.Class({
                 this.emit('show-osd', 'document-save-symbolic', name, -1);
             if (name != DEFAULT_FILE_NAME)
                 this.jsonName = name;
+            this.lastJsonContents = contents;
         }
     },
     
@@ -733,6 +734,7 @@ var DrawingArea = new Lang.Class({
             this.emit('show-osd', 'document-open-symbolic', name, -1);
         if (name != DEFAULT_FILE_NAME)
             this.jsonName = name;
+        this.lastJsonContents = contents;
     },
     
     _loadPersistent: function() {
@@ -765,6 +767,11 @@ var DrawingArea = new Lang.Class({
         
         let previousName = names[this.jsonName && names.indexOf(this.jsonName) > 0 ? names.indexOf(this.jsonName) - 1 : names.length - 1];
         this.loadJson(previousName, true);
+    },
+    
+    get drawingContentsHasChanged() {
+        let contents = `[\n  ` + new Array(...this.elements.map(element => JSON.stringify(element))).join(`,\n\n  `) + `\n]`;
+        return contents != this.lastJsonContents;
     },
     
     disable: function() {
@@ -1387,7 +1394,8 @@ var DrawingMenu = new Lang.Class({
     _updateDrawingNameMenuItem: function() {
         getActor(this.drawingNameMenuItem).visible = this.area.jsonName ? true : false;
         if (this.area.jsonName) {
-            this.drawingNameMenuItem.label.set_text(`<i>${this.area.jsonName}</i>`);
+            let prefix = this.area.drawingContentsHasChanged ? "* " : "";
+            this.drawingNameMenuItem.label.set_text(`<i>${prefix}${this.area.jsonName}</i>`);
             this.drawingNameMenuItem.label.get_clutter_text().set_use_markup(true);
         }
     },
