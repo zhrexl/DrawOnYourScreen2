@@ -1412,6 +1412,9 @@ var DrawingMenu = new Lang.Class({
         
         Mainloop.timeout_add(0, () => {
             this._populateOpenDrawingSubMenu();
+            // small trick to prevent the menu from "jumping" on first opening
+            item.menu.open();
+            item.menu.close();
             return GLib.SOURCE_REMOVE;
         });
         menu.addMenuItem(item);
@@ -1462,6 +1465,9 @@ var DrawingMenu = new Lang.Class({
         
         Mainloop.timeout_add(0, () => {
             this._populateSaveDrawingSubMenu();
+            // small trick to prevent the menu from "jumping" on first opening
+            item.menu.open();
+            item.menu.close();
             return GLib.SOURCE_REMOVE;
         });
         menu.addMenuItem(item);
