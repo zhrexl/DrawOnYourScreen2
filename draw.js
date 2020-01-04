@@ -699,9 +699,10 @@ var DrawingArea = new Lang.Class({
             GLib.file_set_contents(path, contents);
             if (notify)
                 this.emit('show-osd', 'document-save-symbolic', name, -1);
-            if (name != DEFAULT_FILE_NAME)
+            if (name != DEFAULT_FILE_NAME) {
                 this.jsonName = name;
-            this.lastJsonContents = contents;
+                this.lastJsonContents = contents;
+            }
         }
     },
     
@@ -732,9 +733,10 @@ var DrawingArea = new Lang.Class({
         
         if (notify)
             this.emit('show-osd', 'document-open-symbolic', name, -1);
-        if (name != DEFAULT_FILE_NAME)
+        if (name != DEFAULT_FILE_NAME) {
             this.jsonName = name;
-        this.lastJsonContents = contents;
+            this.lastJsonContents = contents;
+        }
     },
     
     _loadPersistent: function() {
