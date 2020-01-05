@@ -196,21 +196,7 @@ var PrefsPage = new GObject.Class({
         globalKeybindingsWidget.margin = MARGIN;
         listBox.add(globalKeybindingsWidget);
         
-        let desktopBox = new Gtk.Box({ margin: MARGIN });
-        let desktopLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let desktopLabel1 = new Gtk.Label({label: _("Drawing on the desktop")});
-        let desktopLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("Draw On Your Screen becomes Draw On Your Desktop") + "</small>" });
-        desktopLabel1.set_halign(1);
-        desktopLabel2.get_style_context().add_class("dim-label");
-        desktopLabelBox.pack_start(desktopLabel1, true, true, 0);
-        desktopLabelBox.pack_start(desktopLabel2, true, true, 0);
-        let desktopSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind("drawing-on-desktop", desktopSwitch, "active", 0);
-        desktopBox.pack_start(desktopLabelBox, true, true, 4);
-        desktopBox.pack_start(desktopSwitch, false, false, 4);
-        listBox.add(desktopBox);
-        
-        let persistentBox = new Gtk.Box({ margin: MARGIN });
+        let persistentBox = new Gtk.Box({ margin_left: MARGIN, margin_right: MARGIN });
         let persistentLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
         let persistentLabel1 = new Gtk.Label({label: _("Persistent")});
         let persistentLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("Persistent drawing through session restart") + "</small>" });
@@ -224,7 +210,21 @@ var PrefsPage = new GObject.Class({
         persistentBox.pack_start(persistentSwitch, false, false, 4);
         listBox.add(persistentBox);
         
-        let osdBox = new Gtk.Box({ margin: MARGIN });
+        let desktopBox = new Gtk.Box({ margin_left: MARGIN, margin_right: MARGIN });
+        let desktopLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
+        let desktopLabel1 = new Gtk.Label({label: _("Drawing on the desktop")});
+        let desktopLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>") + "</small>" });
+        desktopLabel1.set_halign(1);
+        desktopLabel2.get_style_context().add_class("dim-label");
+        desktopLabelBox.pack_start(desktopLabel1, true, true, 0);
+        desktopLabelBox.pack_start(desktopLabel2, true, true, 0);
+        let desktopSwitch = new Gtk.Switch({valign: 3});
+        this.settings.bind("drawing-on-desktop", desktopSwitch, "active", 0);
+        desktopBox.pack_start(desktopLabelBox, true, true, 4);
+        desktopBox.pack_start(desktopSwitch, false, false, 4);
+        listBox.add(desktopBox);
+        
+        let osdBox = new Gtk.Box({ margin_left: MARGIN, margin_right: MARGIN });
         let osdLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
         let osdLabel1 = new Gtk.Label({label: _("Disable on-screen notifications")});
         osdLabel1.set_halign(1);
@@ -235,7 +235,7 @@ var PrefsPage = new GObject.Class({
         osdBox.pack_start(osdSwitch, false, false, 4);
         listBox.add(osdBox);
         
-        let indicatorBox = new Gtk.Box({ margin: MARGIN });
+        let indicatorBox = new Gtk.Box({ margin_left: MARGIN, margin_right: MARGIN });
         let indicatorLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
         let indicatorLabel1 = new Gtk.Label({label: _("Disable panel indicator")});
         indicatorLabel1.set_halign(1);
@@ -245,6 +245,8 @@ var PrefsPage = new GObject.Class({
         indicatorBox.pack_start(indicatorLabelBox, true, true, 4);
         indicatorBox.pack_start(indicatorSwitch, false, false, 4);
         listBox.add(indicatorBox);
+        
+        listBox.add(new Gtk.Box({ margin_bottom: MARGIN, margin_left: MARGIN, margin_right: MARGIN }));
         this.addSeparator(listBox);
         
         let internalTitleBox = new Gtk.Box({ margin: MARGIN });

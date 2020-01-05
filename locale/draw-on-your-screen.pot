@@ -288,7 +288,7 @@ msgstr ""
 msgid "Drawing on the desktop"
 msgstr ""
 
-msgid "Draw On Your Screen becomes Draw On Your Desktop"
+msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
 msgstr ""
 
 msgid "Persistent"
