@@ -107,12 +107,12 @@
       <description>decrement the line width</description>
     </key>
     <key type="as" name="increment-line-width-more">
-      <default>["&lt;Primary&gt;Page_Up"]</default>
+      <default>["&lt;Primary&gt;&lt;Shift&gt;KP_Add"]</default>
       <summary>increment the line width even more</summary>
       <description>increment the line width even more</description>
     </key>
     <key type="as" name="decrement-line-width-more">
-      <default>["&lt;Primary&gt;Page_Down"]</default>
+      <default>["&lt;Primary&gt;&lt;Shift&gt;KP_Subtract"]</default>
       <summary>decrement the line width even more</summary>
       <description>decrement the line width even more</description>
     </key>
@@ -202,22 +202,22 @@
       <description>open stylesheet</description>
     </key>
     <key type="as" name="save-as-svg">
-      <default>["&lt;Primary&gt;s"]</default>
+      <default>["&lt;Primary&gt;&lt;Shift&gt;s"]</default>
       <summary>Save drawing as a svg file</summary>
       <description>Save drawing as a svg file</description>
     </key>
     <key type="as" name="save-as-json">
-      <default>["&lt;Primary&gt;&lt;Shift&gt;s"]</default>
+      <default>["&lt;Primary&gt;s"]</default>
       <summary>Save drawing as a json file</summary>
       <description>Save drawing as a json file</description>
     </key>
     <key type="as" name="open-previous-json">
-      <default>["&lt;Primary&gt;Left"]</default>
+      <default>["&lt;Primary&gt;Page_Down"]</default>
       <summary>Open previous json file</summary>
       <description>Open previous json file</description>
     </key>
     <key type="as" name="open-next-json">
-      <default>["&lt;Primary&gt;Right"]</default>
+      <default>["&lt;Primary&gt;Page_Up"]</default>
       <summary>Open next json file</summary>
       <description>Open next json file</description>
     </key>
