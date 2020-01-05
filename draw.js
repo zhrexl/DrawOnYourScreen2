@@ -40,22 +40,22 @@ const Screenshot = imports.ui.screenshot;
 const Tweener = imports.ui.tweener;
 
 const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Convenience = Extension.imports.convenience;
-const ExtensionJs = Extension.imports.extension;
-const Prefs = Extension.imports.prefs;
-const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
+const Me = ExtensionUtils.getCurrentExtension();
+const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
+const Extension = Me.imports.extension;
+const Prefs = Me.imports.prefs;
+const _ = imports.gettext.domain(Me.metadata["gettext-domain"]).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
 const DEFAULT_FILE_NAME = 'DrawOnYourScreen';
 const DATA_SUB_DIR = 'drawOnYourScreen'
 
-const FILL_ICON_PATH = Extension.dir.get_child('icons').get_child('fill-symbolic.svg').get_path();
-const STROKE_ICON_PATH = Extension.dir.get_child('icons').get_child('stroke-symbolic.svg').get_path();
-const LINEJOIN_ICON_PATH = Extension.dir.get_child('icons').get_child('linejoin-symbolic.svg').get_path();
-const LINECAP_ICON_PATH = Extension.dir.get_child('icons').get_child('linecap-symbolic.svg').get_path();
-const DASHED_LINE_ICON_PATH = Extension.dir.get_child('icons').get_child('dashed-line-symbolic.svg').get_path();
-const FULL_LINE_ICON_PATH = Extension.dir.get_child('icons').get_child('full-line-symbolic.svg').get_path();
+const FILL_ICON_PATH = Me.dir.get_child('icons').get_child('fill-symbolic.svg').get_path();
+const STROKE_ICON_PATH = Me.dir.get_child('icons').get_child('stroke-symbolic.svg').get_path();
+const LINEJOIN_ICON_PATH = Me.dir.get_child('icons').get_child('linejoin-symbolic.svg').get_path();
+const LINECAP_ICON_PATH = Me.dir.get_child('icons').get_child('linecap-symbolic.svg').get_path();
+const DASHED_LINE_ICON_PATH = Me.dir.get_child('icons').get_child('dashed-line-symbolic.svg').get_path();
+const FULL_LINE_ICON_PATH = Me.dir.get_child('icons').get_child('full-line-symbolic.svg').get_path();
 
 var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4 };
 var TextState = { DRAWING: 0, WRITING: 1 };
@@ -406,7 +406,7 @@ var DrawingArea = new Lang.Class({
     setPointerCursor: function(pointerCursorName) {
         if (!this.currentPointerCursorName || this.currentPointerCursorName != pointerCursorName) {
             this.currentPointerCursorName = pointerCursorName;
-            ExtensionJs.setCursor(pointerCursorName);
+            Extension.setCursor(pointerCursorName);
         }
     },
     
@@ -1188,7 +1188,7 @@ var DrawingMenu = new Lang.Class({
         } else {
             this.area.updatePointerCursor();
             // actionMode has changed, set previous actionMode in order to keep internal shortcuts working
-            Main.actionMode = ExtensionJs.DRAWING_ACTION_MODE | Shell.ActionMode.NORMAL;
+            Main.actionMode = Extension.DRAWING_ACTION_MODE | Shell.ActionMode.NORMAL;
             this.area.grab_key_focus();
         }
     },
@@ -1254,7 +1254,7 @@ var DrawingMenu = new Lang.Class({
         this.menu.addMenuItem(fontSection);
         this.fontSection = fontSection;
         
-        let manager = ExtensionJs.manager;
+        let manager = Extension.manager;
         this._addSwitchItemWithCallback(this.menu, _("Hide panel and dock"), manager.hiddenList ? true : false, manager.togglePanelAndDockOpacity.bind(manager));
         this._addSwitchItemWithCallback(this.menu, _("Add a drawing background"), this.area.hasBackground, this.area.toggleBackground.bind(this.area));
         this._addSwitchItemWithCallback(this.menu, _("Square drawing area"), this.area.isSquareArea, this.area.toggleSquareArea.bind(this.area));
@@ -1314,18 +1314,18 @@ var DrawingMenu = new Lang.Class({
                 target[targetProperty] = Math.max(Math.round(value * 50), 0);
                 label.set_text(target[targetProperty] + " px");
                 if (target[targetProperty] === 0)
-                    label.add_style_class_name(ExtensionJs.WARNING_COLOR_STYLE_CLASS_NAME);
+                    label.add_style_class_name(Extension.WARNING_COLOR_STYLE_CLASS_NAME);
                 else
-                    label.remove_style_class_name(ExtensionJs.WARNING_COLOR_STYLE_CLASS_NAME);
+                    label.remove_style_class_name(Extension.WARNING_COLOR_STYLE_CLASS_NAME);
             });
         } else {
             slider.connect('notify::value', () => {
                 target[targetProperty] = Math.max(Math.round(slider.value * 50), 0);
                 label.set_text(target[targetProperty] + " px");
                 if (target[targetProperty] === 0)
-                    label.add_style_class_name(ExtensionJs.WARNING_COLOR_STYLE_CLASS_NAME);
+                    label.add_style_class_name(Extension.WARNING_COLOR_STYLE_CLASS_NAME);
                 else
-                    label.remove_style_class_name(ExtensionJs.WARNING_COLOR_STYLE_CLASS_NAME);
+                    label.remove_style_class_name(Extension.WARNING_COLOR_STYLE_CLASS_NAME);
             });
         }
         

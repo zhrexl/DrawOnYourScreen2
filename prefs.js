@@ -26,10 +26,10 @@ const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 
 const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Convenience = Extension.imports.convenience;
-const Metadata = Extension.metadata;
-const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
+const Me = ExtensionUtils.getCurrentExtension();
+const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
+const Metadata = Me.metadata;
+const _ = imports.gettext.domain(Me.metadata["gettext-domain"]).gettext;
 const _GTK = imports.gettext.domain('gtk30').gettext;
 
 const MARGIN = 10;

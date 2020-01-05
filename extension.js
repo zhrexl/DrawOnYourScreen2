@@ -31,10 +31,11 @@ const Main = imports.ui.main;
 const OsdWindow = imports.ui.osdWindow;
 const PanelMenu = imports.ui.panelMenu;
 
-const Extension = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Extension.imports.convenience;
-const Draw = Extension.imports.draw;
-const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
+const Draw = Me.imports.draw;
+const _ = imports.gettext.domain(Me.metadata["gettext-domain"]).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
 
@@ -92,14 +93,14 @@ var AreaManager = new Lang.Class({
         this.desktopSettingHandler = this.settings.connect('changed::drawing-on-desktop', this.onDesktopSettingChanged.bind(this));
         this.persistentSettingHandler = this.settings.connect('changed::persistent-drawing', this.onPersistentSettingChanged.bind(this));
         
-        if (Extension.stylesheet) {
-            this.stylesheetMonitor = Extension.stylesheet.monitor(Gio.FileMonitorFlags.NONE, null);
+        if (Me.stylesheet) {
+            this.stylesheetMonitor = Me.stylesheet.monitor(Gio.FileMonitorFlags.NONE, null);
             this.stylesheetChangedHandler = this.stylesheetMonitor.connect('changed', (monitor, file, otherFile, eventType) => {
-                if ((eventType != 0 && eventType != 3) || !Extension.stylesheet.query_exists(null))
+                if ((eventType != 0 && eventType != 3) || !Me.stylesheet.query_exists(null))
                     return;
                 let theme = St.ThemeContext.get_for_stage(global.stage).get_theme();
-                theme.unload_stylesheet(Extension.stylesheet);
-                theme.load_stylesheet(Extension.stylesheet);
+                theme.unload_stylesheet(Me.stylesheet);
+                theme.load_stylesheet(Me.stylesheet);
             });
         }
     },
@@ -216,8 +217,8 @@ var AreaManager = new Lang.Class({
     },
     
     openStylesheetFile: function() {
-        if (Extension.stylesheet && Extension.stylesheet.query_exists(null))
-            Gio.AppInfo.launch_default_for_uri(Extension.stylesheet.get_uri(), global.create_app_launch_context(0, -1));
+        if (Me.stylesheet && Me.stylesheet.query_exists(null))
+            Gio.AppInfo.launch_default_for_uri(Me.stylesheet.get_uri(), global.create_app_launch_context(0, -1));
         if (this.activeArea)
             this.toggleDrawing();
     },
