@@ -311,8 +311,6 @@ var DrawingArea = new Lang.Class({
             this._stopDrawing();
         });
         
-        this.smoothedStroke = this.settings.get_boolean('smoothed-stroke');
-        
         this.currentElement = new DrawingElement ({
             shape: this.currentShape,
             color: this.currentColor.to_string(),
@@ -383,7 +381,7 @@ var DrawingArea = new Lang.Class({
         if (!this.currentElement)
             return;
         if (this.currentElement.shape == Shapes.NONE)
-            this.currentElement.addPoint(x, y, this.smoothedStroke);
+            this.currentElement.addPoint(x, y, controlPressed);
         else if ((this.currentElement.shape == Shapes.RECTANGLE || this.currentElement.shape == Shapes.TEXT) && (controlPressed || this.currentElement.transform.active))
             this.currentElement.transformRectangle(x, y);
         else if (this.currentElement.shape == Shapes.ELLIPSE && (controlPressed || this.currentElement.transform.active))

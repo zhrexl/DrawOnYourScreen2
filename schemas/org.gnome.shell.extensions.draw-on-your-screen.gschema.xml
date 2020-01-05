@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="gnome-shell-extensions">
   <schema path="/org/gnome/shell/extensions/draw-on-your-screen/" id="org.gnome.shell.extensions.draw-on-your-screen">
-    <key type="b" name="smoothed-stroke">
-      <default>false</default>
-      <summary>smoothed stroke</summary>
-      <description>smoothed stroke</description>
-    </key>
     <key type="b" name="drawing-on-desktop">
       <default>false</default>
       <summary>move drawing on desktop</summary>

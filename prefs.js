@@ -274,26 +274,16 @@ var PrefsPage = new GObject.Class({
         let controlBox = new Gtk.Box({ margin_top: MARGIN, margin_left: MARGIN, margin_right: MARGIN, margin_bottom:MARGIN });
         let controlLabel = new Gtk.Label({
             use_markup: true,
-            label: _("By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you can:\n . rotate a rectangle or a text area\n . extend and rotate an ellipse\n . curve a line (cubic Bezier curve)")
+            label: _("By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you can:\n" +
+                     " . rotate a rectangle or a text area\n" +
+                     " . extend and rotate an ellipse\n" +
+                     " . curve a line (cubic Bezier curve)\n" +
+                     " . smooth a free drawing stroke (you may prefer to smooth the stroke afterward, see “<i>%s</i>”)").format(_("Smooth last brushstroke"))
         });
         controlLabel.set_halign(1);
         controlLabel.get_style_context().add_class("dim-label");
         controlBox.pack_start(controlLabel, true, true, 4);
         listBox.add(controlBox);
-        
-        let smoothBox = new Gtk.Box({ margin: MARGIN });
-        let smoothLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let smoothLabel1 = new Gtk.Label({label: _("Smooth stroke during the drawing process")});
-        let smoothLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("You can also smooth the stroke afterward\nSee “%s”").format(_("Smooth last brushstroke")) + "</small>" });
-        smoothLabel1.set_halign(1);
-        smoothLabel2.get_style_context().add_class("dim-label");
-        smoothLabelBox.pack_start(smoothLabel1, true, true, 0);
-        smoothLabelBox.pack_start(smoothLabel2, true, true, 0);
-        let smoothSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind("smoothed-stroke", smoothSwitch, "active", 0);
-        smoothBox.pack_start(smoothLabelBox, true, true, 4);
-        smoothBox.pack_start(smoothSwitch, false, false, 4);
-        listBox.add(smoothBox);
         
         let internalKeybindingsWidget = new KeybindingsWidget(INTERNAL_KEYBINDINGS, this.settings);
         internalKeybindingsWidget.margin = MARGIN;
