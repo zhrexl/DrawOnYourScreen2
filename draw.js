@@ -1158,6 +1158,18 @@ var DrawingMenu = new Lang.Class({
         this.menu.itemActivated = () => {};
         this.menu.connect('open-state-changed', this._onMenuOpenStateChanged.bind(this));
         
+        // Case where the menu is closed (escape key) while the save entry clutter_text is active:
+        // St.Entry clutter_text set the DEFAULT cursor on leave event with a delay and
+        // overrides the cursor set by area.updatePointerCursor().
+        // In order to update drawing cursor on menu closed, we need to leave the saveEntry before closing menu.
+        // Since escape key press event can't be captured easily, the job is done in the menu close function.
+        let menuCloseFunc = this.menu.close;
+        this.menu.close = (animate) => {
+            if (this.saveDrawingSubMenu.isOpen)
+                this.saveDrawingSubMenu.close();
+            menuCloseFunc.bind(this.menu)(animate);
+        };
+        
         this.strokeIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(STROKE_ICON_PATH) });
         this.fillIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FILL_ICON_PATH) });
         this.linejoinIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(LINEJOIN_ICON_PATH) });
@@ -1179,6 +1191,7 @@ var DrawingMenu = new Lang.Class({
             this.area.updatePointerCursor();
             // actionMode has changed, set previous actionMode in order to keep internal shortcuts working
             Main.actionMode = ExtensionJs.DRAWING_ACTION_MODE | Shell.ActionMode.NORMAL;
+            this.area.grab_key_focus();
         }
     },
     
