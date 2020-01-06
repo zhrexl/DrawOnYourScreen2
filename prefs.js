@@ -28,8 +28,7 @@ const Mainloop = imports.mainloop;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
-const Metadata = Me.metadata;
-const _ = imports.gettext.domain(Me.metadata["gettext-domain"]).gettext;
+const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const _GTK = imports.gettext.domain('gtk30').gettext;
 
 const MARGIN = 10;
@@ -131,10 +130,10 @@ var AboutPage = new GObject.Class({
         let vbox= new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN*3 });
         this.add(vbox);
         
-        let name = "<b> " + _(Metadata.name) + "</b>";
-        let version = _("Version %d").format(Metadata.version);
-        let description = _(Metadata.description);
-        let link = "<span><a href=\"" + Metadata.url + "\">" + Metadata.url + "</a></span>";
+        let name = "<b> " + _(Me.metadata.name) + "</b>";
+        let version = _("Version %d").format(Me.metadata.version);
+        let description = _(Me.metadata.description);
+        let link = "<span><a href=\"" + Me.metadata.url + "\">" + Me.metadata.url + "</a></span>";
         let licenceName = _GTK("GNU General Public License, version 2 or later");
         let licenceLink = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html";
         let licence = "<small>" + _GTK("This program comes with absolutely no warranty.\nSee the <a href=\"%s\">%s</a> for details.").format(licenceLink, licenceName) + "</small>";

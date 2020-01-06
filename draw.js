@@ -44,7 +44,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
 const Extension = Me.imports.extension;
 const Prefs = Me.imports.prefs;
-const _ = imports.gettext.domain(Me.metadata["gettext-domain"]).gettext;
+const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
 const DEFAULT_FILE_NAME = 'DrawOnYourScreen';
