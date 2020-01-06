@@ -48,7 +48,6 @@ const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
 const DEFAULT_FILE_NAME = 'DrawOnYourScreen';
-const DATA_SUB_DIR = 'drawOnYourScreen'
 
 const FILL_ICON_PATH = Me.dir.get_child('icons').get_child('fill-symbolic.svg').get_path();
 const STROKE_ICON_PATH = Me.dir.get_child('icons').get_child('stroke-symbolic.svg').get_path();
@@ -72,7 +71,7 @@ function getDateString() {
 }
 
 function getJsonFiles() {
-    let directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), DATA_SUB_DIR]));
+    let directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir']]));
     if (!directory.query_exists(null))
         return [];
     
@@ -673,7 +672,7 @@ var DrawingArea = new Lang.Class({
             this._stopDrawing();
         }
         
-        let dir = GLib.build_filenamev([GLib.get_user_data_dir(), DATA_SUB_DIR]);
+        let dir = GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir']]);
         if (!GLib.file_test(dir, GLib.FileTest.EXISTS))
             GLib.mkdir_with_parents(dir, 0o700);
         let path = GLib.build_filenamev([dir, `${name}.json`]);
@@ -718,7 +717,7 @@ var DrawingArea = new Lang.Class({
     
     _loadJson: function(name, notify) {
         let dir = GLib.get_user_data_dir();
-        let path = GLib.build_filenamev([dir, DATA_SUB_DIR, `${name}.json`]);
+        let path = GLib.build_filenamev([dir, Me.metadata['data-dir'], `${name}.json`]);
         
         if (!GLib.file_test(path, GLib.FileTest.EXISTS))
             return;

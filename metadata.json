@@ -5,6 +5,7 @@
     "url": "https://framagit.org/abakkk/DrawOnYourScreen",
     "settings-schema": "org.gnome.shell.extensions.draw-on-your-screen",
     "gettext-domain": "draw-on-your-screen",
+    "data-dir": "drawOnYourScreen",
     "shell-version": [
         "3.24",
         "3.26",
