@@ -1264,7 +1264,7 @@ var DrawingMenu = new Lang.Class({
         this._addSaveDrawingSubMenuItem(this.menu);
         
         this.menu.addAction(_("Save drawing as a SVG file"), this.area.saveAsSvg.bind(this.area), 'image-x-generic-symbolic');
-        this.menu.addAction(_("Open stylesheet.css"), manager.openStylesheetFile.bind(manager), 'document-page-setup-symbolic');
+        this.menu.addAction(_("Open user.css"), manager.openUserStyleFile.bind(manager), 'document-page-setup-symbolic');
         this.menu.addAction(_("Show help"), this.area.toggleHelp.bind(this.area), 'preferences-desktop-keyboard-shortcuts-symbolic');
         
         this.updateSectionVisibility();

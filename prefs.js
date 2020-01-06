@@ -71,7 +71,7 @@ var INTERNAL_KEYBINDINGS = {
     'open-next-json': "Open next drawing",
     'save-as-json': "Save drawing",
     'save-as-svg': "Save drawing as a SVG file",
-    'open-stylesheet': "Open stylesheet.css",
+    'open-user-stylesheet': "Open user.css",
     'toggle-help': "Show help"
 };
 
@@ -291,11 +291,14 @@ var PrefsPage = new GObject.Class({
         listBox.add(internalKeybindingsWidget);
         
         let styleBox = new Gtk.Box({ margin_top: MARGIN, margin_left: MARGIN, margin_right: MARGIN, margin_bottom:MARGIN });
-        let styleLabel = new Gtk.Label({ label: _("Change the style") });
+        let styleLabel = new Gtk.Label({
+            use_markup: true,
+            label: _("<b>Default</b> drawing attributes (color palette, font, line, dash) are defined in an editable <b>css</b> file.\n" +
+                     "See <i>“%s”</i>.").format(_("Open user.css"))
+        });
         styleLabel.set_halign(1);
-        let styleLabel2 = new Gtk.Label({ label: _("See stylesheet.css") });
+        styleLabel.get_style_context().add_class("dim-label");
         styleBox.pack_start(styleLabel, true, true, 4);
-        styleBox.pack_start(styleLabel2, false, false, 4);
         listBox.add(styleBox);
         
         let noteBox = new Gtk.Box({ margin_top: MARGIN, margin_left: MARGIN, margin_right: MARGIN, margin_bottom:MARGIN });

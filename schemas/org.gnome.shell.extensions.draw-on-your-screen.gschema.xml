@@ -191,10 +191,10 @@
       <summary>toggle font style</summary>
       <description>toggle font style</description>
     </key>
-    <key type="as" name="open-stylesheet">
+    <key type="as" name="open-user-stylesheet">
       <default>["&lt;Primary&gt;o"]</default>
-      <summary>open stylesheet</summary>
-      <description>open stylesheet</description>
+      <summary>open user stylesheet</summary>
+      <description>open user stylesheet</description>
     </key>
     <key type="as" name="save-as-svg">
       <default>["&lt;Primary&gt;&lt;Shift&gt;s"]</default>

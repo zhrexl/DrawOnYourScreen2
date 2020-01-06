@@ -21,6 +21,7 @@
  */
 
 const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
@@ -93,16 +94,25 @@ var AreaManager = new Lang.Class({
         this.desktopSettingHandler = this.settings.connect('changed::drawing-on-desktop', this.onDesktopSettingChanged.bind(this));
         this.persistentSettingHandler = this.settings.connect('changed::persistent-drawing', this.onPersistentSettingChanged.bind(this));
         
-        if (Me.stylesheet) {
-            this.stylesheetMonitor = Me.stylesheet.monitor(Gio.FileMonitorFlags.NONE, null);
-            this.stylesheetChangedHandler = this.stylesheetMonitor.connect('changed', (monitor, file, otherFile, eventType) => {
-                if ((eventType != 0 && eventType != 3) || !Me.stylesheet.query_exists(null))
-                    return;
-                let theme = St.ThemeContext.get_for_stage(global.stage).get_theme();
-                theme.unload_stylesheet(Me.stylesheet);
-                theme.load_stylesheet(Me.stylesheet);
-            });
+        this.userStyleFile = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir'], 'user.css']));
+        
+        if (this.userStyleFile.query_exists(null)) {
+            let theme = St.ThemeContext.get_for_stage(global.stage).get_theme();
+            theme.load_stylesheet(this.userStyleFile);
         }
+        
+        this.userStyleMonitor = this.userStyleFile.monitor_file(Gio.FileMonitorFlags.WATCH_MOVES, null);
+        this.userStyleHandler = this.userStyleMonitor.connect('changed', (monitor, file, otherFile, eventType) => {
+            // 'CHANGED' events are followed by a 'CHANGES_DONE_HINT' event
+            if (eventType == Gio.FileMonitorEvent.CHANGED || eventType == Gio.FileMonitorEvent.ATTRIBUTE_CHANGED)
+                return;
+            
+            let theme = St.ThemeContext.get_for_stage(global.stage).get_theme();
+            if (theme.get_custom_stylesheets().indexOf(this.userStyleFile) != -1)
+                theme.unload_stylesheet(this.userStyleFile);
+            if (this.userStyleFile.query_exists(null))
+                theme.load_stylesheet(this.userStyleFile);
+        });
     },
     
     onDesktopSettingChanged: function() {
@@ -185,7 +195,7 @@ var AreaManager = new Lang.Class({
             'toggle-font-style': this.activeArea.toggleFontStyle.bind(this.activeArea),
             'toggle-panel-and-dock-visibility': this.togglePanelAndDockOpacity.bind(this),
             'toggle-help': this.activeArea.toggleHelp.bind(this.activeArea),
-            'open-stylesheet': this.openStylesheetFile.bind(this)
+            'open-user-stylesheet': this.openUserStyleFile.bind(this)
         };
         
         for (let key in this.internalKeybindings) {
@@ -216,9 +226,19 @@ var AreaManager = new Lang.Class({
         }
     },
     
-    openStylesheetFile: function() {
-        if (Me.stylesheet && Me.stylesheet.query_exists(null))
-            Gio.AppInfo.launch_default_for_uri(Me.stylesheet.get_uri(), global.create_app_launch_context(0, -1));
+    openUserStyleFile: function() {
+        if (!this.userStyleFile.query_exists(null)) {
+            if (!this.userStyleFile.get_parent().query_exists(null))
+                this.userStyleFile.get_parent().make_directory_with_parents(null);
+            let defaultStyleFile = Me.dir.get_child('data').get_child('default.css');
+            if (!defaultStyleFile.query_exists(null))
+                return;
+            let success = defaultStyleFile.copy(this.userStyleFile, Gio.FileCopyFlags.NONE, null, null);
+            if (!success)
+                return;
+        }
+        
+        Gio.AppInfo.launch_default_for_uri(this.userStyleFile.get_uri(), global.create_app_launch_context(0, -1));
         if (this.activeArea)
             this.toggleDrawing();
     },
@@ -364,9 +384,13 @@ var AreaManager = new Lang.Class({
     },
     
     disable: function() {
-        if (this.stylesheetChangedHandler) {
-            this.stylesheetMonitor.disconnect(this.stylesheetChangedHandler);
-            this.stylesheetChangedHandler = null;
+        if (this.userStyleHandler && this.userStyleMonitor) {
+            this.userStyleMonitor.disconnect(this.userStyleHandler);
+            this.userStyleHandler = null;
+        }
+        if (this.userStyleMonitor) {
+            this.userStyleMonitor.cancel();
+            this.userStyleMonitor = null;
         }
         if (this.monitorChangedHandler) {
             Main.layoutManager.disconnect(this.monitorChangedHandler);

@@ -215,7 +215,7 @@ msgstr ""
 msgid "Save drawing as a SVG file"
 msgstr ""
 
-msgid "Open stylesheet.css"
+msgid "Open user.css"
 msgstr ""
 
 msgid "Show help"
@@ -315,13 +315,11 @@ msgid ""
 " . extend and rotate an ellipse\n"
 " . curve a line (cubic Bezier curve)\n"
 " . smooth a free drawing stroke (you may prefer to smooth the stroke afterward, see “<i>%s</i>”)"
-
 msgstr ""
 
-msgid "Change the style"
-msgstr ""
-
-msgid "See stylesheet.css"
+msgid ""
+"Default drawing attributes (colors, font, line, dash) are defined in an editable css file.\n"
+"See <i>“%s”</i>."
 msgstr ""
 
 msgid ""
