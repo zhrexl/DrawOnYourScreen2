@@ -49,12 +49,12 @@ const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const GS_VERSION = Config.PACKAGE_VERSION;
 const DEFAULT_FILE_NAME = 'DrawOnYourScreen';
 
-const FILL_ICON_PATH = Me.dir.get_child('icons').get_child('fill-symbolic.svg').get_path();
-const STROKE_ICON_PATH = Me.dir.get_child('icons').get_child('stroke-symbolic.svg').get_path();
-const LINEJOIN_ICON_PATH = Me.dir.get_child('icons').get_child('linejoin-symbolic.svg').get_path();
-const LINECAP_ICON_PATH = Me.dir.get_child('icons').get_child('linecap-symbolic.svg').get_path();
-const DASHED_LINE_ICON_PATH = Me.dir.get_child('icons').get_child('dashed-line-symbolic.svg').get_path();
-const FULL_LINE_ICON_PATH = Me.dir.get_child('icons').get_child('full-line-symbolic.svg').get_path();
+const FILL_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child('fill-symbolic.svg').get_path();
+const STROKE_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child('stroke-symbolic.svg').get_path();
+const LINEJOIN_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child('linejoin-symbolic.svg').get_path();
+const LINECAP_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child('linecap-symbolic.svg').get_path();
+const DASHED_LINE_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child('dashed-line-symbolic.svg').get_path();
+const FULL_LINE_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child('full-line-symbolic.svg').get_path();
 
 var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4 };
 var TextState = { DRAWING: 0, WRITING: 1 };
