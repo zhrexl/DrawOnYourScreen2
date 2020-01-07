@@ -285,16 +285,16 @@ msgstr ""
 msgid "Global"
 msgstr ""
 
-msgid "Drawing on the desktop"
-msgstr ""
-
-msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
-msgstr ""
-
 msgid "Persistent"
 msgstr ""
 
 msgid "Persistent drawing through session restart"
+msgstr ""
+
+msgid "Drawing on the desktop"
+msgstr ""
+
+msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
 msgstr ""
 
 msgid "Disable on-screen notifications"
@@ -314,18 +314,18 @@ msgid ""
 " . rotate a rectangle or a text area\n"
 " . extend and rotate an ellipse\n"
 " . curve a line (cubic Bezier curve)\n"
-" . smooth a free drawing stroke (you may prefer to smooth the stroke afterward, see “<i>%s</i>”)"
+" . smooth a free drawing stroke (you may prefer to smooth the stroke afterward, see <i>“%s”</i>)"
 msgstr ""
 
 msgid ""
-"Default drawing attributes (colors, font, line, dash) are defined in an editable css file.\n"
+"<b>Default</b> drawing attributes (color palette, font, line, dash) are defined in an editable <b>css</b> file.\n"
 "See <i>“%s”</i>."
 msgstr ""
 
 msgid ""
-"<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file,\n"
+"<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file, "
 "they are colored with background color, transparent if it is disabled.\n"
-"(See “%s” or edit the SVG file afterwards)"
+"See <i>“%s”</i> or edit the SVG file afterwards."
 msgstr ""
 
 
