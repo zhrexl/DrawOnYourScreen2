@@ -124,7 +124,7 @@ var AreaManager = new Lang.Class({
     
     onPersistentSettingChanged: function() {
         if (this.settings.get_boolean('persistent-drawing'))
-            this.areas[Main.layoutManager.primaryIndex].savePersistent();
+            this.areas[Main.layoutManager.primaryIndex].syncPersistent();
     },
     
     updateIndicator: function() {

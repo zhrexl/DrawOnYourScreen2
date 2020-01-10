@@ -714,6 +714,15 @@ var DrawingArea = new Lang.Class({
         this._saveAsJson(Me.metadata['persistent-file-name']);
     },
     
+    syncPersistent: function() {
+        // do not override peristent.json with an empty drawing when changing persistency setting
+        if (!this.elements.length)
+            this._loadPersistent();
+        else
+            this.savePersistent();
+            
+    },
+    
     _loadJson: function(name, notify) {
         let dir = GLib.get_user_data_dir();
         let path = GLib.build_filenamev([dir, Me.metadata['data-dir'], `${name}.json`]);
