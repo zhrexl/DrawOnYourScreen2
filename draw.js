@@ -47,7 +47,6 @@ const Prefs = Me.imports.prefs;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
-const DEFAULT_FILE_NAME = 'DrawOnYourScreen';
 
 const FILL_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child('fill-symbolic.svg').get_path();
 const STROKE_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child('stroke-symbolic.svg').get_path();
@@ -86,7 +85,7 @@ function getJsonFiles() {
     let i = 0;
     let fileInfo = enumerator.next_file(null);
     while (fileInfo) {
-        if (fileInfo.get_content_type().indexOf('json') != -1 && fileInfo.get_name() != `${DEFAULT_FILE_NAME}.json`) {
+        if (fileInfo.get_content_type().indexOf('json') != -1 && fileInfo.get_name() != `${Me.metadata['persistent-file-name']}.json`) {
             let file = enumerator.get_child(fileInfo);
             jsonFiles.push({ name: fileInfo.get_name().slice(0, -5),
                              displayName: fileInfo.get_display_name().slice(0, -5),
@@ -644,7 +643,7 @@ var DrawingArea = new Lang.Class({
         }
         content += "\n</svg>";
         
-        let filename = `${DEFAULT_FILE_NAME} ${getDateString()}.svg`;
+        let filename = `${Me.metadata['svg-file-name']} ${getDateString()}.svg`;
         let dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES);
         let path = GLib.build_filenamev([dir, filename]);
         if (GLib.file_test(path, GLib.FileTest.EXISTS))
@@ -696,7 +695,7 @@ var DrawingArea = new Lang.Class({
             GLib.file_set_contents(path, contents);
             if (notify)
                 this.emit('show-osd', 'document-save-symbolic', name, -1);
-            if (name != DEFAULT_FILE_NAME) {
+            if (name != Me.metadata['persistent-file-name']) {
                 this.jsonName = name;
                 this.lastJsonContents = contents;
             }
@@ -712,7 +711,7 @@ var DrawingArea = new Lang.Class({
     },
     
     savePersistent: function() {
-        this._saveAsJson(DEFAULT_FILE_NAME);
+        this._saveAsJson(Me.metadata['persistent-file-name']);
     },
     
     _loadJson: function(name, notify) {
@@ -730,14 +729,14 @@ var DrawingArea = new Lang.Class({
         
         if (notify)
             this.emit('show-osd', 'document-open-symbolic', name, -1);
-        if (name != DEFAULT_FILE_NAME) {
+        if (name != Me.metadata['persistent-file-name']) {
             this.jsonName = name;
             this.lastJsonContents = contents;
         }
     },
     
     _loadPersistent: function() {
-        this._loadJson(DEFAULT_FILE_NAME);
+        this._loadJson(Me.metadata['persistent-file-name']);
     },
     
     loadJson: function(name, notify) {
@@ -1497,7 +1496,7 @@ var DrawingMenu = new Lang.Class({
                                                     this._updateDrawingNameMenuItem();
                                                     this._populateOpenDrawingSubMenu();
                                                 },
-                                                invalidStrings: [DEFAULT_FILE_NAME, '/'],
+                                                invalidStrings: [Me.metadata['persistent-file-name'], '/'],
                                                 primaryIconName: 'insert-text' });
         this.saveDrawingSubMenu.addMenuItem(this.saveEntry.item);
     },
