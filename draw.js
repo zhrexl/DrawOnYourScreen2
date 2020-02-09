@@ -20,6 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+const ByteArray = imports.byteArray;
 const Cairo = imports.cairo;
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
@@ -680,7 +681,7 @@ var DrawingArea = new Lang.Class({
         if (GLib.file_test(path, GLib.FileTest.EXISTS)) {
             oldContents = GLib.file_get_contents(path)[1];
             if (oldContents instanceof Uint8Array)
-                oldContents = imports.byteArray.toString(oldContents);
+                oldContents = ByteArray.toString(oldContents);
         }
         
         // do not create a file to write just an empty array
@@ -733,7 +734,7 @@ var DrawingArea = new Lang.Class({
         if (!success)
             return;
         if (contents instanceof Uint8Array)
-            contents = imports.byteArray.toString(contents);
+            contents = ByteArray.toString(contents);
         this.elements.push(...JSON.parse(contents).map(object => new DrawingElement(object)));
         
         if (notify)
