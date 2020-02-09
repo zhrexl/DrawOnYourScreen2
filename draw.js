@@ -1170,7 +1170,7 @@ var DrawingMenu = new Lang.Class({
         // Since escape key press event can't be captured easily, the job is done in the menu close function.
         let menuCloseFunc = this.menu.close;
         this.menu.close = (animate) => {
-            if (this.saveDrawingSubMenu.isOpen)
+            if (this.saveDrawingSubMenu && this.saveDrawingSubMenu.isOpen)
                 this.saveDrawingSubMenu.close();
             menuCloseFunc.bind(this.menu)(animate);
         };
