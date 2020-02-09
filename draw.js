@@ -258,12 +258,12 @@ var DrawingArea = new Lang.Class({
         } else if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING) {
             if (event.get_key_symbol() == Clutter.KEY_BackSpace) {
                 this.currentElement.text = this.currentElement.text.slice(0, -1);
-                this._updateCursorTimeout();
+                this._updateTextCursorTimeout();
             } else if (event.has_control_modifier() && event.get_key_symbol() == 118) {
             // Ctrl + V
                 St.Clipboard.get_default().get_text(St.ClipboardType.CLIPBOARD, (clipBoard, clipText) => {
                     this.currentElement.text += clipText;
-                    this._updateCursorTimeout();
+                    this._updateTextCursorTimeout();
                     this._redisplay();
                 });
                 return Clutter.EVENT_STOP;
@@ -277,7 +277,7 @@ var DrawingArea = new Lang.Class({
             } else {
                 let unicode = event.get_key_unicode();
                 this.currentElement.text += unicode;
-                this._updateCursorTimeout();
+                this._updateTextCursorTimeout();
             }
             this._redisplay();
             return Clutter.EVENT_STOP;
@@ -361,7 +361,7 @@ var DrawingArea = new Lang.Class({
                 this.currentElement.state = TextState.WRITING;
                 this.currentElement.text = '';
                 this.emit('show-osd', null, _("Type your text\nand press Enter"), -1);
-                this._updateCursorTimeout();
+                this._updateTextCursorTimeout();
                 this.textHasCursor = true;
                 this._redisplay();
                 this.updatePointerCursor();
@@ -398,7 +398,7 @@ var DrawingArea = new Lang.Class({
         if (this.currentElement.text.length > 0)
             this.elements.push(this.currentElement);
         this.currentElement = null;
-        this._stopCursorTimeout();
+        this._stopTextCursorTimeout();
         this._redisplay();
     },
     
@@ -416,17 +416,17 @@ var DrawingArea = new Lang.Class({
             this.setPointerCursor('MOVE_OR_RESIZE_WINDOW');
     },
     
-    _stopCursorTimeout: function() {
-        if (this.cursorTimeoutId) {
-            Mainloop.source_remove(this.cursorTimeoutId);
-            this.cursorTimeoutId = null;
+    _stopTextCursorTimeout: function() {
+        if (this.textCursorTimeoutId) {
+            Mainloop.source_remove(this.textCursorTimeoutId);
+            this.textCursorTimeoutId = null;
         }
         this.textHasCursor = false;
     },
     
-    _updateCursorTimeout: function() {
-        this._stopCursorTimeout();
-        this.cursorTimeoutId = Mainloop.timeout_add(600, () => {
+    _updateTextCursorTimeout: function() {
+        this._stopTextCursorTimeout();
+        this.textCursorTimeoutId = Mainloop.timeout_add(600, () => {
             this.textHasCursor = !this.textHasCursor;
             this._redisplay();
             return GLib.SOURCE_CONTINUE;
@@ -451,7 +451,7 @@ var DrawingArea = new Lang.Class({
                 this.buttonReleasedHandler = null;
             }
             this.currentElement = null;
-            this._stopCursorTimeout();
+            this._stopTextCursorTimeout();
         } else {
             this.elements.pop();
         }
@@ -614,7 +614,7 @@ var DrawingArea = new Lang.Class({
             this.helper.hideHelp();
         
         this.currentElement = null;
-        this._stopCursorTimeout();
+        this._stopTextCursorTimeout();
         this.currentShape = Shapes.NONE;
         this.dashedLine = false;
         this.fill = false;
@@ -752,7 +752,7 @@ var DrawingArea = new Lang.Class({
     loadJson: function(name, notify) {
         this.elements = [];
         this.currentElement = null;
-        this._stopCursorTimeout();
+        this._stopTextCursorTimeout();
         this._loadJson(name, notify);
         this._redisplay();
     },
