@@ -19,17 +19,17 @@ msgstr ""
 
 # Add your name here, for example:
 # (add "\n" as separator if there is many translators)
-# msgid "Translators"
+# msgid "translator-credits"
 # msgstr "Me"
 # or, with mail:
-# msgid "Translators"
+# msgid "translator-credits"
 # msgstr "<a href=\"mailto:me@mail.org\">Me</a>"
 # or, with page:
-# msgid "Translators"
+# msgid "translator-credits"
 # msgstr "<a href=\"https://...\">Me</a>"
 # else keep it empty.
 # It will be displayed in about page
-msgid "Translators"
+msgid "translator-credits"
 msgstr ""
 
 #: extension.js
