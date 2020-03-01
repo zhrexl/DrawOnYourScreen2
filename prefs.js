@@ -83,6 +83,7 @@ var OTHER_SHORTCUTS = [
     { desc: "Increment/decrement line width", shortcut: "Scroll" },
     { desc: "Select color", shortcut: "Ctrl+1...9" },
     { desc: "Select eraser", shortcut: "Shift key held" },
+    { desc: "Ignore pointer movement", shortcut: "Space key held" },
     { desc: "Leave", shortcut: "Escape key" }
 ];
 

@@ -262,6 +262,12 @@ msgstr ""
 msgid "Shift key held"
 msgstr ""
 
+msgid "Ignore pointer movement"
+msgstr ""
+
+msgid "Space key held"
+msgstr ""
+
 msgid "Leave"
 msgstr ""
 

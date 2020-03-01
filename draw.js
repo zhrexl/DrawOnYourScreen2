@@ -213,6 +213,9 @@ var DrawingArea = new Lang.Class({
     },
     
     _onButtonPressed: function(actor, event) {
+        if (this.spaceKeyPressed)
+            return Clutter.EVENT_PROPAGATE;
+        
         let button = event.get_button();
         let [x, y] = event.get_coords();
         let shiftPressed = event.has_shift_modifier();
@@ -248,6 +251,20 @@ var DrawingArea = new Lang.Class({
             this.helper.hideHelp();
         this.menu.popup();
         return Clutter.EVENT_STOP;
+    },
+    
+    _onStageKeyPressed: function(actor, event) {
+        if (event.get_key_symbol() == Clutter.KEY_space)
+            this.spaceKeyPressed = true;
+        
+        return Clutter.EVENT_PROPAGATE;
+    },
+    
+    _onStageKeyReleased: function(actor, event) {
+        if (event.get_key_symbol() == Clutter.KEY_space)
+            this.spaceKeyPressed = false;
+        
+        return Clutter.EVENT_PROPAGATE;
     },
     
     _onKeyPressed: function(actor, event) {
@@ -332,6 +349,9 @@ var DrawingArea = new Lang.Class({
         }
         
         this.motionHandler = this.connect('motion-event', (actor, event) => {
+            if (this.spaceKeyPressed)
+                return;
+            
             let coords = event.get_coords();
             let [s, x, y] = this.transform_stage_point(coords[0], coords[1]);
             if (!s)
@@ -579,7 +599,9 @@ var DrawingArea = new Lang.Class({
     },
     
     enterDrawingMode: function() {
-        this.keyPressedHandler = this.connect('key-press-event', this._onKeyPressed.bind(this));        
+        this.stageKeyPressedHandler = global.stage.connect('key-press-event', this._onStageKeyPressed.bind(this));
+        this.stageKeyReleasedHandler = global.stage.connect('key-release-event', this._onStageKeyReleased.bind(this));
+        this.keyPressedHandler = this.connect('key-press-event', this._onKeyPressed.bind(this));
         this.buttonPressedHandler = this.connect('button-press-event', this._onButtonPressed.bind(this));
         this._onKeyboardPopupMenuHandler = this.connect('popup-menu', this._onKeyboardPopupMenu.bind(this));
         this.scrollHandler = this.connect('scroll-event', this._onScroll.bind(this));
@@ -588,6 +610,14 @@ var DrawingArea = new Lang.Class({
     },
     
     leaveDrawingMode: function(save) {
+        if (this.stageKeyPressedHandler) {
+            global.stage.disconnect(this.stageKeyPressedHandler);
+            this.stageKeyPressedHandler = null;
+        }
+        if (this.stageKeyReleasedHandler) {
+            global.stage.disconnect(this.stageKeyReleasedHandler);
+            this.stageKeyReleasedHandler = null;
+        }
         if (this.keyPressedHandler) {
             this.disconnect(this.keyPressedHandler);
             this.keyPressedHandler = null;
