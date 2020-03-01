@@ -569,6 +569,9 @@ var DrawingArea = new Lang.Class({
     },
     
     toggleHelp: function() {
+        if (this._menu)
+            this._menu.close();
+        
         if (this.helper.visible)
             this.helper.hideHelp();
         else
