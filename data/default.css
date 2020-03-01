@@ -11,16 +11,21 @@
  * 0 : butt, 1 : round, 2 : square
  *
  * dash:
- * dash-array-on is the length of dashes (no dashes if 0, you can put 0.1 to get dots or square according to line-cap)
- * dash-array-off is the length of gaps (no dashes if 0)
+ * dash-array-on is the length of dashes (no dashes if 0, you can put 0.1 to get dots or square according to line-cap).
+ * dash-array-off is the length of gaps (no dashes if 0).
+ *
+ * square area:
+ * Drawing in a square area is convenient when using the extension as a vector graphics editor. By default,
+ * when toggling 'Square drawing area', the area is sized to 75% of monitor size. You can fix and customize this size
+ * by uncommenting square-area-width and square-area-height lines.
  *
  * font:
- * only one family : no comma separated list of families like "font1, font2, ..., Sans-Serif"
- * font family can be any font installed, or a generic family name (Serif, Sans-Serif, Monospace, Cursive, Fantasy)
- * font weight and font style : no upper case when string
- * weight <= 500 (or lighter, normal, medium) is rendered as normal
- * weight > 500 (or bolder, bold) is rendered as bold
- * oblique and italic style support depends on the font family and seem to be rendered identically
+ * Only one family : no comma separated list of families like "font1, font2, ..., Sans-Serif".
+ * Font family can be any font installed, or a generic family name (Serif, Sans-Serif, Monospace, Cursive, Fantasy).
+ * Font weight and font style : no upper case when string.
+ * Weight <= 500 (or lighter, normal, medium) is rendered as normal.
+ * Weight > 500 (or bolder, bold) is rendered as bold.
+ * Oblique and italic style supports depend on the font family and seem to be rendered identically.
  *
  */
 
@@ -41,6 +46,8 @@
     -drawing-color8: rgba(130, 130, 130, 0.3);
     -drawing-color9: rgb(0, 0, 0);
     -drawing-background-color: #2e3436;
+    /*-drawing-square-area-width: 512px;*/
+    /*-drawing-square-area-height: 512px;*/
     font-family: Cantarell;
     font-weight: normal;
     font-style: normal;

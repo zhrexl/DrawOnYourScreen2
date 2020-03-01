@@ -164,6 +164,8 @@ var DrawingArea = new Lang.Class({
             this.fontFamily = font.get_family();
             this.currentFontWeight = font.get_weight();
             this.currentFontStyle = font.get_style();
+            this.squareAreaWidth = themeNode.get_length('-drawing-square-area-width');
+            this.squareAreaHeight = themeNode.get_length('-drawing-square-area-height');
         } catch(e) {
             logError(e);
         }
@@ -505,9 +507,10 @@ var DrawingArea = new Lang.Class({
     toggleSquareArea: function() {
         this.isSquareArea = !this.isSquareArea;
         if (this.isSquareArea) {
-            let squareWidth = Math.min(this.monitor.width, this.monitor.height) * 3 / 4;
-            this.set_position(Math.floor(this.monitor.width / 2 - squareWidth / 2), Math.floor(this.monitor.height / 2 - squareWidth / 2));
-            this.set_size(squareWidth, squareWidth);
+            let width = this.squareAreaWidth || this.squareAreaHeight || Math.min(this.monitor.width, this.monitor.height) * 3 / 4;
+            let height = this.squareAreaHeight || this.squareAreaWidth || Math.min(this.monitor.width, this.monitor.height) * 3 / 4;
+            this.set_position(Math.floor(this.monitor.width / 2 - width / 2), Math.floor(this.monitor.height / 2 - height / 2));
+            this.set_size(width, height);
             this.add_style_class_name('draw-on-your-screen-square-area');
         } else {
             this.set_position(0, 0);
