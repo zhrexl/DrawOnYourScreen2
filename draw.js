@@ -72,10 +72,7 @@ function getDateString() {
 
 function getJsonFiles() {
     let directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir']]));
-    if (!directory.query_exists(null))
-        return [];
     
-    let jsonFiles = [];
     let enumerator;
     try {
         enumerator = directory.enumerate_children('standard::name,standard::display-name,standard::content-type,time::modified', Gio.FileQueryInfoFlags.NONE, null);
@@ -83,7 +80,7 @@ function getJsonFiles() {
         return [];
     }
     
-    let i = 0;
+    let jsonFiles = [];
     let fileInfo = enumerator.next_file(null);
     while (fileInfo) {
         if (fileInfo.get_content_type().indexOf('json') != -1 && fileInfo.get_name() != `${Me.metadata['persistent-file-name']}.json`) {
@@ -114,9 +111,7 @@ var DrawingArea = new Lang.Class({
                'stop-drawing': {} },
 
     _init: function(params, monitor, helper, loadPersistent) {
-        this.parent({ style_class: 'draw-on-your-screen', name: params && params.name ? params.name : ""});
-        
-        this.connect('repaint', this._repaint.bind(this));
+        this.parent({ style_class: 'draw-on-your-screen', name: params.name});
         
         this.settings = Convenience.getSettings();
         this.monitor = monitor;
@@ -184,8 +179,8 @@ var DrawingArea = new Lang.Class({
         this.currentFontStyle = this.currentFontStyle == 2 ? 1 : ( this.currentFontStyle == 1 ? 2 : 0);
     },
     
-    _repaint: function(area) {
-        let cr = area.get_context();
+    vfunc_repaint: function() {
+        let cr = this.get_context();
         
         for (let i = 0; i < this.elements.length; i++) {
             let isStraightLine = this.elements[i].shape == Shapes.LINE &&
@@ -1150,7 +1145,7 @@ var DrawingHelper = new Lang.Class({
         this.opacity = 0;
         this.show();
         
-        let maxHeight = this.monitor.height*(3/4);
+        let maxHeight = this.monitor.height * 3 / 4;
         this.set_height(Math.min(this.height, maxHeight));
         this.set_position(Math.floor(this.monitor.width / 2 - this.width / 2),
                           Math.floor(this.monitor.height / 2 - this.height / 2));
