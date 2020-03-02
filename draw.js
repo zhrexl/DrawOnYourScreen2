@@ -57,20 +57,20 @@ const DASHED_LINE_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_ch
 const FULL_LINE_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child('full-line-symbolic.svg').get_path();
 
 var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4 };
-var TextState = { DRAWING: 0, WRITING: 1 };
-var ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text" };
-var LineCapNames = { 0: 'Butt', 1: 'Round', 2: 'Square' };
-var LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
-var FontWeightNames = { 0: 'Normal', 1: 'Bold' };
-var FontStyleNames = { 0: 'Normal', 1: 'Italic', 2: 'Oblique' };
-var FontFamilyNames = {  0: 'Default', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
+const TextState = { DRAWING: 0, WRITING: 1 };
+const ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text" };
+const LineCapNames = { 0: 'Butt', 1: 'Round', 2: 'Square' };
+const LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
+const FontWeightNames = { 0: 'Normal', 1: 'Bold' };
+const FontStyleNames = { 0: 'Normal', 1: 'Italic', 2: 'Oblique' };
+const FontFamilyNames = {  0: 'Default', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
 
-function getDateString() {
+const getDateString = function() {
     let date = GLib.DateTime.new_now_local();
     return `${date.format("%F")} ${date.format("%X")}`;
-}
+};
 
-function getJsonFiles() {
+const getJsonFiles = function() {
     let directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir']]));
     
     let enumerator;
@@ -99,7 +99,7 @@ function getJsonFiles() {
     });
     
     return jsonFiles;
-}
+};
 
 // DrawingArea is the widget in which we draw, thanks to Cairo.
 // It creates and manages a DrawingElement for each "brushstroke".
@@ -822,7 +822,7 @@ var DrawingArea = new Lang.Class({
 // DrawingElement represents a "brushstroke".
 // It can be converted into a cairo path as well as a svg element.
 // See DrawingArea._startDrawing() to know its params.
-var DrawingElement = new Lang.Class({
+const DrawingElement = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingElement',
     
     _init: function(params) {
@@ -1041,7 +1041,7 @@ var DrawingElement = new Lang.Class({
     },
 });
 
-function getAngle(xO, yO, xA, yA, xB, yB) {
+const getAngle = function(xO, yO, xA, yA, xB, yB) {
     // calculate angle of rotation in absolute value
     // cos(AOB) = (OA.OB)/(||OA||*||OB||) where OA.OB = (xA-xO)*(xB-xO) + (yA-yO)*(yB-yO)
     let angle = Math.acos( ((xA - xO)*(xB - xO) + (yA - yO)*(yB - yO)) / (Math.hypot(xA - xO, yA - yO) * Math.hypot(xB - xO, yB - yO)) );
@@ -1055,11 +1055,11 @@ function getAngle(xO, yO, xA, yA, xB, yB) {
     if (xA < xO)
         angle = - angle;
     return angle;
-}
+};
 
-var HELPER_ANIMATION_TIME = 0.25;
-var MEDIA_KEYS_SCHEMA = 'org.gnome.settings-daemon.plugins.media-keys';
-var MEDIA_KEYS_KEYS = {
+const HELPER_ANIMATION_TIME = 0.25;
+const MEDIA_KEYS_SCHEMA = 'org.gnome.settings-daemon.plugins.media-keys';
+const MEDIA_KEYS_KEYS = {
     'screenshot': "Screenshot",
     'screenshot-clip': "Screenshot to clipboard",
     'area-screenshot': "Area screenshot",
@@ -1172,11 +1172,11 @@ var DrawingHelper = new Lang.Class({
     },
 });
 
-function getActor(object) {
+const getActor = function(object) {
     return GS_VERSION < '3.33.0' ? object.actor : object;
-}
+};
 
-var DrawingMenu = new Lang.Class({
+const DrawingMenu = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingMenu',
     
     _init: function(area, monitor) {
@@ -1550,10 +1550,10 @@ var DrawingMenu = new Lang.Class({
 });
 
 // based on searchItem.js, https://github.com/leonardo-bartoli/gnome-shell-extension-Recents
-var DrawingMenuEntry = new Lang.Class({
+const DrawingMenuEntry = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingMenuEntry',
     
-    _init: function (params) {
+    _init: function(params) {
         this.params = params;
         this.item = new PopupMenu.PopupBaseMenuItem({ style_class: 'draw-on-your-screen-menu-entry-item',
                                                       activate: false,

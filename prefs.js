@@ -106,7 +106,7 @@ function buildPrefsWidget() {
     return topStack;
 }
 
-var TopStack = new GObject.Class({
+const TopStack = new GObject.Class({
     Name: 'DrawOnYourScreenTopStack',
     GTypeName: 'DrawOnYourScreenTopStack',
     Extends: Gtk.Stack,
@@ -120,7 +120,7 @@ var TopStack = new GObject.Class({
     }
 });
 
-var AboutPage = new GObject.Class({
+const AboutPage = new GObject.Class({
     Name: 'DrawOnYourScreenAboutPage',
     GTypeName: 'DrawOnYourScreenAboutPage',
     Extends: Gtk.ScrolledWindow,
@@ -167,7 +167,7 @@ var AboutPage = new GObject.Class({
     
 });
 
-var PrefsPage = new GObject.Class({
+const PrefsPage = new GObject.Class({
     Name: 'DrawOnYourScreenPrefsPage',
     GTypeName: 'DrawOnYourScreenPrefsPage',
     Extends: Gtk.ScrolledWindow,
@@ -330,7 +330,7 @@ var PrefsPage = new GObject.Class({
 });
 
 // this code comes from Sticky Notes View by Sam Bull, https://extensions.gnome.org/extension/568/notes/
-var KeybindingsWidget = new GObject.Class({
+const KeybindingsWidget = new GObject.Class({
     Name: 'DrawOnYourScreenKeybindings.Widget',
     GTypeName: 'DrawOnYourScreenKeybindingsWidget',
     Extends: Gtk.Box,
