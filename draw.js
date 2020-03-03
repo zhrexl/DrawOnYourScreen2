@@ -87,7 +87,8 @@ const getJsonFiles = function() {
             let file = enumerator.get_child(fileInfo);
             jsonFiles.push({ name: fileInfo.get_name().slice(0, -5),
                              displayName: fileInfo.get_display_name().slice(0, -5),
-                             modificationDateTime: fileInfo.get_modification_date_time(),
+                             // fileInfo.get_modification_date_time: Gio 2.62+
+                             modificationUnixTime: fileInfo.get_attribute_uint64('time::modified'),
                              delete: () => file.delete(null) });
         }
         fileInfo = enumerator.next_file(null);
@@ -95,7 +96,7 @@ const getJsonFiles = function() {
     enumerator.close(null);
     
     jsonFiles.sort((a, b) => {
-        return a.modificationDateTime.difference(b.modificationDateTime);
+        return b.modificationUnixTime - a.modificationUnixTime;
     });
     
     return jsonFiles;
@@ -706,28 +707,32 @@ var DrawingArea = new Lang.Class({
         let path = GLib.build_filenamev([dir, `${name}.json`]);
         
         let oldContents;
-        if (GLib.file_test(path, GLib.FileTest.EXISTS)) {
-            oldContents = GLib.file_get_contents(path)[1];
-            if (oldContents instanceof Uint8Array)
-                oldContents = ByteArray.toString(oldContents);
-        }
         
-        // do not create a file to write just an empty array
-        if (!oldContents && this.elements.length == 0)
-            return;
+        if (name == Me.metadata['persistent-file-name']) {
+            if (GLib.file_test(path, GLib.FileTest.EXISTS)) {
+                oldContents = GLib.file_get_contents(path)[1];
+                if (oldContents instanceof Uint8Array)
+                    oldContents = ByteArray.toString(oldContents);
+            }
+            
+            // do not create a file to write just an empty array
+            if (!oldContents && this.elements.length == 0)
+                return;
+        }
         
         // do not use "content = JSON.stringify(this.elements, null, 2);", neither "content = JSON.stringify(this.elements);"
         // because of compromise between disk usage and human readability
         let contents = `[\n  ` + new Array(...this.elements.map(element => JSON.stringify(element))).join(`,\n\n  `) + `\n]`;
         
-        if (contents != oldContents) {
-            GLib.file_set_contents(path, contents);
-            if (notify)
-                this.emit('show-osd', 'document-save-symbolic', name, -1);
-            if (name != Me.metadata['persistent-file-name']) {
-                this.jsonName = name;
-                this.lastJsonContents = contents;
-            }
+        if (name == Me.metadata['persistent-file-name'] && contents == oldContents)
+            return;
+        
+        GLib.file_set_contents(path, contents);
+        if (notify)
+            this.emit('show-osd', 'document-save-symbolic', name, -1);
+        if (name != Me.metadata['persistent-file-name']) {
+            this.jsonName = name;
+            this.lastJsonContents = contents;
         }
     },
     
