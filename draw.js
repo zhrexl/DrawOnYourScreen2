@@ -1478,7 +1478,7 @@ const DrawingMenu = new Lang.Class({
         this.openDrawingSubMenu.removeAll();
         let jsonFiles = getJsonFiles();
         jsonFiles.forEach(file => {
-            let item = this.openDrawingSubMenu.addAction(`<span font_family="Monospace"><i>${file.displayName}</i></span>`, () => {
+            let item = this.openDrawingSubMenu.addAction(`<i>${file.displayName}</i>`, () => {
                 this.area.loadJson(file.name);
                 this._updateDrawingNameMenuItem();
                 this._updateSaveDrawingSubMenuItemSensitivity();
