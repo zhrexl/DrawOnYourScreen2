@@ -215,7 +215,7 @@ msgstr ""
 msgid "Save drawing as a SVG file"
 msgstr ""
 
-msgid "Open user.css"
+msgid "Edit style"
 msgstr ""
 
 msgid "Show help"
@@ -324,7 +324,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"<b>Default</b> drawing attributes (color palette, font, line, dash) are defined in an editable <b>css</b> file.\n"
+"<b>Default</b> drawing style attributes (color palette, font, line, dash) are defined in an editable <b>css</b> file.\n"
 "See <i>“%s”</i>."
 msgstr ""
 
@@ -336,7 +336,7 @@ msgstr ""
 
 
 # The following words refer to SVG attributes.
-# You have the choice to translate or not
+# You are free to translate them or not.
 
 #msgid "Butt"
 #msgstr ""

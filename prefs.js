@@ -71,7 +71,7 @@ var INTERNAL_KEYBINDINGS = {
     'open-next-json': "Open next drawing",
     'save-as-json': "Save drawing",
     'save-as-svg': "Save drawing as a SVG file",
-    'open-user-stylesheet': "Open user.css",
+    'open-user-stylesheet': "Edit style",
     'toggle-help': "Show help"
 };
 
@@ -299,8 +299,8 @@ const PrefsPage = new GObject.Class({
             wrap: true,
             xalign: 0,
             use_markup: true,
-            label: _("<b>Default</b> drawing attributes (color palette, font, line, dash) are defined in an editable <b>css</b> file.\n" +
-                     "See <i>“%s”</i>.").format(_("Open user.css"))
+            label: _("<b>Default</b> drawing style attributes (color palette, font, line, dash) are defined in an editable <b>css</b> file.\n" +
+                     "See <i>“%s”</i>.").format(_("Edit style"))
         });
         styleLabel.set_halign(1);
         styleLabel.get_style_context().add_class('dim-label');

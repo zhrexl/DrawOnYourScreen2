@@ -193,8 +193,8 @@
     </key>
     <key type="as" name="open-user-stylesheet">
       <default>["&lt;Primary&gt;o"]</default>
-      <summary>open user stylesheet</summary>
-      <description>open user stylesheet</description>
+      <summary>open user stylesheet to edit style</summary>
+      <description>open user stylesheet to edit style</description>
     </key>
     <key type="as" name="save-as-svg">
       <default>["&lt;Primary&gt;&lt;Shift&gt;s"]</default>
