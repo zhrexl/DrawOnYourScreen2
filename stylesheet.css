@@ -39,8 +39,8 @@
 }
 
 .draw-on-your-screen-menu .popup-menu-item {
-    padding-top: .32em; /* default: .4em */
-    padding-bottom: .32em;
+    padding-top: .3em; /* default: .4em */
+    padding-bottom: .3em;
 }
 
 .draw-on-your-screen-menu .popup-menu-icon {
@@ -49,7 +49,7 @@
 }
 
 .draw-on-your-screen-menu .toggle-switch {
-    height: 1.4em; /* default: 22px */
+    height: 1.35em; /* default: 22px */
 }
 
 .draw-on-your-screen-menu-separator-item {
@@ -62,8 +62,8 @@
 }
 
 .draw-on-your-screen-menu-separator-item .popup-separator-menu-item {
-    margin-top: 0.4em; /* default 6px */
-    margin-bottom: 0.4em; /* default 6px */
+    margin-top: 0.2em; /* default 6px */
+    margin-bottom: 0.2em; /* default 6px */
 }
 
 .draw-on-your-screen-menu-slider-label {
