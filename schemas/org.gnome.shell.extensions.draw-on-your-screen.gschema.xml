@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="gnome-shell-extensions">
   <schema path="/org/gnome/shell/extensions/draw-on-your-screen/" id="org.gnome.shell.extensions.draw-on-your-screen">
-    <key type="b" name="smoothed-stroke">
-      <default>false</default>
-      <summary>smoothed stroke</summary>
-      <description>smoothed stroke</description>
-    </key>
     <key type="b" name="drawing-on-desktop">
       <default>false</default>
       <summary>move drawing on desktop</summary>
@@ -107,12 +102,12 @@
       <description>decrement the line width</description>
     </key>
     <key type="as" name="increment-line-width-more">
-      <default>["&lt;Primary&gt;Page_Up"]</default>
+      <default>["&lt;Primary&gt;&lt;Shift&gt;KP_Add"]</default>
       <summary>increment the line width even more</summary>
       <description>increment the line width even more</description>
     </key>
     <key type="as" name="decrement-line-width-more">
-      <default>["&lt;Primary&gt;Page_Down"]</default>
+      <default>["&lt;Primary&gt;&lt;Shift&gt;KP_Subtract"]</default>
       <summary>decrement the line width even more</summary>
       <description>decrement the line width even more</description>
     </key>
@@ -196,15 +191,30 @@
       <summary>toggle font style</summary>
       <description>toggle font style</description>
     </key>
-    <key type="as" name="open-stylesheet">
+    <key type="as" name="open-user-stylesheet">
       <default>["&lt;Primary&gt;o"]</default>
-      <summary>open stylesheet</summary>
-      <description>open stylesheet</description>
+      <summary>open user stylesheet to edit style</summary>
+      <description>open user stylesheet to edit style</description>
     </key>
     <key type="as" name="save-as-svg">
-      <default>["&lt;Primary&gt;s"]</default>
+      <default>["&lt;Primary&gt;&lt;Shift&gt;s"]</default>
       <summary>Save drawing as a svg file</summary>
       <description>Save drawing as a svg file</description>
+    </key>
+    <key type="as" name="save-as-json">
+      <default>["&lt;Primary&gt;s"]</default>
+      <summary>Save drawing as a json file</summary>
+      <description>Save drawing as a json file</description>
+    </key>
+    <key type="as" name="open-previous-json">
+      <default>["&lt;Primary&gt;Page_Down"]</default>
+      <summary>Open previous json file</summary>
+      <description>Open previous json file</description>
+    </key>
+    <key type="as" name="open-next-json">
+      <default>["&lt;Primary&gt;Page_Up"]</default>
+      <summary>Open next json file</summary>
+      <description>Open next json file</description>
     </key>
     <key type="as" name="toggle-help">
       <default>["&lt;Primary&gt;F1"]</default>

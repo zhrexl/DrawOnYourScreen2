@@ -1,50 +1,6 @@
-/*
- * Except for the font,
- * you don't need to restart the extension.
- * Just save this file and the changes will be applied for your next brushstroke.
- *
- * line-join (no string):
- * 0 : miter, 1 : round, 2 : bevel
- * line-cap (no string):
- * 0 : butt, 1 : round, 2 : square
- *
- * dash:
- * dash-array-on is the length of dashes (no dashes if 0, you can put 0.1 to get dots or square according to line-cap)
- * dash-array-off is the length of gaps (no dashes if 0)
- *
- * font:
- * only one family : no comma separated list of families like "font1, font2, ..., Sans-Serif"
- * font family can be any font installed, or a generic family name (Serif, Sans-Serif, Monospace, Cursive, Fantasy)
- * font weight and font style : no upper case when string
- * weight <= 500 (or lighter, normal, medium) is rendered as normal
- * weight > 500 (or bolder, bold) is rendered as bold
- * oblique and italic style support depends on the font family and seem to be rendered identically
- *
- */
+@import "./data/default.css";
 
-.draw-on-your-screen {
-    -drawing-line-width: 5px;
-    -drawing-line-join: 1;
-    -drawing-line-cap: 1;
-    -drawing-dash-array-on: 5px;
-    -drawing-dash-array-off: 15px;
-    -drawing-dash-offset: 0px;
-    -drawing-color1: HotPink;
-    -drawing-color2: Cyan;
-    -drawing-color3: yellow;
-    -drawing-color4: Orangered;
-    -drawing-color5: Chartreuse;
-    -drawing-color6: DarkViolet;
-    -drawing-color7: #ffffff;
-    -drawing-color8: rgba(130, 130, 130, 0.3);
-    -drawing-color9: rgb(0, 0, 0);
-    -drawing-background-color: #2e3436; /* GS osd_bg_color: #2e3436, GTK Adwaita-dark theme_base_color: #2d2c2e */
-    font-family: Cantarell;
-    font-weight: normal;
-    font-style: normal;
-}
-
-/*********************************************/
+/* The following styles don't affect the drawing */
 
 /* square area */
 
@@ -56,8 +12,7 @@
     outline: none;
 }
 
-/* The following styles don't affect the drawing,
- * but the "Ctrl + F1" on-screen-display */
+ /* "Ctrl + F1" on-screen-display */
 
 .draw-on-your-screen-helper {
     margin: 0;
@@ -73,36 +28,71 @@
     font-weight: normal;
 }
 
-.draw-on-your-screen-separator {
+.draw-on-your-screen-helper-separator {
     min-height: 0.6em;
 }
 
 /* context menu */
 
 .draw-on-your-screen-menu {
-   font-size: 0.98em; /* default: 1em */
+   font-size: 0.97em; /* default: 1em */
 }
 
 .draw-on-your-screen-menu .popup-menu-item {
-    padding-top: .37em; /* default: .4em */
-    padding-bottom: .37em;
+    padding-top: .3em; /* default: .4em */
+    padding-bottom: .3em;
 }
 
 .draw-on-your-screen-menu .popup-menu-icon {
-    icon-size: 1.04em; /* default: 1.09 */
+    icon-size: 1em; /* default: 1.09 */
+    padding-top: 0.03em;
 }
 
 .draw-on-your-screen-menu .toggle-switch {
-    height: 20px; /* default: 22px */
-} 
+    height: 1.35em; /* default: 22px */
+}
 
-.draw-on-your-screen-menu-separator StLabel {
+.draw-on-your-screen-menu-separator-item {
+    padding-top: 0.14em;
+    padding-bottom: 0.14em;
+}
+
+.draw-on-your-screen-menu-separator-item StLabel {
     font-size: 0;
+}
+
+.draw-on-your-screen-menu-separator-item .popup-separator-menu-item {
+    margin-top: 0.2em; /* default 6px */
+    margin-bottom: 0.2em; /* default 6px */
 }
 
 .draw-on-your-screen-menu-slider-label {
     min-width: 3em;
     text-align: right;
+}
+
+.draw-on-your-screen-menu-entry-item {
+    padding-right: 1.15em; /* default 1.75em */
+    spacing: 0; /* default 12px */
+}
+
+.draw-on-your-screen-menu-entry {
+    border: none;
+    border-radius: 3px;
+    padding: 0.35em 0.57em;
+    width: 10em;
+}
+
+.draw-on-your-screen-menu-entry-error {
+    color: #f57900; /* upstream warning_color */
+}
+
+.draw-on-your-screen-menu-entry:focus {
+    padding: 0.35em 0.57em;
+}
+
+.draw-on-your-screen-menu-delete-button:hover {
+    color: #f57900;
 }
  
  

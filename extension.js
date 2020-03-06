@@ -3,7 +3,7 @@
 /*
  * Copyright 2019 Abakkk
  *
- * This file is part of DrowOnYourScreen, a drawing extension for GNOME Shell.
+ * This file is part of DrawOnYourScreen, a drawing extension for GNOME Shell.
  * https://framagit.org/abakkk/DrawOnYourScreen
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,6 +21,7 @@
  */
 
 const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
@@ -31,10 +32,11 @@ const Main = imports.ui.main;
 const OsdWindow = imports.ui.osdWindow;
 const PanelMenu = imports.ui.panelMenu;
 
-const Extension = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Extension.imports.convenience;
-const Draw = Extension.imports.draw;
-const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
+const Draw = Me.imports.draw;
+const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
 
@@ -92,16 +94,25 @@ var AreaManager = new Lang.Class({
         this.desktopSettingHandler = this.settings.connect('changed::drawing-on-desktop', this.onDesktopSettingChanged.bind(this));
         this.persistentSettingHandler = this.settings.connect('changed::persistent-drawing', this.onPersistentSettingChanged.bind(this));
         
-        if (Extension.stylesheet) {
-            this.stylesheetMonitor = Extension.stylesheet.monitor(Gio.FileMonitorFlags.NONE, null);
-            this.stylesheetChangedHandler = this.stylesheetMonitor.connect('changed', (monitor, file, otherFile, eventType) => {
-                if ((eventType != 0 && eventType != 3) || !Extension.stylesheet.query_exists(null))
-                    return;
-                let theme = St.ThemeContext.get_for_stage(global.stage).get_theme();
-                theme.unload_stylesheet(Extension.stylesheet);
-                theme.load_stylesheet(Extension.stylesheet);
-            });
+        this.userStyleFile = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir'], 'user.css']));
+        
+        if (this.userStyleFile.query_exists(null)) {
+            let theme = St.ThemeContext.get_for_stage(global.stage).get_theme();
+            theme.load_stylesheet(this.userStyleFile);
         }
+        
+        this.userStyleMonitor = this.userStyleFile.monitor_file(Gio.FileMonitorFlags.WATCH_MOVES, null);
+        this.userStyleHandler = this.userStyleMonitor.connect('changed', (monitor, file, otherFile, eventType) => {
+            // 'CHANGED' events are followed by a 'CHANGES_DONE_HINT' event
+            if (eventType == Gio.FileMonitorEvent.CHANGED || eventType == Gio.FileMonitorEvent.ATTRIBUTE_CHANGED)
+                return;
+            
+            let theme = St.ThemeContext.get_for_stage(global.stage).get_theme();
+            if (theme.get_custom_stylesheets().indexOf(this.userStyleFile) != -1)
+                theme.unload_stylesheet(this.userStyleFile);
+            if (this.userStyleFile.query_exists(null))
+                theme.load_stylesheet(this.userStyleFile);
+        });
     },
     
     onDesktopSettingChanged: function() {
@@ -113,7 +124,7 @@ var AreaManager = new Lang.Class({
     
     onPersistentSettingChanged: function() {
         if (this.settings.get_boolean('persistent-drawing'))
-            this.areas[Main.layoutManager.primaryIndex].saveAsJson();
+            this.areas[Main.layoutManager.primaryIndex].syncPersistent();
     },
     
     updateIndicator: function() {
@@ -136,8 +147,8 @@ var AreaManager = new Lang.Class({
             let monitor = this.monitors[i];
             let container = new St.Widget({ name: 'drawOnYourSreenContainer' + i });
             let helper = new Draw.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
-            let load = i == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
-            let area = new Draw.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, load);
+            let loadPersistent = i == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
+            let area = new Draw.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, loadPersistent);
             container.add_child(area);
             container.add_child(helper);
             
@@ -161,6 +172,9 @@ var AreaManager = new Lang.Class({
             'delete-last-element': this.activeArea.deleteLastElement.bind(this.activeArea),
             'smooth-last-element': this.activeArea.smoothLastElement.bind(this.activeArea),
             'save-as-svg': this.activeArea.saveAsSvg.bind(this.activeArea),
+            'save-as-json': this.activeArea.saveAsJson.bind(this.activeArea),
+            'open-previous-json': this.activeArea.loadPreviousJson.bind(this.activeArea),
+            'open-next-json': this.activeArea.loadNextJson.bind(this.activeArea),
             'toggle-background': this.activeArea.toggleBackground.bind(this.activeArea),
             'toggle-square-area': this.activeArea.toggleSquareArea.bind(this.activeArea),
             'increment-line-width': () => this.activeArea.incrementLineWidth(1),
@@ -181,7 +195,7 @@ var AreaManager = new Lang.Class({
             'toggle-font-style': this.activeArea.toggleFontStyle.bind(this.activeArea),
             'toggle-panel-and-dock-visibility': this.togglePanelAndDockOpacity.bind(this),
             'toggle-help': this.activeArea.toggleHelp.bind(this.activeArea),
-            'open-stylesheet': this.openStylesheetFile.bind(this)
+            'open-user-stylesheet': this.openUserStyleFile.bind(this)
         };
         
         for (let key in this.internalKeybindings) {
@@ -212,9 +226,19 @@ var AreaManager = new Lang.Class({
         }
     },
     
-    openStylesheetFile: function() {
-        if (Extension.stylesheet && Extension.stylesheet.query_exists(null))
-            Gio.AppInfo.launch_default_for_uri(Extension.stylesheet.get_uri(), global.create_app_launch_context(0, -1));
+    openUserStyleFile: function() {
+        if (!this.userStyleFile.query_exists(null)) {
+            if (!this.userStyleFile.get_parent().query_exists(null))
+                this.userStyleFile.get_parent().make_directory_with_parents(null);
+            let defaultStyleFile = Me.dir.get_child('data').get_child('default.css');
+            if (!defaultStyleFile.query_exists(null))
+                return;
+            let success = defaultStyleFile.copy(this.userStyleFile, Gio.FileCopyFlags.NONE, null, null);
+            if (!success)
+                return;
+        }
+        
+        Gio.AppInfo.launch_default_for_uri(this.userStyleFile.get_uri(), global.create_app_launch_context(0, -1));
         if (this.activeArea)
             this.toggleDrawing();
     },
@@ -223,7 +247,7 @@ var AreaManager = new Lang.Class({
         for (let i = 0; i < this.areas.length; i++)
             this.areas[i].erase();
         if (this.settings.get_boolean('persistent-drawing'))
-            this.areas[Main.layoutManager.primaryIndex].saveAsJson();
+            this.areas[Main.layoutManager.primaryIndex].savePersistent();
     },
     
     togglePanelAndDockOpacity: function() {
@@ -315,11 +339,12 @@ var AreaManager = new Lang.Class({
     },
     
     // use level -1 to set no level (null)
-    showOsd: function(emitter, label, level, maxLevel) {
+    showOsd: function(emitter, iconName, label, level) {
         if (this.osdDisabled)
             return;
         let activeIndex = this.areas.indexOf(this.activeArea);
         if (activeIndex != -1) {
+            let maxLevel;
             if (level == -1)
                 level = null;
             else if (level > 100)
@@ -329,7 +354,9 @@ var AreaManager = new Lang.Class({
             // GS 3.34+ : bar from 0 to 1
             if (level && GS_VERSION > '3.33.0')
                 level = level / 100;
-            Main.osdWindowManager.show(activeIndex, this.enterGicon, label, level, maxLevel);
+            
+            let icon = iconName && new Gio.ThemedIcon({ name: iconName });
+            Main.osdWindowManager.show(activeIndex, icon || this.enterGicon, label, level, maxLevel);
             Main.osdWindowManager._osdWindows[activeIndex]._label.get_clutter_text().set_use_markup(true);
             
             if (level === 0) {
@@ -357,9 +384,13 @@ var AreaManager = new Lang.Class({
     },
     
     disable: function() {
-        if (this.stylesheetChangedHandler) {
-            this.stylesheetMonitor.disconnect(this.stylesheetChangedHandler);
-            this.stylesheetChangedHandler = null;
+        if (this.userStyleHandler && this.userStyleMonitor) {
+            this.userStyleMonitor.disconnect(this.userStyleHandler);
+            this.userStyleHandler = null;
+        }
+        if (this.userStyleMonitor) {
+            this.userStyleMonitor.cancel();
+            this.userStyleMonitor = null;
         }
         if (this.monitorChangedHandler) {
             Main.layoutManager.disconnect(this.monitorChangedHandler);

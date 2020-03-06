@@ -1,0 +1,51 @@
+v5.1 - March 2020
+=================
+
+* Add "Open" and "Save drawing"
+* Change some keyboard shortcuts
+* Replace "smoothed stroke" preference with `Ctrl` key modifier
+* Add `space` key modifier to ignore pointer movement #20
+* User style is now stored in user data directory (`user.css`)
+* Customizable square area size #22
+
+v5 - December 2019
+==================
+
+* Improve pointer cursor
+* Add 3.24 version as supported
+* Use maxLevel in line-width OSD
+* Small fix with text shape that displayed keybindings
+
+
+v4.1 - October 2019
+===================
+
+* GS 3.34 compatibility
+* Create drawing menu on demand
+* Allow 0 px line width because stroke lines cannot have color with some transparency
+
+
+v4 - April 2019
+===============
+
+* Add drawing menu
+* Add panel indicator
+* Prefs to disable indicator and notifications
+* Change middle click action
+
+v3 - March 2019
+===============
+
+* Fix area container integration #1
+* Add persistence
+
+v2 - March 2019
+===============
+
+* Add transformations
+* Add square area
+
+v1 - March 2019
+===============
+
+* Initial release

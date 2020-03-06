@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen VERSION\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2019-03-04 16:40+0100\n"
+"POT-Creation-Date: 2020-01-03 08:00+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,17 +19,17 @@ msgstr ""
 
 # Add your name here, for example:
 # (add "\n" as separator if there is many translators)
-# msgid "Translators"
+# msgid "translator-credits"
 # msgstr "Me"
 # or, with mail:
-# msgid "Translators"
+# msgid "translator-credits"
 # msgstr "<a href=\"mailto:me@mail.org\">Me</a>"
 # or, with page:
-# msgid "Translators"
+# msgid "translator-credits"
 # msgstr "<a href=\"https://...\">Me</a>"
 # else keep it empty.
 # It will be displayed in about page
-msgid "Translators"
+msgid "translator-credits"
 msgstr ""
 
 #: extension.js
@@ -106,6 +106,12 @@ msgid "Dashed"
 msgstr ""
 
 msgid "Color"
+msgstr ""
+
+msgid "Open drawing"
+msgstr ""
+
+msgid "Save drawing"
 msgstr ""
 
 #: prefs.js
@@ -196,10 +202,20 @@ msgstr ""
 msgid "Square drawing area"
 msgstr ""
 
+msgid "Open previous drawing"
+msgstr ""
+
+msgid "Open next drawing"
+msgstr ""
+
+# already in draw.js
+#msgid "Save drawing"
+#msgstr ""
+
 msgid "Save drawing as a SVG file"
 msgstr ""
 
-msgid "Open stylesheet.css"
+msgid "Edit style"
 msgstr ""
 
 msgid "Show help"
@@ -246,6 +262,12 @@ msgstr ""
 msgid "Shift key held"
 msgstr ""
 
+msgid "Ignore pointer movement"
+msgstr ""
+
+msgid "Space key held"
+msgstr ""
+
 msgid "Leave"
 msgstr ""
 
@@ -269,16 +291,16 @@ msgstr ""
 msgid "Global"
 msgstr ""
 
-msgid "Drawing on the desktop"
-msgstr ""
-
-msgid "Draw On Your Screen becomes Draw On Your Desktop"
-msgstr ""
-
 msgid "Persistent"
 msgstr ""
 
 msgid "Persistent drawing through session restart"
+msgstr ""
+
+msgid "Drawing on the desktop"
+msgstr ""
+
+msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
 msgstr ""
 
 msgid "Disable on-screen notifications"
@@ -297,32 +319,24 @@ msgid ""
 "By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you can:\n"
 " . rotate a rectangle or a text area\n"
 " . extend and rotate an ellipse\n"
-" . curve a line (cubic Bezier curve)"
-msgstr ""
-
-msgid "Smooth stroke during the drawing process"
-msgstr ""
-
-msgid ""
-"You can also smooth the stroke afterward\n"
-"See “%s”"
-msgstr ""
-
-msgid "Change the style"
-msgstr ""
-
-msgid "See stylesheet.css"
+" . curve a line (cubic Bezier curve)\n"
+" . smooth a free drawing stroke (you may prefer to smooth the stroke afterward, see <i>“%s”</i>)"
 msgstr ""
 
 msgid ""
-"<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file,\n"
+"<b>Default</b> drawing style attributes (color palette, font, line, dash) are defined in an editable <b>css</b> file.\n"
+"See <i>“%s”</i>."
+msgstr ""
+
+msgid ""
+"<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file, "
 "they are colored with background color, transparent if it is disabled.\n"
-"(See “%s” or edit the SVG file afterwards)"
+"See <i>“%s”</i> or edit the SVG file afterwards."
 msgstr ""
 
 
 # The following words refer to SVG attributes.
-# You have the choice to translate or not
+# You are free to translate them or not.
 
 #msgid "Butt"
 #msgstr ""

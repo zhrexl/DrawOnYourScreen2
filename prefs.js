@@ -3,7 +3,7 @@
 /*
  * Copyright 2019 Abakkk
  *
- * This file is part of DrowOnYourScreen, a drawing extension for GNOME Shell.
+ * This file is part of DrawOnYourScreen, a drawing extension for GNOME Shell.
  * https://framagit.org/abakkk/DrawOnYourScreen
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,10 +26,9 @@ const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 
 const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Convenience = Extension.imports.convenience;
-const Metadata = Extension.metadata;
-const _ = imports.gettext.domain(Extension.metadata["gettext-domain"]).gettext;
+const Me = ExtensionUtils.getCurrentExtension();
+const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
+const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const _GTK = imports.gettext.domain('gtk30').gettext;
 
 const MARGIN = 10;
@@ -68,8 +67,11 @@ var INTERNAL_KEYBINDINGS = {
     'toggle-background': "Add a drawing background",
     'toggle-square-area': "Square drawing area",
     '-separator-5': '',
+    'open-previous-json': "Open previous drawing",
+    'open-next-json': "Open next drawing",
+    'save-as-json': "Save drawing",
     'save-as-svg': "Save drawing as a SVG file",
-    'open-stylesheet': "Open stylesheet.css",
+    'open-user-stylesheet': "Edit style",
     'toggle-help': "Show help"
 };
 
@@ -81,6 +83,7 @@ var OTHER_SHORTCUTS = [
     { desc: "Increment/decrement line width", shortcut: "Scroll" },
     { desc: "Select color", shortcut: "Ctrl+1...9" },
     { desc: "Select eraser", shortcut: "Shift key held" },
+    { desc: "Ignore pointer movement", shortcut: "Space key held" },
     { desc: "Leave", shortcut: "Escape key" }
 ];
 
@@ -103,7 +106,7 @@ function buildPrefsWidget() {
     return topStack;
 }
 
-var TopStack = new GObject.Class({
+const TopStack = new GObject.Class({
     Name: 'DrawOnYourScreenTopStack',
     GTypeName: 'DrawOnYourScreenTopStack',
     Extends: Gtk.Stack,
@@ -117,7 +120,7 @@ var TopStack = new GObject.Class({
     }
 });
 
-var AboutPage = new GObject.Class({
+const AboutPage = new GObject.Class({
     Name: 'DrawOnYourScreenAboutPage',
     GTypeName: 'DrawOnYourScreenAboutPage',
     Extends: Gtk.ScrolledWindow,
@@ -128,10 +131,10 @@ var AboutPage = new GObject.Class({
         let vbox= new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN*3 });
         this.add(vbox);
         
-        let name = "<b> " + _(Metadata.name) + "</b>";
-        let version = _("Version %d").format(Metadata.version);
-        let description = _(Metadata.description);
-        let link = "<span><a href=\"" + Metadata.url + "\">" + Metadata.url + "</a></span>";
+        let name = "<b> " + _(Me.metadata.name) + "</b>";
+        let version = _("Version %d").format(Me.metadata.version);
+        let description = _(Me.metadata.description);
+        let link = "<span><a href=\"" + Me.metadata.url + "\">" + Me.metadata.url + "</a></span>";
         let licenceName = _GTK("GNU General Public License, version 2 or later");
         let licenceLink = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html";
         let licence = "<small>" + _GTK("This program comes with absolutely no warranty.\nSee the <a href=\"%s\">%s</a> for details.").format(licenceLink, licenceName) + "</small>";
@@ -152,11 +155,11 @@ var AboutPage = new GObject.Class({
         creditBox.pack_start(rightBox, true, true, 5);
         vbox.add(creditBox);
         
-        if (_("Translators") != "Translators" && _("Translators") != "") {
+        if (_("translator-credits") != "translator-credits" && _("translator-credits") != "") {
             leftBox.pack_start(new Gtk.Label(), false, false, 0);
             rightBox.pack_start(new Gtk.Label(), false, false, 0);
             leftLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 2, justify: 1, use_markup: true, label: "<small>" + _GTK("Translated by") + "</small>" });
-            rightLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 1, justify: 0, use_markup: true, label: "<small>" + _("Translators") + "</small>" });
+            rightLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 1, justify: 0, use_markup: true, label: "<small>" + _("translator-credits") + "</small>" });
             leftBox.pack_start(leftLabel, false, false, 0);
             rightBox.pack_start(rightLabel, false, false, 0);
         }
@@ -164,7 +167,7 @@ var AboutPage = new GObject.Class({
     
 });
 
-var PrefsPage = new GObject.Class({
+const PrefsPage = new GObject.Class({
     Name: 'DrawOnYourScreenPrefsPage',
     GTypeName: 'DrawOnYourScreenPrefsPage',
     Extends: Gtk.ScrolledWindow,
@@ -174,83 +177,88 @@ var PrefsPage = new GObject.Class({
 
         this.settings = Convenience.getSettings();
         
-        let box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, margin: MARGIN*3 });
+        let box = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN*3 });
         this.add(box);
         
-        let listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true });
-        box.add(listBox);
+        let globalFrame = new Gtk.Frame({ label_yalign: 1.0 });
+        globalFrame.set_label_widget(new Gtk.Label({ margin_bottom: MARGIN/2, use_markup: true, label: "<b><big>" + _("Global") + "</big></b>" }));
+        box.add(globalFrame);
+        
+        let listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN/2, margin_bottom: MARGIN/2 });
+        globalFrame.add(listBox);
         
         let styleContext = listBox.get_style_context();
         styleContext.add_class('background');
-        
-        let globalTitleBox = new Gtk.Box({ margin: MARGIN });
-        let globalTitleLabel = new Gtk.Label({ use_markup: true, label: "<b><big>" + _("Global") + " :</big></b>" });
-        globalTitleLabel.set_halign(1);
-        globalTitleBox.pack_start(globalTitleLabel, true, true, 4);
-        listBox.add(globalTitleBox);
         
         let globalKeybindingsWidget = new KeybindingsWidget(GLOBAL_KEYBINDINGS, this.settings);
         globalKeybindingsWidget.margin = MARGIN;
         listBox.add(globalKeybindingsWidget);
         
-        let desktopBox = new Gtk.Box({ margin: MARGIN });
-        let desktopLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let desktopLabel1 = new Gtk.Label({label: _("Drawing on the desktop")});
-        let desktopLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("Draw On Your Screen becomes Draw On Your Desktop") + "</small>" });
-        desktopLabel1.set_halign(1);
-        desktopLabel2.get_style_context().add_class("dim-label");
-        desktopLabelBox.pack_start(desktopLabel1, true, true, 0);
-        desktopLabelBox.pack_start(desktopLabel2, true, true, 0);
-        let desktopSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind("drawing-on-desktop", desktopSwitch, "active", 0);
-        desktopBox.pack_start(desktopLabelBox, true, true, 4);
-        desktopBox.pack_start(desktopSwitch, false, false, 4);
-        listBox.add(desktopBox);
-        
-        let persistentBox = new Gtk.Box({ margin: MARGIN });
+        let persistentBox = new Gtk.Box({ margin_top: MARGIN/2, margin_bottom: MARGIN/2, margin_left: MARGIN, margin_right: MARGIN });
         let persistentLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
         let persistentLabel1 = new Gtk.Label({label: _("Persistent")});
-        let persistentLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("Persistent drawing through session restart") + "</small>" });
+        let persistentLabel2 = new Gtk.Label({ use_markup: true, halign: 1, wrap: true, xalign: 0, label: "<small>" + _("Persistent drawing through session restart") + "</small>" });
         persistentLabel1.set_halign(1);
-        persistentLabel2.get_style_context().add_class("dim-label");
+        persistentLabel2.get_style_context().add_class('dim-label');
         persistentLabelBox.pack_start(persistentLabel1, true, true, 0);
         persistentLabelBox.pack_start(persistentLabel2, true, true, 0);
         let persistentSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind("persistent-drawing", persistentSwitch, "active", 0);
+        this.settings.bind('persistent-drawing', persistentSwitch, 'active', 0);
         persistentBox.pack_start(persistentLabelBox, true, true, 4);
         persistentBox.pack_start(persistentSwitch, false, false, 4);
         listBox.add(persistentBox);
         
-        let osdBox = new Gtk.Box({ margin: MARGIN });
+        let desktopBox = new Gtk.Box({ margin_top: MARGIN/2, margin_bottom: MARGIN/2, margin_left: MARGIN, margin_right: MARGIN });
+        let desktopLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
+        let desktopLabel1 = new Gtk.Label({label: _("Drawing on the desktop")});
+        let desktopLabel2 = new Gtk.Label({ use_markup: true, halign: 1, wrap: true, xalign: 0, label: "<small>" + _("<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>") + "</small>" });
+        desktopLabel1.set_halign(1);
+        desktopLabel2.get_style_context().add_class('dim-label');
+        desktopLabelBox.pack_start(desktopLabel1, true, true, 0);
+        desktopLabelBox.pack_start(desktopLabel2, true, true, 0);
+        let desktopSwitch = new Gtk.Switch({valign: 3});
+        this.settings.bind('drawing-on-desktop', desktopSwitch, 'active', 0);
+        desktopBox.pack_start(desktopLabelBox, true, true, 4);
+        desktopBox.pack_start(desktopSwitch, false, false, 4);
+        listBox.add(desktopBox);
+        
+        let osdBox = new Gtk.Box({ margin_top: MARGIN/2, margin_bottom: MARGIN/2, margin_left: MARGIN, margin_right: MARGIN });
         let osdLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
         let osdLabel1 = new Gtk.Label({label: _("Disable on-screen notifications")});
         osdLabel1.set_halign(1);
         osdLabelBox.pack_start(osdLabel1, true, true, 0);
         let osdSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind("osd-disabled", osdSwitch, "active", 0);
+        this.settings.bind('osd-disabled', osdSwitch, 'active', 0);
         osdBox.pack_start(osdLabelBox, true, true, 4);
         osdBox.pack_start(osdSwitch, false, false, 4);
         listBox.add(osdBox);
         
-        let indicatorBox = new Gtk.Box({ margin: MARGIN });
+        let indicatorBox = new Gtk.Box({ margin_top: MARGIN/2, margin_bottom: MARGIN/2, margin_left: MARGIN, margin_right: MARGIN });
         let indicatorLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
         let indicatorLabel1 = new Gtk.Label({label: _("Disable panel indicator")});
         indicatorLabel1.set_halign(1);
         indicatorLabelBox.pack_start(indicatorLabel1, true, true, 0);
         let indicatorSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind("indicator-disabled", indicatorSwitch, "active", 0);
+        this.settings.bind('indicator-disabled', indicatorSwitch, 'active', 0);
         indicatorBox.pack_start(indicatorLabelBox, true, true, 4);
         indicatorBox.pack_start(indicatorSwitch, false, false, 4);
         listBox.add(indicatorBox);
-        this.addSeparator(listBox);
         
-        let internalTitleBox = new Gtk.Box({ margin: MARGIN });
-        let internalTitleLabel = new Gtk.Label({ use_markup: true, label: "<b><big>" + _("Internal") + " </big></b>" + _("(in drawing mode)") + " <b><big>:</big></b>" });
-        internalTitleLabel.set_halign(1);
-        internalTitleBox.pack_start(internalTitleLabel, true, true, 4);
-        listBox.add(internalTitleBox);
+        let children = listBox.get_children();
+        for (let i = 0; i < children.length; i++) {
+            if (children[i].activatable)
+                children[i].set_activatable(false);
+        }
         
-        listBox.add(new Gtk.Box({ margin_top: MARGIN/2, margin_left: MARGIN, margin_right: MARGIN }));
+        let internalFrame = new Gtk.Frame({ margin_top: 3*MARGIN, label_yalign: 1.0 });
+        internalFrame.set_label_widget(new Gtk.Label({ margin_bottom: MARGIN/2, use_markup: true, label: "<b><big>" + _("Internal") + " </big></b>" + _("(in drawing mode)") }));
+        box.add(internalFrame);
+        
+        listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN });
+        internalFrame.add(listBox);
+        
+        styleContext = listBox.get_style_context();
+        styleContext.add_class('background');
         
         for (let i = 0; i < OTHER_SHORTCUTS.length; i++) {
             if (OTHER_SHORTCUTS[i].desc.indexOf('-separator-') != -1) {
@@ -266,70 +274,63 @@ var PrefsPage = new GObject.Class({
             listBox.add(otherBox);
         }
         
-        listBox.add(new Gtk.Box({ margin_top: MARGIN, margin_left: MARGIN, margin_right: MARGIN }));
-        
-        let controlBox = new Gtk.Box({ margin_top: MARGIN, margin_left: MARGIN, margin_right: MARGIN, margin_bottom:MARGIN });
+        let controlBox = new Gtk.Box({ margin: MARGIN, margin_top: 2*MARGIN });
         let controlLabel = new Gtk.Label({
+            wrap: true,
+            xalign: 0,
             use_markup: true,
-            label: _("By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you can:\n . rotate a rectangle or a text area\n . extend and rotate an ellipse\n . curve a line (cubic Bezier curve)")
+            label: _("By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you can:\n" +
+                     " . rotate a rectangle or a text area\n" +
+                     " . extend and rotate an ellipse\n" +
+                     " . curve a line (cubic Bezier curve)\n" +
+                     " . smooth a free drawing stroke (you may prefer to smooth the stroke afterward, see <i>“%s”</i>)").format(_("Smooth last brushstroke"))
         });
         controlLabel.set_halign(1);
-        controlLabel.get_style_context().add_class("dim-label");
+        controlLabel.get_style_context().add_class('dim-label');
         controlBox.pack_start(controlLabel, true, true, 4);
         listBox.add(controlBox);
-        
-        let smoothBox = new Gtk.Box({ margin: MARGIN });
-        let smoothLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let smoothLabel1 = new Gtk.Label({label: _("Smooth stroke during the drawing process")});
-        let smoothLabel2 = new Gtk.Label({ use_markup: true, halign: 1, label: "<small>" + _("You can also smooth the stroke afterward\nSee “%s”").format(_("Smooth last brushstroke")) + "</small>" });
-        smoothLabel1.set_halign(1);
-        smoothLabel2.get_style_context().add_class("dim-label");
-        smoothLabelBox.pack_start(smoothLabel1, true, true, 0);
-        smoothLabelBox.pack_start(smoothLabel2, true, true, 0);
-        let smoothSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind("smoothed-stroke", smoothSwitch, "active", 0);
-        smoothBox.pack_start(smoothLabelBox, true, true, 4);
-        smoothBox.pack_start(smoothSwitch, false, false, 4);
-        listBox.add(smoothBox);
         
         let internalKeybindingsWidget = new KeybindingsWidget(INTERNAL_KEYBINDINGS, this.settings);
         internalKeybindingsWidget.margin = MARGIN;
         listBox.add(internalKeybindingsWidget);
         
-        let styleBox = new Gtk.Box({ margin_top: MARGIN, margin_left: MARGIN, margin_right: MARGIN, margin_bottom:MARGIN });
-        let styleLabel = new Gtk.Label({ label: _("Change the style") });
+        let styleBox = new Gtk.Box({ margin: MARGIN });
+        let styleLabel = new Gtk.Label({
+            wrap: true,
+            xalign: 0,
+            use_markup: true,
+            label: _("<b>Default</b> drawing style attributes (color palette, font, line, dash) are defined in an editable <b>css</b> file.\n" +
+                     "See <i>“%s”</i>.").format(_("Edit style"))
+        });
         styleLabel.set_halign(1);
-        let styleLabel2 = new Gtk.Label({ label: _("See stylesheet.css") });
+        styleLabel.get_style_context().add_class('dim-label');
         styleBox.pack_start(styleLabel, true, true, 4);
-        styleBox.pack_start(styleLabel2, false, false, 4);
         listBox.add(styleBox);
         
-        let noteBox = new Gtk.Box({ margin_top: MARGIN, margin_left: MARGIN, margin_right: MARGIN, margin_bottom:MARGIN });
+        let noteBox = new Gtk.Box({ margin: MARGIN });
         let noteLabel = new Gtk.Label({
+            wrap: true,
+            xalign: 0,
             use_markup: true,
-            label: _("<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file,\nthey are colored with background color, transparent if it is disabled.\n(See “%s” or edit the SVG file afterwards)").format(_("Add a drawing background"))
+            label: _("<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file, " +
+                     "they are colored with background color, transparent if it is disabled.\n" +
+                     "See <i>“%s”</i> or edit the SVG file afterwards.").format(_("Add a drawing background"))
         });
         noteLabel.set_halign(1);
-        noteLabel.get_style_context().add_class("dim-label");
+        noteLabel.get_style_context().add_class('dim-label');
         noteBox.pack_start(noteLabel, true, true, 4);
         listBox.add(noteBox);
         
-        let children = listBox.get_children();
+        children = listBox.get_children();
         for (let i = 0; i < children.length; i++) {
             if (children[i].activatable)
                 children[i].set_activatable(false);
         }
-    },
-    
-    addSeparator: function(container) {
-        let separatorRow = new Gtk.ListBoxRow({sensitive: false});
-        separatorRow.add(new Gtk.Separator({ margin: MARGIN }));
-        container.add(separatorRow);
     }
 });
 
 // this code comes from Sticky Notes View by Sam Bull, https://extensions.gnome.org/extension/568/notes/
-var KeybindingsWidget = new GObject.Class({
+const KeybindingsWidget = new GObject.Class({
     Name: 'DrawOnYourScreenKeybindings.Widget',
     GTypeName: 'DrawOnYourScreenKeybindingsWidget',
     Extends: Gtk.Box,
