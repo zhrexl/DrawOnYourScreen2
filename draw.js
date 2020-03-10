@@ -266,7 +266,7 @@ var DrawingArea = new Lang.Class({
     },
     
     _onKeyPressed: function(actor, event) {
-        if (event.get_key_symbol() == Clutter.Escape) {
+        if (event.get_key_symbol() == Clutter.KEY_Escape) {
             this.emit('stop-drawing');
             return Clutter.EVENT_STOP;
             
@@ -1080,56 +1080,56 @@ var DrawingHelper = new Lang.Class({
         this.hide();
         this.vbox = new St.BoxLayout({ style_class: 'osd-window draw-on-your-screen-helper', vertical: true });
         this.add_actor(this.vbox);
-        this.vbox.add(new St.Label({ text: _("Global") }));
+        this.vbox.add_child(new St.Label({ text: _("Global") }));
         
         let settings = Convenience.getSettings();
         
         for (let settingKey in Prefs.GLOBAL_KEYBINDINGS) {
             let hbox = new St.BoxLayout({ vertical: false });
             if (settingKey.indexOf('-separator-') != -1) {
-                this.vbox.add(hbox);
+                this.vbox.add_child(hbox);
                 continue;
             }
             if (!settings.get_strv(settingKey)[0])
                 continue;
             let [keyval, mods] = Gtk.accelerator_parse(settings.get_strv(settingKey)[0]);
-            hbox.add(new St.Label({ text: _(Prefs.GLOBAL_KEYBINDINGS[settingKey]) }));
-            hbox.add(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods) }), { expand: true });
-            this.vbox.add(hbox);
+            hbox.add_child(new St.Label({ text: _(Prefs.GLOBAL_KEYBINDINGS[settingKey]) }));
+            hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));
+            this.vbox.add_child(hbox);
         }
         
-        this.vbox.add(new St.Label({ text: _("Internal") }));
+        this.vbox.add_child(new St.Label({ text: _("Internal") }));
         
         for (let i = 0; i < Prefs.OTHER_SHORTCUTS.length; i++) {
             if (Prefs.OTHER_SHORTCUTS[i].desc.indexOf('-separator-') != -1) {
-                this.vbox.add(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
+                this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
                 continue;
             }
             let hbox = new St.BoxLayout({ vertical: false });
-            hbox.add(new St.Label({ text: _(Prefs.OTHER_SHORTCUTS[i].desc) }));
-            hbox.add(new St.Label({ text: _(Prefs.OTHER_SHORTCUTS[i].shortcut) }), { expand: true });
-            this.vbox.add(hbox);
+            hbox.add_child(new St.Label({ text: _(Prefs.OTHER_SHORTCUTS[i].desc) }));
+            hbox.add_child(new St.Label({ text: _(Prefs.OTHER_SHORTCUTS[i].shortcut), x_expand: true }));
+            this.vbox.add_child(hbox);
         }
         
-        this.vbox.add(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
+        this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
         
         for (let settingKey in Prefs.INTERNAL_KEYBINDINGS) {
             if (settingKey.indexOf('-separator-') != -1) {
-                this.vbox.add(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
+                this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
                 continue;
             }
             let hbox = new St.BoxLayout({ vertical: false });
             if (!settings.get_strv(settingKey)[0])
                 continue;
             let [keyval, mods] = Gtk.accelerator_parse(settings.get_strv(settingKey)[0]);
-            hbox.add(new St.Label({ text: _(Prefs.INTERNAL_KEYBINDINGS[settingKey]) }));
-            hbox.add(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods) }), { expand: true });
-            this.vbox.add(hbox);
+            hbox.add_child(new St.Label({ text: _(Prefs.INTERNAL_KEYBINDINGS[settingKey]) }));
+            hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));
+            this.vbox.add_child(hbox);
         }
         
         let mediaKeysSettings;
         try { mediaKeysSettings = Convenience.getSettings(MEDIA_KEYS_SCHEMA); } catch(e) { return; }
-        this.vbox.add(new St.Label({ text: _("System") }));
+        this.vbox.add_child(new St.Label({ text: _("System") }));
         
         for (let settingKey in MEDIA_KEYS_KEYS) {
             if (!mediaKeysSettings.settings_schema.has_key(settingKey))
@@ -1137,9 +1137,9 @@ var DrawingHelper = new Lang.Class({
             let shortcut = GS_VERSION < '3.33.0' ? mediaKeysSettings.get_string(settingKey) : mediaKeysSettings.get_strv(settingKey)[0];
             let [keyval, mods] = Gtk.accelerator_parse(shortcut);
             let hbox = new St.BoxLayout({ vertical: false });
-            hbox.add(new St.Label({ text: _(MEDIA_KEYS_KEYS[settingKey]) }));
-            hbox.add(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods) }), { expand: true });
-            this.vbox.add(hbox);
+            hbox.add_child(new St.Label({ text: _(MEDIA_KEYS_KEYS[settingKey]) }));
+            hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));
+            this.vbox.add_child(hbox);
         }
     },
     
@@ -1370,9 +1370,11 @@ const DrawingMenu = new Lang.Class({
             });
         }
         
-        getActor(item).add(getActor(slider), { expand: true });
-        getActor(item).add(label);
-        getActor(item).connect('key-press-event', slider.onKeyPressEvent.bind(slider));
+        getActor(slider).x_expand = true;
+        getActor(item).add_child(getActor(slider));
+        getActor(item).add_child(label);
+        if (slider.onKeyPressEvent)
+            getActor(item).connect('key-press-event', slider.onKeyPressEvent.bind(slider));
         menu.addMenuItem(item);
     },
     
@@ -1568,7 +1570,8 @@ const DrawingMenuEntry = new Lang.Class({
             style_class: 'search-entry draw-on-your-screen-menu-entry',
             track_hover: true,
             reactive: true,
-            can_focus: true
+            can_focus: true,
+            x_expand: true
         });
         
         this.entry.set_primary_icon(new St.Icon({ style_class: 'search-entry-icon',
@@ -1583,7 +1586,7 @@ const DrawingMenuEntry = new Lang.Class({
         });
         this.entry.connect('secondary-icon-clicked', this._reset.bind(this));
         
-        getActor(this.item).add(this.entry, { expand: true });
+        getActor(this.item).add_child(this.entry);
         getActor(this.item).connect('notify::mapped', (actor) => {
             if (actor.mapped) {
                 this.entry.set_text(this.params.initialTextGetter());
