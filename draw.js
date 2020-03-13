@@ -1075,10 +1075,11 @@ var DrawingHelper = new Lang.Class({
     Extends: St.ScrollView,
     
     _init: function(params, monitor) {
+        params.style_class = 'osd-window draw-on-your-screen-helper';
         this.parent(params);
         this.monitor = monitor;
         this.hide();
-        this.vbox = new St.BoxLayout({ style_class: 'osd-window draw-on-your-screen-helper', vertical: true });
+        this.vbox = new St.BoxLayout({ vertical: true });
         this.add_actor(this.vbox);
         this.vbox.add_child(new St.Label({ text: _("Global") }));
         

@@ -13,17 +13,22 @@
 }
 
  /* "Ctrl + F1" on-screen-display */
-
+ 
 .draw-on-your-screen-helper {
-    margin: 0;
+    margin: 0px;
+}
+
+.draw-on-your-screen-helper > StBoxLayout {
+    margin: 8px;
+    margin-right: 16px;
     spacing: 0.5em;
 }
 
-.draw-on-your-screen-helper StBoxLayout {
+.draw-on-your-screen-helper > StBoxLayout StBoxLayout {
     spacing: 7em;
 }
 
-.draw-on-your-screen-helper StBoxLayout StLabel {
+.draw-on-your-screen-helper > StBoxLayout StBoxLayout StLabel {
     text-align: right;
     font-weight: normal;
 }
