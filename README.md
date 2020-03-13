@@ -21,7 +21,7 @@ Then save your beautiful work by taking a screenshot.
 3. **Change the directory name** to `drawOnYourScreen@abakkk.framagit.org`
 4. Xorg: type `alt + F2` and `r` to restart gnome-shell  
    Wayland: restart or re-login
-5. Enable the extension in gnome-tweaks
+5. Enable the extension in gnome-tweaks or gnome-shell-extension-prefs
 6. `Super + Alt + D` to test
 7. [https://framagit.org/abakkk/DrawOnYourScreen/issues](https://framagit.org/abakkk/DrawOnYourScreen/issues) to say it doesn't work
 
