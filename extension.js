@@ -262,18 +262,22 @@ var AreaManager = new Lang.Class({
             // dash-to-dock
             let dtdContainers = Main.uiGroup.get_children().filter((actor) => {
                 return actor.name && actor.name == 'dashtodockContainer' &&
-                       actor._delegate &&
+                       ((actor._delegate &&
                        actor._delegate._monitorIndex !== undefined &&
-                       actor._delegate._monitorIndex == activeIndex;
+                       actor._delegate._monitorIndex == activeIndex) ||
+                       // dtd v68+
+                       (actor._monitorIndex !== undefined &&
+                       actor._monitorIndex == activeIndex));
             });
             
             // for simplicity, we assume that main dash-to-panel panel is displayed on primary monitor
             // and we hide all secondary panels together if the active area is not on the primary
             let name = activeIndex == Main.layoutManager.primaryIndex ? 'panelBox' : 'dashtopanelSecondaryPanelBox';
             let panelBoxes = Main.uiGroup.get_children().filter((actor) => {
-                return actor.name && actor.name == name;
+                return actor.name && actor.name == name ||
+                       // dtp v37+
+                       actor.get_children().length && actor.get_children()[0].name && actor.get_children()[0].name == name;
             });
-            
             
             let actorToHide = dtdContainers.concat(panelBoxes);
             this.hiddenList = [];
