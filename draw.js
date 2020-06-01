@@ -1079,6 +1079,9 @@ var DrawingHelper = new Lang.Class({
         this.parent(params);
         this.monitor = monitor;
         this.hide();
+    },
+    
+    _populate: function() {
         this.vbox = new St.BoxLayout({ vertical: true });
         this.add_actor(this.vbox);
         this.vbox.add_child(new St.Label({ text: _("Global") }));
@@ -1147,6 +1150,9 @@ var DrawingHelper = new Lang.Class({
     },
     
     showHelp: function() {
+        if (!this.vbox)
+            this._populate();
+        
         this.opacity = 0;
         this.show();
         
