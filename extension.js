@@ -339,7 +339,7 @@ var AreaManager = new Lang.Class({
     },
     
     // use level -1 to set no level (null)
-    showOsd: function(emitter, iconName, label, level) {
+    showOsd: function(emitter, iconName, label, color, level) {
         if (this.osdDisabled)
             return;
         let activeIndex = this.areas.indexOf(this.activeArea);
@@ -358,6 +358,16 @@ var AreaManager = new Lang.Class({
             let icon = iconName && new Gio.ThemedIcon({ name: iconName });
             Main.osdWindowManager.show(activeIndex, icon || this.enterGicon, label, level, maxLevel);
             Main.osdWindowManager._osdWindows[activeIndex]._label.get_clutter_text().set_use_markup(true);
+            
+            if (color) {
+                Main.osdWindowManager._osdWindows[activeIndex]._icon.set_style(`color:${color};`);
+                Main.osdWindowManager._osdWindows[activeIndex]._label.set_style(`color:${color};`);
+                let osdColorChangedHandler = Main.osdWindowManager._osdWindows[activeIndex]._label.connect('notify::text', () => {
+                    Main.osdWindowManager._osdWindows[activeIndex]._icon.set_style(`color:;`);
+                    Main.osdWindowManager._osdWindows[activeIndex]._label.set_style(`color:;`);
+                    Main.osdWindowManager._osdWindows[activeIndex]._label.disconnect(osdColorChangedHandler);
+                });
+            }
             
             if (level === 0) {
                 Main.osdWindowManager._osdWindows[activeIndex]._label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);

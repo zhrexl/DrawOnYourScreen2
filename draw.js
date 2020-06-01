@@ -108,7 +108,7 @@ const getJsonFiles = function() {
 var DrawingArea = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingArea',
     Extends: St.DrawingArea,
-    Signals: { 'show-osd': { param_types: [GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE] },
+    Signals: { 'show-osd': { param_types: [GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE] },
                'stop-drawing': {} },
 
     _init: function(params, monitor, helper, loadPersistent) {
@@ -378,7 +378,7 @@ var DrawingArea = new Lang.Class({
             if (this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.DRAWING) {
                 this.currentElement.state = TextState.WRITING;
                 this.currentElement.text = '';
-                this.emit('show-osd', null, _("Type your text\nand press Enter"), -1);
+                this.emit('show-osd', null, _("Type your text\nand press Enter"), "", -1);
                 this._updateTextCursorTimeout();
                 this.textHasCursor = true;
                 this._redisplay();
@@ -525,38 +525,39 @@ var DrawingArea = new Lang.Class({
             this.currentElement.color = this.currentColor.to_string();
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span foreground="${this.currentColor.to_string()}">${this.currentColor.to_string()}</span>`, -1);
+        // Foreground color markup is not displayed since 3.36, use style instead but the transparency is lost.
+        this.emit('show-osd', null, this.currentColor.to_string(), this.currentColor.to_string().slice(0, 7), -1);
     },
     
     selectShape: function(shape) {
         this.currentShape = shape;
-        this.emit('show-osd', null, _(ShapeNames[shape]), -1);
+        this.emit('show-osd', null, _(ShapeNames[shape]), "", -1);
         this.updatePointerCursor();
     },
     
     toggleFill: function() {
         this.fill = !this.fill;
-        this.emit('show-osd', null, this.fill ? _("Fill") : _("Stroke"), -1);
+        this.emit('show-osd', null, this.fill ? _("Fill") : _("Stroke"), "", -1);
     },
     
     toggleDash: function() {
         this.dashedLine = !this.dashedLine;
-        this.emit('show-osd', null, this.dashedLine ? _("Dashed line") : _("Full line"), -1);
+        this.emit('show-osd', null, this.dashedLine ? _("Dashed line") : _("Full line"), "", -1);
     },
     
     incrementLineWidth: function(increment) {
         this.currentLineWidth = Math.max(this.currentLineWidth + increment, 0);
-        this.emit('show-osd', null, this.currentLineWidth + " " + _("px"), 2 * this.currentLineWidth);
+        this.emit('show-osd', null, this.currentLineWidth + " " + _("px"), "", 2 * this.currentLineWidth);
     },
     
     toggleLineJoin: function() {
         this.currentLineJoin = this.currentLineJoin == 2 ? 0 : this.currentLineJoin + 1;
-        this.emit('show-osd', null, _(LineJoinNames[this.currentLineJoin]), -1);
+        this.emit('show-osd', null, _(LineJoinNames[this.currentLineJoin]), "", -1);
     },
     
     toggleLineCap: function() {
         this.currentLineCap = this.currentLineCap == 2 ? 0 : this.currentLineCap + 1;
-        this.emit('show-osd', null, _(LineCapNames[this.currentLineCap]), -1);
+        this.emit('show-osd', null, _(LineCapNames[this.currentLineCap]), "", -1);
     },
     
     toggleFontWeight: function() {
@@ -565,7 +566,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.weight = this.currentFontWeight;
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_weight="${FontWeightNames[this.currentFontWeight].toLowerCase()}">${_(FontWeightNames[this.currentFontWeight])}</span>`, -1);
+        this.emit('show-osd', null, `<span font_weight="${FontWeightNames[this.currentFontWeight].toLowerCase()}">${_(FontWeightNames[this.currentFontWeight])}</span>`, "", -1);
     },
     
     toggleFontStyle: function() {
@@ -574,7 +575,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.style = this.currentFontStyle;
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_style="${FontStyleNames[this.currentFontStyle].toLowerCase()}">${_(FontStyleNames[this.currentFontStyle])}</span>`, -1);
+        this.emit('show-osd', null, `<span font_style="${FontStyleNames[this.currentFontStyle].toLowerCase()}">${_(FontStyleNames[this.currentFontStyle])}</span>`, "", -1);
     },
     
     toggleFontFamily: function() {
@@ -584,7 +585,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.family = currentFontFamily;
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_family="${currentFontFamily}">${_(currentFontFamily)}</span>`, -1);
+        this.emit('show-osd', null, `<span font_family="${currentFontFamily}">${_(currentFontFamily)}</span>`, "", -1);
     },
     
     toggleHelp: function() {
@@ -729,7 +730,7 @@ var DrawingArea = new Lang.Class({
         
         GLib.file_set_contents(path, contents);
         if (notify)
-            this.emit('show-osd', 'document-save-symbolic', name, -1);
+            this.emit('show-osd', 'document-save-symbolic', name, "", -1);
         if (name != Me.metadata['persistent-file-name']) {
             this.jsonName = name;
             this.lastJsonContents = contents;
@@ -771,7 +772,7 @@ var DrawingArea = new Lang.Class({
         this.elements.push(...JSON.parse(contents).map(object => new DrawingElement(object)));
         
         if (notify)
-            this.emit('show-osd', 'document-open-symbolic', name, -1);
+            this.emit('show-osd', 'document-open-symbolic', name, "", -1);
         if (name != Me.metadata['persistent-file-name']) {
             this.jsonName = name;
             this.lastJsonContents = contents;
@@ -1436,13 +1437,15 @@ const DrawingMenu = new Lang.Class({
         
         Mainloop.timeout_add(0, () => {
             for (let i = 1; i < this.area.colors.length; i++) {
-                let text = `<span foreground="${this.area.colors[i].to_string()}">${this.area.colors[i].to_string()}</span>`;
+                let text = this.area.colors[i].to_string();
                 let iCaptured = i;
                 let colorItem = item.menu.addAction(text, () => {
                     this.area.currentColor = this.area.colors[iCaptured];
                     item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
                 });
                 colorItem.label.get_clutter_text().set_use_markup(true);
+                // Foreground color markup is not displayed since 3.36, use style instead but the transparency is lost.
+                colorItem.label.set_style(`color:${this.area.colors[i].to_string().slice(0, 7)};`);
             }
             return GLib.SOURCE_REMOVE;
         });
