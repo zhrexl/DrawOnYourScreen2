@@ -1136,6 +1136,8 @@ var DrawingHelper = new Lang.Class({
             if (!mediaKeysSettings.settings_schema.has_key(settingKey))
                 continue;
             let shortcut = GS_VERSION < '3.33.0' ? mediaKeysSettings.get_string(settingKey) : mediaKeysSettings.get_strv(settingKey)[0];
+            if (!shortcut)
+                continue;
             let [keyval, mods] = Gtk.accelerator_parse(shortcut);
             let hbox = new St.BoxLayout({ vertical: false });
             hbox.add_child(new St.Label({ text: _(MEDIA_KEYS_KEYS[settingKey]) }));
