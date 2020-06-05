@@ -36,23 +36,27 @@
     -drawing-dash-array-on: 5px;
     -drawing-dash-array-off: 15px;
     -drawing-dash-offset: 0px;
+    -drawing-background-color: #2e3436;
+    -grid-overlay-gap: 10px;
+    -grid-overlay-line-width: 0.4px;
+    -grid-overlay-interline-width: 0.2px;
+    -grid-overlay-color: Gray;
+    /*-drawing-square-area-width: 512px;*/
+    /*-drawing-square-area-height: 512px;*/
+    font-family: Cantarell;
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Palette */
+.draw-on-your-screen {
     -drawing-color1: HotPink;
     -drawing-color2: Cyan;
     -drawing-color3: yellow;
     -drawing-color4: Orangered;
     -drawing-color5: Chartreuse;
     -drawing-color6: DarkViolet;
-    -drawing-color7: #ffffff;
-    -drawing-color8: rgba(130, 130, 130, 0.3);
-    -drawing-color9: rgb(0, 0, 0);
-    -drawing-background-color: #2e3436;
-    -grid-overlay-gap: 10px;
-    -grid-overlay-line-width: 0.4px;
-    -grid-overlay-interline-width: 0.2px;
-    -grid-overlay-color: gray;
-    /*-drawing-square-area-width: 512px;*/
-    /*-drawing-square-area-height: 512px;*/
-    font-family: Cantarell;
-    font-weight: normal;
-    font-style: normal;
+    -drawing-color7: White;
+    -drawing-color8: Gray;
+    -drawing-color9: Black;
 }
