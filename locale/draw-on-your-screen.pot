@@ -72,7 +72,7 @@ msgstr ""
 
 msgid ""
 "Type your text\n"
-"and press Enter"
+"and press <i>Escape</i>"
 msgstr ""
 
 msgid "Screenshot"

@@ -248,13 +248,13 @@ var DrawingArea = new Lang.Class({
         let [x, y] = event.get_coords();
         let shiftPressed = event.has_shift_modifier();
         
-        // stop writing
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING ) {
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING) {
+            // finish writing
             this._stopWriting();
         }
         
-        // hide helper
         if (this.helper.visible) {
+            // hide helper
             this.helper.hideHelp();
             return Clutter.EVENT_STOP;
         }
@@ -296,31 +296,27 @@ var DrawingArea = new Lang.Class({
     },
     
     _onKeyPressed: function(actor, event) {
-        if (event.get_key_symbol() == Clutter.KEY_Escape) {
-            if (this.helper.visible)
-                this.helper.hideHelp();
-            else
-                this.emit('stop-drawing');
-            return Clutter.EVENT_STOP;
-            
-        } else if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING) {
-            if (event.get_key_symbol() == Clutter.KEY_BackSpace) {
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING) {
+            if (event.get_key_symbol() == Clutter.KEY_Escape) {
+                // finish writing
+                this._stopWriting();
+            } else if (event.get_key_symbol() == Clutter.KEY_BackSpace) {
                 this.currentElement.text = this.currentElement.text.slice(0, -1);
                 this._updateTextCursorTimeout();
             } else if (event.has_control_modifier() && event.get_key_symbol() == 118) {
-            // Ctrl + V
+                // Ctrl + V
                 St.Clipboard.get_default().get_text(St.ClipboardType.CLIPBOARD, (clipBoard, clipText) => {
                     this.currentElement.text += clipText;
                     this._updateTextCursorTimeout();
                     this._redisplay();
                 });
-                return Clutter.EVENT_STOP;
             } else if (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == 65421) {
-            // stop writing
-            // Clutter.KEY_Return is "Enter" and 65421 is KP_Enter
-                this._stopWriting();
+                // Clutter.KEY_Return is "Enter" and 65421 is KP_Enter
+                // start a new line
+                let startNewLine = true;
+                this._stopWriting(startNewLine);
             } else if (event.has_control_modifier()){
-            // it's a shortcut, do not write text
+                // it is a shortcut, do not write text
                 return Clutter.EVENT_PROPAGATE;
             } else {
                 let unicode = event.get_key_unicode();
@@ -328,6 +324,13 @@ var DrawingArea = new Lang.Class({
                 this._updateTextCursorTimeout();
             }
             this._redisplay();
+            return Clutter.EVENT_STOP;
+        
+        } else if (event.get_key_symbol() == Clutter.KEY_Escape) {
+            if (this.helper.visible)
+                this.helper.hideHelp();
+            else
+                this.emit('stop-drawing');
             return Clutter.EVENT_STOP;
             
         } else {
@@ -407,11 +410,11 @@ var DrawingArea = new Lang.Class({
             (this.currentShape == Shapes.NONE ||
                 Math.hypot(this.currentElement.points[1][0] - this.currentElement.points[0][0], this.currentElement.points[1][1] - this.currentElement.points[0][1]) > 3)) {
             
-            // start writing
             if (this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.DRAWING) {
+                // start writing
                 this.currentElement.state = TextState.WRITING;
                 this.currentElement.text = '';
-                this.emit('show-osd', null, _("Type your text\nand press Enter"), "", -1);
+                this.emit('show-osd', null, _("Type your text\nand press <i>Escape</i>"), "", -1);
                 this._updateTextCursorTimeout();
                 this.textHasCursor = true;
                 this._redisplay();
@@ -445,11 +448,23 @@ var DrawingArea = new Lang.Class({
         this.updatePointerCursor(controlPressed);
     },
     
-    _stopWriting: function() {
+    _stopWriting: function(startNewLine) {
         if (this.currentElement.text.length > 0)
             this.elements.push(this.currentElement);
-        this.currentElement = null;
-        this._stopTextCursorTimeout();
+        if (startNewLine && this.currentElement.points.length == 2) {
+            // copy object, the original keep existing in this.elements
+            this.currentElement = Object.create(this.currentElement);
+            let height = Math.abs(this.currentElement.points[1][1] - this.currentElement.points[0][1]);
+            // define a new 'points' array, the original keep existing in this.elements
+            this.currentElement.points = [
+                [this.currentElement.points[0][0], this.currentElement.points[0][1] + height],
+                [this.currentElement.points[1][0], this.currentElement.points[1][1] + height]
+            ];
+            this.currentElement.text = "";
+        } else {
+            this.currentElement = null;
+            this._stopTextCursorTimeout();
+        }
         this._redisplay();
     },
     
