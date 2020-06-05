@@ -176,6 +176,7 @@ var AreaManager = new Lang.Class({
             'open-previous-json': this.activeArea.loadPreviousJson.bind(this.activeArea),
             'open-next-json': this.activeArea.loadNextJson.bind(this.activeArea),
             'toggle-background': this.activeArea.toggleBackground.bind(this.activeArea),
+            'toggle-grid': this.activeArea.toggleGrid.bind(this.activeArea),
             'toggle-square-area': this.activeArea.toggleSquareArea.bind(this.activeArea),
             'increment-line-width': () => this.activeArea.incrementLineWidth(1),
             'decrement-line-width': () => this.activeArea.incrementLineWidth(-1),

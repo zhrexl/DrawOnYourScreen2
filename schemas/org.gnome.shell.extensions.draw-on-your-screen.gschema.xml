@@ -53,8 +53,13 @@
     </key>
     <key type="as" name="toggle-background">
       <default>["&lt;Primary&gt;b"]</default>
-      <summary>toggle background</summary>
-      <description>toggle background</description>
+      <summary>toggle drawing background</summary>
+      <description>toggle drawing background</description>
+    </key>
+    <key type="as" name="toggle-grid">
+      <default>["&lt;Primary&gt;g"]</default>
+      <summary>toggle grid overlay</summary>
+      <description>toggle grid overlay</description>
     </key>
     <key type="as" name="toggle-panel-and-dock-visibility">
       <default>["&lt;Primary&gt;h"]</default>

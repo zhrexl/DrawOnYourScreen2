@@ -123,6 +123,7 @@ var DrawingArea = new Lang.Class({
         this.currentElement = null;
         this.currentShape = Shapes.NONE;
         this.isSquareArea = false;
+        this.hasGrid = false;
         this.hasBackground = false;
         this.textHasCursor = false;
         this.dashedLine = false;
@@ -160,6 +161,10 @@ var DrawingArea = new Lang.Class({
             this.fontFamily = font.get_family();
             this.currentFontWeight = font.get_weight();
             this.currentFontStyle = font.get_style();
+            this.gridGap = themeNode.get_length('-grid-overlay-gap') || 10;
+            this.gridLineWidth = themeNode.get_length('-grid-overlay-line-width') || 0.4;
+            this.gridInterlineWidth = themeNode.get_length('-grid-overlay-interline-width') || 0.2;
+            this.gridColor = themeNode.get_color('-grid-overlay-color');
             this.squareAreaWidth = themeNode.get_length('-drawing-square-area-width');
             this.squareAreaHeight = themeNode.get_length('-drawing-square-area-height');
         } catch(e) {
@@ -178,6 +183,11 @@ var DrawingArea = new Lang.Class({
         this.currentFontWeight = this.currentFontWeight > 500 ? 1 : 0 ;
         // font style enum order of Cairo and Pango are different
         this.currentFontStyle = this.currentFontStyle == 2 ? 1 : ( this.currentFontStyle == 1 ? 2 : 0);
+        
+        this.gridGap = this.gridGap && this.gridGap >= 1 ? this.gridGap : 10;
+        this.gridLineWidth = this.gridLineWidth || 0.4;
+        this.gridInterlineWidth = this.gridInterlineWidth || 0.2;
+        this.gridColor = this.gridColor && this.gridColor.alpha ? this.gridColor : Clutter.Color.new(127, 127, 127, 255);
     },
     
     vfunc_repaint: function() {
@@ -205,6 +215,26 @@ var DrawingArea = new Lang.Class({
         if (this.currentElement) {
             this.currentElement.buildCairo(cr, this.textHasCursor);
             cr.stroke();
+        }
+        
+        if (this.isInDrawingMode && this.hasGrid && this.gridGap && this.gridGap >= 1) {
+            Clutter.cairo_set_source_color(cr, this.gridColor);
+            
+            let [gridX, gridY] = [this.gridGap, this.gridGap];
+            while (gridX < this.monitor.width) {
+                cr.setLineWidth((gridX / this.gridGap) % 5 ? this.gridInterlineWidth : this.gridLineWidth);
+                cr.moveTo(gridX, 0);
+                cr.lineTo(gridX, this.monitor.height);
+                gridX += this.gridGap;
+                cr.stroke();
+            }
+            while (gridY < this.monitor.height) {
+                cr.setLineWidth((gridY / this.gridGap) % 5 ? this.gridInterlineWidth : this.gridLineWidth);
+                cr.moveTo(0, gridY);
+                cr.lineTo(this.monitor.width, gridY);
+                gridY += this.gridGap;
+                cr.stroke();
+            }
         }
         
         cr.$dispose();
@@ -500,6 +530,11 @@ var DrawingArea = new Lang.Class({
         this.get_parent().set_background_color(this.hasBackground ? this.activeBackgroundColor : null);
     },
     
+    toggleGrid: function() {
+        this.hasGrid = !this.hasGrid;
+        this._redisplay();
+    },
+    
     toggleSquareArea: function() {
         this.isSquareArea = !this.isSquareArea;
         if (this.isSquareArea) {
@@ -596,6 +631,7 @@ var DrawingArea = new Lang.Class({
     },
     
     enterDrawingMode: function() {
+        this.isInDrawingMode = true;
         this.stageKeyPressedHandler = global.stage.connect('key-press-event', this._onStageKeyPressed.bind(this));
         this.stageKeyReleasedHandler = global.stage.connect('key-release-event', this._onStageKeyReleased.bind(this));
         this.keyPressedHandler = this.connect('key-press-event', this._onKeyPressed.bind(this));
@@ -607,6 +643,7 @@ var DrawingArea = new Lang.Class({
     },
     
     leaveDrawingMode: function(save) {
+        this.isInDrawingMode = false;
         if (this.stageKeyPressedHandler) {
             global.stage.disconnect(this.stageKeyPressedHandler);
             this.stageKeyPressedHandler = null;
@@ -1308,6 +1345,7 @@ const DrawingMenu = new Lang.Class({
         let manager = Extension.manager;
         this._addSwitchItemWithCallback(this.menu, _("Hide panel and dock"), manager.hiddenList ? true : false, manager.togglePanelAndDockOpacity.bind(manager));
         this._addSwitchItemWithCallback(this.menu, _("Add a drawing background"), this.area.hasBackground, this.area.toggleBackground.bind(this.area));
+        this._addSwitchItemWithCallback(this.menu, _("Add a grid overlay"), this.area.hasGrid, this.area.toggleGrid.bind(this.area));
         this._addSwitchItemWithCallback(this.menu, _("Square drawing area"), this.area.isSquareArea, this.area.toggleSquareArea.bind(this.area));
         this._addSeparator(this.menu);
         

@@ -65,6 +65,7 @@ var INTERNAL_KEYBINDINGS = {
     '-separator-4': '',
     'toggle-panel-and-dock-visibility': "Hide panel and dock",
     'toggle-background': "Add a drawing background",
+    'toggle-grid': "Add a grid overlay",
     'toggle-square-area': "Square drawing area",
     '-separator-5': '',
     'open-previous-json': "Open previous drawing",

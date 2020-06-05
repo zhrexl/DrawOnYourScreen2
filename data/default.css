@@ -46,6 +46,10 @@
     -drawing-color8: rgba(130, 130, 130, 0.3);
     -drawing-color9: rgb(0, 0, 0);
     -drawing-background-color: #2e3436;
+    -grid-overlay-gap: 10px;
+    -grid-overlay-line-width: 0.4px;
+    -grid-overlay-interline-width: 0.2px;
+    -grid-overlay-color: gray;
     /*-drawing-square-area-width: 512px;*/
     /*-drawing-square-area-height: 512px;*/
     font-family: Cantarell;

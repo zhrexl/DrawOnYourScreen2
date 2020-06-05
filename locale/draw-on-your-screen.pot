@@ -199,6 +199,9 @@ msgstr ""
 msgid "Add a drawing background"
 msgstr ""
 
+msgid "Add a grid overlay"
+msgstr ""
+
 msgid "Square drawing area"
 msgstr ""
 
