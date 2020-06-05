@@ -297,7 +297,10 @@ var DrawingArea = new Lang.Class({
     
     _onKeyPressed: function(actor, event) {
         if (event.get_key_symbol() == Clutter.KEY_Escape) {
-            this.emit('stop-drawing');
+            if (this.helper.visible)
+                this.helper.hideHelp();
+            else
+                this.emit('stop-drawing');
             return Clutter.EVENT_STOP;
             
         } else if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING) {
