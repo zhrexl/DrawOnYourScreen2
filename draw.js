@@ -1239,6 +1239,7 @@ const DrawingMenu = new Lang.Class({
         this.menu.actor.add_style_class_name('background-menu draw-on-your-screen-menu');
         this.menu.actor.set_style('max-height:' + monitor.height + 'px;');
         this.menu.actor.hide();
+        this.hasSeparators = monitor.height >= 750;
         
         // do not close the menu on item activated
         this.menu.itemActivated = () => {};
@@ -1597,9 +1598,11 @@ const DrawingMenu = new Lang.Class({
     },
     
     _addSeparator: function(menu) {
-        let separatorItem = new PopupMenu.PopupSeparatorMenuItem(' ');
-        getActor(separatorItem).add_style_class_name('draw-on-your-screen-menu-separator-item');
-        menu.addMenuItem(separatorItem);
+        if (this.hasSeparators) {
+            let separatorItem = new PopupMenu.PopupSeparatorMenuItem(' ');
+            getActor(separatorItem).add_style_class_name('draw-on-your-screen-menu-separator-item');
+            menu.addMenuItem(separatorItem);
+        }
     }
 });
 
