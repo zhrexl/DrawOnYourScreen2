@@ -994,7 +994,8 @@ const DrawingElement = new Lang.Class({
             
         } else if (shape == Shapes.TEXT && points.length == 2) {
             this.rotate(cr, trans.angle, trans.center[0], trans.center[1]);
-            if (this.state == TextState.DRAWING)
+            // the state property is undefined if the element is loaded from json file
+            if (this.state !== undefined && this.state == TextState.DRAWING)
                 cr.rectangle(points[0][0], points[0][1], points[1][0] - points[0][0], points[1][1] - points[0][1]);
             cr.selectFontFace(this.font.family, this.font.style, this.font.weight);
             cr.setFontSize(Math.abs(points[1][1] - points[0][1]));
