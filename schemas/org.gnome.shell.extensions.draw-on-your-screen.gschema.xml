@@ -81,6 +81,11 @@
       <summary>select rectangle</summary>
       <description>select rectangle</description>
     </key>
+    <key type="as" name="select-polygon-shape">
+      <default>["&lt;Primary&gt;y"]</default>
+      <summary>select polygon</summary>
+      <description>select polygon</description>
+    </key>
     <key type="as" name="select-line-shape">
       <default>["&lt;Primary&gt;l"]</default>
       <summary>select line</summary>

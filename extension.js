@@ -191,6 +191,7 @@ var AreaManager = new Lang.Class({
             'select-ellipse-shape': () => this.activeArea.selectShape(Draw.Shapes.ELLIPSE),
             'select-rectangle-shape': () => this.activeArea.selectShape(Draw.Shapes.RECTANGLE),
             'select-text-shape': () => this.activeArea.selectShape(Draw.Shapes.TEXT),
+            'select-polygon-shape': () => this.activeArea.selectShape(Draw.Shapes.POLYGON),
             'toggle-font-family': this.activeArea.toggleFontFamily.bind(this.activeArea),
             'toggle-font-weight': this.activeArea.toggleFontWeight.bind(this.activeArea),
             'toggle-font-style': this.activeArea.toggleFontStyle.bind(this.activeArea),

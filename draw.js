@@ -56,9 +56,9 @@ const LINECAP_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child(
 const DASHED_LINE_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child('dashed-line-symbolic.svg').get_path();
 const FULL_LINE_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child('full-line-symbolic.svg').get_path();
 
-var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4 };
+var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5 };
 const TextState = { DRAWING: 0, WRITING: 1 };
-const ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text" };
+const ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon" };
 const LineCapNames = { 0: 'Butt', 1: 'Round', 2: 'Square' };
 const LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
 const FontWeightNames = { 0: 'Normal', 1: 'Bold' };
@@ -325,7 +325,16 @@ var DrawingArea = new Lang.Class({
             }
             this._redisplay();
             return Clutter.EVENT_STOP;
-        
+            
+        } else if (this.currentElement && this.currentElement.shape == Shapes.POLYGON &&
+                   (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == 65421)) {
+            // copy last point
+            let lastPoint = this.currentElement.points[this.currentElement.points.length - 1];
+            let secondToLastPoint = this.currentElement.points[this.currentElement.points.length - 2];
+            if (!getNearness(secondToLastPoint, lastPoint, 3))
+                this.currentElement.points.push([lastPoint[0], lastPoint[1]]);
+            return Clutter.EVENT_STOP;
+            
         } else if (event.get_key_symbol() == Clutter.KEY_Escape) {
             if (this.helper.visible)
                 this.helper.hideHelp();
@@ -382,6 +391,11 @@ var DrawingArea = new Lang.Class({
             this.currentElement.state = TextState.DRAWING;
         }
         
+        if (this.currentShape == Shapes.POLYGON) {
+            this.currentElement.points.push([startX, startY]);
+            this.emit('show-osd', null, _("Press <i>Enter</i>\nto mark vertices"), "", -1);
+        }
+        
         this.motionHandler = this.connect('motion-event', (actor, event) => {
             if (this.spaceKeyPressed)
                 return;
@@ -405,11 +419,19 @@ var DrawingArea = new Lang.Class({
             this.buttonReleasedHandler = null;
         }
         
+        // skip when a polygon has not at least 3 points
+        if (this.currentElement && this.currentElement.shape == Shapes.POLYGON && this.currentElement.points.length < 3)
+            this.currentElement = null;
+        
         // skip when the size is too small to be visible (3px) (except for free drawing)
-        if (this.currentElement && this.currentElement.points.length >= 2 &&
-            (this.currentShape == Shapes.NONE ||
-                Math.hypot(this.currentElement.points[1][0] - this.currentElement.points[0][0], this.currentElement.points[1][1] - this.currentElement.points[0][1]) > 3)) {
-            
+        if (this.currentElement && this.currentElement.shape != Shapes.NONE && this.currentElement.points.length >= 2) {
+            let lastPoint = this.currentElement.points[this.currentElement.points.length - 1];
+            let secondToLastPoint = this.currentElement.points[this.currentElement.points.length - 2];
+            if (getNearness(secondToLastPoint, lastPoint, 3))
+                this.currentElement.points.pop();
+        }
+        
+        if (this.currentElement && this.currentElement.points.length >= 2) {
             if (this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.DRAWING) {
                 // start writing
                 this.currentElement.state = TextState.WRITING;
@@ -436,11 +458,15 @@ var DrawingArea = new Lang.Class({
         if (this.currentElement.shape == Shapes.NONE)
             this.currentElement.addPoint(x, y, controlPressed);
         else if ((this.currentElement.shape == Shapes.RECTANGLE || this.currentElement.shape == Shapes.TEXT) && (controlPressed || this.currentElement.transform.active))
-            this.currentElement.transformRectangle(x, y);
+            this.currentElement.transformPolygon(x, y);
         else if (this.currentElement.shape == Shapes.ELLIPSE && (controlPressed || this.currentElement.transform.active))
             this.currentElement.transformEllipse(x, y);
         else if (this.currentElement.shape == Shapes.LINE && (controlPressed || this.currentElement.transform.active))
             this.currentElement.transformLine(x, y);
+        else if (this.currentElement.shape == Shapes.POLYGON && (controlPressed || this.currentElement.transform.active))
+            this.currentElement.transformPolygon(x, y);
+        else if (this.currentElement.shape == Shapes.POLYGON)
+            this.currentElement.points[this.currentElement.points.length - 1] = [x, y];
         else
             this.currentElement.points[1] = [x, y];
         
@@ -928,6 +954,7 @@ const DrawingElement = new Lang.Class({
         if (shape == Shapes.LINE && points.length == 3) {
             cr.moveTo(points[0][0], points[0][1]);
             cr.curveTo(points[0][0], points[0][1], points[1][0], points[1][1], points[2][0], points[2][1]);
+            
         } else if (shape == Shapes.NONE || shape == Shapes.LINE) {
             cr.moveTo(points[0][0], points[0][1]);
             for (let j = 1; j < points.length; j++) {
@@ -945,6 +972,16 @@ const DrawingElement = new Lang.Class({
         } else if (shape == Shapes.RECTANGLE && points.length == 2) {
             this.rotate(cr, trans.angle, trans.center[0], trans.center[1]);
             cr.rectangle(points[0][0], points[0][1], points[1][0] - points[0][0], points[1][1] - points[0][1]);
+            this.rotate(cr, - trans.angle, trans.center[0], trans.center[1]);
+        
+        } else if (shape == Shapes.POLYGON && points.length >= 2) {
+            this.rotate(cr, trans.angle, trans.center[0], trans.center[1]);
+            cr.moveTo(points[0][0], points[0][1]);
+            for (let j = 1; j < points.length; j++) {
+                cr.lineTo(points[j][0], points[j][1]);
+            }
+            if (shape == Shapes.POLYGON)
+                cr.closePath();
             this.rotate(cr, - trans.angle, trans.center[0], trans.center[1]);
             
         } else if (shape == Shapes.TEXT && points.length == 2) {
@@ -982,9 +1019,8 @@ const DrawingElement = new Lang.Class({
             
         } else if (this.shape == Shapes.NONE || this.shape == Shapes.LINE) {
             row += `<path ${attributes} d="M${points[0][0]} ${points[0][1]}`;
-            for (let i = 1; i < points.length; i++) {
+            for (let i = 1; i < points.length; i++)
                 row += ` L ${points[i][0]} ${points[i][1]}`;
-            }
             row += `${fill ? 'z' : ''}"/>`;
             
         } else if (this.shape == Shapes.ELLIPSE && points.length == 2 && this.transform.ratio != 1) {
@@ -1006,6 +1042,17 @@ const DrawingElement = new Lang.Class({
             row += `<rect ${attributes} x="${Math.min(points[0][0], points[1][0])}" y="${Math.min(points[0][1], points[1][1])}" ` +
                    `width="${Math.abs(points[1][0] - points[0][0])}" height="${Math.abs(points[1][1] - points[0][1])}"${transAttribute}/>`;
                    
+        } else if (this.shape == Shapes.POLYGON && points.length >= 3) {
+            let transAttribute = "";
+            if (this.transform.angle != 0) {
+                let angle = this.transform.angle * 180 / Math.PI;
+                transAttribute = ` transform="rotate(${angle}, ${this.transform.center[0]}, ${this.transform.center[1]})"`;
+            }
+            row += `<polygon ${attributes} points="`;
+            for (let i = 0; i < points.length; i++)
+                row += ` ${points[i][0]},${points[i][1]}`;
+            row += `"${transAttribute}/>`;
+        
         } else if (this.shape == Shapes.TEXT && points.length == 2) {
             let transAttribute = "";
             if (this.transform.angle != 0) {
@@ -1060,14 +1107,13 @@ const DrawingElement = new Lang.Class({
         cr.translate(-x, -y);
     },
     
-    transformRectangle: function(x, y) {
+    transformPolygon: function(x, y) {
         let points = this.points;
         if (points.length < 2 || points[0][0] == points[1][0] || points[0][1] == points[1][1])
             return;
             
-        this.transform.center = [points[0][0] + (points[1][0] - points[0][0]) / 2, points[0][1] + (points[1][1] - points[0][1]) / 2];
-        
-        this.transform.angle = getAngle(this.transform.center[0], this.transform.center[1], points[1][0], points[1][1], x, y);
+        this.transform.center = points.length >= 3 ? getCentroid(points) : getNaiveCenter(points);
+        this.transform.angle = getAngle(this.transform.center[0], this.transform.center[1], points[points.length - 1][0], points[points.length - 1][1], x, y);
         this.transform.active = true;
     },
     
@@ -1096,8 +1142,35 @@ const DrawingElement = new Lang.Class({
             this.points[2] = this.points[1];
         this.points[1] = [x, y];
         this.transform.active = true;
-    },
+    }
 });
+
+const getNearness = function(pointA, pointB, distance) {
+    return Math.hypot(pointB[0] - pointA[0], pointB[1] - pointA[1]) < distance;
+};
+
+// mean of the vertices, ok for regular polygons
+const getNaiveCenter = function(points) {
+    return points.reduce((accumulator, point) => accumulator = [accumulator[0] + point[0], accumulator[1] + point[1]])
+                 .map(coord => coord / points.length);
+};
+
+// https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
+const getCentroid = function(points) {
+    let n = points.length;
+    points.push(points[0]);
+    
+    let [sA, sX, sY] = [0, 0, 0];
+    for (let i = 0; i <= n-1; i++) {
+        let a = points[i][0]*points[i+1][1] - points[i+1][0]*points[i][1];
+        sA += a;
+        sX += (points[i][0] + points[i+1][0]) * a;
+        sY += (points[i][1] + points[i+1][1]) * a;
+    }
+    
+    points.pop();
+    return [sX / (3 * sA), sY / (3 * sA)];
+};
 
 const getAngle = function(xO, yO, xA, yA, xB, yB) {
     // calculate angle of rotation in absolute value
@@ -1477,6 +1550,10 @@ const DrawingMenu = new Lang.Class({
                 });
                 
                 subItem.label.get_clutter_text().set_use_markup(true);
+                
+                // change the display order of shapes
+                if (obj == ShapeNames && i == Shapes.POLYGON)
+                    item.menu.moveMenuItem(subItem, 4);
             }
             return GLib.SOURCE_REMOVE;
         });

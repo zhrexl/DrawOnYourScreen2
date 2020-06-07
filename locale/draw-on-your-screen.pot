@@ -58,6 +58,9 @@ msgstr ""
 msgid "Text"
 msgstr ""
 
+msgid "Polygon"
+msgstr ""
+
 msgid "Fill"
 msgstr ""
 
@@ -68,6 +71,11 @@ msgid "Dashed line"
 msgstr ""
 
 msgid "Full line"
+msgstr ""
+
+msgid ""
+"Press <i>Enter</i>\n"
+"to mark vertices"
 msgstr ""
 
 msgid ""
@@ -151,6 +159,9 @@ msgid "Select ellipse"
 msgstr ""
 
 msgid "Select rectangle"
+msgstr ""
+
+msgid "Select polygon"
 msgstr ""
 
 msgid "Select text"

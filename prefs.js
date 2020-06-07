@@ -47,6 +47,7 @@ var INTERNAL_KEYBINDINGS = {
     'select-line-shape': "Select line",
     'select-ellipse-shape': "Select ellipse",
     'select-rectangle-shape': "Select rectangle",
+    'select-polygon-shape': "Select polygon",
     'select-text-shape': "Select text",
     'select-none-shape': "Unselect shape (free drawing)",
     'toggle-fill': "Toggle fill/stroke",
