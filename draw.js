@@ -1003,7 +1003,14 @@ const DrawingElement = new Lang.Class({
         let color = this.eraser ? bgColor : this.color;
         let isStraightLine = this.shape == Shapes.LINE && (points.length < 3 || points[2] == points[1] || points[2] == points[0]);
         let fill = this.fill && !isStraightLine;
-        let attributes = `fill="${fill ? color : 'transparent'}" ` +
+        let attributes;
+        
+        if (isStraightLine)
+            attributes = `stroke="${color}" ` +
+                         `stroke-width="${this.line.lineWidth}" ` +
+                         `stroke-linecap="${LineCapNames[this.line.lineCap].toLowerCase()}"`;
+        else
+            attributes = `fill="${fill ? color : 'transparent'}" ` +
                          `stroke="${color}" ` +
                          `${fill ? '' : 'fill-opacity="0"'} ` +
                          `stroke-width="${this.line.lineWidth}" ` +
@@ -1018,7 +1025,10 @@ const DrawingElement = new Lang.Class({
             row += ` C ${points[0][0]} ${points[0][1]}, ${points[1][0]} ${points[1][1]}, ${points[2][0]} ${points[2][1]}`;
             row += `${fill ? 'z' : ''}"/>`;
             
-        } else if (this.shape == Shapes.NONE || this.shape == Shapes.LINE) {
+        } else if (this.shape == Shapes.LINE) {
+            row += `<line ${attributes} x1="${points[0][0]}" y1="${points[0][1]}" x2="${points[1][0]}" y2="${points[1][1]}"/>`;
+        
+        } else if (this.shape == Shapes.NONE) {
             row += `<path ${attributes} d="M${points[0][0]} ${points[0][1]}`;
             for (let i = 1; i < points.length; i++)
                 row += ` L ${points[i][0]} ${points[i][1]}`;
