@@ -61,6 +61,9 @@ msgstr ""
 msgid "Polygon"
 msgstr ""
 
+msgid "Polyline"
+msgstr ""
+
 msgid "Fill"
 msgstr ""
 
@@ -162,6 +165,9 @@ msgid "Select rectangle"
 msgstr ""
 
 msgid "Select polygon"
+msgstr ""
+
+msgid "Select polyline"
 msgstr ""
 
 msgid "Select text"

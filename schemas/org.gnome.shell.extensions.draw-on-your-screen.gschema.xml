@@ -86,6 +86,11 @@
       <summary>select polygon</summary>
       <description>select polygon</description>
     </key>
+    <key type="as" name="select-polyline-shape">
+      <default>["&lt;Primary&gt;u"]</default>
+      <summary>select polyline</summary>
+      <description>select polyline</description>
+    </key>
     <key type="as" name="select-line-shape">
       <default>["&lt;Primary&gt;l"]</default>
       <summary>select line</summary>

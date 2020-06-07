@@ -56,9 +56,9 @@ const LINECAP_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child(
 const DASHED_LINE_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child('dashed-line-symbolic.svg').get_path();
 const FULL_LINE_ICON_PATH = Me.dir.get_child('data').get_child('icons').get_child('full-line-symbolic.svg').get_path();
 
-var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5 };
+var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
 const TextState = { DRAWING: 0, WRITING: 1 };
-const ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon" };
+const ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline" };
 const LineCapNames = { 0: 'Butt', 1: 'Round', 2: 'Square' };
 const LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
 const FontWeightNames = { 0: 'Normal', 1: 'Bold' };
@@ -326,7 +326,8 @@ var DrawingArea = new Lang.Class({
             this._redisplay();
             return Clutter.EVENT_STOP;
             
-        } else if (this.currentElement && this.currentElement.shape == Shapes.POLYGON &&
+        } else if (this.currentElement &&
+                   (this.currentElement.shape == Shapes.POLYGON || this.currentElement.shape == Shapes.POLYLINE) &&
                    (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == 65421)) {
             // copy last point
             let lastPoint = this.currentElement.points[this.currentElement.points.length - 1];
@@ -391,7 +392,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.state = TextState.DRAWING;
         }
         
-        if (this.currentShape == Shapes.POLYGON) {
+        if (this.currentShape == Shapes.POLYGON || this.currentShape == Shapes.POLYLINE) {
             this.currentElement.points.push([startX, startY]);
             this.emit('show-osd', null, _("Press <i>Enter</i>\nto mark vertices"), "", -1);
         }
@@ -463,9 +464,9 @@ var DrawingArea = new Lang.Class({
             this.currentElement.transformEllipse(x, y);
         else if (this.currentElement.shape == Shapes.LINE && (controlPressed || this.currentElement.transform.active))
             this.currentElement.transformLine(x, y);
-        else if (this.currentElement.shape == Shapes.POLYGON && (controlPressed || this.currentElement.transform.active))
+        else if ((this.currentElement.shape == Shapes.POLYGON || this.currentElement.shape == Shapes.POLYLINE) && (controlPressed || this.currentElement.transform.active))
             this.currentElement.transformPolygon(x, y);
-        else if (this.currentElement.shape == Shapes.POLYGON)
+        else if (this.currentElement.shape == Shapes.POLYGON || this.currentElement.shape == Shapes.POLYLINE)
             this.currentElement.points[this.currentElement.points.length - 1] = [x, y];
         else
             this.currentElement.points[1] = [x, y];
@@ -974,7 +975,7 @@ const DrawingElement = new Lang.Class({
             cr.rectangle(points[0][0], points[0][1], points[1][0] - points[0][0], points[1][1] - points[0][1]);
             this.rotate(cr, - trans.angle, trans.center[0], trans.center[1]);
         
-        } else if (shape == Shapes.POLYGON && points.length >= 2) {
+        } else if ((shape == Shapes.POLYGON || shape == Shapes.POLYLINE) && points.length >= 2) {
             this.rotate(cr, trans.angle, trans.center[0], trans.center[1]);
             cr.moveTo(points[0][0], points[0][1]);
             for (let j = 1; j < points.length; j++) {
@@ -1049,6 +1050,17 @@ const DrawingElement = new Lang.Class({
                 transAttribute = ` transform="rotate(${angle}, ${this.transform.center[0]}, ${this.transform.center[1]})"`;
             }
             row += `<polygon ${attributes} points="`;
+            for (let i = 0; i < points.length; i++)
+                row += ` ${points[i][0]},${points[i][1]}`;
+            row += `"${transAttribute}/>`;
+        
+        } else if (this.shape == Shapes.POLYLINE && points.length >= 2) {
+            let transAttribute = "";
+            if (this.transform.angle != 0) {
+                let angle = this.transform.angle * 180 / Math.PI;
+                transAttribute = ` transform="rotate(${angle}, ${this.transform.center[0]}, ${this.transform.center[1]})"`;
+            }
+            row += `<polyline ${attributes} points="`;
             for (let i = 0; i < points.length; i++)
                 row += ` ${points[i][0]},${points[i][1]}`;
             row += `"${transAttribute}/>`;
@@ -1554,6 +1566,8 @@ const DrawingMenu = new Lang.Class({
                 // change the display order of shapes
                 if (obj == ShapeNames && i == Shapes.POLYGON)
                     item.menu.moveMenuItem(subItem, 4);
+                else if (obj == ShapeNames && i == Shapes.POLYLINE)
+                    item.menu.moveMenuItem(subItem, 5);
             }
             return GLib.SOURCE_REMOVE;
         });
