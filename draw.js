@@ -214,6 +214,13 @@ var DrawingArea = new Lang.Class({
         
         if (this.currentElement) {
             this.currentElement.buildCairo(cr, this.textHasCursor);
+            
+            if (this.currentElement.fill && this.currentElement.line.lineWidth == 0) {
+                // add a dummy stroke while drawing
+                cr.setLineWidth(2);
+                cr.setDash([1, 2], 0);
+            }
+            
             cr.stroke();
         }
         
@@ -385,8 +392,8 @@ var DrawingArea = new Lang.Class({
         });
         
         if (this.currentShape == Shapes.TEXT) {
-            this.currentElement.line = { lineWidth: 1, lineJoin: 0, lineCap: 0 };
-            this.currentElement.dash = { array: [1, 1] , offset: 0 };
+            this.currentElement.line = { lineWidth: 2, lineJoin: 0, lineCap: 0 };
+            this.currentElement.dash = { array: [1, 2] , offset: 0 };
             this.currentElement.fill = false;
             this.currentElement.text = _("Text");
             this.currentElement.state = TextState.DRAWING;
