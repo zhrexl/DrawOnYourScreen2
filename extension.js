@@ -184,6 +184,7 @@ var AreaManager = new Lang.Class({
             'decrement-line-width-more': () => this.activeArea.incrementLineWidth(-5),
             'toggle-linejoin': this.activeArea.toggleLineJoin.bind(this.activeArea),
             'toggle-linecap': this.activeArea.toggleLineCap.bind(this.activeArea),
+            'toggle-fill-rule': this.activeArea.toggleFillRule.bind(this.activeArea),
             'toggle-dash' : this.activeArea.toggleDash.bind(this.activeArea),
             'toggle-fill' : this.activeArea.toggleFill.bind(this.activeArea),
             'select-none-shape': () => this.activeArea.selectShape(Draw.Shapes.NONE),

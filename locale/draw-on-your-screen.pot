@@ -200,6 +200,9 @@ msgstr ""
 msgid "Change linecap"
 msgstr ""
 
+msgid "Change fill rule"
+msgstr ""
+
 #: already in draw.js
 #:msgid "Dashed line"
 #:msgstr ""
@@ -370,6 +373,12 @@ msgstr ""
 #msgstr ""
 
 #msgid "Bevel"
+#msgstr ""
+
+#msgid "Nonzero"
+#msgstr ""
+
+#msgid "Evenodd"
 #msgstr ""
 
 #msgid "Normal"

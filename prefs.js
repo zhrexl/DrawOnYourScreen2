@@ -60,6 +60,7 @@ var INTERNAL_KEYBINDINGS = {
     'decrement-line-width-more': "Decrement line width even more",
     'toggle-linejoin': "Change linejoin",
     'toggle-linecap': "Change linecap",
+    'toggle-fill-rule': "Change fill rule",
     'toggle-dash': "Dashed line",
     '-separator-3': '',
     'toggle-font-family': "Change font family (generic name)",
