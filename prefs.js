@@ -77,16 +77,21 @@ var INTERNAL_KEYBINDINGS = {
     'toggle-help': "Show help"
 };
 
+function getKeyLabel(accel) {
+    let [keyval, mods] = Gtk.accelerator_parse(accel);
+    return Gtk.accelerator_get_label(keyval, mods);
+}
+
 var OTHER_SHORTCUTS = [
-    { desc: "Draw", shortcut: "Left click" },
-    { desc: "Menu", shortcut: "Right click" },
-    { desc: "Toggle fill/stroke", shortcut: "Center click" },
-    { desc: "Transform shape (when drawing)", shortcut: "Ctrl key" },
-    { desc: "Increment/decrement line width", shortcut: "Scroll" },
-    { desc: "Select color", shortcut: "Ctrl+1...9" },
-    { desc: "Select eraser", shortcut: "Shift key held" },
-    { desc: "Ignore pointer movement", shortcut: "Space key held" },
-    { desc: "Leave", shortcut: "Escape key" }
+    { desc: "Draw", get shortcut() { return _("Left click"); } },
+    { desc: "Menu", get shortcut() { return _("Right click"); } },
+    { desc: "Toggle fill/stroke", get shortcut() { return _("Center click"); } },
+    { desc: "Transform shape (when drawing)", shortcut: getKeyLabel('<Primary>') },
+    { desc: "Increment/decrement line width", get shortcut() { return _("Scroll"); } },
+    { desc: "Select color", get shortcut() { return _("%s … %s").format(getKeyLabel('<Primary>1'), getKeyLabel('<Primary>9')); } },
+    { desc: "Select eraser", get shortcut() { return _("%s held").format(getKeyLabel('<Shift>')); } },
+    { desc: "Ignore pointer movement", get shortcut() { return _("%s held").format(getKeyLabel('space')); } },
+    { desc: "Leave", shortcut: getKeyLabel('Escape') }
 ];
 
 function init() {
@@ -270,7 +275,7 @@ const PrefsPage = new GObject.Class({
             let otherBox = new Gtk.Box({ margin_left: MARGIN, margin_right: MARGIN });
             let otherLabel = new Gtk.Label({ label: _(OTHER_SHORTCUTS[i].desc) });
             otherLabel.set_halign(1);
-            let otherLabel2 = new Gtk.Label({ label: _(OTHER_SHORTCUTS[i].shortcut) });
+            let otherLabel2 = new Gtk.Label({ label: OTHER_SHORTCUTS[i].shortcut });
             otherBox.pack_start(otherLabel, true, true, 4);
             otherBox.pack_start(otherLabel2, false, false, 4);
             listBox.add(otherBox);

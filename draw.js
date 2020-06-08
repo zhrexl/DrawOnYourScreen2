@@ -401,7 +401,7 @@ var DrawingArea = new Lang.Class({
         
         if (this.currentShape == Shapes.POLYGON || this.currentShape == Shapes.POLYLINE) {
             this.currentElement.points.push([startX, startY]);
-            this.emit('show-osd', null, _("Press <i>Enter</i>\nto mark vertices"), "", -1);
+            this.emit('show-osd', null, _("Press <i>%s</i>\nto mark vertices").format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1);
         }
         
         this.motionHandler = this.connect('motion-event', (actor, event) => {
@@ -444,7 +444,7 @@ var DrawingArea = new Lang.Class({
                 // start writing
                 this.currentElement.state = TextState.WRITING;
                 this.currentElement.text = '';
-                this.emit('show-osd', null, _("Type your text\nand press <i>Escape</i>"), "", -1);
+                this.emit('show-osd', null, _("Type your text\nand press <i>%s</i>").format(Gtk.accelerator_get_label(Clutter.KEY_Escape, 0)), "", -1);
                 this._updateTextCursorTimeout();
                 this.textHasCursor = true;
                 this._redisplay();
@@ -1238,6 +1238,32 @@ var DrawingHelper = new Lang.Class({
         this.parent(params);
         this.monitor = monitor;
         this.hide();
+        this.settings = Convenience.getSettings();
+        
+        this.settingHandler = this.settings.connect('changed', this._onSettingChanged.bind(this));
+        this.connect('destroy', () => this.settings.disconnect(this.settingHandler));
+    },
+    
+    _onSettingChanged: function(settings, key) {
+        if (key == 'toggle-help')
+            this._updateHelpKeyLabel();
+        
+        if (this.vbox) {
+            this.vbox.destroy();
+            this.vbox = null;
+        }
+    },
+    
+    _updateHelpKeyLabel: function() {
+        let [keyval, mods] = Gtk.accelerator_parse(this.settings.get_strv('toggle-help')[0]);
+        this._helpKeyLabel = Gtk.accelerator_get_label(keyval, mods);
+    },
+    
+    get helpKeyLabel() {
+        if (!this._helpKeyLabel)
+            this._updateHelpKeyLabel();
+        
+        return this._helpKeyLabel;
     },
     
     _populate: function() {
@@ -1245,17 +1271,15 @@ var DrawingHelper = new Lang.Class({
         this.add_actor(this.vbox);
         this.vbox.add_child(new St.Label({ text: _("Global") }));
         
-        let settings = Convenience.getSettings();
-        
         for (let settingKey in Prefs.GLOBAL_KEYBINDINGS) {
             let hbox = new St.BoxLayout({ vertical: false });
             if (settingKey.indexOf('-separator-') != -1) {
                 this.vbox.add_child(hbox);
                 continue;
             }
-            if (!settings.get_strv(settingKey)[0])
+            if (!this.settings.get_strv(settingKey)[0])
                 continue;
-            let [keyval, mods] = Gtk.accelerator_parse(settings.get_strv(settingKey)[0]);
+            let [keyval, mods] = Gtk.accelerator_parse(this.settings.get_strv(settingKey)[0]);
             hbox.add_child(new St.Label({ text: _(Prefs.GLOBAL_KEYBINDINGS[settingKey]) }));
             hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));
             this.vbox.add_child(hbox);
@@ -1270,7 +1294,7 @@ var DrawingHelper = new Lang.Class({
             }
             let hbox = new St.BoxLayout({ vertical: false });
             hbox.add_child(new St.Label({ text: _(Prefs.OTHER_SHORTCUTS[i].desc) }));
-            hbox.add_child(new St.Label({ text: _(Prefs.OTHER_SHORTCUTS[i].shortcut), x_expand: true }));
+            hbox.add_child(new St.Label({ text: Prefs.OTHER_SHORTCUTS[i].shortcut, x_expand: true }));
             this.vbox.add_child(hbox);
         }
         
@@ -1282,9 +1306,9 @@ var DrawingHelper = new Lang.Class({
                 continue;
             }
             let hbox = new St.BoxLayout({ vertical: false });
-            if (!settings.get_strv(settingKey)[0])
+            if (!this.settings.get_strv(settingKey)[0])
                 continue;
-            let [keyval, mods] = Gtk.accelerator_parse(settings.get_strv(settingKey)[0]);
+            let [keyval, mods] = Gtk.accelerator_parse(this.settings.get_strv(settingKey)[0]);
             hbox.add_child(new St.Label({ text: _(Prefs.INTERNAL_KEYBINDINGS[settingKey]) }));
             hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));
             this.vbox.add_child(hbox);
@@ -1339,7 +1363,7 @@ var DrawingHelper = new Lang.Class({
                                  transition: 'easeOutQuad',
                                  onComplete: this.hide.bind(this) });
         
-    },
+    }
 });
 
 const getActor = function(object) {

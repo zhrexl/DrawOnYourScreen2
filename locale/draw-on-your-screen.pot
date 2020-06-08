@@ -36,7 +36,8 @@ msgstr ""
 msgid "Leaving drawing mode"
 msgstr ""
 
-msgid "Press Ctrl + F1 for help"
+# %s is a key label
+msgid "<small>Press <i>%s</i> for help</small>"
 msgstr ""
 
 msgid "Entering drawing mode"
@@ -76,14 +77,16 @@ msgstr ""
 msgid "Full line"
 msgstr ""
 
+# %s is a key label
 msgid ""
-"Press <i>Enter</i>\n"
+"Press <i>%s</i>\n"
 "to mark vertices"
 msgstr ""
 
+# %s is a key label
 msgid ""
 "Type your text\n"
-"and press <i>Escape</i>"
+"and press <i>%s</i>"
 msgstr ""
 
 msgid "Screenshot"
@@ -133,7 +136,7 @@ msgstr ""
 msgid "About"
 msgstr ""
 
-# GLOBAL_KEYBINDINGS
+#: GLOBAL_KEYBINDINGS
 
 msgid "Enter/leave drawing mode"
 msgstr ""
@@ -141,7 +144,7 @@ msgstr ""
 msgid "Erase all drawings"
 msgstr ""
 
-# INTERNAL_KEYBINDINGS
+#: INTERNAL_KEYBINDINGS
 
 msgid "Undo last brushstroke"
 msgstr ""
@@ -197,9 +200,9 @@ msgstr ""
 msgid "Change linecap"
 msgstr ""
 
-# already in draw.js
-#msgid "Dashed line"
-#msgstr ""
+#: already in draw.js
+#:msgid "Dashed line"
+#:msgstr ""
 
 msgid "Change font family (generic name)"
 msgstr ""
@@ -228,9 +231,9 @@ msgstr ""
 msgid "Open next drawing"
 msgstr ""
 
-# already in draw.js
-#msgid "Save drawing"
-#msgstr ""
+#: already in draw.js
+#:msgid "Save drawing"
+#:msgstr ""
 
 msgid "Save drawing as a SVG file"
 msgstr ""
@@ -241,7 +244,7 @@ msgstr ""
 msgid "Show help"
 msgstr ""
 
-# OTHER_SHORTCUTS
+#: OTHER_SHORTCUTS
 
 msgid "Draw"
 msgstr ""
@@ -261,9 +264,6 @@ msgstr ""
 msgid "Transform shape (when drawing)"
 msgstr ""
 
-msgid "Ctrl key"
-msgstr ""
-
 msgid "Increment/decrement line width"
 msgstr ""
 
@@ -273,32 +273,28 @@ msgstr ""
 msgid "Select color"
 msgstr ""
 
-msgid "Ctrl+1...9"
+# %s are key labels (Ctrl+F1 and Ctrl+F9)
+msgid "%s … %s"
 msgstr ""
 
 msgid "Select eraser"
 msgstr ""
 
-msgid "Shift key held"
+# %s is a key label
+msgid "%s held"
 msgstr ""
 
 msgid "Ignore pointer movement"
 msgstr ""
 
-msgid "Space key held"
-msgstr ""
-
 msgid "Leave"
 msgstr ""
 
-msgid "Escape key"
+#: About page
+
+# You are free to translate the extension name, that is displayed in About page, or not.
+msgid "Draw On You Screen"
 msgstr ""
-
-# About page
-
-# you are free to translate the extension name
-#msgid "Draw On You Screen"
-#msgstr ""
 
 msgid "Version %d"
 msgstr ""
@@ -306,7 +302,7 @@ msgstr ""
 msgid "Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot"
 msgstr ""
 
-# Prefs page
+#: Prefs page
 
 msgid "Global"
 msgstr ""

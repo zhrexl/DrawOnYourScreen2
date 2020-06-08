@@ -336,7 +336,9 @@ var AreaManager = new Lang.Class({
                 // increase OSD display time
                 let hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
                 try { OsdWindow.HIDE_TIMEOUT = 2000; } catch(e) { /* HIDE_TIMEOUT is not exported with 'var' */ }
-                Main.osdWindowManager.show(currentIndex, this.enterGicon, _("Press Ctrl + F1 for help") + "\n\n" + _("Entering drawing mode"), null);
+                let label = _("<small>Press <i>%s</i> for help</small>").format(this.activeArea.helper.helpKeyLabel) + "\n\n" + _("Entering drawing mode");
+                Main.osdWindowManager.show(currentIndex, this.enterGicon, label, null);
+                Main.osdWindowManager._osdWindows[this.areas.indexOf(this.activeArea)]._label.get_clutter_text().set_use_markup(true);
                 try { OsdWindow.HIDE_TIMEOUT = hideTimeoutSave; } catch(e) {}
             }
         }
