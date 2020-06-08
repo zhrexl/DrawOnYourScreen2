@@ -241,6 +241,9 @@ msgstr ""
 msgid "Edit style"
 msgstr ""
 
+msgid "Open preferences"
+msgstr ""
+
 msgid "Show help"
 msgstr ""
 

@@ -25,12 +25,14 @@ const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 
+const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const _GTK = imports.gettext.domain('gtk30').gettext;
 
+const GS_VERSION = Config.PACKAGE_VERSION;
 const MARGIN = 10;
 
 var GLOBAL_KEYBINDINGS = {
@@ -74,8 +76,12 @@ var INTERNAL_KEYBINDINGS = {
     'save-as-json': "Save drawing",
     'save-as-svg': "Save drawing as a SVG file",
     'open-user-stylesheet': "Edit style",
+    'open-preferences': "Open preferences",
     'toggle-help': "Show help"
 };
+
+if (GS_VERSION < "3.36")
+    delete INTERNAL_KEYBINDINGS['open-preferences'];
 
 function getKeyLabel(accel) {
     let [keyval, mods] = Gtk.accelerator_parse(accel);

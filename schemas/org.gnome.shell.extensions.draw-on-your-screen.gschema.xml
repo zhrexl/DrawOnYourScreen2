@@ -231,6 +231,11 @@
       <summary>Open next json file</summary>
       <description>Open next json file</description>
     </key>
+    <key type="as" name="open-preferences">
+      <default>["&lt;Primary&gt;comma"]</default>
+      <summary>Open preferences</summary>
+      <description>Open preferences</description>
+    </key>
     <key type="as" name="toggle-help">
       <default>["&lt;Primary&gt;F1"]</default>
       <summary>toggle help</summary>

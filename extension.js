@@ -198,7 +198,8 @@ var AreaManager = new Lang.Class({
             'toggle-font-style': this.activeArea.toggleFontStyle.bind(this.activeArea),
             'toggle-panel-and-dock-visibility': this.togglePanelAndDockOpacity.bind(this),
             'toggle-help': this.activeArea.toggleHelp.bind(this.activeArea),
-            'open-user-stylesheet': this.openUserStyleFile.bind(this)
+            'open-user-stylesheet': this.openUserStyleFile.bind(this),
+            'open-preferences': this.openPreferences.bind(this)
         };
         
         for (let key in this.internalKeybindings) {
@@ -226,6 +227,15 @@ var AreaManager = new Lang.Class({
         
         for (let i = 1; i < 10; i++) {
             Main.wm.removeKeybinding('select-color' + i);
+        }
+    },
+    
+    openPreferences: function() {
+        // since GS 3.36
+        if (ExtensionUtils.openPrefs) {
+            if (this.activeArea)
+                this.toggleDrawing();
+            ExtensionUtils.openPrefs();
         }
     },
     
