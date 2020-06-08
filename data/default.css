@@ -13,8 +13,9 @@
  * 0 : nonzero (winding in Cairo), 1 : evenodd
  *
  * dash:
- * dash-array-on is the length of dashes (no dashes if 0, you can put 0.1 to get dots or square according to line-cap).
- * dash-array-off is the length of gaps (no dashes if 0).
+ * By default, it is computed from the line width.
+ * dash-array-on is the length of dashes (put 0.1 to get dots or squares according to line-cap).
+ * dash-array-off is the length of gaps
  *
  * square area:
  * Drawing in a square area is convenient when using the extension as a vector graphics editor. By default,
@@ -36,9 +37,9 @@
     -drawing-line-join: 1;
     -drawing-line-cap: 1;
     -drawing-fill-rule: 0;
-    -drawing-dash-array-on: 5px;
-    -drawing-dash-array-off: 15px;
-    -drawing-dash-offset: 0px;
+    /*-drawing-dash-array-on: 5px;*/
+    /*-drawing-dash-array-off: 15px;*/
+    /*-drawing-dash-offset: 0px;*/
     -drawing-background-color: #2e3436;
     -grid-overlay-gap: 10px;
     -grid-overlay-line-width: 0.4px;

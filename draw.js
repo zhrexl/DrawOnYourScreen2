@@ -160,7 +160,7 @@ var DrawingArea = new Lang.Class({
             this.currentLineJoin = themeNode.get_double('-drawing-line-join');
             this.currentLineCap = themeNode.get_double('-drawing-line-cap');
             this.currentFillRule = themeNode.get_double('-drawing-fill-rule');
-            this.dashArray = [themeNode.get_length('-drawing-dash-array-on'), themeNode.get_length('-drawing-dash-array-off')];
+            this.dashArray = [Math.abs(themeNode.get_length('-drawing-dash-array-on')), Math.abs(themeNode.get_length('-drawing-dash-array-off'))];
             this.dashOffset = themeNode.get_length('-drawing-dash-offset');
             let font = themeNode.get_font();
             this.fontFamily = font.get_family();
@@ -388,7 +388,7 @@ var DrawingArea = new Lang.Class({
             shape: this.currentShape,
             color: this.currentColor.to_string(),
             line: { lineWidth: this.currentLineWidth, lineJoin: this.currentLineJoin, lineCap: this.currentLineCap },
-            dash: { array: this.dashedLine ? this.dashArray : [0, 0] , offset: this.dashedLine ? this.dashOffset : 0 },
+            dash: { active: this.dashedLine, array: this.dashedLine ? [this.dashArray[0] || this.currentLineWidth, this.dashArray[1] || this.currentLineWidth * 3] : [0, 0] , offset: this.dashOffset },
             fill: this.fill,
             fillRule: this.currentFillRule,
             eraser: eraser,
@@ -400,7 +400,7 @@ var DrawingArea = new Lang.Class({
         
         if (this.currentShape == Shapes.TEXT) {
             this.currentElement.line = { lineWidth: 2, lineJoin: 0, lineCap: 0 };
-            this.currentElement.dash = { array: [1, 2] , offset: 0 };
+            this.currentElement.dash = { active: true, array: [1, 2] , offset: 0 };
             this.currentElement.fill = false;
             this.currentElement.text = _("Text");
             this.currentElement.state = TextState.DRAWING;
@@ -961,7 +961,7 @@ const DrawingElement = new Lang.Class({
         cr.setLineWidth(this.line.lineWidth);
         cr.setFillRule(this.fillRule);
         
-        if (this.dash.array[0] > 0 && this.dash.array[1] > 0)
+        if (this.dash.active)
             cr.setDash(this.dash.array, this.dash.offset);
         else
             cr.setDash([1000000], 0);
@@ -1043,7 +1043,7 @@ const DrawingElement = new Lang.Class({
                          `stroke-linecap="${LineCapNames[this.line.lineCap].toLowerCase()}" ` +
                          `stroke-linejoin="${LineJoinNames[this.line.lineJoin].toLowerCase()}"`;
                           
-        if (this.dash.array[0] > 0 && this.dash.array[1] > 0)
+        if (this.dash.active)
             attributes += ` stroke-dasharray="${this.dash.array[0]} ${this.dash.array[1]}" stroke-dashoffset="${this.dash.offset}"`;
         
         if (this.shape == Shapes.LINE && points.length == 3) {
