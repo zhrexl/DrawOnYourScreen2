@@ -65,6 +65,9 @@ msgstr ""
 msgid "Polyline"
 msgstr ""
 
+msgid "Move"
+msgstr ""
+
 msgid "Fill"
 msgstr ""
 
@@ -158,6 +161,9 @@ msgstr ""
 msgid "Smooth last brushstroke"
 msgstr ""
 
+msgid "Free drawing"
+msgstr ""
+
 msgid "Select line"
 msgstr ""
 
@@ -176,7 +182,7 @@ msgstr ""
 msgid "Select text"
 msgstr ""
 
-msgid "Unselect shape (free drawing)"
+msgid "Select move"
 msgstr ""
 
 msgid "Toggle fill/stroke"
@@ -270,6 +276,9 @@ msgstr ""
 msgid "Transform shape (when drawing)"
 msgstr ""
 
+msgid "Rotate drawing (when moving)"
+msgstr ""
+
 msgid "Increment/decrement line width"
 msgstr ""
 
@@ -283,7 +292,10 @@ msgstr ""
 msgid "%s … %s"
 msgstr ""
 
-msgid "Select eraser"
+msgid "Select eraser (when starting drawing)"
+msgstr ""
+
+msgid "Duplicate drawing (when starting moving)"
 msgstr ""
 
 # %s is a key label

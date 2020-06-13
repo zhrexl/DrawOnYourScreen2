@@ -59,10 +59,12 @@ const FILLRULE_EVENODD_ICON_PATH = ICON_DIR.get_child('fillrule-evenodd-symbolic
 const DASHED_LINE_ICON_PATH = ICON_DIR.get_child('dashed-line-symbolic.svg').get_path();
 const FULL_LINE_ICON_PATH = ICON_DIR.get_child('full-line-symbolic.svg').get_path();
 
-var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
-const TextState = { DRAWING: 0, WRITING: 1 };
+const Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
+const Manipulations = { MOVE: 100 };
+var   Tools = Object.assign({}, Shapes, Manipulations);
+const TextStates = { WRITTEN: 0, DRAWING: 1, WRITING: 2 };
 const Transformations = { TRANSLATION: 0, ROTATION: 1 };
-const ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline" };
+const ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move" };
 const LineCapNames = { 0: 'Butt', 1: 'Round', 2: 'Square' };
 const LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
 const FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
@@ -126,7 +128,7 @@ var DrawingArea = new Lang.Class({
         this.elements = [];
         this.undoneElements = [];
         this.currentElement = null;
-        this.currentShape = Shapes.NONE;
+        this.currentTool = Shapes.NONE;
         this.isSquareArea = false;
         this.hasGrid = false;
         this.hasBackground = false;
@@ -145,12 +147,16 @@ var DrawingArea = new Lang.Class({
         return this._menu;
     },
     
-    get currentShape() {
-        return this._currentShape;
+    get currentTool() {
+        return this._currentTool;
     },
     
-    set currentShape(shape) {
-        this._currentShape = shape;
+    set currentTool(tool) {
+        this._currentTool = tool;
+        if (Object.values(Manipulations).indexOf(tool) != -1)
+            this._startElementFinder();
+        else
+            this._stopElementFinder();
     },
     
     _redisplay: function() {
@@ -210,29 +216,31 @@ var DrawingArea = new Lang.Class({
         
         for (let i = 0; i < this.elements.length; i++) {
             let isStraightLine = this.elements[i].shape == Shapes.LINE &&
-                                (this.elements[i].points.length < 3 || this.elements[i].points[2] == this.elements[i].points[1] || this.elements[i].points[2] == this.elements[i].points[0]);
+                                (this.elements[i].points.length < 3 ||
+                                 this.elements[i].points[2] == this.elements[i].points[1] ||
+                                 this.elements[i].points[2] == this.elements[i].points[0]);
             
-            this.elements[i].buildCairo(cr, false);
+            let showTextRectangle = this.elements[i].shape == Shapes.TEXT && this.transformingElement && this.transformingElement == this.elements[i];
+            this.elements[i].buildCairo(cr, false, showTextRectangle);
             
-            if (this.transformation)
+            if (this.finderPoint)
                 this._findTransformingElement(cr, this.elements[i]);
             
             if (this.elements[i].fill && !isStraightLine) {
                 let pathCopy = cr.copyPath();
                 if (this.elements[i].shape == Shapes.NONE || this.elements[i].shape == Shapes.LINE)
                     cr.closePath();
-                // first paint stroke
-                cr.stroke();
-                // secondly paint fill
+                cr.stroke(); // first paint stroke
                 cr.appendPath(pathCopy);
-                cr.fill();
+                cr.fill(); // secondly paint fill
             } else {
                 cr.stroke();
             }
         }
         
         if (this.currentElement) {
-            this.currentElement.buildCairo(cr, this.textHasCursor);
+            let showTextRectangle = this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.DRAWING;
+            this.currentElement.buildCairo(cr, this.textHasCursor, showTextRectangle);
             
             if (this.currentElement.fill && this.currentElement.line.lineWidth == 0) {
                 // add a dummy stroke while drawing
@@ -274,7 +282,7 @@ var DrawingArea = new Lang.Class({
         let [x, y] = event.get_coords();
         let shiftPressed = event.has_shift_modifier();
         
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextState.WRITING) {
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING) {
             // finish writing
             this._stopWriting();
         }
@@ -286,7 +294,12 @@ var DrawingArea = new Lang.Class({
         }
         
         if (button == 1) {
-            this._startDrawing(x, y, shiftPressed);
+            if (this.currentTool == Manipulations.MOVE) {
+                if (this.elements.length)
+                    this._startTransforming(x, y, shiftPressed);
+            } else {
+                this._startDrawing(x, y, shiftPressed);
+            }
             return Clutter.EVENT_STOP;
         } else if (button == 2) {
             this.toggleFill();
@@ -322,7 +335,7 @@ var DrawingArea = new Lang.Class({
     },
     
     _onKeyPressed: function(actor, event) {
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextState.WRITING) {
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING) {
             if (event.get_key_symbol() == Clutter.KEY_Escape) {
                 // finish writing
                 this._stopWriting();
@@ -387,6 +400,111 @@ var DrawingArea = new Lang.Class({
         return Clutter.EVENT_STOP;
     },
     
+    _findTransformingElement: function(cr, element) {
+        if (element.getContainsPoint(cr, this.finderPoint[0], this.finderPoint[1]))
+            this.transformingElement = element;
+        else if (this.transformingElement == element)
+            this.transformingElement = null;
+        
+        if (element == this.elements[this.elements.length - 1]) {
+            // All elements have been tested, the winner is the last.
+            this.updatePointerCursor();
+        }
+    },
+    
+    _startElementFinder: function() {
+        this.elementFinderHandler = this.connect('motion-event', (actor, event) => {
+            if (this.motionHandler) {
+                this.finderPoint = null;
+                return;
+            }
+            
+            let coords = event.get_coords();
+            let [s, x, y] = this.transform_stage_point(coords[0], coords[1]);
+            if (!s)
+                return;
+            
+            this.finderPoint = [x, y];
+            this.transformingElement = null;
+            // this._redisplay calls this._findTransformingElement.
+            this._redisplay();
+        });
+    },
+    
+    _stopElementFinder: function() {
+        if (this.elementFinderHandler) {
+            this.disconnect(this.elementFinderHandler);
+            this.finderPoint = null;
+            this.elementFinderHandler = null;
+        }
+    },
+    
+    _startTransforming: function(stageX, stageY, duplicate) {
+        if (!this.transformingElement)
+            return;
+        
+        let [success, startX, startY] = this.transform_stage_point(stageX, stageY);
+        
+        if (!success)
+            return;
+        
+        this.buttonReleasedHandler = this.connect('button-release-event', (actor, event) => {
+            this._stopTransforming();
+        });
+        
+        if (duplicate) {
+            // deep cloning
+            let copy = new DrawingElement(JSON.parse(JSON.stringify(this.transformingElement)));
+            this.elements.push(copy);
+            this.transformingElement = copy;
+        }
+        
+        if (this.currentTool == Manipulations.MOVE)
+            this.transformingElement.startTransformation(startX, startY, Transformations.TRANSLATION);
+        
+        this.finderPoint = null;
+        
+        this.motionHandler = this.connect('motion-event', (actor, event) => {
+            if (this.spaceKeyPressed)
+                return;
+            
+            let coords = event.get_coords();
+            let [s, x, y] = this.transform_stage_point(coords[0], coords[1]);
+            if (!s)
+                return;
+            let controlPressed = event.has_control_modifier();
+            this._updateTransforming(x, y, controlPressed);
+        });
+    },
+    
+    _updateTransforming: function(x, y, controlPressed) {
+        if (controlPressed && this.transformingElement.lastTransformation.type == Transformations.TRANSLATION) {
+            this.transformingElement.stopTransformation(x, y);
+            this.transformingElement.startTransformation(x, y, Transformations.ROTATION);
+        } else if (!controlPressed && this.transformingElement.lastTransformation.type == Transformations.ROTATION) {
+            this.transformingElement.stopTransformation(x, y);
+            this.transformingElement.startTransformation(x, y, Transformations.TRANSLATION);
+        }
+        
+        this.transformingElement.updateTransformation(x, y);
+        this._redisplay();
+    },
+    
+    _stopTransforming: function() {
+        if (this.motionHandler) {
+            this.disconnect(this.motionHandler);
+            this.motionHandler = null;
+        }
+        if (this.buttonReleasedHandler) {
+            this.disconnect(this.buttonReleasedHandler);
+            this.buttonReleasedHandler = null;
+        }
+        
+        this.transformingElement.stopTransformation();
+        this.transformingElement = null;
+        this._redisplay();
+    },
+    
     _startDrawing: function(stageX, stageY, eraser) {
         let [success, startX, startY] = this.transform_stage_point(stageX, stageY);
         
@@ -398,7 +516,7 @@ var DrawingArea = new Lang.Class({
         });
         
         this.currentElement = new DrawingElement ({
-            shape: this.currentShape,
+            shape: this.currentTool,
             color: this.currentColor.to_string(),
             line: { lineWidth: this.currentLineWidth, lineJoin: this.currentLineJoin, lineCap: this.currentLineCap },
             dash: { active: this.dashedLine, array: this.dashedLine ? [this.dashArray[0] || this.currentLineWidth, this.dashArray[1] || this.currentLineWidth * 3] : [0, 0] , offset: this.dashOffset },
@@ -411,17 +529,17 @@ var DrawingArea = new Lang.Class({
             points: []
         });
         
-        if (this.currentShape == Shapes.TEXT) {
+        if (this.currentTool == Shapes.TEXT) {
             this.currentElement.line = { lineWidth: 2, lineJoin: 0, lineCap: 0 };
             this.currentElement.dash = { active: true, array: [1, 2] , offset: 0 };
             this.currentElement.fill = false;
             this.currentElement.text = _("Text");
-            this.currentElement.textState = TextState.DRAWING;
+            this.currentElement.textState = TextStates.DRAWING;
         }
         
         this.currentElement.startDrawing(startX, startY);
         
-        if (this.currentShape == Shapes.POLYGON || this.currentShape == Shapes.POLYLINE)
+        if (this.currentTool == Shapes.POLYGON || this.currentTool == Shapes.POLYLINE)
             this.emit('show-osd', null, _("Press <i>%s</i>\nto mark vertices").format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1);
         
         this.motionHandler = this.connect('motion-event', (actor, event) => {
@@ -465,9 +583,9 @@ var DrawingArea = new Lang.Class({
             this.currentElement.stopDrawing();
         
         if (this.currentElement && this.currentElement.points.length >= 2) {
-            if (this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextState.DRAWING) {
+            if (this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.DRAWING) {
                 // start writing
-                this.currentElement.textState = TextState.WRITING;
+                this.currentElement.textState = TextStates.WRITING;
                 this.currentElement.text = '';
                 this.emit('show-osd', null, _("Type your text\nand press <i>%s</i>").format(Gtk.accelerator_get_label(Clutter.KEY_Escape, 0)), "", -1);
                 this._updateTextCursorTimeout();
@@ -486,11 +604,16 @@ var DrawingArea = new Lang.Class({
     },
     
     _stopWriting: function(startNewLine) {
+        this.currentElement.textState = TextStates.WRITTEN;
+        
         if (this.currentElement.text.length > 0)
             this.elements.push(this.currentElement);
         if (startNewLine && this.currentElement.points.length == 2) {
+            this.currentElement.lineIndex = this.currentElement.lineIndex || 0;
             // copy object, the original keep existing in this.elements
             this.currentElement = Object.create(this.currentElement);
+            this.currentElement.textState = TextStates.WRITING;
+            this.currentElement.lineIndex ++;
             let height = Math.abs(this.currentElement.points[1][1] - this.currentElement.points[0][1]);
             // define a new 'points' array, the original keep existing in this.elements
             this.currentElement.points = [
@@ -513,8 +636,10 @@ var DrawingArea = new Lang.Class({
     },
     
     updatePointerCursor: function(controlPressed) {
-        if (!this.currentElement || (this.currentElement.shape == Shapes.TEXT && this.currentElement.state == TextState.WRITING))
-            this.setPointerCursor(this.currentShape == Shapes.NONE ? 'POINTING_HAND' : 'CROSSHAIR');
+        if (this.currentTool == Manipulations.MOVE)
+            this.setPointerCursor(this.transformingElement ? 'MOVE_OR_RESIZE_WINDOW' : 'DEFAULT');
+        else if (!this.currentElement || (this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING))
+            this.setPointerCursor(this.currentTool == Shapes.NONE ? 'POINTING_HAND' : 'CROSSHAIR');
         else if (this.currentElement.shape != Shapes.NONE && controlPressed)
             this.setPointerCursor('MOVE_OR_RESIZE_WINDOW');
     },
@@ -619,9 +744,9 @@ var DrawingArea = new Lang.Class({
         this.emit('show-osd', null, this.currentColor.to_string(), this.currentColor.to_string().slice(0, 7), -1);
     },
     
-    selectShape: function(shape) {
-        this.currentShape = shape;
-        this.emit('show-osd', null, _(ShapeNames[shape]), "", -1);
+    selectTool: function(tool) {
+        this.currentTool = tool;
+        this.emit('show-osd', null, _(ToolNames[tool]), "", -1);
         this.updatePointerCursor();
     },
     
@@ -724,6 +849,10 @@ var DrawingArea = new Lang.Class({
             this.disconnect(this._onKeyboardPopupMenuHandler);
             this._onKeyboardPopupMenuHandler = null;
         }
+        if (this.elementFinderHandler) {
+            this.disconnect(this.elementFinderHandler);
+            this.elementFinderHandler = null;
+        }
         if (this.motionHandler) {
             this.disconnect(this.motionHandler);
             this.motionHandler = null;
@@ -742,7 +871,7 @@ var DrawingArea = new Lang.Class({
         
         this.currentElement = null;
         this._stopTextCursorTimeout();
-        this.currentShape = Shapes.NONE;
+        this.currentTool = Shapes.NONE;
         this.dashedLine = false;
         this.fill = false;
         this._redisplay();
@@ -755,7 +884,7 @@ var DrawingArea = new Lang.Class({
     
     saveAsSvg: function() {
         // stop drawing or writing
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextState.WRITING) {
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING) {
             this._stopWriting();
         } else if (this.currentElement && this.currentElement.shape != Shapes.TEXT) {
             this._stopDrawing();
@@ -793,7 +922,7 @@ var DrawingArea = new Lang.Class({
     
     _saveAsJson: function(name, notify) {
         // stop drawing or writing
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextState.WRITING) {
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING) {
             this._stopWriting();
         } else if (this.currentElement && this.currentElement.shape != Shapes.TEXT) {
             this._stopDrawing();
@@ -939,7 +1068,7 @@ const DrawingElement = new Lang.Class({
         if (params.transform && params.transform.center) {
             let angle = (params.transform.angle || 0) + (params.transform.startAngle || 0);
             if (angle)
-                this.transformations.push({ type: Transformations.ROTATION, center: params.transform.center, angle: angle });
+                this.transformations.push({ type: Transformations.ROTATION, angle: angle });
         }
         if (params.shape == Shapes.ELLIPSE && params.transform && params.transform.ratio && params.transform.ratio != 1 && params.points.length >= 2) {
             let [ratio, p0, p1] = [params.transform.ratio, params.points[0], params.points[1]];
@@ -961,12 +1090,13 @@ const DrawingElement = new Lang.Class({
             eraser: this.eraser,
             transformations: this.transformations,
             text: this.text,
+            lineIndex: this.lineIndex !== undefined ? this.lineIndex : undefined,
             font: this.font,
             points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
         };
     },
     
-    buildCairo: function(cr, showTextCursor) {
+    buildCairo: function(cr, showTextCursor, showTextRectangle) {
         cr.setLineCap(this.line.lineCap);
         cr.setLineJoin(this.line.lineJoin);
         cr.setLineWidth(this.line.lineWidth);
@@ -987,10 +1117,12 @@ const DrawingElement = new Lang.Class({
             Clutter.cairo_set_source_color(cr, color);
         
         this.transformations.slice(0).reverse().forEach(transformation => {
-            if (transformation.type == Transformations.TRANSLATION)
+            if (transformation.type == Transformations.TRANSLATION) {
                 cr.translate(transformation.slideX, transformation.slideY);
-            else if (transformation.type == Transformations.ROTATION)
-                this._rotate(cr, transformation.angle, transformation.center[0], transformation.center[1]);
+            } else if (transformation.type == Transformations.ROTATION) {
+                let centerWithSlide = this._getCenterWithSlide(transformation);
+                this._rotate(cr, transformation.angle, centerWithSlide[0], centerWithSlide[1]);
+            }
         });
         
         let [points, shape] = [this.points, this.shape];
@@ -1027,21 +1159,47 @@ const DrawingElement = new Lang.Class({
                 cr.closePath();
             
         } else if (shape == Shapes.TEXT && points.length == 2) {
-            // the textState property is undefined if the element is loaded from json file
-            if (this.textState !== undefined && this.textState == TextState.DRAWING)
-                cr.rectangle(points[0][0], points[0][1], points[1][0] - points[0][0], points[1][1] - points[0][1]);
             cr.selectFontFace(this.font.family, this.font.style, this.font.weight);
             cr.setFontSize(Math.abs(points[1][1] - points[0][1]));
             cr.moveTo(Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]));
             cr.showText((showTextCursor) ? (this.text + "_") : this.text);
+            
+            if (!showTextCursor)
+                this.textWidth = cr.getCurrentPoint()[0] - Math.min(points[0][0], points[1][0])
+            
+            cr.rectangle(Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]),
+                         this.textWidth, - Math.abs(points[1][1] - points[0][1]));
+            
+            if (!showTextRectangle)
+                cr.setLineWidth(0);
         }
         
         this.transformations.forEach(transformation => {
-            if (transformation.type == Transformations.TRANSLATION)
+            if (transformation.type == Transformations.TRANSLATION) {
                 cr.translate(-transformation.slideX, -transformation.slideY);
-            else if (transformation.type == Transformations.ROTATION)
-                this._rotate(cr, -transformation.angle, transformation.center[0], transformation.center[1]);
+            } else if (transformation.type == Transformations.ROTATION) {
+                let centerWithSlide = this._getCenterWithSlide(transformation);
+                this._rotate(cr, -transformation.angle, centerWithSlide[0], centerWithSlide[1]);
+            }
         });
+    },
+    
+    getContainsPoint: function(cr, x, y) {
+        if (this.shape == Shapes.TEXT)
+            return cr.inFill(x, y);
+        
+        cr.setLineWidth(Math.max(this.line.lineWidth, 25));
+        cr.setDash([], 0);
+        
+        // Check whether the point is inside/on/near the element.
+        let inElement = cr.inStroke(x, y) || this.fill  && cr.inFill(x, y);
+        
+        cr.setLineWidth(this.line.lineWidth);
+        if (this.dash.active)
+            cr.setDash(this.dash.array, this.dash.offset);
+        else
+            cr.setDash([1000000], 0);
+        return inElement;
     },
     
     buildSVG: function(bgColor) {
@@ -1076,8 +1234,8 @@ const DrawingElement = new Lang.Class({
         this.transformations.filter(transformation => transformation.type == Transformations.ROTATION)
                             .forEach(transformation => {
             transAttribute += transAttribute ? ' ' : ' transform="';
-            transAttribute += `rotate(${transformation.angle * 180 / Math.PI},` + 
-                              `${transformation.center[0] - transformation.totalSlide[0]},${transformation.center[1] - transformation.totalSlide[1]})`;
+            let center = this._getCenter();
+            transAttribute += `rotate(${transformation.angle * 180 / Math.PI},${center[0]},${center[1]})`;
         });
         transAttribute += transAttribute ? '"' : '';
         
@@ -1175,23 +1333,16 @@ const DrawingElement = new Lang.Class({
             if (points.length < 2)
                 return;
                 
-            if (!this.transformations[0])
-                this.transformations[0] = { type: Transformations.ROTATION, center: this._getCenter() };
-            this.transformations[0].angle = getAngle(this.transformations[0].center[0], this.transformations[0].center[1],
-                                                     points[points.length - 1][0], points[points.length - 1][1],
-                                                     x, y);
+            let center = this._getCenter();
+            this.transformations[0] = { type: Transformations.ROTATION, angle: getAngle(center[0], center[1], points[points.length - 1][0], points[points.length - 1][1], x, y) };
             
         } else if (this.shape == Shapes.ELLIPSE && transform) {
             if (points.length < 2)
                 return;
             
             points[2] = [x, y];
-            
-            if (!this.transformations[0])
-                this.transformations[0] = { type: Transformations.ROTATION, center: this._getCenter() };
-            this.transformations[0].angle = getAngle(this.transformations[0].center[0], this.transformations[0].center[1],
-                                                     this.transformations[0].center[0] + 1, this.transformations[0].center[1],
-                                                     x, y);
+            let center = this._getCenter();
+            this.transformations[0] = { type: Transformations.ROTATION, angle: getAngle(center[0], center[1], center[0] + 1, center[1], x, y) };
             
         } else if (this.shape == Shapes.LINE && transform) {
             if (points.length < 2)
@@ -1220,12 +1371,68 @@ const DrawingElement = new Lang.Class({
         }
     },
     
-    // The figure center before transformations
+    startTransformation: function(startX, startY, type) {
+        if (type == Transformations.TRANSLATION)
+            this.transformations.push({ startX: startX, startY: startY, type: type, slideX: 0, slideY: 0 });
+        else if (type == Transformations.ROTATION)
+            this.transformations.push({ startX: startX, startY: startY, type: type, angle: 0 });
+    },
+    
+    updateTransformation: function(x, y) {
+        let transformation = this.transformations[this.transformations.length - 1];
+        
+        if (transformation.type == Transformations.TRANSLATION) {
+            transformation.slideX = x - transformation.startX;
+            transformation.slideY = y - transformation.startY;
+        } else if (transformation.type == Transformations.ROTATION) {
+            let centerWithSlide = this._getCenterWithSlide(transformation);
+            transformation.angle = getAngle(centerWithSlide[0], centerWithSlide[1], transformation.startX, transformation.startY, x, y);
+        }
+    },
+    
+    stopTransformation: function(x, y) {
+        // Clean transformations
+        let transformation = this.transformations[this.transformations.length - 1];
+        
+        if (transformation.type == Transformations.TRANSLATION && Math.hypot(transformation.slideX, transformation.slideY) < 1 ||
+            transformation.type == Transformations.ROTATION && Math.abs(transformation.angle) < Math.PI / 1000) {
+            this.transformations.pop();
+        } else {
+            delete transformation.startX;
+            delete transformation.startY;
+        }
+    },
+    
+    _getTotalSlideBefore: function(transformation) {
+        let totalSlide = [0, 0];
+        
+        this.transformations.slice(0, this.transformations.indexOf(transformation))
+                            .filter(transformation => transformation.type == Transformations.TRANSLATION)
+                            .forEach(transformation => totalSlide = [totalSlide[0] + transformation.slideX, totalSlide[1] + transformation.slideY]);
+        
+        return totalSlide;
+    },
+    
+    // When rotating grouped lines, lineOffset is used to retrieve the rotation center of the first line.
+    _getLineOffset: function() {
+        return (this.lineIndex || 0) * Math.abs(this.points[1][1] - this.points[0][1]);
+    },
+    
+    // The figure rotation center before transformations (original).
     _getCenter: function() {
-        return this.shape == Shapes.ELLIPSE ? [this.points[0][0], this.points[0][1]] :
-               this.shape == Shapes.LINE && this.points.length == 3 ? getCurveCenter(this.points[0], this.points[1], this.points[2]) :
-               this.points.length >= 3 ? getCentroid(this.points) :
-               getNaiveCenter(this.points);
+        let points = this.points;
+        
+        return this.shape == Shapes.ELLIPSE ? [points[0][0], points[0][1]] :
+               this.shape == Shapes.LINE && points.length == 3 ? getCurveCenter(points[0], points[1], points[2]) :
+               this.shape == Shapes.TEXT && this.textWidth ? [Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]) - this._getLineOffset()] :
+               points.length >= 3 ? getCentroid(points) :
+               getNaiveCenter(points);
+    },
+    
+    // The figure rotation center that takes previous translations into account.
+    _getCenterWithSlide: function(transformation) {
+        let [center, totalSlide] = [this._getCenter(), this._getTotalSlideBefore(transformation)];
+        return [center[0] + totalSlide[0], center[1] + totalSlide[1]];
     },
     
     _addPoint: function(x, y, smoothedStroke) {
@@ -1580,7 +1787,7 @@ const DrawingMenu = new Lang.Class({
         this.menu.addAction(_("Smooth"), this.area.smoothLastElement.bind(this.area), 'format-text-strikethrough-symbolic');
         this._addSeparator(this.menu);
         
-        this._addSubMenuItem(this.menu, null, ShapeNames, this.area, 'currentShape', this._updateSectionVisibility.bind(this));
+        this._addSubMenuItem(this.menu, null, ToolNames, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
         this._addColorSubMenuItem(this.menu);
         this.fillItem = this._addSwitchItem(this.menu, _("Fill"), this.strokeIcon, this.fillIcon, this.area, 'fill', this._updateSectionVisibility.bind(this));
         this.fillSection = new PopupMenu.PopupMenuSection();
@@ -1628,7 +1835,7 @@ const DrawingMenu = new Lang.Class({
     },
     
     _updateSectionVisibility: function() {
-        if (this.area.currentShape != Shapes.TEXT) {
+        if (this.area.currentTool != Shapes.TEXT) {
             this.lineSection.actor.show();
             this.fontSection.actor.hide();
             this.fillItem.setSensitive(true);
@@ -1740,10 +1947,10 @@ const DrawingMenu = new Lang.Class({
                 
                 subItem.label.get_clutter_text().set_use_markup(true);
                 
-                // change the display order of shapes
-                if (obj == ShapeNames && i == Shapes.POLYGON)
+                // change the display order of tools
+                if (obj == ToolNames && i == Shapes.POLYGON)
                     item.menu.moveMenuItem(subItem, 4);
-                else if (obj == ShapeNames && i == Shapes.POLYLINE)
+                else if (obj == ToolNames && i == Shapes.POLYLINE)
                     item.menu.moveMenuItem(subItem, 5);
             }
             return GLib.SOURCE_REMOVE;

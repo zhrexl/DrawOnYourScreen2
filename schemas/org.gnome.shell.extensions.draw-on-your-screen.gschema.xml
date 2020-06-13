@@ -106,6 +106,11 @@
       <summary>unselect shape (free drawing)</summary>
       <description>unselect shape (free drawing)</description>
     </key>
+    <key type="as" name="select-move-tool">
+      <default>["&lt;Primary&gt;m"]</default>
+      <summary>select move tool</summary>
+      <description>select move tool</description>
+    </key>
     <key type="as" name="increment-line-width">
       <default><![CDATA[['<Primary>KP_Add','<Primary><Shift>plus']]]></default>
       <summary>increment the line width</summary>
