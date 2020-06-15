@@ -60,11 +60,11 @@ const DASHED_LINE_ICON_PATH = ICON_DIR.get_child('dashed-line-symbolic.svg').get
 const FULL_LINE_ICON_PATH = ICON_DIR.get_child('full-line-symbolic.svg').get_path();
 
 const Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
-const Manipulations = { MOVE: 100 };
+const Manipulations = { MOVE: 100, RESIZE: 101 };
 var   Tools = Object.assign({}, Shapes, Manipulations);
 const TextStates = { WRITTEN: 0, DRAWING: 1, WRITING: 2 };
-const Transformations = { TRANSLATION: 0, ROTATION: 1 };
-const ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move" };
+const Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, SCALE: 3, SCALE_ANGLE: 4 };
+const ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move", 101: "Resize" };
 const LineCapNames = { 0: 'Butt', 1: 'Round', 2: 'Square' };
 const LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
 const FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
@@ -220,8 +220,8 @@ var DrawingArea = new Lang.Class({
                                  this.elements[i].points[2] == this.elements[i].points[1] ||
                                  this.elements[i].points[2] == this.elements[i].points[0]);
             
-            let showTextRectangle = this.elements[i].shape == Shapes.TEXT && this.transformingElement && this.transformingElement == this.elements[i];
-            this.elements[i].buildCairo(cr, false, showTextRectangle);
+            this.elements[i].buildCairo(cr, { showTextRectangle: this.transformingElement && this.transformingElement == this.elements[i],
+                                              drawTextRectangle: this.finderPoint ? true : false });
             
             if (this.finderPoint)
                 this._findTransformingElement(cr, this.elements[i]);
@@ -239,8 +239,8 @@ var DrawingArea = new Lang.Class({
         }
         
         if (this.currentElement) {
-            let showTextRectangle = this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.DRAWING;
-            this.currentElement.buildCairo(cr, this.textHasCursor, showTextRectangle);
+            this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
+                                                 showTextRectangle: this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.DRAWING })
             
             if (this.currentElement.fill && this.currentElement.line.lineWidth == 0) {
                 // add a dummy stroke while drawing
@@ -280,6 +280,7 @@ var DrawingArea = new Lang.Class({
         
         let button = event.get_button();
         let [x, y] = event.get_coords();
+        let controlPressed = event.has_control_modifier();
         let shiftPressed = event.has_shift_modifier();
         
         if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING) {
@@ -294,9 +295,9 @@ var DrawingArea = new Lang.Class({
         }
         
         if (button == 1) {
-            if (this.currentTool == Manipulations.MOVE) {
-                if (this.elements.length)
-                    this._startTransforming(x, y, shiftPressed);
+            if (Object.values(Manipulations).indexOf(this.currentTool) != -1) {
+                if (this.transformingElement)
+                    this._startTransforming(x, y, controlPressed, shiftPressed);
             } else {
                 this._startDrawing(x, y, shiftPressed);
             }
@@ -439,10 +440,7 @@ var DrawingArea = new Lang.Class({
         }
     },
     
-    _startTransforming: function(stageX, stageY, duplicate) {
-        if (!this.transformingElement)
-            return;
-        
+    _startTransforming: function(stageX, stageY, controlPressed, duplicate) {
         let [success, startX, startY] = this.transform_stage_point(stageX, stageY);
         
         if (!success)
@@ -460,7 +458,9 @@ var DrawingArea = new Lang.Class({
         }
         
         if (this.currentTool == Manipulations.MOVE)
-            this.transformingElement.startTransformation(startX, startY, Transformations.TRANSLATION);
+            this.transformingElement.startTransformation(startX, startY, controlPressed ? Transformations.ROTATION : Transformations.TRANSLATION);
+        else if (this.currentTool == Manipulations.RESIZE)
+            this.transformingElement.startTransformation(startX, startY, controlPressed ? Transformations.SCALE : Transformations.SCALE_PRESERVE);
         
         this.finderPoint = null;
         
@@ -484,6 +484,14 @@ var DrawingArea = new Lang.Class({
         } else if (!controlPressed && this.transformingElement.lastTransformation.type == Transformations.ROTATION) {
             this.transformingElement.stopTransformation(x, y);
             this.transformingElement.startTransformation(x, y, Transformations.TRANSLATION);
+        }
+        
+        if (controlPressed && this.transformingElement.lastTransformation.type == Transformations.SCALE_PRESERVE) {
+            this.transformingElement.stopTransformation(x, y);
+            this.transformingElement.startTransformation(x, y, Transformations.SCALE);
+        } else if (!controlPressed && this.transformingElement.lastTransformation.type == Transformations.SCALE) {
+            this.transformingElement.stopTransformation(x, y);
+            this.transformingElement.startTransformation(x, y, Transformations.SCALE_PRESERVE);
         }
         
         this.transformingElement.updateTransformation(x, y);
@@ -636,7 +644,7 @@ var DrawingArea = new Lang.Class({
     },
     
     updatePointerCursor: function(controlPressed) {
-        if (this.currentTool == Manipulations.MOVE)
+        if (Object.values(Manipulations).indexOf(this.currentTool) != -1)
             this.setPointerCursor(this.transformingElement ? 'MOVE_OR_RESIZE_WINDOW' : 'DEFAULT');
         else if (!this.currentElement || (this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING))
             this.setPointerCursor(this.currentTool == Shapes.NONE ? 'POINTING_HAND' : 'CROSSHAIR');
@@ -1096,7 +1104,7 @@ const DrawingElement = new Lang.Class({
         };
     },
     
-    buildCairo: function(cr, showTextCursor, showTextRectangle) {
+    buildCairo: function(cr, params) {
         cr.setLineCap(this.line.lineCap);
         cr.setLineJoin(this.line.lineJoin);
         cr.setLineWidth(this.line.lineWidth);
@@ -1120,8 +1128,19 @@ const DrawingElement = new Lang.Class({
             if (transformation.type == Transformations.TRANSLATION) {
                 cr.translate(transformation.slideX, transformation.slideY);
             } else if (transformation.type == Transformations.ROTATION) {
-                let centerWithSlide = this._getCenterWithSlide(transformation);
-                this._rotate(cr, transformation.angle, centerWithSlide[0], centerWithSlide[1]);
+                let center = this._getCenterWithSlideBefore(transformation);
+                this._rotate(cr, transformation.angle, center[0], center[1]);
+            } else if (transformation.type == Transformations.SCALE_PRESERVE) {
+                let center = this._getCenterWithSlideBefore(transformation);
+                this._scale(cr, transformation.scale, transformation.scale, center[0], center[1]);
+            } else if (transformation.type == Transformations.SCALE) {
+                let center = this._getCenterWithSlideBefore(transformation);
+                this._scale(cr, transformation.scaleX, transformation.scaleY, center[0], center[1]);
+            } else if (transformation.type == Transformations.SCALE_ANGLE) {
+                let center = this._getCenterWithSlideBefore(transformation);
+                this._rotate(cr, transformation.angle, center[0], center[1]);
+                this._scale(cr, transformation.scale, 1, center[0], center[1]);
+                this._rotate(cr, -transformation.angle, center[0], center[1]);
             }
         });
         
@@ -1162,24 +1181,37 @@ const DrawingElement = new Lang.Class({
             cr.selectFontFace(this.font.family, this.font.style, this.font.weight);
             cr.setFontSize(Math.abs(points[1][1] - points[0][1]));
             cr.moveTo(Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]));
-            cr.showText((showTextCursor) ? (this.text + "_") : this.text);
+            cr.showText(params.showTextCursor ? (this.text + "_") : this.text);
             
-            if (!showTextCursor)
+            if (!params.showTextCursor)
                 this.textWidth = cr.getCurrentPoint()[0] - Math.min(points[0][0], points[1][0])
             
-            cr.rectangle(Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]),
-                         this.textWidth, - Math.abs(points[1][1] - points[0][1]));
-            
-            if (!showTextRectangle)
-                cr.setLineWidth(0);
+            if (params.showTextRectangle || params.drawTextRectangle) {
+                cr.rectangle(Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]),
+                             this.textWidth, - Math.abs(points[1][1] - points[0][1]));
+                if (!params.showTextRectangle)
+                    // Only draw the rectangle to find the element, not to show it.
+                    cr.setLineWidth(0);
+            }
         }
         
         this.transformations.forEach(transformation => {
             if (transformation.type == Transformations.TRANSLATION) {
                 cr.translate(-transformation.slideX, -transformation.slideY);
             } else if (transformation.type == Transformations.ROTATION) {
-                let centerWithSlide = this._getCenterWithSlide(transformation);
-                this._rotate(cr, -transformation.angle, centerWithSlide[0], centerWithSlide[1]);
+                let center = this._getCenterWithSlideBefore(transformation);
+                this._rotate(cr, -transformation.angle, center[0], center[1]);
+            } else if (transformation.type == Transformations.SCALE_PRESERVE) {
+                let center = this._getCenterWithSlideBefore(transformation);
+                this._scale(cr, 1 / transformation.scale, 1 / transformation.scale, center[0], center[1]);
+            } else if (transformation.type == Transformations.SCALE) {
+                let center = this._getCenterWithSlideBefore(transformation);
+                this._scale(cr, 1 / transformation.scaleX, 1 / transformation.scaleY, center[0], center[1]);
+            } else if (transformation.type == Transformations.SCALE_ANGLE) {
+                let center = this._getCenterWithSlideBefore(transformation);
+                this._rotate(cr, -transformation.angle, center[0], center[1]);
+                this._scale(cr, 1 / transformation.scale, 1, center[0], center[1]);
+                this._rotate(cr, transformation.angle, center[0], center[1]);
             }
         });
     },
@@ -1226,16 +1258,32 @@ const DrawingElement = new Lang.Class({
             attributes += ` stroke-dasharray="${this.dash.array[0]} ${this.dash.array[1]}" stroke-dashoffset="${this.dash.offset}"`;
         
         let transAttribute = '';
+        // Do translations first.
         this.transformations.filter(transformation => transformation.type == Transformations.TRANSLATION)
                             .forEach(transformation => {
             transAttribute += transAttribute ? ' ' : ' transform="';
             transAttribute += `translate(${transformation.slideX},${transformation.slideY})`;
         });
-        this.transformations.filter(transformation => transformation.type == Transformations.ROTATION)
+        this.transformations.filter(transformation => transformation.type != Transformations.TRANSLATION)
+                            .reverse()
                             .forEach(transformation => {
             transAttribute += transAttribute ? ' ' : ' transform="';
             let center = this._getCenter();
-            transAttribute += `rotate(${transformation.angle * 180 / Math.PI},${center[0]},${center[1]})`;
+            
+            if (transformation.type == Transformations.ROTATION) {
+                transAttribute += `rotate(${transformation.angle * 180 / Math.PI},${center[0]},${center[1]})`;
+            } else if (transformation.type == Transformations.SCALE_PRESERVE) {
+                transAttribute += `translate(${-center[0] * (transformation.scale - 1)},${-center[1] * (transformation.scale - 1)}) `;
+                transAttribute += `scale(${transformation.scale})`;
+            } else if (transformation.type == Transformations.SCALE) {
+                transAttribute += `translate(${-center[0] * (transformation.scaleX - 1)},${-center[1] * (transformation.scaleY - 1)}) `;
+                transAttribute += `scale(${transformation.scaleX},${transformation.scaleY})`;
+            } else if (transformation.type == Transformations.SCALE_ANGLE) {
+                transAttribute += `rotate(${transformation.angle * 180 / Math.PI},${center[0]},${center[1]}) `;
+                transAttribute += `translate(${-center[0] * (transformation.scale - 1)},0) `;
+                transAttribute += `scale(${transformation.scale},1) `;
+                transAttribute += `rotate(${-transformation.angle * 180 / Math.PI},${center[0]},${center[1]})`;
+            }
         });
         transAttribute += transAttribute ? '"' : '';
         
@@ -1376,23 +1424,43 @@ const DrawingElement = new Lang.Class({
             this.transformations.push({ startX: startX, startY: startY, type: type, slideX: 0, slideY: 0 });
         else if (type == Transformations.ROTATION)
             this.transformations.push({ startX: startX, startY: startY, type: type, angle: 0 });
+        else if (type == Transformations.SCALE_PRESERVE)
+            this.transformations.push({ startX: startX, startY: startY, type: type, scale: 1 });
+        else if (type == Transformations.SCALE)
+            this.transformations.push({ startX: startX, startY: startY, type: type, scaleX: 1, scaleY: 1 });
+        else if (type == Transformations.SCALE_ANGLE)
+            this.transformations.push({ startX: startX, startY: startY, type: type, scale: 1, angle: 0 });
     },
     
     updateTransformation: function(x, y) {
-        let transformation = this.transformations[this.transformations.length - 1];
+        let transformation = this.lastTransformation;
         
         if (transformation.type == Transformations.TRANSLATION) {
             transformation.slideX = x - transformation.startX;
             transformation.slideY = y - transformation.startY;
         } else if (transformation.type == Transformations.ROTATION) {
-            let centerWithSlide = this._getCenterWithSlide(transformation);
-            transformation.angle = getAngle(centerWithSlide[0], centerWithSlide[1], transformation.startX, transformation.startY, x, y);
+            let center = this._getCenterWithSlideBefore(transformation);
+            transformation.angle = getAngle(center[0], center[1], transformation.startX, transformation.startY, x, y);
+        } else if (transformation.type == Transformations.SCALE_PRESERVE) {
+            let center = this._getCenterWithSlideBefore(transformation);
+            transformation.scale = Math.hypot(x - center[0], y - center[1]) / Math.hypot(transformation.startX - center[0], transformation.startY - center[1]);
+        } else if (transformation.type == Transformations.SCALE) {
+            let center = this._getCenterWithSlideBefore(transformation);
+            let startAngle = getAngle(center[0], center[1], center[0] + 1, center[1], transformation.startX, transformation.startY);
+            let vertical = Math.abs(Math.sin(startAngle)) >= Math.sin(3 * Math.PI / 8);
+            let horizontal = Math.abs(Math.cos(startAngle)) >= Math.cos(Math.PI / 8);
+            transformation.scaleX = vertical ? 1 : Math.abs((x - center[0]) / (transformation.startX - center[0]));
+            transformation.scaleY = horizontal ? 1 : Math.abs((y - center[1]) / (transformation.startY - center[1]));
+        } else if (transformation.type == Transformations.SCALE_ANGLE) {
+            let center = this._getCenterWithSlideBefore(transformation);
+            transformation.scale = Math.hypot(x - center[0], y - center[1]) / Math.hypot(transformation.startX - center[0], transformation.startY - center[1]);
+            transformation.angle = getAngle(center[0], center[1], center[0] + 1, center[1], x, y);
         }
     },
     
     stopTransformation: function(x, y) {
         // Clean transformations
-        let transformation = this.transformations[this.transformations.length - 1];
+        let transformation = this.lastTransformation;
         
         if (transformation.type == Transformations.TRANSLATION && Math.hypot(transformation.slideX, transformation.slideY) < 1 ||
             transformation.type == Transformations.ROTATION && Math.abs(transformation.angle) < Math.PI / 1000) {
@@ -1430,9 +1498,16 @@ const DrawingElement = new Lang.Class({
     },
     
     // The figure rotation center that takes previous translations into account.
-    _getCenterWithSlide: function(transformation) {
+    _getCenterWithSlideBefore: function(transformation) {
         let [center, totalSlide] = [this._getCenter(), this._getTotalSlideBefore(transformation)];
         return [center[0] + totalSlide[0], center[1] + totalSlide[1]];
+    },
+    
+    _getCenterWithSlide: function() {
+        if (this.transformations.length)
+            return this._getCenterWithSlideBefore(this.lastTransformation);
+        else
+            return this._getCenter();
     },
     
     _addPoint: function(x, y, smoothedStroke) {
@@ -1450,7 +1525,7 @@ const DrawingElement = new Lang.Class({
     },
     
     _scale: function(cr, scaleX, scaleY, x, y) {
-        if (scaleX == scaleY)
+        if (scaleX == 1 && scaleY == 1)
             return;
         cr.translate(x, y);
         cr.scale(scaleX, scaleY);
@@ -1937,7 +2012,7 @@ const DrawingMenu = new Lang.Class({
                 else
                     text = _(obj[i]);
                 
-                let iCaptured = i;
+                let iCaptured = Number(i);
                 let subItem = item.menu.addAction(text, () => {
                     item.label.set_text(_(obj[iCaptured]));
                     target[targetProperty] = iCaptured;

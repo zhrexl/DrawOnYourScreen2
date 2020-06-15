@@ -111,6 +111,11 @@
       <summary>select move tool</summary>
       <description>select move tool</description>
     </key>
+    <key type="as" name="select-resize-tool">
+      <default>["&lt;Primary&gt;x"]</default>
+      <summary>select resize tool</summary>
+      <description>select resize tool</description>
+    </key>
     <key type="as" name="increment-line-width">
       <default><![CDATA[['<Primary>KP_Add','<Primary><Shift>plus']]]></default>
       <summary>increment the line width</summary>

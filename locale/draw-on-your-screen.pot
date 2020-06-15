@@ -68,6 +68,9 @@ msgstr ""
 msgid "Move"
 msgstr ""
 
+msgid "Resize"
+msgstr ""
+
 msgid "Fill"
 msgstr ""
 
@@ -183,6 +186,9 @@ msgid "Select text"
 msgstr ""
 
 msgid "Select move"
+msgstr ""
+
+msgid "Select resize"
 msgstr ""
 
 msgid "Toggle fill/stroke"
