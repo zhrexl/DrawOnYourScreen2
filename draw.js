@@ -242,17 +242,15 @@ var DrawingArea = new Lang.Class({
             this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
                                                  showTextRectangle: this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.DRAWING })
             
-            if (this.currentElement.fill && this.currentElement.line.lineWidth == 0) {
-                // add a dummy stroke while drawing
-                cr.setLineWidth(2);
-                cr.setDash([1, 2], 0);
-            }
+            if (this.currentElement.fill && this.currentElement.line.lineWidth == 0)
+                crSetDummyStroke(cr);
             
             cr.stroke();
         }
         
         if (this.isInDrawingMode && this.hasGrid && this.gridGap && this.gridGap >= 1) {
             Clutter.cairo_set_source_color(cr, this.gridColor);
+            cr.setDash([], 0);
             
             let [gridX, gridY] = [this.gridGap, this.gridGap];
             while (gridX < this.monitor.width) {
@@ -538,8 +536,6 @@ var DrawingArea = new Lang.Class({
         });
         
         if (this.currentTool == Shapes.TEXT) {
-            this.currentElement.line = { lineWidth: 2, lineJoin: 0, lineCap: 0 };
-            this.currentElement.dash = { active: true, array: [1, 2] , offset: 0 };
             this.currentElement.fill = false;
             this.currentElement.text = _("Text");
             this.currentElement.textState = TextStates.DRAWING;
@@ -1113,7 +1109,7 @@ const DrawingElement = new Lang.Class({
         if (this.dash.active)
             cr.setDash(this.dash.array, this.dash.offset);
         else
-            cr.setDash([1000000], 0);
+            cr.setDash([], 0);
         
         if (this.eraser)
             cr.setOperator(Cairo.Operator.CLEAR);
@@ -1129,18 +1125,18 @@ const DrawingElement = new Lang.Class({
                 cr.translate(transformation.slideX, transformation.slideY);
             } else if (transformation.type == Transformations.ROTATION) {
                 let center = this._getCenterWithSlideBefore(transformation);
-                this._rotate(cr, transformation.angle, center[0], center[1]);
+                crRotate(cr, transformation.angle, center[0], center[1]);
             } else if (transformation.type == Transformations.SCALE_PRESERVE) {
                 let center = this._getCenterWithSlideBefore(transformation);
-                this._scale(cr, transformation.scale, transformation.scale, center[0], center[1]);
+                crScale(cr, transformation.scale, transformation.scale, center[0], center[1]);
             } else if (transformation.type == Transformations.SCALE) {
                 let center = this._getCenterWithSlideBefore(transformation);
-                this._scale(cr, transformation.scaleX, transformation.scaleY, center[0], center[1]);
+                crScale(cr, transformation.scaleX, transformation.scaleY, center[0], center[1]);
             } else if (transformation.type == Transformations.SCALE_ANGLE) {
                 let center = this._getCenterWithSlideBefore(transformation);
-                this._rotate(cr, transformation.angle, center[0], center[1]);
-                this._scale(cr, transformation.scale, 1, center[0], center[1]);
-                this._rotate(cr, -transformation.angle, center[0], center[1]);
+                crRotate(cr, transformation.angle, center[0], center[1]);
+                crScale(cr, transformation.scale, 1, center[0], center[1]);
+                crRotate(cr, -transformation.angle, center[0], center[1]);
             }
         });
         
@@ -1161,10 +1157,10 @@ const DrawingElement = new Lang.Class({
             if (points[2])
                 ratio = Math.hypot(points[2][0] - points[0][0], points[2][1] - points[0][1]) / Math.hypot(points[1][0] - points[0][0], points[1][1] - points[0][1]);
             
-            this._scale(cr, ratio, 1, points[0][0], points[0][1]);
+            crScale(cr, ratio, 1, points[0][0], points[0][1]);
             let r = Math.hypot(points[1][0] - points[0][0], points[1][1] - points[0][1]);
             cr.arc(points[0][0], points[0][1], r, 0, 2 * Math.PI);
-            this._scale(cr, 1 / ratio, 1, points[0][0], points[0][1]);
+            crScale(cr, 1 / ratio, 1, points[0][0], points[0][1]);
             
         } else if (shape == Shapes.RECTANGLE && points.length == 2) {
             cr.rectangle(points[0][0], points[0][1], points[1][0] - points[0][0], points[1][1] - points[0][1]);
@@ -1189,7 +1185,9 @@ const DrawingElement = new Lang.Class({
             if (params.showTextRectangle || params.drawTextRectangle) {
                 cr.rectangle(Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]),
                              this.textWidth, - Math.abs(points[1][1] - points[0][1]));
-                if (!params.showTextRectangle)
+                if (params.showTextRectangle)
+                    crSetDummyStroke(cr);
+                else
                     // Only draw the rectangle to find the element, not to show it.
                     cr.setLineWidth(0);
             }
@@ -1200,18 +1198,18 @@ const DrawingElement = new Lang.Class({
                 cr.translate(-transformation.slideX, -transformation.slideY);
             } else if (transformation.type == Transformations.ROTATION) {
                 let center = this._getCenterWithSlideBefore(transformation);
-                this._rotate(cr, -transformation.angle, center[0], center[1]);
+                crRotate(cr, -transformation.angle, center[0], center[1]);
             } else if (transformation.type == Transformations.SCALE_PRESERVE) {
                 let center = this._getCenterWithSlideBefore(transformation);
-                this._scale(cr, 1 / transformation.scale, 1 / transformation.scale, center[0], center[1]);
+                crScale(cr, 1 / transformation.scale, 1 / transformation.scale, center[0], center[1]);
             } else if (transformation.type == Transformations.SCALE) {
                 let center = this._getCenterWithSlideBefore(transformation);
-                this._scale(cr, 1 / transformation.scaleX, 1 / transformation.scaleY, center[0], center[1]);
+                crScale(cr, 1 / transformation.scaleX, 1 / transformation.scaleY, center[0], center[1]);
             } else if (transformation.type == Transformations.SCALE_ANGLE) {
                 let center = this._getCenterWithSlideBefore(transformation);
-                this._rotate(cr, -transformation.angle, center[0], center[1]);
-                this._scale(cr, 1 / transformation.scale, 1, center[0], center[1]);
-                this._rotate(cr, transformation.angle, center[0], center[1]);
+                crRotate(cr, -transformation.angle, center[0], center[1]);
+                crScale(cr, 1 / transformation.scale, 1, center[0], center[1]);
+                crRotate(cr, transformation.angle, center[0], center[1]);
             }
         });
     },
@@ -1230,7 +1228,7 @@ const DrawingElement = new Lang.Class({
         if (this.dash.active)
             cr.setDash(this.dash.array, this.dash.offset);
         else
-            cr.setDash([1000000], 0);
+            cr.setDash([], 0);
         return inElement;
     },
     
@@ -1514,24 +1512,39 @@ const DrawingElement = new Lang.Class({
         this.points.push([x, y]);
         if (smoothedStroke)
             this.smooth(this.points.length - 1);
-    },
-    
-    _rotate: function(cr, angle, x, y) {
-        if (angle == 0)
-            return;
-        cr.translate(x, y);
-        cr.rotate(angle);
-        cr.translate(-x, -y);
-    },
-    
-    _scale: function(cr, scaleX, scaleY, x, y) {
-        if (scaleX == 1 && scaleY == 1)
-            return;
-        cr.translate(x, y);
-        cr.scale(scaleX, scaleY);
-        cr.translate(-x, -y);
     }
 });
+
+/*
+    Some Cairo utils
+*/
+
+const crSetDummyStroke = function(cr) {
+    cr.setLineWidth(2);
+    cr.setLineCap(0);
+    cr.setLineJoin(0);
+    cr.setDash([1, 2], 0);
+};
+
+const crRotate = function(cr, angle, x, y) {
+    if (angle == 0)
+        return;
+    cr.translate(x, y);
+    cr.rotate(angle);
+    cr.translate(-x, -y);
+};
+
+const crScale = function(cr, scaleX, scaleY, x, y) {
+    if (scaleX == 1 && scaleY == 1)
+        return;
+    cr.translate(x, y);
+    cr.scale(scaleX, scaleY);
+    cr.translate(-x, -y);
+};
+
+/*
+    Some geometric utils
+*/
 
 const getNearness = function(pointA, pointB, distance) {
     return Math.hypot(pointB[0] - pointA[0], pointB[1] - pointA[1]) < distance;
