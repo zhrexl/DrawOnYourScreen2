@@ -223,10 +223,6 @@ var DrawingArea = new Lang.Class({
         
         for (let i = 0; i < this.elements.length; i++) {
             cr.save();
-            let isStraightLine = this.elements[i].shape == Shapes.LINE &&
-                                (this.elements[i].points.length < 3 ||
-                                 this.elements[i].points[2] == this.elements[i].points[1] ||
-                                 this.elements[i].points[2] == this.elements[i].points[0]);
             
             this.elements[i].buildCairo(cr, { showTextRectangle: this.grabbedElement && this.grabbedElement == this.elements[i],
                                               drawTextRectangle: this.grabPoint ? true : false });
@@ -234,7 +230,7 @@ var DrawingArea = new Lang.Class({
             if (this.grabPoint)
                 this._searchElementToGrab(cr, this.elements[i]);
             
-            if (this.elements[i].fill && !isStraightLine) {
+            if (this.elements[i].fill && !this.elements[i].isStraightLine) {
                 cr.fillPreserve();
                 if (this.elements[i].shape == Shapes.NONE || this.elements[i].shape == Shapes.LINE)
                     cr.closePath();
@@ -1276,11 +1272,10 @@ const DrawingElement = new Lang.Class({
         let row = "\n  ";
         let points = this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100]);
         let color = this.eraser ? bgColor : this.color;
-        let isStraightLine = this.shape == Shapes.LINE && (points.length < 3 || points[2] == points[1] || points[2] == points[0]);
-        let fill = this.fill && !isStraightLine;
+        let fill = this.fill && !this.isStraightLine;
         let attributes;
         
-        if (isStraightLine)
+        if (this.isStraightLine)
             attributes = `stroke="${color}" ` +
                          `stroke-width="${this.line.lineWidth}" ` +
                          `stroke-linecap="${LineCapNames[this.line.lineCap].toLowerCase()}"`;
@@ -1384,6 +1379,10 @@ const DrawingElement = new Lang.Class({
             return null;
         
         return this.transformations[this.transformations.length - 1];
+    },
+    
+    get isStraightLine() {
+        return this.shape == Shapes.LINE && (this.points.length < 3 || this.points[2] == this.points[1] || this.points[2] == this.points[0]);
     },
     
     smooth: function(i) {
