@@ -48,6 +48,9 @@ const Prefs = Me.imports.prefs;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
+const CAIRO_DEBUG_EXTENDS = false;
+const SVG_DEBUG_EXTENDS = false;
+const SVG_DEBUG_SUPERPOSES_CAIRO = false;
 
 const ICON_DIR = Me.dir.get_child('data').get_child('icons');
 const FILL_ICON_PATH = ICON_DIR.get_child('fill-symbolic.svg').get_path();
@@ -213,6 +216,10 @@ var DrawingArea = new Lang.Class({
     
     vfunc_repaint: function() {
         let cr = this.get_context();
+        if (CAIRO_DEBUG_EXTENDS) {
+            cr.scale(0.5, 0.5);
+            cr.translate(this.monitor.width, this.monitor.height);
+        }
         
         for (let i = 0; i < this.elements.length; i++) {
             cr.save();
@@ -897,9 +904,15 @@ var DrawingArea = new Lang.Class({
         }
         
         let content = `<svg viewBox="0 0 ${this.width} ${this.height}" xmlns="http://www.w3.org/2000/svg">`;
+        if (SVG_DEBUG_EXTENDS)
+            content = `<svg viewBox="${-this.width} ${-this.height} ${2 * this.width} ${2 * this.height}" xmlns="http://www.w3.org/2000/svg">`;
         let backgroundColorString = this.hasBackground ? this.activeBackgroundColor.to_string() : 'transparent';
         if (backgroundColorString != 'transparent') {
             content += `\n  <rect id="background" width="100%" height="100%" fill="${backgroundColorString}"/>`;
+        }
+        if (SVG_DEBUG_EXTENDS) {
+            content += `\n  <line stroke="black" x1="0" y1="${-this.height}" x2="0" y2="${this.height}"/>`;
+            content += `\n  <line stroke="black" x1="${-this.width}" y1="0" x2="${this.width}" y2="0"/>`;
         }
         for (let i = 0; i < this.elements.length; i++) {
             content += this.elements[i].buildSVG(backgroundColorString);
@@ -1121,6 +1134,10 @@ const DrawingElement = new Lang.Class({
         let [success, color] = Clutter.Color.from_string(this.color);
         if (success)
             Clutter.cairo_set_source_color(cr, color);
+        if (SVG_DEBUG_SUPERPOSES_CAIRO) {
+            Clutter.cairo_set_source_color(cr, Clutter.Color.from_string("red")[1]);
+            cr.setLineWidth(this.line.lineWidth / 2 || 1);
+        }
         
         this.transformations.slice(0).reverse().forEach(transformation => {
             if (transformation.type == Transformations.TRANSLATION) {
