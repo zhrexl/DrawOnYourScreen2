@@ -837,6 +837,9 @@ var DrawingArea = new Lang.Class({
         this._onKeyboardPopupMenuHandler = this.connect('popup-menu', this._onKeyboardPopupMenu.bind(this));
         this.scrollHandler = this.connect('scroll-event', this._onScroll.bind(this));
         this.get_parent().set_background_color(this.hasBackground ? this.activeBackgroundColor : null);
+        if (this.hasGrid)
+            // redisplay to show the grid before updating the style because _updateStyle is long.
+            this._redisplay();
         this._updateStyle();
     },
     
