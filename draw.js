@@ -215,6 +215,7 @@ var DrawingArea = new Lang.Class({
         let cr = this.get_context();
         
         for (let i = 0; i < this.elements.length; i++) {
+            cr.save();
             let isStraightLine = this.elements[i].shape == Shapes.LINE &&
                                 (this.elements[i].points.length < 3 ||
                                  this.elements[i].points[2] == this.elements[i].points[1] ||
@@ -236,9 +237,11 @@ var DrawingArea = new Lang.Class({
             } else {
                 cr.stroke();
             }
+            cr.restore();
         }
         
         if (this.currentElement) {
+            cr.save();
             this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
                                                  showTextRectangle: this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.DRAWING })
             
@@ -246,9 +249,11 @@ var DrawingArea = new Lang.Class({
                 crSetDummyStroke(cr);
             
             cr.stroke();
+            cr.restore();
         }
         
         if (this.isInDrawingMode && this.hasGrid && this.gridGap && this.gridGap >= 1) {
+            cr.save();
             Clutter.cairo_set_source_color(cr, this.gridColor);
             cr.setDash([], 0);
             
@@ -267,6 +272,7 @@ var DrawingArea = new Lang.Class({
                 gridY += this.gridGap;
                 cr.stroke();
             }
+            cr.restore();
         }
         
         cr.$dispose();
@@ -405,10 +411,9 @@ var DrawingArea = new Lang.Class({
         else if (this.transformingElement == element)
             this.transformingElement = null;
         
-        if (element == this.elements[this.elements.length - 1]) {
+        if (element == this.elements[this.elements.length - 1])
             // All elements have been tested, the winner is the last.
             this.updatePointerCursor();
-        }
     },
     
     _startElementFinder: function() {
@@ -1193,42 +1198,20 @@ const DrawingElement = new Lang.Class({
             }
         }
         
-        this.transformations.forEach(transformation => {
-            if (transformation.type == Transformations.TRANSLATION) {
-                cr.translate(-transformation.slideX, -transformation.slideY);
-            } else if (transformation.type == Transformations.ROTATION) {
-                let center = this._getCenterWithSlideBefore(transformation);
-                crRotate(cr, -transformation.angle, center[0], center[1]);
-            } else if (transformation.type == Transformations.SCALE_PRESERVE) {
-                let center = this._getCenterWithSlideBefore(transformation);
-                crScale(cr, 1 / transformation.scale, 1 / transformation.scale, center[0], center[1]);
-            } else if (transformation.type == Transformations.SCALE) {
-                let center = this._getCenterWithSlideBefore(transformation);
-                crScale(cr, 1 / transformation.scaleX, 1 / transformation.scaleY, center[0], center[1]);
-            } else if (transformation.type == Transformations.SCALE_ANGLE) {
-                let center = this._getCenterWithSlideBefore(transformation);
-                crRotate(cr, -transformation.angle, center[0], center[1]);
-                crScale(cr, 1 / transformation.scale, 1, center[0], center[1]);
-                crRotate(cr, transformation.angle, center[0], center[1]);
-            }
-        });
+        cr.identityMatrix();
     },
     
     getContainsPoint: function(cr, x, y) {
         if (this.shape == Shapes.TEXT)
             return cr.inFill(x, y);
         
+        cr.save();
         cr.setLineWidth(Math.max(this.line.lineWidth, 25));
         cr.setDash([], 0);
         
         // Check whether the point is inside/on/near the element.
-        let inElement = cr.inStroke(x, y) || this.fill  && cr.inFill(x, y);
-        
-        cr.setLineWidth(this.line.lineWidth);
-        if (this.dash.active)
-            cr.setDash(this.dash.array, this.dash.offset);
-        else
-            cr.setDash([], 0);
+        let inElement = cr.inStroke(x, y) || this.fill && cr.inFill(x, y);
+        cr.restore();
         return inElement;
     },
     
