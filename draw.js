@@ -228,15 +228,12 @@ var DrawingArea = new Lang.Class({
                 this._findTransformingElement(cr, this.elements[i]);
             
             if (this.elements[i].fill && !isStraightLine) {
-                let pathCopy = cr.copyPath();
+                cr.fillPreserve();
                 if (this.elements[i].shape == Shapes.NONE || this.elements[i].shape == Shapes.LINE)
                     cr.closePath();
-                cr.stroke(); // first paint stroke
-                cr.appendPath(pathCopy);
-                cr.fill(); // secondly paint fill
-            } else {
-                cr.stroke();
-            }
+            } 
+            
+            cr.stroke();
             cr.restore();
         }
         
