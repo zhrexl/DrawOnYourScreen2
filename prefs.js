@@ -55,6 +55,7 @@ var INTERNAL_KEYBINDINGS = {
     'select-text-shape': "Select text",
     'select-move-tool': "Select move",
     'select-resize-tool': "Select resize",
+    'select-mirror-tool': "Select mirror",
     'toggle-fill': "Toggle fill/stroke",
     '-separator-2': '',
     'increment-line-width': "Increment line width",

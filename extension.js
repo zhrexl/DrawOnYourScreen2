@@ -196,6 +196,7 @@ var AreaManager = new Lang.Class({
             'select-polyline-shape': () => this.activeArea.selectTool(Draw.Tools.POLYLINE),
             'select-move-tool': () => this.activeArea.selectTool(Draw.Tools.MOVE),
             'select-resize-tool': () => this.activeArea.selectTool(Draw.Tools.RESIZE),
+            'select-mirror-tool': () => this.activeArea.selectTool(Draw.Tools.MIRROR),
             'toggle-font-family': this.activeArea.toggleFontFamily.bind(this.activeArea),
             'toggle-font-weight': this.activeArea.toggleFontWeight.bind(this.activeArea),
             'toggle-font-style': this.activeArea.toggleFontStyle.bind(this.activeArea),

@@ -71,6 +71,9 @@ msgstr ""
 msgid "Resize"
 msgstr ""
 
+msgid "Mirror"
+msgstr ""
+
 msgid "Fill"
 msgstr ""
 
@@ -189,6 +192,9 @@ msgid "Select move"
 msgstr ""
 
 msgid "Select resize"
+msgstr ""
+
+msgid "Select mirror"
 msgstr ""
 
 msgid "Toggle fill/stroke"

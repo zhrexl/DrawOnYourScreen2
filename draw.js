@@ -63,11 +63,11 @@ const DASHED_LINE_ICON_PATH = ICON_DIR.get_child('dashed-line-symbolic.svg').get
 const FULL_LINE_ICON_PATH = ICON_DIR.get_child('full-line-symbolic.svg').get_path();
 
 const Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
-const Manipulations = { MOVE: 100, RESIZE: 101 };
+const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
 var   Tools = Object.assign({}, Shapes, Manipulations);
 const TextStates = { WRITTEN: 0, DRAWING: 1, WRITING: 2 };
-const Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, SCALE: 3, SCALE_ANGLE: 4 };
-const ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move", 101: "Resize" };
+const Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, SCALE: 3, SCALE_ANGLE: 4, REFLECTION: 5, INVERSION: 6 };
+const ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move", 101: "Resize", 102: "Mirror" };
 const LineCapNames = { 0: 'Butt', 1: 'Round', 2: 'Square' };
 const LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
 const FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
@@ -422,7 +422,7 @@ var DrawingArea = new Lang.Class({
     
     _startElementFinder: function() {
         this.elementFinderHandler = this.connect('motion-event', (actor, event) => {
-            if (this.motionHandler) {
+            if (this.motionHandler || this.transformingElementLocked) {
                 this.finderPoint = null;
                 return;
             }
@@ -453,6 +453,16 @@ var DrawingArea = new Lang.Class({
         if (!success)
             return;
         
+        if (this.currentTool == Manipulations.MIRROR) {
+            this.transformingElementLocked = !this.transformingElementLocked;
+            if (this.transformingElementLocked) {
+                this.updatePointerCursor();
+                return;
+            }
+        }
+        
+        this.finderPoint = null;
+        
         this.buttonReleasedHandler = this.connect('button-release-event', (actor, event) => {
             this._stopTransforming();
         });
@@ -468,8 +478,11 @@ var DrawingArea = new Lang.Class({
             this.transformingElement.startTransformation(startX, startY, controlPressed ? Transformations.ROTATION : Transformations.TRANSLATION);
         else if (this.currentTool == Manipulations.RESIZE)
             this.transformingElement.startTransformation(startX, startY, controlPressed ? Transformations.SCALE : Transformations.SCALE_PRESERVE);
+         else if (this.currentTool == Manipulations.MIRROR) {
+            this.transformingElement.startTransformation(startX, startY, controlPressed ? Transformations.INVERSION : Transformations.REFLECTION);
+            this._redisplay();
+        }
         
-        this.finderPoint = null;
         
         this.motionHandler = this.connect('motion-event', (actor, event) => {
             if (this.spaceKeyPressed)
@@ -486,19 +499,27 @@ var DrawingArea = new Lang.Class({
     
     _updateTransforming: function(x, y, controlPressed) {
         if (controlPressed && this.transformingElement.lastTransformation.type == Transformations.TRANSLATION) {
-            this.transformingElement.stopTransformation(x, y);
+            this.transformingElement.stopTransformation();
             this.transformingElement.startTransformation(x, y, Transformations.ROTATION);
         } else if (!controlPressed && this.transformingElement.lastTransformation.type == Transformations.ROTATION) {
-            this.transformingElement.stopTransformation(x, y);
+            this.transformingElement.stopTransformation();
             this.transformingElement.startTransformation(x, y, Transformations.TRANSLATION);
         }
         
         if (controlPressed && this.transformingElement.lastTransformation.type == Transformations.SCALE_PRESERVE) {
-            this.transformingElement.stopTransformation(x, y);
+            this.transformingElement.stopTransformation();
             this.transformingElement.startTransformation(x, y, Transformations.SCALE);
         } else if (!controlPressed && this.transformingElement.lastTransformation.type == Transformations.SCALE) {
-            this.transformingElement.stopTransformation(x, y);
+            this.transformingElement.stopTransformation();
             this.transformingElement.startTransformation(x, y, Transformations.SCALE_PRESERVE);
+        }
+        
+        if (controlPressed && this.transformingElement.lastTransformation.type == Transformations.REFLECTION) {
+            this.transformingElement.transformations.pop();
+            this.transformingElement.startTransformation(x, y, Transformations.INVERSION);
+        } else if (!controlPressed && this.transformingElement.lastTransformation.type == Transformations.INVERSION) {
+            this.transformingElement.transformations.pop();
+            this.transformingElement.startTransformation(x, y, Transformations.REFLECTION);
         }
         
         this.transformingElement.updateTransformation(x, y);
@@ -517,6 +538,7 @@ var DrawingArea = new Lang.Class({
         
         this.transformingElement.stopTransformation();
         this.transformingElement = null;
+        this.transformingElementLocked = false;
         this._redisplay();
     },
     
@@ -649,7 +671,9 @@ var DrawingArea = new Lang.Class({
     },
     
     updatePointerCursor: function(controlPressed) {
-        if (Object.values(Manipulations).indexOf(this.currentTool) != -1)
+        if (this.currentTool == Manipulations.MIRROR && this.transformingElementLocked)
+            this.setPointerCursor('CROSSHAIR');
+        else if (Object.values(Manipulations).indexOf(this.currentTool) != -1)
             this.setPointerCursor(this.transformingElement ? 'MOVE_OR_RESIZE_WINDOW' : 'DEFAULT');
         else if (!this.currentElement || (this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING))
             this.setPointerCursor(this.currentTool == Shapes.NONE ? 'POINTING_HAND' : 'CROSSHAIR');
@@ -1070,6 +1094,9 @@ var DrawingArea = new Lang.Class({
     }
 });
 
+const MIN_REFLECTION_LINE_LENGTH = 10; // px
+const INVERSION_CIRCLE_RADIUS = 12; // px
+
 // DrawingElement represents a "brushstroke".
 // It can be converted into a cairo path as well as a svg element.
 // See DrawingArea._startDrawing() to know its params.
@@ -1119,6 +1146,22 @@ const DrawingElement = new Lang.Class({
     },
     
     buildCairo: function(cr, params) {
+        let [success, color] = Clutter.Color.from_string(this.color);
+        if (success)
+            Clutter.cairo_set_source_color(cr, color);
+        
+        if (this.showSymmetryElement) {
+            let transformation = this.lastTransformation;
+            crSetDummyStroke(cr);
+            if (transformation.type == Transformations.REFLECTION) {
+                cr.moveTo(transformation.startX, transformation.startY);
+                cr.lineTo(transformation.endX, transformation.endY);
+            } else {
+                cr.arc(transformation.endX, transformation.endY, INVERSION_CIRCLE_RADIUS, 0, 2 * Math.PI);
+            }
+            cr.stroke();
+        }
+        
         cr.setLineCap(this.line.lineCap);
         cr.setLineJoin(this.line.lineJoin);
         cr.setLineWidth(this.line.lineWidth);
@@ -1134,11 +1177,8 @@ const DrawingElement = new Lang.Class({
         else
             cr.setOperator(Cairo.Operator.OVER);
         
-        let [success, color] = Clutter.Color.from_string(this.color);
-        if (success)
-            Clutter.cairo_set_source_color(cr, color);
         if (SVG_DEBUG_SUPERPOSES_CAIRO) {
-            Clutter.cairo_set_source_color(cr, Clutter.Color.from_string("red")[1]);
+            Clutter.cairo_set_source_color(cr, Clutter.Color.new(255, 0, 0, 255));
             cr.setLineWidth(this.line.lineWidth / 2 || 1);
         }
         
@@ -1159,6 +1199,12 @@ const DrawingElement = new Lang.Class({
                 crRotate(cr, transformation.angle, center[0], center[1]);
                 crScale(cr, transformation.scale, 1, center[0], center[1]);
                 crRotate(cr, -transformation.angle, center[0], center[1]);
+            } else if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION) {
+                cr.translate(transformation.slideX, transformation.slideY);
+                cr.rotate(transformation.angle);
+                cr.scale(transformation.scaleX, transformation.scaleY);
+                cr.rotate(-transformation.angle);
+                cr.translate(-transformation.slideX, -transformation.slideY);
             }
         });
         
@@ -1256,7 +1302,7 @@ const DrawingElement = new Lang.Class({
             attributes += ` stroke-dasharray="${this.dash.array[0]} ${this.dash.array[1]}" stroke-dashoffset="${this.dash.offset}"`;
         
         let transAttribute = '';
-        // Do translations first.
+        // Do translations first, because it works this way.
         this.transformations.filter(transformation => transformation.type == Transformations.TRANSLATION)
                             .forEach(transformation => {
             transAttribute += transAttribute ? ' ' : ' transform="';
@@ -1281,6 +1327,12 @@ const DrawingElement = new Lang.Class({
                 transAttribute += `translate(${-center[0] * (transformation.scale - 1)},0) `;
                 transAttribute += `scale(${transformation.scale},1) `;
                 transAttribute += `rotate(${-transformation.angle * 180 / Math.PI},${center[0]},${center[1]})`;
+            } else if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION) {
+                transAttribute += `translate(${transformation.slideX}, ${transformation.slideY}) `;
+                transAttribute += `rotate(${transformation.angle * 180 / Math.PI}) `;
+                transAttribute += `scale(${transformation.scaleX}, ${transformation.scaleY}) `;
+                transAttribute += `rotate(${-transformation.angle * 180 / Math.PI}) `;
+                transAttribute += `translate(${-transformation.slideX}, ${-transformation.slideY})`;
             }
         });
         transAttribute += transAttribute ? '"' : '';
@@ -1428,6 +1480,16 @@ const DrawingElement = new Lang.Class({
             this.transformations.push({ startX: startX, startY: startY, type: type, scaleX: 1, scaleY: 1 });
         else if (type == Transformations.SCALE_ANGLE)
             this.transformations.push({ startX: startX, startY: startY, type: type, scale: 1, angle: 0 });
+        else if (type == Transformations.REFLECTION)
+            this.transformations.push({ startX: startX, startY: startY, endX: startX, endY: startY, type: type,
+                                        scaleX:  1, scaleY:  1, slideX: 0, slideY: 0, angle: 0 });
+        else if (type == Transformations.INVERSION)
+            this.transformations.push({ startX: startX, startY: startY, endX: startX, endY: startY, type: type,
+                                        scaleX: -1, scaleY: -1, slideX: startX, slideY: startY,
+                                        angle: Math.PI + Math.atan(startY / (startX || 1)) });
+        
+        if (type == Transformations.REFLECTION || type == Transformations.INVERSION)
+            this.showSymmetryElement = true;
     },
     
     updateTransformation: function(x, y) {
@@ -1453,19 +1515,55 @@ const DrawingElement = new Lang.Class({
             let center = this._getCenterWithSlideBefore(transformation);
             transformation.scale = Math.hypot(x - center[0], y - center[1]) / Math.hypot(transformation.startX - center[0], transformation.startY - center[1]);
             transformation.angle = getAngle(center[0], center[1], center[0] + 1, center[1], x, y);
+        } else if (transformation.type == Transformations.REFLECTION) {
+            [transformation.endX, transformation.endY] = [x, y];
+            if (getNearness([transformation.startX, transformation.startY], [x, y], MIN_REFLECTION_LINE_LENGTH)) {
+                // do nothing to avoid jumps (no transformation at starting and locked transformation after)
+            } else if (Math.abs(y - transformation.startY) <= 5 && Math.abs(x - transformation.startX) >= 5) {
+                [transformation.scaleX, transformation.scaleY] = [1, -1];
+                [transformation.slideX, transformation.slideY] = [0, transformation.startY];
+                transformation.angle = Math.PI;
+            } else if (Math.abs(x - transformation.startX) <= 5 && Math.abs(y - transformation.startY) >= 5) {
+                [transformation.scaleX, transformation.scaleY] = [-1, 1];
+                [transformation.slideX, transformation.slideY] = [transformation.startX, 0];
+                transformation.angle = Math.PI;
+            } else if (x != transformation.startX) {
+                let tan = (y - transformation.startY) / (x - transformation.startX);
+                [transformation.scaleX, transformation.scaleY] = [1, -1];
+                [transformation.slideX, transformation.slideY] = [0, transformation.startY - transformation.startX * tan];
+                transformation.angle = Math.PI + Math.atan(tan);
+            } else if (y != transformation.startY) {
+                let tan = (x - transformation.startX) / (y - transformation.startY);
+                [transformation.scaleX, transformation.scaleY] = [-1, 1];
+                [transformation.slideX, transformation.slideY] = [transformation.startX - transformation.startY * tan, 0];
+                transformation.angle = Math.PI - Math.atan(tan);
+            }
+        } else if (transformation.type == Transformations.INVERSION) {
+            [transformation.endX, transformation.endY] = [x, y];
+            [transformation.scaleX, transformation.scaleY] = [-1, -1];
+            [transformation.slideX, transformation.slideY] = [x, y];
+            transformation.angle = Math.PI + Math.atan(y / (x || 1));
         }
     },
     
-    stopTransformation: function(x, y) {
+    stopTransformation: function() {
         // Clean transformations
         let transformation = this.lastTransformation;
         
-        if (transformation.type == Transformations.TRANSLATION && Math.hypot(transformation.slideX, transformation.slideY) < 1 ||
+        if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION)
+            this.showSymmetryElement = false;
+        
+        if (transformation.type == Transformations.REFLECTION &&
+                getNearness([transformation.startX, transformation.startY], [transformation.endX, transformation.endY], MIN_REFLECTION_LINE_LENGTH) ||
+            transformation.type == Transformations.TRANSLATION && Math.hypot(transformation.slideX, transformation.slideY) < 1 ||
             transformation.type == Transformations.ROTATION && Math.abs(transformation.angle) < Math.PI / 1000) {
+            
             this.transformations.pop();
         } else {
             delete transformation.startX;
             delete transformation.startY;
+            delete transformation.endX;
+            delete transformation.endY;
         }
     },
     

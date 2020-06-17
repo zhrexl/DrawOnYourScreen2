@@ -116,6 +116,11 @@
       <summary>select resize tool</summary>
       <description>select resize tool</description>
     </key>
+    <key type="as" name="select-mirror-tool">
+      <default>["&lt;Primary&gt;c"]</default>
+      <summary>select mirror tool</summary>
+      <description>select mirror tool</description>
+    </key>
     <key type="as" name="increment-line-width">
       <default><![CDATA[['<Primary>KP_Add','<Primary><Shift>plus']]]></default>
       <summary>increment the line width</summary>
