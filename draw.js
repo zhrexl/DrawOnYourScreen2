@@ -157,9 +157,9 @@ var DrawingArea = new Lang.Class({
     set currentTool(tool) {
         this._currentTool = tool;
         if (Object.values(Manipulations).indexOf(tool) != -1)
-            this._startElementFinder();
+            this._startElementGrabber();
         else
-            this._stopElementFinder();
+            this._stopElementGrabber();
     },
     
     _redisplay: function() {
@@ -228,11 +228,11 @@ var DrawingArea = new Lang.Class({
                                  this.elements[i].points[2] == this.elements[i].points[1] ||
                                  this.elements[i].points[2] == this.elements[i].points[0]);
             
-            this.elements[i].buildCairo(cr, { showTextRectangle: this.transformingElement && this.transformingElement == this.elements[i],
-                                              drawTextRectangle: this.finderPoint ? true : false });
+            this.elements[i].buildCairo(cr, { showTextRectangle: this.grabbedElement && this.grabbedElement == this.elements[i],
+                                              drawTextRectangle: this.grabPoint ? true : false });
             
-            if (this.finderPoint)
-                this._findTransformingElement(cr, this.elements[i]);
+            if (this.grabPoint)
+                this._searchElementToGrab(cr, this.elements[i]);
             
             if (this.elements[i].fill && !isStraightLine) {
                 cr.fillPreserve();
@@ -304,7 +304,7 @@ var DrawingArea = new Lang.Class({
         
         if (button == 1) {
             if (Object.values(Manipulations).indexOf(this.currentTool) != -1) {
-                if (this.transformingElement)
+                if (this.grabbedElement)
                     this._startTransforming(x, y, controlPressed, shiftPressed);
             } else {
                 this._startDrawing(x, y, shiftPressed);
@@ -409,21 +409,21 @@ var DrawingArea = new Lang.Class({
         return Clutter.EVENT_STOP;
     },
     
-    _findTransformingElement: function(cr, element) {
-        if (element.getContainsPoint(cr, this.finderPoint[0], this.finderPoint[1]))
-            this.transformingElement = element;
-        else if (this.transformingElement == element)
-            this.transformingElement = null;
+    _searchElementToGrab: function(cr, element) {
+        if (element.getContainsPoint(cr, this.grabPoint[0], this.grabPoint[1]))
+            this.grabbedElement = element;
+        else if (this.grabbedElement == element)
+            this.grabbedElement = null;
         
         if (element == this.elements[this.elements.length - 1])
             // All elements have been tested, the winner is the last.
             this.updatePointerCursor();
     },
     
-    _startElementFinder: function() {
-        this.elementFinderHandler = this.connect('motion-event', (actor, event) => {
-            if (this.motionHandler || this.transformingElementLocked) {
-                this.finderPoint = null;
+    _startElementGrabber: function() {
+        this.elementGrabberHandler = this.connect('motion-event', (actor, event) => {
+            if (this.motionHandler || this.grabbedElementLocked) {
+                this.grabPoint = null;
                 return;
             }
             
@@ -432,18 +432,18 @@ var DrawingArea = new Lang.Class({
             if (!s)
                 return;
             
-            this.finderPoint = [x, y];
-            this.transformingElement = null;
-            // this._redisplay calls this._findTransformingElement.
+            this.grabPoint = [x, y];
+            this.grabbedElement = null;
+            // this._redisplay calls this._searchElementToGrab.
             this._redisplay();
         });
     },
     
-    _stopElementFinder: function() {
-        if (this.elementFinderHandler) {
-            this.disconnect(this.elementFinderHandler);
-            this.finderPoint = null;
-            this.elementFinderHandler = null;
+    _stopElementGrabber: function() {
+        if (this.elementGrabberHandler) {
+            this.disconnect(this.elementGrabberHandler);
+            this.grabPoint = null;
+            this.elementGrabberHandler = null;
         }
     },
     
@@ -454,14 +454,14 @@ var DrawingArea = new Lang.Class({
             return;
         
         if (this.currentTool == Manipulations.MIRROR) {
-            this.transformingElementLocked = !this.transformingElementLocked;
-            if (this.transformingElementLocked) {
+            this.grabbedElementLocked = !this.grabbedElementLocked;
+            if (this.grabbedElementLocked) {
                 this.updatePointerCursor();
                 return;
             }
         }
         
-        this.finderPoint = null;
+        this.grabPoint = null;
         
         this.buttonReleasedHandler = this.connect('button-release-event', (actor, event) => {
             this._stopTransforming();
@@ -469,17 +469,17 @@ var DrawingArea = new Lang.Class({
         
         if (duplicate) {
             // deep cloning
-            let copy = new DrawingElement(JSON.parse(JSON.stringify(this.transformingElement)));
+            let copy = new DrawingElement(JSON.parse(JSON.stringify(this.grabbedElement)));
             this.elements.push(copy);
-            this.transformingElement = copy;
+            this.grabbedElement = copy;
         }
         
         if (this.currentTool == Manipulations.MOVE)
-            this.transformingElement.startTransformation(startX, startY, controlPressed ? Transformations.ROTATION : Transformations.TRANSLATION);
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.ROTATION : Transformations.TRANSLATION);
         else if (this.currentTool == Manipulations.RESIZE)
-            this.transformingElement.startTransformation(startX, startY, controlPressed ? Transformations.SCALE_DIRECTIONAL : Transformations.SCALE_PRESERVE);
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.SCALE_DIRECTIONAL : Transformations.SCALE_PRESERVE);
          else if (this.currentTool == Manipulations.MIRROR) {
-            this.transformingElement.startTransformation(startX, startY, controlPressed ? Transformations.INVERSION : Transformations.REFLECTION);
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.INVERSION : Transformations.REFLECTION);
             this._redisplay();
         }
         
@@ -498,31 +498,31 @@ var DrawingArea = new Lang.Class({
     },
     
     _updateTransforming: function(x, y, controlPressed) {
-        if (controlPressed && this.transformingElement.lastTransformation.type == Transformations.TRANSLATION) {
-            this.transformingElement.stopTransformation();
-            this.transformingElement.startTransformation(x, y, Transformations.ROTATION);
-        } else if (!controlPressed && this.transformingElement.lastTransformation.type == Transformations.ROTATION) {
-            this.transformingElement.stopTransformation();
-            this.transformingElement.startTransformation(x, y, Transformations.TRANSLATION);
+        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.TRANSLATION) {
+            this.grabbedElement.stopTransformation();
+            this.grabbedElement.startTransformation(x, y, Transformations.ROTATION);
+        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.ROTATION) {
+            this.grabbedElement.stopTransformation();
+            this.grabbedElement.startTransformation(x, y, Transformations.TRANSLATION);
         }
         
-        if (controlPressed && this.transformingElement.lastTransformation.type == Transformations.SCALE_PRESERVE) {
-            this.transformingElement.stopTransformation();
-            this.transformingElement.startTransformation(x, y, Transformations.SCALE_DIRECTIONAL);
-        } else if (!controlPressed && this.transformingElement.lastTransformation.type == Transformations.SCALE_DIRECTIONAL) {
-            this.transformingElement.stopTransformation();
-            this.transformingElement.startTransformation(x, y, Transformations.SCALE_PRESERVE);
+        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.SCALE_PRESERVE) {
+            this.grabbedElement.stopTransformation();
+            this.grabbedElement.startTransformation(x, y, Transformations.SCALE_DIRECTIONAL);
+        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.SCALE_DIRECTIONAL) {
+            this.grabbedElement.stopTransformation();
+            this.grabbedElement.startTransformation(x, y, Transformations.SCALE_PRESERVE);
         }
         
-        if (controlPressed && this.transformingElement.lastTransformation.type == Transformations.REFLECTION) {
-            this.transformingElement.transformations.pop();
-            this.transformingElement.startTransformation(x, y, Transformations.INVERSION);
-        } else if (!controlPressed && this.transformingElement.lastTransformation.type == Transformations.INVERSION) {
-            this.transformingElement.transformations.pop();
-            this.transformingElement.startTransformation(x, y, Transformations.REFLECTION);
+        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.REFLECTION) {
+            this.grabbedElement.transformations.pop();
+            this.grabbedElement.startTransformation(x, y, Transformations.INVERSION);
+        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.INVERSION) {
+            this.grabbedElement.transformations.pop();
+            this.grabbedElement.startTransformation(x, y, Transformations.REFLECTION);
         }
         
-        this.transformingElement.updateTransformation(x, y);
+        this.grabbedElement.updateTransformation(x, y);
         this._redisplay();
     },
     
@@ -536,9 +536,9 @@ var DrawingArea = new Lang.Class({
             this.buttonReleasedHandler = null;
         }
         
-        this.transformingElement.stopTransformation();
-        this.transformingElement = null;
-        this.transformingElementLocked = false;
+        this.grabbedElement.stopTransformation();
+        this.grabbedElement = null;
+        this.grabbedElementLocked = false;
         this._redisplay();
     },
     
@@ -671,10 +671,10 @@ var DrawingArea = new Lang.Class({
     },
     
     updatePointerCursor: function(controlPressed) {
-        if (this.currentTool == Manipulations.MIRROR && this.transformingElementLocked)
+        if (this.currentTool == Manipulations.MIRROR && this.grabbedElementLocked)
             this.setPointerCursor('CROSSHAIR');
         else if (Object.values(Manipulations).indexOf(this.currentTool) != -1)
-            this.setPointerCursor(this.transformingElement ? 'MOVE_OR_RESIZE_WINDOW' : 'DEFAULT');
+            this.setPointerCursor(this.grabbedElement ? 'MOVE_OR_RESIZE_WINDOW' : 'DEFAULT');
         else if (!this.currentElement || (this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING))
             this.setPointerCursor(this.currentTool == Shapes.NONE ? 'POINTING_HAND' : 'CROSSHAIR');
         else if (this.currentElement.shape != Shapes.NONE && controlPressed)
@@ -889,9 +889,9 @@ var DrawingArea = new Lang.Class({
             this.disconnect(this._onKeyboardPopupMenuHandler);
             this._onKeyboardPopupMenuHandler = null;
         }
-        if (this.elementFinderHandler) {
-            this.disconnect(this.elementFinderHandler);
-            this.elementFinderHandler = null;
+        if (this.elementGrabberHandler) {
+            this.disconnect(this.elementGrabberHandler);
+            this.elementGrabberHandler = null;
         }
         if (this.motionHandler) {
             this.disconnect(this.motionHandler);
