@@ -29,6 +29,7 @@ const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const Mainloop = imports.mainloop;
+const PangoMatrix = imports.gi.Pango.Matrix;
 const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 
@@ -1182,10 +1183,10 @@ const DrawingElement = new Lang.Class({
             if (transformation.type == Transformations.TRANSLATION) {
                 cr.translate(transformation.slideX, transformation.slideY);
             } else if (transformation.type == Transformations.ROTATION) {
-                let center = this._getCenterWithSlideBefore(transformation);
+                let center = this._getTransformedCenter(transformation);
                 crRotate(cr, transformation.angle, center[0], center[1]);
             } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.SCALE_DIRECTIONAL) {
-                let center = this._getCenterWithSlideBefore(transformation);
+                let center = this._getTransformedCenter(transformation);
                 crRotate(cr, transformation.angle, center[0], center[1]);
                 crScale(cr, transformation.scaleX, transformation.scaleY, center[0], center[1]);
                 crRotate(cr, -transformation.angle, center[0], center[1]);
@@ -1301,7 +1302,7 @@ const DrawingElement = new Lang.Class({
                             .reverse()
                             .forEach(transformation => {
             transAttribute += transAttribute ? ' ' : ' transform="';
-            let center = this._getCenter();
+            let center = this._getOriginalCenter();
             
             if (transformation.type == Transformations.ROTATION) {
                 transAttribute += `rotate(${transformation.angle * 180 / Math.PI},${center[0]},${center[1]})`;
@@ -1418,7 +1419,7 @@ const DrawingElement = new Lang.Class({
             if (points.length < 2)
                 return;
                 
-            let center = this._getCenter();
+            let center = this._getOriginalCenter();
             this.transformations[0] = { type: Transformations.ROTATION, angle: getAngle(center[0], center[1], points[points.length - 1][0], points[points.length - 1][1], x, y) };
             
         } else if (this.shape == Shapes.ELLIPSE && transform) {
@@ -1426,7 +1427,7 @@ const DrawingElement = new Lang.Class({
                 return;
             
             points[2] = [x, y];
-            let center = this._getCenter();
+            let center = this._getOriginalCenter();
             this.transformations[0] = { type: Transformations.ROTATION, angle: getAngle(center[0], center[1], center[0] + 1, center[1], x, y) };
             
         } else if (this.shape == Shapes.LINE && transform) {
@@ -1482,14 +1483,14 @@ const DrawingElement = new Lang.Class({
             transformation.slideX = x - transformation.startX;
             transformation.slideY = y - transformation.startY;
         } else if (transformation.type == Transformations.ROTATION) {
-            let center = this._getCenterWithSlideBefore(transformation);
+            let center = this._getTransformedCenter(transformation);
             transformation.angle = getAngle(center[0], center[1], transformation.startX, transformation.startY, x, y);
         } else if (transformation.type == Transformations.SCALE_PRESERVE) {
-            let center = this._getCenterWithSlideBefore(transformation);
+            let center = this._getTransformedCenter(transformation);
             let scale = Math.hypot(x - center[0], y - center[1]) / Math.hypot(transformation.startX - center[0], transformation.startY - center[1]) || 1;
             [transformation.scaleX, transformation.scaleY] = [scale, scale];
         } else if (transformation.type == Transformations.SCALE_DIRECTIONAL) {
-            let center = this._getCenterWithSlideBefore(transformation);
+            let center = this._getTransformedCenter(transformation);
             let startAngle = getAngle(center[0], center[1], center[0] + 1, center[1], transformation.startX, transformation.startY);
             let vertical = Math.abs(Math.sin(startAngle)) >= Math.sin(3 * Math.PI / 8);
             let horizontal = Math.abs(Math.cos(startAngle)) >= Math.cos(Math.PI / 8);
@@ -1549,43 +1550,54 @@ const DrawingElement = new Lang.Class({
         }
     },
     
-    _getTotalSlideBefore: function(transformation) {
-        let totalSlide = [0, 0];
-        
-        this.transformations.slice(0, this.transformations.indexOf(transformation))
-                            .filter(transformation => transformation.type == Transformations.TRANSLATION)
-                            .forEach(transformation => totalSlide = [totalSlide[0] + transformation.slideX, totalSlide[1] + transformation.slideY]);
-        
-        return totalSlide;
-    },
-    
     // When rotating grouped lines, lineOffset is used to retrieve the rotation center of the first line.
     _getLineOffset: function() {
         return (this.lineIndex || 0) * Math.abs(this.points[1][1] - this.points[0][1]);
     },
     
     // The figure rotation center before transformations (original).
-    _getCenter: function() {
-        let points = this.points;
+    _getOriginalCenter: function() {
+        if (!this._originalCenter) {
+            let points = this.points;
+            this._originalCenter = this.shape == Shapes.ELLIPSE ? [points[0][0], points[0][1]] :
+                                   this.shape == Shapes.LINE && points.length == 3 ? getCurveCenter(points[0], points[1], points[2]) :
+                                   this.shape == Shapes.TEXT && this.textWidth ? [Math.min(points[0][0], points[1][0]),
+                                                                                  Math.max(points[0][1], points[1][1]) - this._getLineOffset()] :
+                                   points.length >= 3 ? getCentroid(points) :
+                                   getNaiveCenter(points);
+        }
         
-        return this.shape == Shapes.ELLIPSE ? [points[0][0], points[0][1]] :
-               this.shape == Shapes.LINE && points.length == 3 ? getCurveCenter(points[0], points[1], points[2]) :
-               this.shape == Shapes.TEXT && this.textWidth ? [Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]) - this._getLineOffset()] :
-               points.length >= 3 ? getCentroid(points) :
-               getNaiveCenter(points);
+        return this._originalCenter;
     },
     
-    // The figure rotation center that takes previous translations into account.
-    _getCenterWithSlideBefore: function(transformation) {
-        let [center, totalSlide] = [this._getCenter(), this._getTotalSlideBefore(transformation)];
-        return [center[0] + totalSlide[0], center[1] + totalSlide[1]];
-    },
-    
-    _getCenterWithSlide: function() {
-        if (this.transformations.length)
-            return this._getCenterWithSlideBefore(this.lastTransformation);
-        else
-            return this._getCenter();
+    // The figure rotation center, whose position is affected by all transformations done before 'transformation'.
+    _getTransformedCenter: function(transformation) {
+        if (!transformation.elementTransformedCenter) {
+            let matrix = new PangoMatrix({ xx: 1, xy: 0, yx: 0, yy: 1, x0: 0, y0: 0 });
+            
+            // Apply transformations to the matrice in reverse order
+            // because Pango multiply matrices by the left when applying a transformation
+            this.transformations.slice(0, this.transformations.indexOf(transformation)).reverse().forEach(transformation => {
+                if (transformation.type == Transformations.TRANSLATION) {
+                    matrix.translate(transformation.slideX, transformation.slideY);
+                } else if (transformation.type == Transformations.ROTATION) {
+                    // nothing, the center position is preserved.
+                } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.SCALE_DIRECTIONAL) {
+                    // nothing, the center position is preserved.
+                } else if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION) {
+                    matrix.translate(transformation.slideX, transformation.slideY);
+                    matrix.rotate(-transformation.angle * 180 / Math.PI);
+                    matrix.scale(transformation.scaleX, transformation.scaleY);
+                    matrix.rotate(transformation.angle * 180 / Math.PI);
+                    matrix.translate(-transformation.slideX, -transformation.slideY);
+                }
+            });
+            
+            let originalCenter = this._getOriginalCenter();
+            transformation.elementTransformedCenter = matrix.transform_point(originalCenter[0], originalCenter[1]);
+        }
+        
+        return transformation.elementTransformedCenter;
     },
     
     _addPoint: function(x, y, smoothedStroke) {
