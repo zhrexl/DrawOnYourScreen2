@@ -28,7 +28,6 @@ const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
-const Mainloop = imports.mainloop;
 const PangoMatrix = imports.gi.Pango.Matrix;
 const Shell = imports.gi.Shell;
 const St = imports.gi.St;
@@ -52,6 +51,7 @@ const GS_VERSION = Config.PACKAGE_VERSION;
 const CAIRO_DEBUG_EXTENDS = false;
 const SVG_DEBUG_EXTENDS = false;
 const SVG_DEBUG_SUPERPOSES_CAIRO = false;
+const TEXT_CURSOR_TIME = 600; // ms
 
 const ICON_DIR = Me.dir.get_child('data').get_child('icons');
 const FILL_ICON_PATH = ICON_DIR.get_child('fill-symbolic.svg').get_path();
@@ -683,7 +683,7 @@ var DrawingArea = new Lang.Class({
     
     _stopTextCursorTimeout: function() {
         if (this.textCursorTimeoutId) {
-            Mainloop.source_remove(this.textCursorTimeoutId);
+            GLib.source_remove(this.textCursorTimeoutId);
             this.textCursorTimeoutId = null;
         }
         this.textHasCursor = false;
@@ -691,7 +691,7 @@ var DrawingArea = new Lang.Class({
     
     _updateTextCursorTimeout: function() {
         this._stopTextCursorTimeout();
-        this.textCursorTimeoutId = Mainloop.timeout_add(600, () => {
+        this.textCursorTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, TEXT_CURSOR_TIME, () => {
             this.textHasCursor = !this.textHasCursor;
             this._redisplay();
             return GLib.SOURCE_CONTINUE;
@@ -2106,7 +2106,7 @@ const DrawingMenu = new Lang.Class({
             item.menu.close();
         };
         
-        Mainloop.timeout_add(0, () => {
+        GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
             for (let i in obj) {
                 let text;
                 if (targetProperty == 'currentFontFamilyId')
@@ -2148,7 +2148,7 @@ const DrawingMenu = new Lang.Class({
             item.menu.close();
         };
         
-        Mainloop.timeout_add(0, () => {
+        GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
             for (let i = 1; i < this.area.colors.length; i++) {
                 let text = this.area.colors[i].to_string();
                 let iCaptured = i;
@@ -2191,7 +2191,7 @@ const DrawingMenu = new Lang.Class({
             item.menu.close();
         };
         
-        Mainloop.timeout_add(0, () => {
+        GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
             this._populateOpenDrawingSubMenu();
             // small trick to prevent the menu from "jumping" on first opening
             item.menu.open();
@@ -2244,7 +2244,7 @@ const DrawingMenu = new Lang.Class({
             item.menu.close();
         };
         
-        Mainloop.timeout_add(0, () => {
+        GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
             this._populateSaveDrawingSubMenu();
             // small trick to prevent the menu from "jumping" on first opening
             item.menu.open();

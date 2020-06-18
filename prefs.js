@@ -20,10 +20,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
-const Mainloop = imports.mainloop;
 
 const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -114,7 +114,7 @@ function init() {
 function buildPrefsWidget() {
     let topStack = new TopStack();
     let switcher = new Gtk.StackSwitcher({halign: Gtk.Align.CENTER, visible: true, stack: topStack});
-    Mainloop.timeout_add(0, () => {
+    GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
         let window = topStack.get_toplevel();
         window.resize(720,500);
         let headerBar = window.get_titlebar();
