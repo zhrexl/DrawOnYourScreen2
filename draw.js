@@ -256,7 +256,6 @@ var DrawingArea = new Lang.Class({
         if (this.isInDrawingMode && this.hasGrid && this.gridGap && this.gridGap >= 1) {
             cr.save();
             Clutter.cairo_set_source_color(cr, this.gridColor);
-            cr.setDash([], 0);
             
             let [gridX, gridY] = [this.gridGap, this.gridGap];
             while (gridX < this.monitor.width) {
@@ -1170,8 +1169,6 @@ const DrawingElement = new Lang.Class({
         
         if (this.dash.active)
             cr.setDash(this.dash.array, this.dash.offset);
-        else
-            cr.setDash([], 0);
         
         if (this.eraser)
             cr.setOperator(Cairo.Operator.CLEAR);
