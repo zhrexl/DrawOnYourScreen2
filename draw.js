@@ -424,6 +424,10 @@ var DrawingArea = new Lang.Class({
                 return;
             }
             
+            // Reduce computing without notable effect.
+            if (Math.random() <= 0.75)
+                return;
+            
             let coords = event.get_coords();
             let [s, x, y] = this.transform_stage_point(coords[0], coords[1]);
             if (!s)
