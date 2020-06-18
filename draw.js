@@ -67,7 +67,7 @@ const Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5
 const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
 var   Tools = Object.assign({}, Shapes, Manipulations);
 const TextStates = { WRITTEN: 0, DRAWING: 1, WRITING: 2 };
-const Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, SCALE_DIRECTIONAL: 3, REFLECTION: 4, INVERSION: 5 };
+const Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
 const ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move", 101: "Resize", 102: "Mirror" };
 const LineCapNames = { 0: 'Butt', 1: 'Round', 2: 'Square' };
 const LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
@@ -477,7 +477,7 @@ var DrawingArea = new Lang.Class({
         if (this.currentTool == Manipulations.MOVE)
             this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.ROTATION : Transformations.TRANSLATION);
         else if (this.currentTool == Manipulations.RESIZE)
-            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.SCALE_DIRECTIONAL : Transformations.SCALE_PRESERVE);
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.STRETCH : Transformations.SCALE_PRESERVE);
          else if (this.currentTool == Manipulations.MIRROR) {
             this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.INVERSION : Transformations.REFLECTION);
             this._redisplay();
@@ -508,8 +508,8 @@ var DrawingArea = new Lang.Class({
         
         if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.SCALE_PRESERVE) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.SCALE_DIRECTIONAL);
-        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.SCALE_DIRECTIONAL) {
+            this.grabbedElement.startTransformation(x, y, Transformations.STRETCH);
+        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.STRETCH) {
             this.grabbedElement.stopTransformation();
             this.grabbedElement.startTransformation(x, y, Transformations.SCALE_PRESERVE);
         }
@@ -1186,7 +1186,7 @@ const DrawingElement = new Lang.Class({
             } else if (transformation.type == Transformations.ROTATION) {
                 let center = this._getTransformedCenter(transformation);
                 crRotate(cr, transformation.angle, center[0], center[1]);
-            } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.SCALE_DIRECTIONAL) {
+            } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.STRETCH) {
                 let center = this._getTransformedCenter(transformation);
                 crRotate(cr, transformation.angle, center[0], center[1]);
                 crScale(cr, transformation.scaleX, transformation.scaleY, center[0], center[1]);
@@ -1307,7 +1307,7 @@ const DrawingElement = new Lang.Class({
             
             if (transformation.type == Transformations.ROTATION) {
                 transAttribute += `rotate(${transformation.angle * 180 / Math.PI},${center[0]},${center[1]})`;
-            } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.SCALE_DIRECTIONAL) {
+            } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.STRETCH) {
                 transAttribute += `rotate(${transformation.angle * 180 / Math.PI},${center[0]},${center[1]}) `;
                 transAttribute += `translate(${-center[0] * (transformation.scaleX - 1)},${-center[1] * (transformation.scaleY - 1)}) `;
                 transAttribute += `scale(${transformation.scaleX},${transformation.scaleY}) `;
@@ -1463,7 +1463,7 @@ const DrawingElement = new Lang.Class({
             this.transformations.push({ startX: startX, startY: startY, type: type, slideX: 0, slideY: 0 });
         else if (type == Transformations.ROTATION)
             this.transformations.push({ startX: startX, startY: startY, type: type, angle: 0 });
-        else if (type == Transformations.SCALE_PRESERVE || type == Transformations.SCALE_DIRECTIONAL)
+        else if (type == Transformations.SCALE_PRESERVE || type == Transformations.STRETCH)
             this.transformations.push({ startX: startX, startY: startY, type: type, scaleX: 1, scaleY: 1, angle: 0 });
         else if (type == Transformations.REFLECTION)
             this.transformations.push({ startX: startX, startY: startY, endX: startX, endY: startY, type: type,
@@ -1490,7 +1490,7 @@ const DrawingElement = new Lang.Class({
             let center = this._getTransformedCenter(transformation);
             let scale = Math.hypot(x - center[0], y - center[1]) / Math.hypot(transformation.startX - center[0], transformation.startY - center[1]) || 1;
             [transformation.scaleX, transformation.scaleY] = [scale, scale];
-        } else if (transformation.type == Transformations.SCALE_DIRECTIONAL) {
+        } else if (transformation.type == Transformations.STRETCH) {
             let center = this._getTransformedCenter(transformation);
             let startAngle = getAngle(center[0], center[1], center[0] + 1, center[1], transformation.startX, transformation.startY);
             let vertical = Math.abs(Math.sin(startAngle)) >= Math.sin(3 * Math.PI / 8);
@@ -1583,7 +1583,7 @@ const DrawingElement = new Lang.Class({
                     matrix.translate(transformation.slideX, transformation.slideY);
                 } else if (transformation.type == Transformations.ROTATION) {
                     // nothing, the center position is preserved.
-                } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.SCALE_DIRECTIONAL) {
+                } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.STRETCH) {
                     // nothing, the center position is preserved.
                 } else if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION) {
                     matrix.translate(transformation.slideX, transformation.slideY);
