@@ -244,7 +244,7 @@ var DrawingArea = new Lang.Class({
         if (this.currentElement) {
             cr.save();
             this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
-                                                 showTextRectangle: this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.DRAWING })
+                                                 showTextRectangle: this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.DRAWING });
             
             if (this.currentElement.fill && this.currentElement.line.lineWidth == 0)
                 crSetDummyStroke(cr);
@@ -373,11 +373,7 @@ var DrawingArea = new Lang.Class({
         } else if (this.currentElement &&
                    (this.currentElement.shape == Shapes.POLYGON || this.currentElement.shape == Shapes.POLYLINE) &&
                    (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == 65421)) {
-            // copy last point
-            let lastPoint = this.currentElement.points[this.currentElement.points.length - 1];
-            let secondToLastPoint = this.currentElement.points[this.currentElement.points.length - 2];
-            if (!getNearness(secondToLastPoint, lastPoint, 3))
-                this.currentElement.points.push([lastPoint[0], lastPoint[1]]);
+            this.currentElement.addPolyPoint();
             return Clutter.EVENT_STOP;
             
         } else if (event.get_key_symbol() == Clutter.KEY_Escape) {
@@ -1094,8 +1090,13 @@ var DrawingArea = new Lang.Class({
     }
 });
 
-const MIN_REFLECTION_LINE_LENGTH = 10; // px
-const INVERSION_CIRCLE_RADIUS = 12; // px
+const INVERSION_CIRCLE_RADIUS = 12;         // px
+const REFLECTION_TOLERANCE = 5;             // px,  to select vertical and horizontal directions
+const STRETCH_TOLERANCE = Math.PI / 8;      // rad, to select vertical and horizontal directions
+const MIN_REFLECTION_LINE_LENGTH = 10;      // px
+const MIN_TRANSLATION_DISTANCE = 1;         // px
+const MIN_ROTATION_ANGLE = Math.PI / 1000;  // rad
+const MIN_DRAWING_SIZE = 3;                 // px
 
 // DrawingElement represents a "brushstroke".
 // It can be converted into a cairo path as well as a svg element.
@@ -1240,7 +1241,7 @@ const DrawingElement = new Lang.Class({
             cr.showText(params.showTextCursor ? (this.text + "_") : this.text);
             
             if (!params.showTextCursor)
-                this.textWidth = cr.getCurrentPoint()[0] - Math.min(points[0][0], points[1][0])
+                this.textWidth = cr.getCurrentPoint()[0] - Math.min(points[0][0], points[1][0]);
             
             if (params.showTextRectangle || params.drawTextRectangle) {
                 cr.rectangle(Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]),
@@ -1399,6 +1400,14 @@ const DrawingElement = new Lang.Class({
         }
     },
     
+    // For polygons and polylines.
+    addPolyPoint: function() {
+        // copy last point
+        let [lastPoint, secondToLastPoint] = [this.points[this.points.length - 1], this.points[this.points.length - 2]];
+        if (!getNearness(secondToLastPoint, lastPoint, MIN_DRAWING_SIZE))
+            this.points.push([lastPoint[0], lastPoint[1]]);
+    },
+    
     startDrawing: function(startX, startY) {
         this.points.push([startX, startY]);
         
@@ -1421,7 +1430,8 @@ const DrawingElement = new Lang.Class({
                 return;
                 
             let center = this._getOriginalCenter();
-            this.transformations[0] = { type: Transformations.ROTATION, angle: getAngle(center[0], center[1], points[points.length - 1][0], points[points.length - 1][1], x, y) };
+            this.transformations[0] = { type: Transformations.ROTATION,
+                                        angle: getAngle(center[0], center[1], points[points.length - 1][0], points[points.length - 1][1], x, y) };
             
         } else if (this.shape == Shapes.ELLIPSE && transform) {
             if (points.length < 2)
@@ -1429,7 +1439,8 @@ const DrawingElement = new Lang.Class({
             
             points[2] = [x, y];
             let center = this._getOriginalCenter();
-            this.transformations[0] = { type: Transformations.ROTATION, angle: getAngle(center[0], center[1], center[0] + 1, center[1], x, y) };
+            this.transformations[0] = { type: Transformations.ROTATION,
+                                        angle: getAngle(center[0], center[1], center[0] + 1, center[1], x, y) };
             
         } else if (this.shape == Shapes.LINE && transform) {
             if (points.length < 2)
@@ -1453,9 +1464,13 @@ const DrawingElement = new Lang.Class({
         if (this.shape != Shapes.NONE && this.points.length >= 2) {
             let lastPoint = this.points[this.points.length - 1];
             let secondToLastPoint = this.points[this.points.length - 2];
-            if (getNearness(secondToLastPoint, lastPoint, 3))
+            if (getNearness(secondToLastPoint, lastPoint, MIN_DRAWING_SIZE))
                 this.points.pop();
         }
+        
+        if (this.transformations[0] && this.transformations[0].type == Transformations.ROTATION &&
+                Math.abs(this.transformations[0].angle) < MIN_ROTATION_ANGLE)
+            this.transformations.shift();
     },
     
     startTransformation: function(startX, startY, type) {
@@ -1493,8 +1508,8 @@ const DrawingElement = new Lang.Class({
         } else if (transformation.type == Transformations.STRETCH) {
             let center = this._getTransformedCenter(transformation);
             let startAngle = getAngle(center[0], center[1], center[0] + 1, center[1], transformation.startX, transformation.startY);
-            let vertical = Math.abs(Math.sin(startAngle)) >= Math.sin(3 * Math.PI / 8);
-            let horizontal = Math.abs(Math.cos(startAngle)) >= Math.cos(Math.PI / 8);
+            let vertical = Math.abs(Math.sin(startAngle)) >= Math.sin(Math.PI / 2 - STRETCH_TOLERANCE);
+            let horizontal = Math.abs(Math.cos(startAngle)) >= Math.cos(STRETCH_TOLERANCE);
             let scale = Math.hypot(x - center[0], y - center[1]) / Math.hypot(transformation.startX - center[0], transformation.startY - center[1]) || 1;
             transformation.scaleX = vertical ? 1 : scale;
             transformation.scaleY = !vertical ? 1 : scale;
@@ -1503,11 +1518,11 @@ const DrawingElement = new Lang.Class({
             [transformation.endX, transformation.endY] = [x, y];
             if (getNearness([transformation.startX, transformation.startY], [x, y], MIN_REFLECTION_LINE_LENGTH)) {
                 // do nothing to avoid jumps (no transformation at starting and locked transformation after)
-            } else if (Math.abs(y - transformation.startY) <= 5 && Math.abs(x - transformation.startX) >= 5) {
+            } else if (Math.abs(y - transformation.startY) <= REFLECTION_TOLERANCE && Math.abs(x - transformation.startX) > REFLECTION_TOLERANCE) {
                 [transformation.scaleX, transformation.scaleY] = [1, -1];
                 [transformation.slideX, transformation.slideY] = [0, transformation.startY];
                 transformation.angle = Math.PI;
-            } else if (Math.abs(x - transformation.startX) <= 5 && Math.abs(y - transformation.startY) >= 5) {
+            } else if (Math.abs(x - transformation.startX) <= REFLECTION_TOLERANCE && Math.abs(y - transformation.startY) > REFLECTION_TOLERANCE) {
                 [transformation.scaleX, transformation.scaleY] = [-1, 1];
                 [transformation.slideX, transformation.slideY] = [transformation.startX, 0];
                 transformation.angle = Math.PI;
@@ -1539,8 +1554,8 @@ const DrawingElement = new Lang.Class({
         
         if (transformation.type == Transformations.REFLECTION &&
                 getNearness([transformation.startX, transformation.startY], [transformation.endX, transformation.endY], MIN_REFLECTION_LINE_LENGTH) ||
-            transformation.type == Transformations.TRANSLATION && Math.hypot(transformation.slideX, transformation.slideY) < 1 ||
-            transformation.type == Transformations.ROTATION && Math.abs(transformation.angle) < Math.PI / 1000) {
+            transformation.type == Transformations.TRANSLATION && Math.hypot(transformation.slideX, transformation.slideY) < MIN_TRANSLATION_DISTANCE ||
+            transformation.type == Transformations.ROTATION && Math.abs(transformation.angle) < MIN_ROTATION_ANGLE) {
             
             this.transformations.pop();
         } else {
