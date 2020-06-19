@@ -244,10 +244,8 @@ var DrawingArea = new Lang.Class({
         if (this.currentElement) {
             cr.save();
             this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
-                                                 showTextRectangle: this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.DRAWING });
-            
-            if (this.currentElement.fill && this.currentElement.line.lineWidth == 0)
-                crSetDummyStroke(cr);
+                                                 showTextRectangle: this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.DRAWING,
+                                                 dummyStroke: this.currentElement.fill && this.currentElement.line.lineWidth == 0 });
             
             cr.stroke();
             cr.restore();
@@ -1101,6 +1099,7 @@ var DrawingArea = new Lang.Class({
     }
 });
 
+const RADIAN = 180 / Math.PI;               // degree
 const INVERSION_CIRCLE_RADIUS = 12;         // px
 const REFLECTION_TOLERANCE = 5;             // px,  to select vertical and horizontal directions
 const STRETCH_TOLERANCE = Math.PI / 8;      // rad, to select vertical and horizontal directions
@@ -1164,7 +1163,7 @@ const DrawingElement = new Lang.Class({
         
         if (this.showSymmetryElement) {
             let transformation = this.lastTransformation;
-            crSetDummyStroke(cr);
+            setDummyStroke(cr);
             if (transformation.type == Transformations.REFLECTION) {
                 cr.moveTo(transformation.startX, transformation.startY);
                 cr.lineTo(transformation.endX, transformation.endY);
@@ -1187,6 +1186,9 @@ const DrawingElement = new Lang.Class({
         else
             cr.setOperator(Cairo.Operator.OVER);
         
+        if (params.dummyStroke)
+            setDummyStroke(cr);
+        
         if (SVG_DEBUG_SUPERPOSES_CAIRO) {
             Clutter.cairo_set_source_color(cr, Clutter.Color.new(255, 0, 0, 255));
             cr.setLineWidth(this.line.lineWidth / 2 || 1);
@@ -1197,12 +1199,16 @@ const DrawingElement = new Lang.Class({
                 cr.translate(transformation.slideX, transformation.slideY);
             } else if (transformation.type == Transformations.ROTATION) {
                 let center = this._getTransformedCenter(transformation);
-                crRotate(cr, transformation.angle, center[0], center[1]);
+                cr.translate(center[0], center[1]);
+                cr.rotate(transformation.angle);
+                cr.translate(-center[0], -center[1]);
             } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.STRETCH) {
                 let center = this._getTransformedCenter(transformation);
-                crRotate(cr, transformation.angle, center[0], center[1]);
-                crScale(cr, transformation.scaleX, transformation.scaleY, center[0], center[1]);
-                crRotate(cr, -transformation.angle, center[0], center[1]);
+                cr.translate(center[0], center[1]);
+                cr.rotate(transformation.angle);
+                cr.scale(transformation.scaleX, transformation.scaleY);
+                cr.rotate(-transformation.angle);
+                cr.translate(-center[0], -center[1]);
             } else if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION) {
                 cr.translate(transformation.slideX, transformation.slideY);
                 cr.rotate(transformation.angle);
@@ -1229,14 +1235,20 @@ const DrawingElement = new Lang.Class({
             }
             
         } else if (shape == Shapes.ELLIPSE && points.length >= 2) {
+            let radius = Math.hypot(points[1][0] - points[0][0], points[1][1] - points[0][1]);
             let ratio = 1;
-            if (points[2])
-                ratio = Math.hypot(points[2][0] - points[0][0], points[2][1] - points[0][1]) / Math.hypot(points[1][0] - points[0][0], points[1][1] - points[0][1]);
             
-            crScale(cr, ratio, 1, points[0][0], points[0][1]);
-            let r = Math.hypot(points[1][0] - points[0][0], points[1][1] - points[0][1]);
-            cr.arc(points[0][0], points[0][1], r, 0, 2 * Math.PI);
-            crScale(cr, 1 / ratio, 1, points[0][0], points[0][1]);
+            if (points[2]) {
+                ratio = Math.hypot(points[2][0] - points[0][0], points[2][1] - points[0][1]) / radius;
+                cr.translate(points[0][0], points[0][1]);
+                cr.scale(ratio, 1);
+                cr.translate(-points[0][0], -points[0][1]);
+                cr.arc(points[0][0], points[0][1], radius, 0, 2 * Math.PI);
+                cr.translate(points[0][0], points[0][1]);
+                cr.scale(1 / ratio, 1);
+                cr.translate(-points[0][0], -points[0][1]);
+            } else
+                cr.arc(points[0][0], points[0][1], radius, 0, 2 * Math.PI);
             
         } else if (shape == Shapes.RECTANGLE && points.length == 2) {
             cr.rectangle(points[0][0], points[0][1], points[1][0] - points[0][0], points[1][1] - points[0][1]);
@@ -1262,7 +1274,7 @@ const DrawingElement = new Lang.Class({
                 cr.rectangle(Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]),
                              this.textWidth, - Math.abs(points[1][1] - points[0][1]));
                 if (params.showTextRectangle)
-                    crSetDummyStroke(cr);
+                    setDummyStroke(cr);
                 else
                     // Only draw the rectangle to find the element, not to show it.
                     cr.setLineWidth(0);
@@ -1309,30 +1321,27 @@ const DrawingElement = new Lang.Class({
             attributes += ` stroke-dasharray="${this.dash.array[0]} ${this.dash.array[1]}" stroke-dashoffset="${this.dash.offset}"`;
         
         let transAttribute = '';
-        // Do translations first, because it works this way.
-        this.transformations.filter(transformation => transformation.type == Transformations.TRANSLATION)
-                            .forEach(transformation => {
+        this.transformations.slice(0).reverse().forEach(transformation => {
             transAttribute += transAttribute ? ' ' : ' transform="';
-            transAttribute += `translate(${transformation.slideX},${transformation.slideY})`;
-        });
-        this.transformations.filter(transformation => transformation.type != Transformations.TRANSLATION)
-                            .reverse()
-                            .forEach(transformation => {
-            transAttribute += transAttribute ? ' ' : ' transform="';
-            let center = this._getOriginalCenter();
+            let center = this._getTransformedCenter(transformation);
             
-            if (transformation.type == Transformations.ROTATION) {
-                transAttribute += `rotate(${transformation.angle * 180 / Math.PI},${center[0]},${center[1]})`;
+            if (transformation.type == Transformations.TRANSLATION) {
+                transAttribute += `translate(${transformation.slideX},${transformation.slideY})`;
+            } else if (transformation.type == Transformations.ROTATION) {
+                transAttribute += `translate(${center[0]},${center[1]}) `;
+                transAttribute += `rotate(${transformation.angle * RADIAN}) `;
+                transAttribute += `translate(${-center[0]},${-center[1]})`;
             } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.STRETCH) {
-                transAttribute += `rotate(${transformation.angle * 180 / Math.PI},${center[0]},${center[1]}) `;
-                transAttribute += `translate(${-center[0] * (transformation.scaleX - 1)},${-center[1] * (transformation.scaleY - 1)}) `;
+                transAttribute += `translate(${center[0]},${center[1]}) `;
+                transAttribute += `rotate(${transformation.angle * RADIAN}) `;
                 transAttribute += `scale(${transformation.scaleX},${transformation.scaleY}) `;
-                transAttribute += `rotate(${-transformation.angle * 180 / Math.PI},${center[0]},${center[1]})`;
+                transAttribute += `rotate(${-transformation.angle * RADIAN}) `;
+                transAttribute += `translate(${-center[0]},${-center[1]})`;
             } else if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION) {
                 transAttribute += `translate(${transformation.slideX}, ${transformation.slideY}) `;
-                transAttribute += `rotate(${transformation.angle * 180 / Math.PI}) `;
+                transAttribute += `rotate(${transformation.angle * RADIAN}) `;
                 transAttribute += `scale(${transformation.scaleX}, ${transformation.scaleY}) `;
-                transAttribute += `rotate(${-transformation.angle * 180 / Math.PI}) `;
+                transAttribute += `rotate(${-transformation.angle * RADIAN}) `;
                 transAttribute += `translate(${-transformation.slideX}, ${-transformation.slideY})`;
             }
         });
@@ -1619,9 +1628,9 @@ const DrawingElement = new Lang.Class({
                     // nothing, the center position is preserved.
                 } else if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION) {
                     matrix.translate(transformation.slideX, transformation.slideY);
-                    matrix.rotate(-transformation.angle * 180 / Math.PI);
+                    matrix.rotate(-transformation.angle * RADIAN);
                     matrix.scale(transformation.scaleX, transformation.scaleY);
-                    matrix.rotate(transformation.angle * 180 / Math.PI);
+                    matrix.rotate(transformation.angle * RADIAN);
                     matrix.translate(-transformation.slideX, -transformation.slideY);
                 }
             });
@@ -1640,31 +1649,11 @@ const DrawingElement = new Lang.Class({
     }
 });
 
-/*
-    Some Cairo utils
-*/
-
-const crSetDummyStroke = function(cr) {
+const setDummyStroke = function(cr) {
     cr.setLineWidth(2);
     cr.setLineCap(0);
     cr.setLineJoin(0);
     cr.setDash([1, 2], 0);
-};
-
-const crRotate = function(cr, angle, x, y) {
-    if (angle == 0)
-        return;
-    cr.translate(x, y);
-    cr.rotate(angle);
-    cr.translate(-x, -y);
-};
-
-const crScale = function(cr, scaleX, scaleY, x, y) {
-    if (scaleX == 1 && scaleY == 1)
-        return;
-    cr.translate(x, y);
-    cr.scale(scaleX, scaleY);
-    cr.translate(-x, -y);
 };
 
 /*
