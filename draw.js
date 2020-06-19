@@ -370,10 +370,21 @@ var DrawingArea = new Lang.Class({
             this._redisplay();
             return Clutter.EVENT_STOP;
             
+        } else if (this.currentElement && this.currentElement.shape == Shapes.LINE) {
+            if (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == 65421 || event.get_key_symbol() == 65507) {
+                // 65507 is 'Ctrl' key alone
+                this.currentElement.addPoint();
+                this.updatePointerCursor(true);
+                this._redisplay();
+                return Clutter.EVENT_STOP;
+            } else {
+                return Clutter.EVENT_PROPAGATE;
+            }
+        
         } else if (this.currentElement &&
                    (this.currentElement.shape == Shapes.POLYGON || this.currentElement.shape == Shapes.POLYLINE) &&
                    (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == 65421)) {
-            this.currentElement.addPolyPoint();
+            this.currentElement.addPoint();
             return Clutter.EVENT_STOP;
             
         } else if (event.get_key_symbol() == Clutter.KEY_Escape) {
@@ -1207,6 +1218,10 @@ const DrawingElement = new Lang.Class({
             cr.moveTo(points[0][0], points[0][1]);
             cr.curveTo(points[0][0], points[0][1], points[1][0], points[1][1], points[2][0], points[2][1]);
             
+        } else if (shape == Shapes.LINE && points.length == 4) {
+            cr.moveTo(points[0][0], points[0][1]);
+            cr.curveTo(points[1][0], points[1][1], points[2][0], points[2][1], points[3][0], points[3][1]);
+            
         } else if (shape == Shapes.NONE || shape == Shapes.LINE) {
             cr.moveTo(points[0][0], points[0][1]);
             for (let j = 1; j < points.length; j++) {
@@ -1323,7 +1338,12 @@ const DrawingElement = new Lang.Class({
         });
         transAttribute += transAttribute ? '"' : '';
         
-        if (this.shape == Shapes.LINE && points.length == 3) {
+        if (this.shape == Shapes.LINE && points.length == 4) {
+            row += `<path ${attributes} d="M${points[0][0]} ${points[0][1]}`;
+            row += ` C ${points[1][0]} ${points[1][1]}, ${points[2][0]} ${points[2][1]}, ${points[3][0]} ${points[3][1]}`;
+            row += `${fill ? 'z' : ''}"${transAttribute}/>`;
+            
+        } else if (this.shape == Shapes.LINE && points.length == 3) {
             row += `<path ${attributes} d="M${points[0][0]} ${points[0][1]}`;
             row += ` C ${points[0][0]} ${points[0][1]}, ${points[1][0]} ${points[1][1]}, ${points[2][0]} ${points[2][1]}`;
             row += `${fill ? 'z' : ''}"${transAttribute}/>`;
@@ -1385,27 +1405,29 @@ const DrawingElement = new Lang.Class({
     },
     
     get isStraightLine() {
-        return this.shape == Shapes.LINE && (this.points.length < 3 || this.points[2] == this.points[1] || this.points[2] == this.points[0]);
-    },
-    
-    smooth: function(i) {
-        if (i < 2)
-            return;
-        this.points[i-1] = [(this.points[i-2][0] + this.points[i][0]) / 2, (this.points[i-2][1] + this.points[i][1]) / 2];
+        return this.shape == Shapes.LINE && this.points.length == 2;
     },
     
     smoothAll: function() {
         for (let i = 0; i < this.points.length; i++) {
-            this.smooth(i);
+            this._smooth(i);
         }
     },
     
-    // For polygons and polylines.
-    addPolyPoint: function() {
-        // copy last point
-        let [lastPoint, secondToLastPoint] = [this.points[this.points.length - 1], this.points[this.points.length - 2]];
-        if (!getNearness(secondToLastPoint, lastPoint, MIN_DRAWING_SIZE))
-            this.points.push([lastPoint[0], lastPoint[1]]);
+    addPoint: function() {
+        if (this.shape == Shapes.POLYGON || this.shape == Shapes.POLYLINE) {
+            // copy last point
+            let [lastPoint, secondToLastPoint] = [this.points[this.points.length - 1], this.points[this.points.length - 2]];
+            if (!getNearness(secondToLastPoint, lastPoint, MIN_DRAWING_SIZE))
+                this.points.push([lastPoint[0], lastPoint[1]]);
+        } else if (this.shape == Shapes.LINE) {
+            if (this.points.length == 2) {
+                this.points[2] = this.points[1];
+            } else if (this.points.length == 3) {
+                this.points[3] = this.points[2];
+                this.points[2] = this.points[1];
+            }
+        }
     },
     
     startDrawing: function(startX, startY) {
@@ -1420,10 +1442,12 @@ const DrawingElement = new Lang.Class({
         if (x == points[points.length - 1][0] && y == points[points.length - 1][1])
             return;
         
-        transform = transform || this.transformations.length >= 1 || this.shape == Shapes.LINE && points.length == 3;
+        transform = transform || this.transformations.length >= 1;
         
         if (this.shape == Shapes.NONE) {
-            this._addPoint(x, y, transform);
+            points.push([x, y]);
+            if (transform)
+                this._smooth(points.length - 1);
             
         } else if ((this.shape == Shapes.RECTANGLE || this.shape == Shapes.TEXT || this.shape == Shapes.POLYGON || this.shape == Shapes.POLYLINE) && transform) {
             if (points.length < 2)
@@ -1441,14 +1465,6 @@ const DrawingElement = new Lang.Class({
             let center = this._getOriginalCenter();
             this.transformations[0] = { type: Transformations.ROTATION,
                                         angle: getAngle(center[0], center[1], center[0] + 1, center[1], x, y) };
-            
-        } else if (this.shape == Shapes.LINE && transform) {
-            if (points.length < 2)
-                return;
-            
-            if (points.length == 2)
-                points[2] = points[1];
-            points[1] = [x, y];
             
         } else if (this.shape == Shapes.POLYGON || this.shape == Shapes.POLYLINE) {
             points[points.length - 1] = [x, y];
@@ -1576,7 +1592,8 @@ const DrawingElement = new Lang.Class({
         if (!this._originalCenter) {
             let points = this.points;
             this._originalCenter = this.shape == Shapes.ELLIPSE ? [points[0][0], points[0][1]] :
-                                   this.shape == Shapes.LINE && points.length == 3 ? getCurveCenter(points[0], points[1], points[2]) :
+                                   this.shape == Shapes.LINE && points.length == 4 ? getCurveCenter(points[0], points[1], points[2], points[3]) :
+                                   this.shape == Shapes.LINE && points.length == 3 ? getCurveCenter(points[0], points[0], points[1], points[2]) :
                                    this.shape == Shapes.TEXT && this.textWidth ? [Math.min(points[0][0], points[1][0]),
                                                                                   Math.max(points[0][1], points[1][1]) - this._getLineOffset()] :
                                    points.length >= 3 ? getCentroid(points) :
@@ -1616,10 +1633,10 @@ const DrawingElement = new Lang.Class({
         return transformation.elementTransformedCenter;
     },
     
-    _addPoint: function(x, y, smoothedStroke) {
-        this.points.push([x, y]);
-        if (smoothedStroke)
-            this.smooth(this.points.length - 1);
+    _smooth: function(i) {
+        if (i < 2)
+            return;
+        this.points[i-1] = [(this.points[i-2][0] + this.points[i][0]) / 2, (this.points[i-2][1] + this.points[i][1]) / 2];
     }
 });
 
@@ -1702,11 +1719,15 @@ control point: p0 ----  p1  ----  p2  ----  p3  (p2 is not on the curve)
             t: 0  ---- 1/3  ---- 2/3  ----  1
 */
 
-// Here, p0 = p1 and t = 2/3.
-// If the curve has a symmetry axis, p(2/3) is truly a center (the intersection of the curve and the axis).
+// If the curve has a symmetry axis, it is truly a center (the intersection of the curve and the axis).
 // In other cases, it is not a notable point, just a visual approximation.
-const getCurveCenter = function(p1, p2, p3) {
-    return [(p1[0] + 6*p1[0] + 12*p2[0] + 8*p3[0]) / 27, (p1[1] + 6*p1[1] + 12*p2[1] + 8*p3[1]) / 27];
+const getCurveCenter = function(p0, p1, p2, p3) {
+    if (p0[0] == p1[0] && p0[1] == p1[1])
+        // p0 = p1, t = 2/3
+        return [(p1[0] + 6*p1[0] + 12*p2[0] + 8*p3[0]) / 27, (p1[1] + 6*p1[1] + 12*p2[1] + 8*p3[1]) / 27];
+    else
+        // t = 1/2
+        return [(p0[0] + 3*p1[0] + 3*p2[0] + p3[0]) / 8, (p0[1] + 3*p1[1] + 3*p2[1] + p3[1]) / 8];
 };
 
 const getAngle = function(xO, yO, xA, yA, xB, yB) {
