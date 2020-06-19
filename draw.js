@@ -66,7 +66,7 @@ const Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5
 const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
 var   Tools = Object.assign({}, Shapes, Manipulations);
 const TextStates = { WRITTEN: 0, DRAWING: 1, WRITING: 2 };
-const Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, SCALE: 3, SCALE_ANGLE: 4, REFLECTION: 5, INVERSION: 6 };
+const Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, SCALE_DIRECTIONAL: 3, REFLECTION: 4, INVERSION: 5 };
 const ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move", 101: "Resize", 102: "Mirror" };
 const LineCapNames = { 0: 'Butt', 1: 'Round', 2: 'Square' };
 const LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
@@ -477,7 +477,7 @@ var DrawingArea = new Lang.Class({
         if (this.currentTool == Manipulations.MOVE)
             this.transformingElement.startTransformation(startX, startY, controlPressed ? Transformations.ROTATION : Transformations.TRANSLATION);
         else if (this.currentTool == Manipulations.RESIZE)
-            this.transformingElement.startTransformation(startX, startY, controlPressed ? Transformations.SCALE : Transformations.SCALE_PRESERVE);
+            this.transformingElement.startTransformation(startX, startY, controlPressed ? Transformations.SCALE_DIRECTIONAL : Transformations.SCALE_PRESERVE);
          else if (this.currentTool == Manipulations.MIRROR) {
             this.transformingElement.startTransformation(startX, startY, controlPressed ? Transformations.INVERSION : Transformations.REFLECTION);
             this._redisplay();
@@ -508,8 +508,8 @@ var DrawingArea = new Lang.Class({
         
         if (controlPressed && this.transformingElement.lastTransformation.type == Transformations.SCALE_PRESERVE) {
             this.transformingElement.stopTransformation();
-            this.transformingElement.startTransformation(x, y, Transformations.SCALE);
-        } else if (!controlPressed && this.transformingElement.lastTransformation.type == Transformations.SCALE) {
+            this.transformingElement.startTransformation(x, y, Transformations.SCALE_DIRECTIONAL);
+        } else if (!controlPressed && this.transformingElement.lastTransformation.type == Transformations.SCALE_DIRECTIONAL) {
             this.transformingElement.stopTransformation();
             this.transformingElement.startTransformation(x, y, Transformations.SCALE_PRESERVE);
         }
@@ -1188,16 +1188,10 @@ const DrawingElement = new Lang.Class({
             } else if (transformation.type == Transformations.ROTATION) {
                 let center = this._getCenterWithSlideBefore(transformation);
                 crRotate(cr, transformation.angle, center[0], center[1]);
-            } else if (transformation.type == Transformations.SCALE_PRESERVE) {
-                let center = this._getCenterWithSlideBefore(transformation);
-                crScale(cr, transformation.scale, transformation.scale, center[0], center[1]);
-            } else if (transformation.type == Transformations.SCALE) {
-                let center = this._getCenterWithSlideBefore(transformation);
-                crScale(cr, transformation.scaleX, transformation.scaleY, center[0], center[1]);
-            } else if (transformation.type == Transformations.SCALE_ANGLE) {
+            } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.SCALE_DIRECTIONAL) {
                 let center = this._getCenterWithSlideBefore(transformation);
                 crRotate(cr, transformation.angle, center[0], center[1]);
-                crScale(cr, transformation.scale, 1, center[0], center[1]);
+                crScale(cr, transformation.scaleX, transformation.scaleY, center[0], center[1]);
                 crRotate(cr, -transformation.angle, center[0], center[1]);
             } else if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION) {
                 cr.translate(transformation.slideX, transformation.slideY);
@@ -1316,16 +1310,10 @@ const DrawingElement = new Lang.Class({
             
             if (transformation.type == Transformations.ROTATION) {
                 transAttribute += `rotate(${transformation.angle * 180 / Math.PI},${center[0]},${center[1]})`;
-            } else if (transformation.type == Transformations.SCALE_PRESERVE) {
-                transAttribute += `translate(${-center[0] * (transformation.scale - 1)},${-center[1] * (transformation.scale - 1)}) `;
-                transAttribute += `scale(${transformation.scale})`;
-            } else if (transformation.type == Transformations.SCALE) {
-                transAttribute += `translate(${-center[0] * (transformation.scaleX - 1)},${-center[1] * (transformation.scaleY - 1)}) `;
-                transAttribute += `scale(${transformation.scaleX},${transformation.scaleY})`;
-            } else if (transformation.type == Transformations.SCALE_ANGLE) {
+            } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.SCALE_DIRECTIONAL) {
                 transAttribute += `rotate(${transformation.angle * 180 / Math.PI},${center[0]},${center[1]}) `;
-                transAttribute += `translate(${-center[0] * (transformation.scale - 1)},0) `;
-                transAttribute += `scale(${transformation.scale},1) `;
+                transAttribute += `translate(${-center[0] * (transformation.scaleX - 1)},${-center[1] * (transformation.scaleY - 1)}) `;
+                transAttribute += `scale(${transformation.scaleX},${transformation.scaleY}) `;
                 transAttribute += `rotate(${-transformation.angle * 180 / Math.PI},${center[0]},${center[1]})`;
             } else if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION) {
                 transAttribute += `translate(${transformation.slideX}, ${transformation.slideY}) `;
@@ -1474,12 +1462,8 @@ const DrawingElement = new Lang.Class({
             this.transformations.push({ startX: startX, startY: startY, type: type, slideX: 0, slideY: 0 });
         else if (type == Transformations.ROTATION)
             this.transformations.push({ startX: startX, startY: startY, type: type, angle: 0 });
-        else if (type == Transformations.SCALE_PRESERVE)
-            this.transformations.push({ startX: startX, startY: startY, type: type, scale: 1 });
-        else if (type == Transformations.SCALE)
-            this.transformations.push({ startX: startX, startY: startY, type: type, scaleX: 1, scaleY: 1 });
-        else if (type == Transformations.SCALE_ANGLE)
-            this.transformations.push({ startX: startX, startY: startY, type: type, scale: 1, angle: 0 });
+        else if (type == Transformations.SCALE_PRESERVE || type == Transformations.SCALE_DIRECTIONAL)
+            this.transformations.push({ startX: startX, startY: startY, type: type, scaleX: 1, scaleY: 1, angle: 0 });
         else if (type == Transformations.REFLECTION)
             this.transformations.push({ startX: startX, startY: startY, endX: startX, endY: startY, type: type,
                                         scaleX:  1, scaleY:  1, slideX: 0, slideY: 0, angle: 0 });
@@ -1503,18 +1487,17 @@ const DrawingElement = new Lang.Class({
             transformation.angle = getAngle(center[0], center[1], transformation.startX, transformation.startY, x, y);
         } else if (transformation.type == Transformations.SCALE_PRESERVE) {
             let center = this._getCenterWithSlideBefore(transformation);
-            transformation.scale = Math.hypot(x - center[0], y - center[1]) / Math.hypot(transformation.startX - center[0], transformation.startY - center[1]);
-        } else if (transformation.type == Transformations.SCALE) {
+            let scale = Math.hypot(x - center[0], y - center[1]) / Math.hypot(transformation.startX - center[0], transformation.startY - center[1]) || 1;
+            [transformation.scaleX, transformation.scaleY] = [scale, scale];
+        } else if (transformation.type == Transformations.SCALE_DIRECTIONAL) {
             let center = this._getCenterWithSlideBefore(transformation);
             let startAngle = getAngle(center[0], center[1], center[0] + 1, center[1], transformation.startX, transformation.startY);
             let vertical = Math.abs(Math.sin(startAngle)) >= Math.sin(3 * Math.PI / 8);
             let horizontal = Math.abs(Math.cos(startAngle)) >= Math.cos(Math.PI / 8);
-            transformation.scaleX = vertical ? 1 : Math.abs((x - center[0]) / (transformation.startX - center[0]));
-            transformation.scaleY = horizontal ? 1 : Math.abs((y - center[1]) / (transformation.startY - center[1]));
-        } else if (transformation.type == Transformations.SCALE_ANGLE) {
-            let center = this._getCenterWithSlideBefore(transformation);
-            transformation.scale = Math.hypot(x - center[0], y - center[1]) / Math.hypot(transformation.startX - center[0], transformation.startY - center[1]);
-            transformation.angle = getAngle(center[0], center[1], center[0] + 1, center[1], x, y);
+            let scale = Math.hypot(x - center[0], y - center[1]) / Math.hypot(transformation.startX - center[0], transformation.startY - center[1]) || 1;
+            transformation.scaleX = vertical ? 1 : scale;
+            transformation.scaleY = !vertical ? 1 : scale;
+            transformation.angle = vertical || horizontal ? 0 : getAngle(center[0], center[1], center[0] + 1, center[1], x, y);
         } else if (transformation.type == Transformations.REFLECTION) {
             [transformation.endX, transformation.endY] = [x, y];
             if (getNearness([transformation.startX, transformation.startY], [x, y], MIN_REFLECTION_LINE_LENGTH)) {
