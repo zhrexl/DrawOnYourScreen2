@@ -37,7 +37,8 @@ const MARGIN = 10;
 
 var GLOBAL_KEYBINDINGS = {
     'toggle-drawing': "Enter/leave drawing mode",
-    'erase-drawing': "Erase all drawings"
+    'erase-drawing': "Erase all drawings",
+    'toggle-modal': "Toggle modeless/modal"
 };
 
 var INTERNAL_KEYBINDINGS = {

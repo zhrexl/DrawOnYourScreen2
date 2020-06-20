@@ -86,6 +86,12 @@ var AreaManager = new Lang.Class({
                               Shell.ActionMode.ALL,
                               this.eraseDrawing.bind(this));
         
+        Main.wm.addKeybinding('toggle-modal',
+                              this.settings,
+                              Meta.KeyBindingFlags.NONE,
+                              Shell.ActionMode.ALL,
+                              this.toggleModal.bind(this));
+        
         this.updateAreas();
         this.monitorChangedHandler = Main.layoutManager.connect('monitors-changed', this.updateAreas.bind(this));
         
@@ -306,53 +312,78 @@ var AreaManager = new Lang.Class({
         }
     },
     
-    toggleDrawing: function() {
-        if (this.activeArea) {
-            let activeIndex = this.areas.indexOf(this.activeArea);
-            let activeContainer = this.activeArea.get_parent();
-            let save = activeIndex == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
-            
-            if (this.hiddenList)
-                this.togglePanelAndDockOpacity();
-            
-            setCursor('DEFAULT');
-            if (!this.osdDisabled)
-                this.showOsd(null, this.leaveGicon, _("Leaving drawing mode"));
-            
-            Main.popModal(this.activeArea);
-            this.removeInternalKeybindings();
-            this.activeArea.reactive = false;
-            this.activeArea.leaveDrawingMode(save);
-            this.activeArea = null;
-            
-            activeContainer.get_parent().remove_actor(activeContainer);
+    toggleContainer: function() {
+        if (!this.activeArea)
+            return;
+        
+        let activeContainer = this.activeArea.get_parent();
+        let activeIndex = this.areas.indexOf(this.activeArea);
+        
+        if (activeContainer.get_parent() == Main.uiGroup) {
+            Main.uiGroup.remove_actor(activeContainer);
             Main.layoutManager._backgroundGroup.insert_child_above(activeContainer, Main.layoutManager._bgManagers[activeIndex].backgroundActor);
             if (!this.settings.get_boolean("drawing-on-desktop")) 
                 activeContainer.hide();
         } else {
-            // avoid to deal with Meta changes (global.display/global.screen)
-            let currentIndex = Main.layoutManager.monitors.indexOf(Main.layoutManager.currentMonitor);
-            let activeContainer = this.areas[currentIndex].get_parent();
-            
-            activeContainer.get_parent().remove_actor(activeContainer);
+            Main.layoutManager._backgroundGroup.remove_actor(activeContainer);
             Main.uiGroup.add_child(activeContainer);
-            
+        }
+    },
+    
+    toggleModal: function() {
+        if (!this.activeArea)
+            return;
+        
+        if (Main.actionMode & DRAWING_ACTION_MODE) {
+            Main.popModal(this.activeArea);
+            setCursor('DEFAULT');
+            this.activeArea.reactive = false;
+            this.removeInternalKeybindings();
+        } else {
             // add Shell.ActionMode.NORMAL to keep system keybindings enabled (e.g. Alt + F2 ...)
-            if (!Main.pushModal(this.areas[currentIndex], { actionMode: DRAWING_ACTION_MODE | Shell.ActionMode.NORMAL }))
-                return;
-            this.activeArea = this.areas[currentIndex];
+            if (!Main.pushModal(this.activeArea, { actionMode: DRAWING_ACTION_MODE | Shell.ActionMode.NORMAL }))
+                return false;
             this.addInternalKeybindings();
             this.activeArea.reactive = true;
-            this.activeArea.enterDrawingMode();
+            this.activeArea.initPointerCursor();
+        }
+        
+        return true;
+    },
+    
+    toggleDrawing: function() {
+        if (this.activeArea) {
+            let activeIndex = this.areas.indexOf(this.activeArea);
+            let save = activeIndex == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
             
-            setCursor('POINTING_HAND');
+            this.showOsd(null, this.leaveGicon, _("Leaving drawing mode"));
+            this.activeArea.leaveDrawingMode(save);
+            if (this.hiddenList)
+                this.togglePanelAndDockOpacity();
+            
+            if (Main.actionMode & DRAWING_ACTION_MODE)
+                this.toggleModal();
+            this.toggleContainer();
+            this.activeArea = null;
+        } else {
+            // avoid to deal with Meta changes (global.display/global.screen)
+            let currentIndex = Main.layoutManager.monitors.indexOf(Main.layoutManager.currentMonitor);
+            this.activeArea = this.areas[currentIndex];
+            this.toggleContainer();
+            if (!this.toggleModal()) {
+                this.toggleContainer();
+                this.activeArea = null;
+                return;
+            }
+            
+            this.activeArea.enterDrawingMode();
             this.osdDisabled = this.settings.get_boolean('osd-disabled');
             let label = _("<small>Press <i>%s</i> for help</small>").format(this.activeArea.helper.helpKeyLabel) + "\n\n" + _("Entering drawing mode");
             this.showOsd(null, this.enterGicon, label, null, null, true);
         }
         
         if (this.indicator)
-            this.indicator.sync(this.activeArea != null);
+            this.indicator.sync(Boolean(this.activeArea));
     },
     
     // Use level -1 to set no level through a signal.
@@ -482,6 +513,7 @@ var AreaManager = new Lang.Class({
             this.toggleDrawing();
         Main.wm.removeKeybinding('toggle-drawing');
         Main.wm.removeKeybinding('erase-drawing');
+        Main.wm.removeKeybinding('toggle-modal');
         this.removeAreas();
         if (this.indicator)
             this.indicator.disable();

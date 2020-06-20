@@ -163,6 +163,9 @@ msgstr ""
 msgid "Erase all drawings"
 msgstr ""
 
+msgid "Toggle modeless/modal"
+msgstr ""
+
 #: INTERNAL_KEYBINDINGS
 
 msgid "Undo last brushstroke"

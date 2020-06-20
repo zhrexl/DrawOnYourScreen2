@@ -691,6 +691,11 @@ var DrawingArea = new Lang.Class({
             this.setPointerCursor('MOVE_OR_RESIZE_WINDOW');
     },
     
+    initPointerCursor: function() {
+        this.currentPointerCursorName = null;
+        this.updatePointerCursor();
+    },
+    
     _stopTextCursorTimeout: function() {
         if (this.textCursorTimeoutId) {
             GLib.source_remove(this.textCursorTimeoutId);
