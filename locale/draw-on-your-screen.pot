@@ -86,16 +86,26 @@ msgstr ""
 msgid "Full line"
 msgstr ""
 
-# %s is a key label
-msgid ""
-"Press <i>%s</i>\n"
-"to mark vertices"
+msgid "%d px"
+msgstr ""
+
+msgid "Press <i>%s</i> to get a fourth control point"
+msgstr ""
+
+msgid "Mark a point of symmetry"
+msgstr ""
+
+msgid "Draw a line of symmetry"
 msgstr ""
 
 # %s is a key label
 msgid ""
-"Type your text\n"
-"and press <i>%s</i>"
+"Press <i>%s</i> to mark vertices"
+msgstr ""
+
+# %s is a key label
+msgid ""
+"Type your text and press <i>%s</i>"
 msgstr ""
 
 msgid "Screenshot"
@@ -285,12 +295,6 @@ msgstr ""
 msgid "Center click"
 msgstr ""
 
-msgid "Transform shape (when drawing)"
-msgstr ""
-
-msgid "Rotate drawing (when moving)"
-msgstr ""
-
 msgid "Increment/decrement line width"
 msgstr ""
 
@@ -304,20 +308,41 @@ msgstr ""
 msgid "%s … %s"
 msgstr ""
 
-msgid "Select eraser (when starting drawing)"
-msgstr ""
-
-msgid "Duplicate drawing (when starting moving)"
+msgid "Ignore pointer movement"
 msgstr ""
 
 # %s is a key label
 msgid "%s held"
 msgstr ""
 
-msgid "Ignore pointer movement"
+msgid "Leave"
 msgstr ""
 
-msgid "Leave"
+msgid "Select eraser (when starting a drawing)"
+msgstr ""
+
+msgid "Duplicate (when starting a transformation)"
+msgstr ""
+
+msgid "Rotate rectangle, polygon, polyline, text area"
+msgstr ""
+
+msgid "Extend circle to ellipse"
+msgstr ""
+
+msgid "Curve line"
+msgstr ""
+
+msgid "Smooth free drawing stroke"
+msgstr ""
+
+msgid "Rotate (when moving)"
+msgstr ""
+
+msgid "Stretch (when resizing)"
+msgstr ""
+
+msgid "Inverse (when mirroring)"
 msgstr ""
 
 #: About page
@@ -430,8 +455,5 @@ msgstr ""
 #msgstr ""
 
 #msgid "Fantasy"
-#msgstr ""
-
-#msgid "px"
 #msgstr ""
 

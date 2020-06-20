@@ -56,26 +56,27 @@ var INTERNAL_KEYBINDINGS = {
     'select-move-tool': "Select move",
     'select-resize-tool': "Select resize",
     'select-mirror-tool': "Select mirror",
-    'toggle-fill': "Toggle fill/stroke",
     '-separator-2': '',
+    'toggle-fill': "Toggle fill/stroke",
+    'toggle-fill-rule': "Change fill rule",
+    '-separator-3': '',
     'increment-line-width': "Increment line width",
     'decrement-line-width': "Decrement line width",
     'increment-line-width-more': "Increment line width even more",
     'decrement-line-width-more': "Decrement line width even more",
     'toggle-linejoin': "Change linejoin",
     'toggle-linecap': "Change linecap",
-    'toggle-fill-rule': "Change fill rule",
     'toggle-dash': "Dashed line",
-    '-separator-3': '',
+    '-separator-4': '',
     'toggle-font-family': "Change font family (generic name)",
     'toggle-font-weight': "Change font weight",
     'toggle-font-style': "Change font style",
-    '-separator-4': '',
+    '-separator-5': '',
     'toggle-panel-and-dock-visibility': "Hide panel and dock",
     'toggle-background': "Add a drawing background",
     'toggle-grid': "Add a grid overlay",
     'toggle-square-area': "Square drawing area",
-    '-separator-5': '',
+    '-separator-6': '',
     'open-previous-json': "Open previous drawing",
     'open-next-json': "Open next drawing",
     'save-as-json': "Save drawing",
@@ -97,14 +98,20 @@ var OTHER_SHORTCUTS = [
     { desc: "Draw", get shortcut() { return _("Left click"); } },
     { desc: "Menu", get shortcut() { return _("Right click"); } },
     { desc: "Toggle fill/stroke", get shortcut() { return _("Center click"); } },
-    { desc: "Transform shape (when drawing)", shortcut: getKeyLabel('<Primary>') },
-    { desc: "Rotate drawing (when moving)", shortcut: getKeyLabel('<Primary>') },
     { desc: "Increment/decrement line width", get shortcut() { return _("Scroll"); } },
     { desc: "Select color", get shortcut() { return _("%s … %s").format(getKeyLabel('<Primary>1'), getKeyLabel('<Primary>9')); } },
-    { desc: "Select eraser (when starting drawing)", get shortcut() { return _("%s held").format(getKeyLabel('<Shift>')); } },
-    { desc: "Duplicate drawing (when starting moving)", get shortcut() { return _("%s held").format(getKeyLabel('<Shift>')); } },
     { desc: "Ignore pointer movement", get shortcut() { return _("%s held").format(getKeyLabel('space')); } },
-    { desc: "Leave", shortcut: getKeyLabel('Escape') }
+    { desc: "Leave", shortcut: getKeyLabel('Escape') },
+    { desc: "-separator-1", shortcut: "" },
+    { desc: "Select eraser <span alpha=\"50%\">(while starting a drawing)</span>", shortcut: "%s".format(getKeyLabel('<Shift>')) },
+    { desc: "Duplicate <span alpha=\"50%\">(while starting a transformation)</span>", shortcut: "%s".format(getKeyLabel('<Shift>')) },
+    { desc: "Rotate rectangle, polygon, polyline, text area", shortcut: getKeyLabel('<Primary>') },
+    { desc: "Extend circle to ellipse", shortcut: getKeyLabel('<Primary>') },
+    { desc: "Curve line", shortcut: getKeyLabel('<Primary>') },
+    { desc: "Smooth free drawing stroke", shortcut: getKeyLabel('<Primary>') },
+    { desc: "Rotate <span alpha=\"50%\">(while moving)</span>", shortcut: getKeyLabel('<Primary>') },
+    { desc: "Stretch <span alpha=\"50%\">(while resizing)</span>", shortcut: getKeyLabel('<Primary>') },
+    { desc: "Inverse <span alpha=\"50%\">(while mirroring)</span>", shortcut: getKeyLabel('<Primary>') }
 ];
 
 function init() {
@@ -286,7 +293,7 @@ const PrefsPage = new GObject.Class({
                 continue;
             }
             let otherBox = new Gtk.Box({ margin_left: MARGIN, margin_right: MARGIN });
-            let otherLabel = new Gtk.Label({ label: _(OTHER_SHORTCUTS[i].desc) });
+            let otherLabel = new Gtk.Label({ label: _(OTHER_SHORTCUTS[i].desc), use_markup: true });
             otherLabel.set_halign(1);
             let otherLabel2 = new Gtk.Label({ label: OTHER_SHORTCUTS[i].shortcut });
             otherBox.pack_start(otherLabel, true, true, 4);

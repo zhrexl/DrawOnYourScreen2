@@ -371,6 +371,9 @@ var DrawingArea = new Lang.Class({
         } else if (this.currentElement && this.currentElement.shape == Shapes.LINE) {
             if (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == 65421 || event.get_key_symbol() == 65507) {
                 // 65507 is 'Ctrl' key alone
+                if (this.currentElement.points.length == 2)
+                    this.emit('show-osd', null, _("Press <i>%s</i> to get a fourth control point")
+                                                .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1);
                 this.currentElement.addPoint();
                 this.updatePointerCursor(true);
                 this._redisplay();
@@ -462,6 +465,8 @@ var DrawingArea = new Lang.Class({
             this.grabbedElementLocked = !this.grabbedElementLocked;
             if (this.grabbedElementLocked) {
                 this.updatePointerCursor();
+                let label = controlPressed ? _("Mark a point of symmetry") : _("Draw a line of symmetry");
+                this.emit('show-osd', null, label, "", -1);
                 return;
             }
         }
@@ -580,7 +585,7 @@ var DrawingArea = new Lang.Class({
         this.currentElement.startDrawing(startX, startY);
         
         if (this.currentTool == Shapes.POLYGON || this.currentTool == Shapes.POLYLINE)
-            this.emit('show-osd', null, _("Press <i>%s</i>\nto mark vertices").format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1);
+            this.emit('show-osd', null, _("Press <i>%s</i> to mark vertices").format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1);
         
         this.motionHandler = this.connect('motion-event', (actor, event) => {
             if (this.spaceKeyPressed)
@@ -627,7 +632,7 @@ var DrawingArea = new Lang.Class({
                 // start writing
                 this.currentElement.textState = TextStates.WRITING;
                 this.currentElement.text = '';
-                this.emit('show-osd', null, _("Type your text\nand press <i>%s</i>").format(Gtk.accelerator_get_label(Clutter.KEY_Escape, 0)), "", -1);
+                this.emit('show-osd', null, _("Type your text and press <i>%s</i>").format(Gtk.accelerator_get_label(Clutter.KEY_Escape, 0)), "", -1);
                 this._updateTextCursorTimeout();
                 this.textHasCursor = true;
                 this._redisplay();
@@ -804,7 +809,7 @@ var DrawingArea = new Lang.Class({
     
     incrementLineWidth: function(increment) {
         this.currentLineWidth = Math.max(this.currentLineWidth + increment, 0);
-        this.emit('show-osd', null, this.currentLineWidth + " " + _("px"), "", 2 * this.currentLineWidth);
+        this.emit('show-osd', null, _("%d px").format(this.currentLineWidth), "", 2 * this.currentLineWidth);
     },
     
     toggleLineJoin: function() {
@@ -1823,6 +1828,7 @@ var DrawingHelper = new Lang.Class({
             let hbox = new St.BoxLayout({ vertical: false });
             hbox.add_child(new St.Label({ text: _(Prefs.OTHER_SHORTCUTS[i].desc) }));
             hbox.add_child(new St.Label({ text: Prefs.OTHER_SHORTCUTS[i].shortcut, x_expand: true }));
+            hbox.get_children()[0].get_clutter_text().set_use_markup(true);
             this.vbox.add_child(hbox);
         }
         
@@ -2089,7 +2095,7 @@ const DrawingMenu = new Lang.Class({
     
     _addSliderItem: function(menu, target, targetProperty) {
         let item = new PopupMenu.PopupBaseMenuItem({ activate: false });
-        let label = new St.Label({ text: target[targetProperty] + " " + _("px"), style_class: 'draw-on-your-screen-menu-slider-label' });
+        let label = new St.Label({ text: _("%d px").format(target[targetProperty]), style_class: 'draw-on-your-screen-menu-slider-label' });
         let slider = new Slider.Slider(target[targetProperty] / 50);
         
         if (GS_VERSION < '3.33.0') {
