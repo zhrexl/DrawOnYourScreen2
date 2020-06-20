@@ -39,6 +39,7 @@ const Draw = Me.imports.draw;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
+const HIDE_TIMEOUT_LONG = 2500; // ms, default is 1500 ms
 
 // DRAWING_ACTION_MODE is a custom Shell.ActionMode
 var DRAWING_ACTION_MODE = Math.pow(2,14);
@@ -314,6 +315,10 @@ var AreaManager = new Lang.Class({
             if (this.hiddenList)
                 this.togglePanelAndDockOpacity();
             
+            setCursor('DEFAULT');
+            if (!this.osdDisabled)
+                this.showOsd(null, this.leaveGicon, _("Leaving drawing mode"));
+            
             Main.popModal(this.activeArea);
             this.removeInternalKeybindings();
             this.activeArea.reactive = false;
@@ -324,11 +329,7 @@ var AreaManager = new Lang.Class({
             Main.layoutManager._backgroundGroup.insert_child_above(activeContainer, Main.layoutManager._bgManagers[activeIndex].backgroundActor);
             if (!this.settings.get_boolean("drawing-on-desktop")) 
                 activeContainer.hide();
-            
-            setCursor('DEFAULT');
-            if (!this.osdDisabled)
-                Main.osdWindowManager.show(activeIndex, this.leaveGicon, _("Leaving drawing mode"), null);
-        } else  {
+        } else {
             // avoid to deal with Meta changes (global.display/global.screen)
             let currentIndex = Main.layoutManager.monitors.indexOf(Main.layoutManager.currentMonitor);
             let activeContainer = this.areas[currentIndex].get_parent();
@@ -346,15 +347,8 @@ var AreaManager = new Lang.Class({
             
             setCursor('POINTING_HAND');
             this.osdDisabled = this.settings.get_boolean('osd-disabled');
-            if (!this.osdDisabled) {
-                // increase OSD display time
-                let hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
-                try { OsdWindow.HIDE_TIMEOUT = 2000; } catch(e) { /* HIDE_TIMEOUT is not exported with 'var' */ }
-                let label = _("<small>Press <i>%s</i> for help</small>").format(this.activeArea.helper.helpKeyLabel) + "\n\n" + _("Entering drawing mode");
-                Main.osdWindowManager.show(currentIndex, this.enterGicon, label, null);
-                Main.osdWindowManager._osdWindows[this.areas.indexOf(this.activeArea)]._label.get_clutter_text().set_use_markup(true);
-                try { OsdWindow.HIDE_TIMEOUT = hideTimeoutSave; } catch(e) {}
-            }
+            let label = _("<small>Press <i>%s</i> for help</small>").format(this.activeArea.helper.helpKeyLabel) + "\n\n" + _("Entering drawing mode");
+            this.showOsd(null, this.enterGicon, label, null, null, true);
         }
         
         if (this.indicator)
@@ -362,45 +356,61 @@ var AreaManager = new Lang.Class({
     },
     
     // use level -1 to set no level (null)
-    showOsd: function(emitter, iconName, label, color, level) {
-        if (this.osdDisabled)
-            return;
+    showOsd: function(emitter, icon, label, color, level, long) {
         let activeIndex = this.areas.indexOf(this.activeArea);
-        if (activeIndex != -1) {
-            let maxLevel;
-            if (level == -1)
-                level = null;
-            else if (level > 100)
-                maxLevel = 2;
-            
-            // GS 3.32- : bar from 0 to 100
-            // GS 3.34+ : bar from 0 to 1
-            if (level && GS_VERSION > '3.33.0')
-                level = level / 100;
-            
-            let icon = iconName && new Gio.ThemedIcon({ name: iconName });
-            Main.osdWindowManager.show(activeIndex, icon || this.enterGicon, label, level, maxLevel);
-            Main.osdWindowManager._osdWindows[activeIndex]._label.get_clutter_text().set_use_markup(true);
-            
-            if (color) {
-                Main.osdWindowManager._osdWindows[activeIndex]._icon.set_style(`color:${color};`);
-                Main.osdWindowManager._osdWindows[activeIndex]._label.set_style(`color:${color};`);
-                let osdColorChangedHandler = Main.osdWindowManager._osdWindows[activeIndex]._label.connect('notify::text', () => {
-                    Main.osdWindowManager._osdWindows[activeIndex]._icon.set_style(`color:;`);
-                    Main.osdWindowManager._osdWindows[activeIndex]._label.set_style(`color:;`);
-                    Main.osdWindowManager._osdWindows[activeIndex]._label.disconnect(osdColorChangedHandler);
-                });
+        if (activeIndex == -1 || this.osdDisabled)
+            return;
+        
+        let hideTimeoutSave;
+        if (long)
+            try {
+                hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
+                OsdWindow.HIDE_TIMEOUT = HIDE_TIMEOUT_LONG;
+            } catch(e) {
+                // HIDE_TIMEOUT is not exportable.
+                hideTimeoutSave = null;
             }
-            
-            if (level === 0) {
-                Main.osdWindowManager._osdWindows[activeIndex]._label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
-                // the same label is shared by all GS OSD so the style must be removed after being used
-                let osdLabelChangedHandler = Main.osdWindowManager._osdWindows[activeIndex]._label.connect('notify::text', () => {
-                    Main.osdWindowManager._osdWindows[activeIndex]._label.remove_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
-                    Main.osdWindowManager._osdWindows[activeIndex]._label.disconnect(osdLabelChangedHandler);
-                });
-            }
+        
+        let maxLevel;
+        if (level == -1)
+            level = null;
+        else if (level > 100)
+            maxLevel = 2;
+        
+        // GS 3.32- : bar from 0 to 100
+        // GS 3.34+ : bar from 0 to 1
+        if (level && GS_VERSION > '3.33.0')
+            level = level / 100;
+        
+        if (icon && typeof icon == 'string')
+            icon = new Gio.ThemedIcon({ name: icon });
+        else if (!icon)
+            icon = this.enterGicon;
+        
+        Main.osdWindowManager.show(activeIndex, icon, label, level, maxLevel);
+        Main.osdWindowManager._osdWindows[activeIndex]._label.get_clutter_text().set_use_markup(true);
+        
+        if (color) {
+            Main.osdWindowManager._osdWindows[activeIndex]._icon.set_style(`color:${color};`);
+            Main.osdWindowManager._osdWindows[activeIndex]._label.set_style(`color:${color};`);
+            let osdColorChangedHandler = Main.osdWindowManager._osdWindows[activeIndex]._label.connect('notify::text', () => {
+                Main.osdWindowManager._osdWindows[activeIndex]._icon.set_style(`color:;`);
+                Main.osdWindowManager._osdWindows[activeIndex]._label.set_style(`color:;`);
+                Main.osdWindowManager._osdWindows[activeIndex]._label.disconnect(osdColorChangedHandler);
+            });
         }
+        
+        if (level === 0) {
+            Main.osdWindowManager._osdWindows[activeIndex]._label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
+            // the same label is shared by all GS OSD so the style must be removed after being used
+            let osdLabelChangedHandler = Main.osdWindowManager._osdWindows[activeIndex]._label.connect('notify::text', () => {
+                Main.osdWindowManager._osdWindows[activeIndex]._label.remove_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
+                Main.osdWindowManager._osdWindows[activeIndex]._label.disconnect(osdLabelChangedHandler);
+            });
+        }
+        
+        if (hideTimeoutSave)
+            OsdWindow.HIDE_TIMEOUT = hideTimeoutSave;
     },
     
     removeAreas: function() {
