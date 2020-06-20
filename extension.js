@@ -355,7 +355,7 @@ var AreaManager = new Lang.Class({
             this.indicator.sync(this.activeArea != null);
     },
     
-    // use level -1 to set no level (null)
+    // Use level -1 to set no level through a signal.
     showOsd: function(emitter, icon, label, color, level, long) {
         let activeIndex = this.areas.indexOf(this.activeArea);
         if (activeIndex == -1 || this.osdDisabled)
@@ -387,25 +387,51 @@ var AreaManager = new Lang.Class({
         else if (!icon)
             icon = this.enterGicon;
         
+        let osdWindow = Main.osdWindowManager._osdWindows[activeIndex];
+        
+        try {
+            if (!this.osdWindowConstraint)
+                this.osdWindowConstraint = new OsdWindowConstraint();
+            
+            if (!osdWindow._box.get_constraint(this.osdWindowConstraint.constructor.name)) {
+                osdWindow._box.remove_constraint(osdWindow._boxConstraint);
+                osdWindow._box.add_constraint_with_name(this.osdWindowConstraint.constructor.name, this.osdWindowConstraint);
+                this.osdWindowConstraint._minSize = osdWindow._boxConstraint._minSize;
+                osdWindow._boxConstraintOld = osdWindow._boxConstraint;
+                osdWindow._boxConstraint = this.osdWindowConstraint;
+                let osdConstraintHandler = osdWindow._box.connect('notify::mapped', (box) => {
+                    if (!box.mapped) {
+                        osdWindow._boxConstraint = osdWindow._boxConstraintOld;
+                        osdWindow._boxConstraint._minSize = this.osdWindowConstraint._minSize;
+                        osdWindow._box.remove_constraint(this.osdWindowConstraint);
+                        osdWindow._box.add_constraint(osdWindow._boxConstraint);
+                        osdWindow._box.disconnect(osdConstraintHandler);
+                    }
+                });
+            }
+        } catch(e) {
+            logError(e);
+        }
+        
         Main.osdWindowManager.show(activeIndex, icon, label, level, maxLevel);
-        Main.osdWindowManager._osdWindows[activeIndex]._label.get_clutter_text().set_use_markup(true);
+        osdWindow._label.get_clutter_text().set_use_markup(true);
         
         if (color) {
-            Main.osdWindowManager._osdWindows[activeIndex]._icon.set_style(`color:${color};`);
-            Main.osdWindowManager._osdWindows[activeIndex]._label.set_style(`color:${color};`);
-            let osdColorChangedHandler = Main.osdWindowManager._osdWindows[activeIndex]._label.connect('notify::text', () => {
-                Main.osdWindowManager._osdWindows[activeIndex]._icon.set_style(`color:;`);
-                Main.osdWindowManager._osdWindows[activeIndex]._label.set_style(`color:;`);
-                Main.osdWindowManager._osdWindows[activeIndex]._label.disconnect(osdColorChangedHandler);
+            osdWindow._icon.set_style(`color:${color};`);
+            osdWindow._label.set_style(`color:${color};`);
+            let osdColorChangedHandler = osdWindow._label.connect('notify::text', () => {
+                osdWindow._icon.set_style(`color:;`);
+                osdWindow._label.set_style(`color:;`);
+                osdWindow._label.disconnect(osdColorChangedHandler);
             });
         }
         
         if (level === 0) {
-            Main.osdWindowManager._osdWindows[activeIndex]._label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
+            osdWindow._label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
             // the same label is shared by all GS OSD so the style must be removed after being used
-            let osdLabelChangedHandler = Main.osdWindowManager._osdWindows[activeIndex]._label.connect('notify::text', () => {
-                Main.osdWindowManager._osdWindows[activeIndex]._label.remove_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
-                Main.osdWindowManager._osdWindows[activeIndex]._label.disconnect(osdLabelChangedHandler);
+            let osdLabelChangedHandler = osdWindow._label.connect('notify::text', () => {
+                osdWindow._label.remove_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
+                osdWindow._label.disconnect(osdLabelChangedHandler);
             });
         }
         
@@ -462,7 +488,30 @@ var AreaManager = new Lang.Class({
     }
 });
 
-var DrawingIndicator = new Lang.Class({
+// The same as the original, without forcing a ratio of 1.
+const OsdWindowConstraint = new Lang.Class({
+    Name: 'DrawOnYourScreenOsdWindowConstraint',
+    Extends: OsdWindow.OsdWindowConstraint,
+
+    vfunc_update_allocation: function(actor, actorBox) {
+        // Clutter will adjust the allocation for margins,
+        // so add it to our minimum size
+        let minSize = this._minSize + actor.margin_top + actor.margin_bottom;
+        let [width, height] = actorBox.get_size();
+
+        // DO NOT Enforce a ratio of 1
+        let newWidth = Math.ceil(Math.max(minSize, width, height));
+        let newHeight = Math.ceil(Math.max(minSize, height));
+        actorBox.set_size(newWidth, newHeight);
+
+        // Recenter
+        let [x, y] = actorBox.get_origin();
+        actorBox.set_origin(Math.ceil(x + width / 2 - newWidth / 2),
+                            Math.ceil(y + height / 2 - newHeight / 2));
+    }
+});
+
+const DrawingIndicator = new Lang.Class({
     Name: 'DrawOnYourScreenIndicator',
 
     _init: function() {
