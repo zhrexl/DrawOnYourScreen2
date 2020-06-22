@@ -122,7 +122,7 @@ function init() {
 function buildPrefsWidget() {
     let topStack = new TopStack();
     let switcher = new Gtk.StackSwitcher({halign: Gtk.Align.CENTER, visible: true, stack: topStack});
-    GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+    GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
         let window = topStack.get_toplevel();
         window.resize(720,500);
         let headerBar = window.get_titlebar();

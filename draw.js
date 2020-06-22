@@ -1029,13 +1029,15 @@ var DrawingArea = new Lang.Class({
         if (name == Me.metadata['persistent-file-name'] && contents == oldContents)
             return;
         
-        GLib.file_set_contents(path, contents);
-        if (notify)
-            this.emit('show-osd', 'document-save-symbolic', name, "", -1);
-        if (name != Me.metadata['persistent-file-name']) {
-            this.jsonName = name;
-            this.lastJsonContents = contents;
-        }
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            GLib.file_set_contents(path, contents);
+            if (notify)
+                this.emit('show-osd', 'document-save-symbolic', name, "", -1);
+            if (name != Me.metadata['persistent-file-name']) {
+                this.jsonName = name;
+                this.lastJsonContents = contents;
+            }
+        });
     },
     
     saveAsJsonWithName: function(name) {
@@ -2151,7 +2153,7 @@ const DrawingMenu = new Lang.Class({
             item.menu.close();
         };
         
-        GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             for (let i in obj) {
                 let text;
                 if (targetProperty == 'currentFontFamilyId')
@@ -2193,7 +2195,7 @@ const DrawingMenu = new Lang.Class({
             item.menu.close();
         };
         
-        GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             for (let i = 1; i < this.area.colors.length; i++) {
                 let text = this.area.colors[i].to_string();
                 let iCaptured = i;
@@ -2236,7 +2238,7 @@ const DrawingMenu = new Lang.Class({
             item.menu.close();
         };
         
-        GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             this._populateOpenDrawingSubMenu();
             // small trick to prevent the menu from "jumping" on first opening
             item.menu.open();
@@ -2289,7 +2291,7 @@ const DrawingMenu = new Lang.Class({
             item.menu.close();
         };
         
-        GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             this._populateSaveDrawingSubMenu();
             // small trick to prevent the menu from "jumping" on first opening
             item.menu.open();
