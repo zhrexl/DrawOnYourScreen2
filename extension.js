@@ -166,7 +166,7 @@ var AreaManager = new Lang.Class({
             container.set_position(monitor.x, monitor.y);
             container.set_size(monitor.width, monitor.height);
             area.set_size(monitor.width, monitor.height);
-            area.stopDrawingHandler = area.connect('stop-drawing', this.toggleDrawing.bind(this));
+            area.leaveDrawingHandler = area.connect('leave-drawing-mode', this.toggleDrawing.bind(this));
             area.showOsdHandler = area.connect('show-osd', this.showOsd.bind(this));
             this.areas.push(area);
         }
@@ -334,6 +334,9 @@ var AreaManager = new Lang.Class({
         if (!this.activeArea)
             return;
         
+        // The menu changes Main.actionMode.
+        this.activeArea.closeMenu();
+        
         if (Main.actionMode & DRAWING_ACTION_MODE) {
             Main.popModal(this.activeArea);
             setCursor('DEFAULT');
@@ -473,11 +476,10 @@ var AreaManager = new Lang.Class({
     removeAreas: function() {
         for (let i = 0; i < this.areas.length; i++) {
             let area = this.areas[i];
+            area.disconnect(area.leaveDrawingHandler);
+            area.disconnect(area.showOsdHandler);
             let container = area.get_parent();
             container.get_parent().remove_actor(container);
-            area.disconnect(area.stopDrawingHandler);
-            area.disconnect(area.showOsdHandler);
-            area.disable();
             container.destroy();
         }
         this.areas = [];

@@ -120,10 +120,13 @@ var DrawingArea = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingArea',
     Extends: St.DrawingArea,
     Signals: { 'show-osd': { param_types: [GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE] },
-               'stop-drawing': {} },
+               'leave-drawing-mode': {} },
 
     _init: function(params, monitor, helper, loadPersistent) {
         this.parent({ style_class: 'draw-on-your-screen', name: params.name});
+        
+        this.connect('destroy', this._onDestroy.bind(this));
+        this.reactiveHandler = this.connect('notify::reactive', this._onReactiveChanged.bind(this));
         
         this.settings = Convenience.getSettings();
         this.monitor = monitor;
@@ -149,6 +152,11 @@ var DrawingArea = new Lang.Class({
         if (!this._menu)
             this._menu = new DrawingMenu(this, this.monitor);
         return this._menu;
+    },
+    
+    closeMenu: function() {
+        if (this._menu)
+            this._menu.close();
     },
     
     get currentTool() {
@@ -251,7 +259,7 @@ var DrawingArea = new Lang.Class({
             cr.restore();
         }
         
-        if (this.isInDrawingMode && this.hasGrid && this.gridGap && this.gridGap >= 1) {
+        if (this.reactive && this.hasGrid && this.gridGap && this.gridGap >= 1) {
             cr.save();
             Clutter.cairo_set_source_color(cr, this.gridColor);
             
@@ -392,7 +400,7 @@ var DrawingArea = new Lang.Class({
             if (this.helper.visible)
                 this.helper.hideHelp();
             else
-                this.emit('stop-drawing');
+                this.emit('leave-drawing-mode');
             return Clutter.EVENT_STOP;
             
         } else {
@@ -867,23 +875,33 @@ var DrawingArea = new Lang.Class({
             this.helper.showHelp();
     },
     
+    // The area is reactive when it is modal.
+    _onReactiveChanged: function() {
+        if (this.hasGrid)
+            this._redisplay();
+        if (this.helper.visible)
+            this.helper.hideHelp();
+    },
+    
+    _onDestroy: function() {
+        this.disconnect(this.reactiveHandler);
+        this.erase();
+        if (this._menu)
+            this._menu.disable();
+    },
+    
     enterDrawingMode: function() {
-        this.isInDrawingMode = true;
         this.stageKeyPressedHandler = global.stage.connect('key-press-event', this._onStageKeyPressed.bind(this));
         this.stageKeyReleasedHandler = global.stage.connect('key-release-event', this._onStageKeyReleased.bind(this));
         this.keyPressedHandler = this.connect('key-press-event', this._onKeyPressed.bind(this));
         this.buttonPressedHandler = this.connect('button-press-event', this._onButtonPressed.bind(this));
         this._onKeyboardPopupMenuHandler = this.connect('popup-menu', this._onKeyboardPopupMenu.bind(this));
         this.scrollHandler = this.connect('scroll-event', this._onScroll.bind(this));
-        this.get_parent().set_background_color(this.hasBackground ? this.activeBackgroundColor : null);
-        if (this.hasGrid)
-            // redisplay to show the grid before updating the style because _updateStyle is long.
-            this._redisplay();
+        this.get_parent().set_background_color(this.reactive && this.hasBackground ? this.activeBackgroundColor : null);
         this._updateStyle();
     },
     
     leaveDrawingMode: function(save) {
-        this.isInDrawingMode = false;
         if (this.stageKeyPressedHandler) {
             global.stage.disconnect(this.stageKeyPressedHandler);
             this.stageKeyPressedHandler = null;
@@ -921,17 +939,13 @@ var DrawingArea = new Lang.Class({
             this.scrollHandler = null;
         }
         
-        if (this.helper.visible)
-            this.helper.hideHelp();
-        
         this.currentElement = null;
         this._stopTextCursorTimeout();
         this.currentTool = Shapes.NONE;
         this.dashedLine = false;
         this.fill = false;
         this._redisplay();
-        if (this._menu)
-            this._menu.close();
+        this.closeMenu();
         this.get_parent().set_background_color(null);
         if (save)
             this.savePersistent();
@@ -1101,11 +1115,6 @@ var DrawingArea = new Lang.Class({
     get drawingContentsHasChanged() {
         let contents = `[\n  ` + new Array(...this.elements.map(element => JSON.stringify(element))).join(`,\n\n  `) + `\n]`;
         return contents != this.lastJsonContents;
-    },
-    
-    disable: function() {
-        this.erase();
-        this.menu.disable();
     }
 });
 
