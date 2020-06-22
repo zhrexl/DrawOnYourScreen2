@@ -1965,7 +1965,7 @@ const DrawingMenu = new Lang.Class({
     disable: function() {
         this.menuManager.removeMenu(this.menu);
         Main.layoutManager.uiGroup.remove_actor(this.menu.actor);
-        this.menu.actor.destroy();
+        this.menu.destroy();
     },
     
     _onMenuOpenStateChanged: function(menu, open) {
@@ -2238,13 +2238,13 @@ const DrawingMenu = new Lang.Class({
             item.menu.close();
         };
         
-        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-            this._populateOpenDrawingSubMenu();
-            // small trick to prevent the menu from "jumping" on first opening
-            item.menu.open();
-            item.menu.close();
-            return GLib.SOURCE_REMOVE;
-        });
+        item.menu.openOld = item.menu.open;
+        item.menu.open = (animate) => {
+            if (!item.menu.isOpen)
+                this._populateOpenDrawingSubMenu();
+            item.menu.openOld();
+        }
+        
         menu.addMenuItem(item);
     },
     
@@ -2273,7 +2273,7 @@ const DrawingMenu = new Lang.Class({
             
             deleteButton.connect('clicked', () => {
                 file.delete();
-                this._populateOpenDrawingSubMenu();
+                item.destroy();
             });
         });
         
@@ -2291,13 +2291,12 @@ const DrawingMenu = new Lang.Class({
             item.menu.close();
         };
         
-        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-            this._populateSaveDrawingSubMenu();
-            // small trick to prevent the menu from "jumping" on first opening
-            item.menu.open();
-            item.menu.close();
-            return GLib.SOURCE_REMOVE;
-        });
+        item.menu.openOld = item.menu.open;
+        item.menu.open = (animate) => {
+            if (!item.menu.isOpen)
+                this._populateSaveDrawingSubMenu();
+            item.menu.openOld();
+        }
         menu.addMenuItem(item);
     },
     
@@ -2306,16 +2305,16 @@ const DrawingMenu = new Lang.Class({
     },
     
     _populateSaveDrawingSubMenu: function() {
-        this.saveEntry = new DrawingMenuEntry({ initialTextGetter: getDateString,
+        this.saveDrawingSubMenu.removeAll();
+        let saveEntry = new DrawingMenuEntry({ initialTextGetter: getDateString,
                                                 entryActivateCallback: (text) => {
                                                     this.area.saveAsJsonWithName(text);
                                                     this.saveDrawingSubMenu.toggle();
                                                     this._updateDrawingNameMenuItem();
-                                                    this._populateOpenDrawingSubMenu();
                                                 },
                                                 invalidStrings: [Me.metadata['persistent-file-name'], '/'],
                                                 primaryIconName: 'insert-text' });
-        this.saveDrawingSubMenu.addMenuItem(this.saveEntry.item);
+        this.saveDrawingSubMenu.addMenuItem(saveEntry.item);
     },
     
     _addSeparator: function(menu) {
