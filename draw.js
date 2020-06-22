@@ -346,26 +346,27 @@ var DrawingArea = new Lang.Class({
     },
     
     _onKeyPressed: function(actor, event) {
+        let [keySymbol, ctrlPressed] = [event.get_key_symbol(), event.has_control_modifier()];
+        
         if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING) {
-            if (event.get_key_symbol() == Clutter.KEY_Escape) {
+            if (keySymbol == Clutter.KEY_Escape) {
                 // finish writing
                 this._stopWriting();
-            } else if (event.get_key_symbol() == Clutter.KEY_BackSpace) {
+            } else if (keySymbol == Clutter.KEY_BackSpace) {
                 this.currentElement.text = this.currentElement.text.slice(0, -1);
                 this._updateTextCursorTimeout();
-            } else if (event.has_control_modifier() && event.get_key_symbol() == 118) {
+            } else if (ctrlPressed && keySymbol == Clutter.KEY_v) {
                 // Ctrl + V
                 St.Clipboard.get_default().get_text(St.ClipboardType.CLIPBOARD, (clipBoard, clipText) => {
                     this.currentElement.text += clipText;
                     this._updateTextCursorTimeout();
                     this._redisplay();
                 });
-            } else if (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == 65421) {
-                // Clutter.KEY_Return is "Enter" and 65421 is KP_Enter
+            } else if (keySymbol == Clutter.KEY_Return || keySymbol == Clutter.KEY_KP_Enter) {
                 // start a new line
                 let startNewLine = true;
                 this._stopWriting(startNewLine);
-            } else if (event.has_control_modifier()){
+            } else if (ctrlPressed){
                 // it is a shortcut, do not write text
                 return Clutter.EVENT_PROPAGATE;
             } else {
@@ -377,8 +378,7 @@ var DrawingArea = new Lang.Class({
             return Clutter.EVENT_STOP;
             
         } else if (this.currentElement && this.currentElement.shape == Shapes.LINE) {
-            if (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == 65421 || event.get_key_symbol() == 65507) {
-                // 65507 is 'Ctrl' key alone
+            if (keySymbol == Clutter.KEY_Return || keySymbol == Clutter.KEY_KP_Enter || keySymbol == Clutter.KEY_Control_L) {
                 if (this.currentElement.points.length == 2)
                     this.emit('show-osd', null, _("Press <i>%s</i> to get a fourth control point")
                                                 .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1);
@@ -392,11 +392,11 @@ var DrawingArea = new Lang.Class({
         
         } else if (this.currentElement &&
                    (this.currentElement.shape == Shapes.POLYGON || this.currentElement.shape == Shapes.POLYLINE) &&
-                   (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == 65421)) {
+                   (keySymbol == Clutter.KEY_Return || keySymbol == Clutter.KEY_KP_Enter)) {
             this.currentElement.addPoint();
             return Clutter.EVENT_STOP;
             
-        } else if (event.get_key_symbol() == Clutter.KEY_Escape) {
+        } else if (keySymbol == Clutter.KEY_Escape) {
             if (this.helper.visible)
                 this.helper.hideHelp();
             else
