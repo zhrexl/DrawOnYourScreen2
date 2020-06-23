@@ -6,6 +6,7 @@
  *
  * Except for the font, you don't need to restart the extension.
  * Just save this file as ~/.local/share/drawOnYourScreen/user.css and the changes will be applied for your next brushstroke.
+ * Some attributes are modifiable in the user interface.
  *
  * line-join (no string):
  * 0 : miter, 1 : round, 2 : bevel
@@ -17,7 +18,7 @@
  * dash:
  * By default, it is computed from the line width.
  * dash-array-on is the length of dashes (put 0.1 to get dots or squares according to line-cap).
- * dash-array-off is the length of gaps
+ * dash-array-off is the length of gaps.
  *
  * square area:
  * Drawing in a square area is convenient when using the extension as a vector graphics editor. By default,

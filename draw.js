@@ -74,7 +74,7 @@ const LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
 const FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
 const FontWeightNames = { 0: 'Normal', 1: 'Bold' };
 const FontStyleNames = { 0: 'Normal', 1: 'Italic', 2: 'Oblique' };
-const FontFamilyNames = {  0: 'Default', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
+const FontFamilyNames = {  0: 'Theme', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
 
 const getDateString = function() {
     let date = GLib.DateTime.new_now_local();
@@ -136,6 +136,7 @@ var DrawingArea = new Lang.Class({
         this.undoneElements = [];
         this.currentElement = null;
         this.currentTool = Shapes.NONE;
+        this.currentFontFamilyId = 0;
         this.isSquareArea = false;
         this.hasGrid = false;
         this.hasBackground = false;
@@ -143,6 +144,8 @@ var DrawingArea = new Lang.Class({
         this.dashedLine = false;
         this.fill = false;
         this.colors = [Clutter.Color.new(0, 0, 0, 255)];
+        this.newThemeAttributes = {};
+        this.oldThemeAttributes = {};
         
         if (loadPersistent)
             this._loadPersistent();
@@ -182,23 +185,23 @@ var DrawingArea = new Lang.Class({
             for (let i = 1; i < 10; i++) {
                 this.colors[i] = themeNode.get_color('-drawing-color' + i);
             }
-            this.activeBackgroundColor = themeNode.get_color('-drawing-background-color');
-            this.currentLineWidth = themeNode.get_length('-drawing-line-width');
-            this.currentLineJoin = themeNode.get_double('-drawing-line-join');
-            this.currentLineCap = themeNode.get_double('-drawing-line-cap');
-            this.currentFillRule = themeNode.get_double('-drawing-fill-rule');
+            let font = themeNode.get_font();
+            this.newThemeAttributes.ThemeFontFamily = font.get_family();
+            this.newThemeAttributes.FontWeight = font.get_weight();
+            this.newThemeAttributes.FontStyle = font.get_style();
+            this.newThemeAttributes.LineWidth = themeNode.get_length('-drawing-line-width');
+            this.newThemeAttributes.LineJoin = themeNode.get_double('-drawing-line-join');
+            this.newThemeAttributes.LineCap = themeNode.get_double('-drawing-line-cap');
+            this.newThemeAttributes.FillRule = themeNode.get_double('-drawing-fill-rule');
             this.dashArray = [Math.abs(themeNode.get_length('-drawing-dash-array-on')), Math.abs(themeNode.get_length('-drawing-dash-array-off'))];
             this.dashOffset = themeNode.get_length('-drawing-dash-offset');
-            let font = themeNode.get_font();
-            this.fontFamily = font.get_family();
-            this.currentFontWeight = font.get_weight();
-            this.currentFontStyle = font.get_style();
-            this.gridGap = themeNode.get_length('-grid-overlay-gap') || 10;
-            this.gridLineWidth = themeNode.get_length('-grid-overlay-line-width') || 0.4;
-            this.gridInterlineWidth = themeNode.get_length('-grid-overlay-interline-width') || 0.2;
+            this.gridGap = themeNode.get_length('-grid-overlay-gap');
+            this.gridLineWidth = themeNode.get_length('-grid-overlay-line-width');
+            this.gridInterlineWidth = themeNode.get_length('-grid-overlay-interline-width');
             this.gridColor = themeNode.get_color('-grid-overlay-color');
             this.squareAreaWidth = themeNode.get_length('-drawing-square-area-width');
             this.squareAreaHeight = themeNode.get_length('-drawing-square-area-height');
+            this.activeBackgroundColor = themeNode.get_color('-drawing-background-color');
         } catch(e) {
             logError(e);
         }
@@ -206,17 +209,20 @@ var DrawingArea = new Lang.Class({
         for (let i = 1; i < 10; i++) {
             this.colors[i] = this.colors[i].alpha ? this.colors[i] : this.colors[0];
         }
-        this.currentColor = this.colors[1];
-        
-        this.currentLineWidth = (this.currentLineWidth > 0) ? this.currentLineWidth : 3;
-        this.currentLineJoin = ([0, 1, 2].indexOf(this.currentLineJoin) != -1) ? this.currentLineJoin : Cairo.LineJoin.ROUND;
-        this.currentLineCap = ([0, 1, 2].indexOf(this.currentLineCap) != -1) ? this.currentLineCap : Cairo.LineCap.ROUND;
-        this.currentFillRule = ([0, 1].indexOf(this.currentFillRule) != -1) ? this.currentFillRule : Cairo.FillRule.WINDING;
-        this.currentFontFamilyId = 0;
-        this.currentFontWeight = this.currentFontWeight > 500 ? 1 : 0 ;
+        this.currentColor = this.currentColor || this.colors[1];
+        this.newThemeAttributes.LineWidth = (this.newThemeAttributes.LineWidth > 0) ? this.newThemeAttributes.LineWidth : 3;
+        this.newThemeAttributes.LineJoin = ([0, 1, 2].indexOf(this.newThemeAttributes.LineJoin) != -1) ? this.newThemeAttributes.LineJoin : Cairo.LineJoin.ROUND;
+        this.newThemeAttributes.LineCap = ([0, 1, 2].indexOf(this.newThemeAttributes.LineCap) != -1) ? this.newThemeAttributes.LineCap : Cairo.LineCap.ROUND;
+        this.newThemeAttributes.FillRule = ([0, 1].indexOf(this.newThemeAttributes.FillRule) != -1) ? this.newThemeAttributes.FillRule : Cairo.FillRule.WINDING;
+        this.newThemeAttributes.FontWeight = this.newThemeAttributes.FontWeight > 500 ? 1 : 0 ;
         // font style enum order of Cairo and Pango are different
-        this.currentFontStyle = this.currentFontStyle == 2 ? 1 : ( this.currentFontStyle == 1 ? 2 : 0);
-        
+        this.newThemeAttributes.FontStyle = this.newThemeAttributes.FontStyle == 2 ? 1 : ( this.newThemeAttributes.FontStyle == 1 ? 2 : 0);
+        for (const attributeName in this.newThemeAttributes) {
+            if (this.newThemeAttributes[attributeName] != this.oldThemeAttributes[attributeName]) {
+                this.oldThemeAttributes[attributeName] = this.newThemeAttributes[attributeName];
+                this[`current${attributeName}`] = this.newThemeAttributes[attributeName];
+            }
+        }
         this.gridGap = this.gridGap && this.gridGap >= 1 ? this.gridGap : 10;
         this.gridLineWidth = this.gridLineWidth || 0.4;
         this.gridInterlineWidth = this.gridInterlineWidth || 0.2;
@@ -580,7 +586,7 @@ var DrawingArea = new Lang.Class({
             eraser: eraser,
             transform: { active: false, center: [0, 0], angle: 0, startAngle: 0, ratio: 1 },
             text: '',
-            font: { family: (this.currentFontFamilyId == 0 ? this.fontFamily : FontFamilyNames[this.currentFontFamilyId]), weight: this.currentFontWeight, style: this.currentFontStyle },
+            font: { family: (this.currentFontFamilyId == 0 ? this.currentThemeFontFamily : FontFamilyNames[this.currentFontFamilyId]), weight: this.currentFontWeight, style: this.currentFontStyle },
             points: []
         });
         
@@ -860,7 +866,7 @@ var DrawingArea = new Lang.Class({
     
     toggleFontFamily: function() {
         this.currentFontFamilyId = this.currentFontFamilyId == 5 ? 0 : this.currentFontFamilyId + 1;
-        let currentFontFamily = this.currentFontFamilyId == 0 ? this.fontFamily : FontFamilyNames[this.currentFontFamilyId];
+        let currentFontFamily = this.currentFontFamilyId == 0 ? this.currentThemeFontFamily : FontFamilyNames[this.currentFontFamilyId];
         if (this.currentElement) {
             this.currentElement.font.family = currentFontFamily;
             this._redisplay();
@@ -941,9 +947,6 @@ var DrawingArea = new Lang.Class({
         
         this.currentElement = null;
         this._stopTextCursorTimeout();
-        this.currentTool = Shapes.NONE;
-        this.dashedLine = false;
-        this.fill = false;
         this._redisplay();
         this.closeMenu();
         this.get_parent().set_background_color(null);
@@ -2035,7 +2038,7 @@ const DrawingMenu = new Lang.Class({
         
         let fontSection = new PopupMenu.PopupMenuSection();
         let FontFamilyNamesCopy = Object.create(FontFamilyNames);
-        FontFamilyNamesCopy[0] = this.area.fontFamily;
+        FontFamilyNamesCopy[0] = this.area.currentThemeFontFamily;
         this._addSubMenuItem(fontSection, 'font-x-generic-symbolic', FontFamilyNamesCopy, this.area, 'currentFontFamilyId');
         this._addSubMenuItem(fontSection, 'format-text-bold-symbolic', FontWeightNames, this.area, 'currentFontWeight');
         this._addSubMenuItem(fontSection, 'format-text-italic-symbolic', FontStyleNames, this.area, 'currentFontStyle');
