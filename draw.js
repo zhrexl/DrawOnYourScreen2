@@ -52,6 +52,7 @@ const CAIRO_DEBUG_EXTENDS = false;
 const SVG_DEBUG_EXTENDS = false;
 const SVG_DEBUG_SUPERPOSES_CAIRO = false;
 const TEXT_CURSOR_TIME = 600; // ms
+const ENABLE_RTL = false;
 
 const ICON_DIR = Me.dir.get_child('data').get_child('icons');
 const FILL_ICON_PATH = ICON_DIR.get_child('fill-symbolic.svg').get_path();
@@ -594,6 +595,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.fill = false;
             this.currentElement.text = _("Text");
             this.currentElement.textState = TextStates.DRAWING;
+            this.currentElement.rtl = ENABLE_RTL && this.get_text_direction() == Clutter.TextDirection.RTL;
         }
         
         this.currentElement.startDrawing(startX, startY);
@@ -1148,6 +1150,8 @@ const DrawingElement = new Lang.Class({
             this.fillRule = Cairo.FillRule.WINDING;
         if (params.transformations === undefined)
             this.transformations = [];
+        if (params.shape == Shapes.TEXT && params.rtl === undefined)
+            this.rtl = false;
         
         if (params.transform && params.transform.center) {
             let angle = (params.transform.angle || 0) + (params.transform.startAngle || 0);
@@ -1175,6 +1179,7 @@ const DrawingElement = new Lang.Class({
             transformations: this.transformations,
             text: this.text,
             lineIndex: this.lineIndex !== undefined ? this.lineIndex : undefined,
+            rtl: this.rtl,
             font: this.font,
             points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
         };
@@ -1288,15 +1293,29 @@ const DrawingElement = new Lang.Class({
         } else if (shape == Shapes.TEXT && points.length == 2) {
             cr.selectFontFace(this.font.family, this.font.style, this.font.weight);
             cr.setFontSize(Math.abs(points[1][1] - points[0][1]));
-            cr.moveTo(Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]));
-            cr.showText(params.showTextCursor ? (this.text + "_") : this.text);
+            
+            let textWidth;
+            if (this.rtl) {
+                cr.save()
+                cr.setSourceRGBA(0, 0, 0, 0);
+                cr.moveTo(points[1][0], Math.max(points[0][1], points[1][1]));
+                cr.showText(params.showTextCursor ? ("_" + this.text) : this.text);
+                textWidth = cr.getCurrentPoint()[0] - points[1][0];
+                cr.restore();
+                cr.moveTo(points[1][0] - textWidth, Math.max(points[0][1], points[1][1]));
+                cr.showText(params.showTextCursor ? ("_" + this.text) : this.text);
+            } else {
+                cr.moveTo(points[1][0], Math.max(points[0][1], points[1][1]));
+                cr.showText(params.showTextCursor ? (this.text + "_") : this.text);
+                textWidth = cr.getCurrentPoint()[0] - points[1][0];
+            }
             
             if (!params.showTextCursor)
-                this.textWidth = cr.getCurrentPoint()[0] - Math.min(points[0][0], points[1][0]);
+                this.textWidth = textWidth;
             
             if (params.showTextRectangle || params.drawTextRectangle) {
-                cr.rectangle(Math.min(points[0][0], points[1][0]), Math.max(points[0][1], points[1][1]),
-                             this.textWidth, - Math.abs(points[1][1] - points[0][1]));
+                cr.rectangle(points[1][0] - this.rtl * textWidth, Math.max(points[0][1], points[1][1]),
+                             textWidth, - Math.abs(points[1][1] - points[0][1]));
                 if (params.showTextRectangle)
                     setDummyStroke(cr);
                 else
@@ -1424,7 +1443,8 @@ const DrawingElement = new Lang.Class({
                          `font-weight="${FontWeightNames[this.font.weight].toLowerCase()}" ` +
                          `font-style="${FontStyleNames[this.font.style].toLowerCase()}"`;
             
-            row += `<text ${attributes} x="${Math.min(points[0][0], points[1][0])}" y="${Math.max(points[0][1], points[1][1])}"${transAttribute}>${this.text}</text>`;
+            row += `<text ${attributes} x="${points[1][0] - this.rtl * this.textWidth}" `;
+            row += `y="${Math.max(points[0][1], points[1][1])}"${transAttribute}>${this.text}</text>`;
         }
         
         return row;
@@ -1482,7 +1502,7 @@ const DrawingElement = new Lang.Class({
             if (transform)
                 this._smooth(points.length - 1);
             
-        } else if ((this.shape == Shapes.RECTANGLE || this.shape == Shapes.TEXT || this.shape == Shapes.POLYGON || this.shape == Shapes.POLYLINE) && transform) {
+        } else if ((this.shape == Shapes.RECTANGLE || this.shape == Shapes.POLYGON || this.shape == Shapes.POLYLINE) && transform) {
             if (points.length < 2)
                 return;
                 
@@ -1502,6 +1522,14 @@ const DrawingElement = new Lang.Class({
         } else if (this.shape == Shapes.POLYGON || this.shape == Shapes.POLYLINE) {
             points[points.length - 1] = [x, y];
             
+        } else if (this.shape == Shapes.TEXT && transform) {
+           if (points.length < 2)
+                return;
+        
+            let [slideX, slideY] = [x - points[1][0], y - points[1][1]];
+            points[0] = [points[0][0] + slideX, points[0][1] + slideY];
+            points[1] = [x, y];
+        
         } else {
             points[1] = [x, y];
             
@@ -1627,8 +1655,7 @@ const DrawingElement = new Lang.Class({
             this._originalCenter = this.shape == Shapes.ELLIPSE ? [points[0][0], points[0][1]] :
                                    this.shape == Shapes.LINE && points.length == 4 ? getCurveCenter(points[0], points[1], points[2], points[3]) :
                                    this.shape == Shapes.LINE && points.length == 3 ? getCurveCenter(points[0], points[0], points[1], points[2]) :
-                                   this.shape == Shapes.TEXT && this.textWidth ? [Math.min(points[0][0], points[1][0]),
-                                                                                  Math.max(points[0][1], points[1][1]) - this._getLineOffset()] :
+                                   this.shape == Shapes.TEXT && this.textWidth ? [points[1][0], Math.max(points[0][1], points[1][1]) - this._getLineOffset()] :
                                    points.length >= 3 ? getCentroid(points) :
                                    getNaiveCenter(points);
         }

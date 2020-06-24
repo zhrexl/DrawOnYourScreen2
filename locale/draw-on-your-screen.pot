@@ -327,7 +327,10 @@ msgstr ""
 msgid "Duplicate (when starting a transformation)"
 msgstr ""
 
-msgid "Rotate rectangle, polygon, polyline, text area"
+msgid "Rotate rectangle, polygon, polyline"
+msgstr ""
+
+msgid "Translate text area"
 msgstr ""
 
 msgid "Extend circle to ellipse"
