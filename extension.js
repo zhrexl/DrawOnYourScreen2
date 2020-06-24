@@ -337,7 +337,7 @@ var AreaManager = new Lang.Class({
         // The menu changes Main.actionMode.
         this.activeArea.closeMenu();
         
-        if (Main.actionMode & DRAWING_ACTION_MODE) {
+        if (Main._findModal(this.activeArea) != -1) {
             Main.popModal(this.activeArea);
             setCursor('DEFAULT');
             this.activeArea.reactive = false;
@@ -364,7 +364,7 @@ var AreaManager = new Lang.Class({
             if (this.hiddenList)
                 this.togglePanelAndDockOpacity();
             
-            if (Main.actionMode & DRAWING_ACTION_MODE)
+            if (Main._findModal(this.activeArea) != -1)
                 this.toggleModal();
             this.toggleContainer();
             this.activeArea = null;
