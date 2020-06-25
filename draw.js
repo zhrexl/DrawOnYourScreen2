@@ -29,7 +29,6 @@ const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const PangoMatrix = imports.gi.Pango.Matrix;
-const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 
 const BoxPointer = imports.ui.boxpointer;
@@ -67,7 +66,6 @@ const FULL_LINE_ICON_PATH = ICON_DIR.get_child('full-line-symbolic.svg').get_pat
 const Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
 const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
 var   Tools = Object.assign({}, Shapes, Manipulations);
-const TextStates = { WRITTEN: 0, DRAWING: 1, WRITING: 2 };
 const Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
 const ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move", 101: "Resize", 102: "Mirror" };
 const LineCapNames = { 0: 'Butt', 1: 'Round', 2: 'Square' };
@@ -121,6 +119,7 @@ var DrawingArea = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingArea',
     Extends: St.DrawingArea,
     Signals: { 'show-osd': { param_types: [GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE] },
+               'update-action-mode': {},
                'leave-drawing-mode': {} },
 
     _init: function(params, monitor, helper, loadPersistent) {
@@ -161,6 +160,10 @@ var DrawingArea = new Lang.Class({
     closeMenu: function() {
         if (this._menu)
             this._menu.close();
+    },
+    
+    get isWriting() {
+        return this.textEntry ? true : false;
     },
     
     get currentTool() {
@@ -259,7 +262,7 @@ var DrawingArea = new Lang.Class({
         if (this.currentElement) {
             cr.save();
             this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
-                                                 showTextRectangle: this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.DRAWING,
+                                                 showTextRectangle: this.currentElement.shape == Shapes.TEXT && !this.isWriting,
                                                  dummyStroke: this.currentElement.fill && this.currentElement.line.lineWidth == 0 });
             
             cr.stroke();
@@ -300,14 +303,13 @@ var DrawingArea = new Lang.Class({
         let controlPressed = event.has_control_modifier();
         let shiftPressed = event.has_shift_modifier();
         
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING) {
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting)
             // finish writing
             this._stopWriting();
-        }
         
         if (this.helper.visible) {
             // hide helper
-            this.helper.hideHelp();
+            this.toggleHelp();
             return Clutter.EVENT_STOP;
         }
         
@@ -333,7 +335,7 @@ var DrawingArea = new Lang.Class({
     _onKeyboardPopupMenu: function() {
         this._stopDrawing();
         if (this.helper.visible)
-            this.helper.hideHelp();
+            this.toggleHelp();
         this.menu.popup();
         return Clutter.EVENT_STOP;
     },
@@ -353,39 +355,10 @@ var DrawingArea = new Lang.Class({
     },
     
     _onKeyPressed: function(actor, event) {
-        let [keySymbol, ctrlPressed] = [event.get_key_symbol(), event.has_control_modifier()];
-        
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING) {
-            if (keySymbol == Clutter.KEY_Escape) {
-                // finish writing
-                this._stopWriting();
-            } else if (keySymbol == Clutter.KEY_BackSpace) {
-                this.currentElement.text = this.currentElement.text.slice(0, -1);
-                this._updateTextCursorTimeout();
-            } else if (ctrlPressed && keySymbol == Clutter.KEY_v) {
-                // Ctrl + V
-                St.Clipboard.get_default().get_text(St.ClipboardType.CLIPBOARD, (clipBoard, clipText) => {
-                    this.currentElement.text += clipText;
-                    this._updateTextCursorTimeout();
-                    this._redisplay();
-                });
-            } else if (keySymbol == Clutter.KEY_Return || keySymbol == Clutter.KEY_KP_Enter) {
-                // start a new line
-                let startNewLine = true;
-                this._stopWriting(startNewLine);
-            } else if (ctrlPressed){
-                // it is a shortcut, do not write text
-                return Clutter.EVENT_PROPAGATE;
-            } else {
-                let unicode = event.get_key_unicode();
-                this.currentElement.text += unicode;
-                this._updateTextCursorTimeout();
-            }
-            this._redisplay();
-            return Clutter.EVENT_STOP;
-            
-        } else if (this.currentElement && this.currentElement.shape == Shapes.LINE) {
-            if (keySymbol == Clutter.KEY_Return || keySymbol == Clutter.KEY_KP_Enter || keySymbol == Clutter.KEY_Control_L) {
+        if (this.currentElement && this.currentElement.shape == Shapes.LINE) {
+            if (event.get_key_symbol() == Clutter.KEY_Return ||
+                event.get_key_symbol() == Clutter.KEY_KP_Enter ||
+                event.get_key_symbol() == Clutter.KEY_Control_L) {
                 if (this.currentElement.points.length == 2)
                     this.emit('show-osd', null, _("Press <i>%s</i> to get a fourth control point")
                                                 .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1);
@@ -399,13 +372,13 @@ var DrawingArea = new Lang.Class({
         
         } else if (this.currentElement &&
                    (this.currentElement.shape == Shapes.POLYGON || this.currentElement.shape == Shapes.POLYLINE) &&
-                   (keySymbol == Clutter.KEY_Return || keySymbol == Clutter.KEY_KP_Enter)) {
+                   (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == Clutter.KEY_KP_Enter)) {
             this.currentElement.addPoint();
             return Clutter.EVENT_STOP;
             
-        } else if (keySymbol == Clutter.KEY_Escape) {
+        } else if (event.get_key_symbol() == Clutter.KEY_Escape) {
             if (this.helper.visible)
-                this.helper.hideHelp();
+                this.toggleHelp();
             else
                 this.emit('leave-drawing-mode');
             return Clutter.EVENT_STOP;
@@ -594,7 +567,6 @@ var DrawingArea = new Lang.Class({
         if (this.currentTool == Shapes.TEXT) {
             this.currentElement.fill = false;
             this.currentElement.text = _("Text");
-            this.currentElement.textState = TextStates.DRAWING;
             this.currentElement.rtl = ENABLE_RTL && this.get_text_direction() == Clutter.TextDirection.RTL;
         }
         
@@ -644,15 +616,8 @@ var DrawingArea = new Lang.Class({
             this.currentElement.stopDrawing();
         
         if (this.currentElement && this.currentElement.points.length >= 2) {
-            if (this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.DRAWING) {
-                // start writing
-                this.currentElement.textState = TextStates.WRITING;
-                this.currentElement.text = '';
-                this.emit('show-osd', null, _("Type your text and press <i>%s</i>").format(Gtk.accelerator_get_label(Clutter.KEY_Escape, 0)), "", -1);
-                this._updateTextCursorTimeout();
-                this.textHasCursor = true;
-                this._redisplay();
-                this.updatePointerCursor();
+            if (this.currentElement.shape == Shapes.TEXT && !this.isWriting) {
+                this._startWriting();
                 return;
             }
         
@@ -664,16 +629,65 @@ var DrawingArea = new Lang.Class({
         this.updatePointerCursor();
     },
     
-    _stopWriting: function(startNewLine) {
-        this.currentElement.textState = TextStates.WRITTEN;
+    _startWriting: function() {
+        this.currentElement.text = '';
+        this.currentElement.cursorPosition = 0;
+        this.emit('show-osd', null, _("Type your text and press <i>%s</i>").format(Gtk.accelerator_get_label(Clutter.KEY_Escape, 0)), "", -1);
+        this._updateTextCursorTimeout();
+        this.textHasCursor = true;
+        this._redisplay();
+        this.updatePointerCursor();
         
+        this.textEntry = new St.Entry({ visible: false });
+        this.get_parent().add_child(this.textEntry);
+        this.textEntry.grab_key_focus();
+        this.updateActionMode();
+        
+        this.textEntry.clutterText.connect('activate', (clutterText) => {
+            let startNewLine = true;
+            this._stopWriting(startNewLine);
+            clutterText.text = "";
+        });
+        
+        this.textEntry.clutterText.connect('text-changed', (clutterText) => {
+            GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                this.currentElement.text = clutterText.text;
+                this.currentElement.cursorPosition = clutterText.cursorPosition;
+                this._updateTextCursorTimeout();
+                this._redisplay();
+            });
+        });
+        
+        this.textEntry.clutterText.connect('key-press-event', (clutterText, event) => {
+            if (event.get_key_symbol() == Clutter.KEY_Escape) {
+                this._stopWriting();
+                return Clutter.EVENT_STOP;
+            }
+            
+            // 'cursor-changed' signal is not emitted if the text entry is not visible.
+            // So key events related to the cursor must be listened.
+            if (event.get_key_symbol() == Clutter.KEY_Left || event.get_key_symbol() == Clutter.KEY_Right ||
+                event.get_key_symbol() == Clutter.KEY_Home || event.get_key_symbol() == Clutter.KEY_End) {
+                GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                    this.currentElement.cursorPosition = clutterText.cursorPosition;
+                    this._updateTextCursorTimeout();
+                    this.textHasCursor = true;
+                    this._redisplay();
+                });
+            }
+            
+            return Clutter.EVENT_PROPAGATE;
+        });
+    },
+    
+    _stopWriting: function(startNewLine) {
         if (this.currentElement.text.length > 0)
             this.elements.push(this.currentElement);
+            
         if (startNewLine && this.currentElement.points.length == 2) {
             this.currentElement.lineIndex = this.currentElement.lineIndex || 0;
             // copy object, the original keep existing in this.elements
             this.currentElement = Object.create(this.currentElement);
-            this.currentElement.textState = TextStates.WRITING;
             this.currentElement.lineIndex ++;
             let height = Math.abs(this.currentElement.points[1][1] - this.currentElement.points[0][1]);
             // define a new 'points' array, the original keep existing in this.elements
@@ -685,7 +699,12 @@ var DrawingArea = new Lang.Class({
         } else {
             this.currentElement = null;
             this._stopTextCursorTimeout();
+            this.textEntry.destroy();
+            delete this.textEntry;
+            this.grab_key_focus();
+            this.updateActionMode();
         }
+        
         this._redisplay();
     },
     
@@ -701,7 +720,7 @@ var DrawingArea = new Lang.Class({
             this.setPointerCursor('CROSSHAIR');
         else if (Object.values(Manipulations).indexOf(this.currentTool) != -1)
             this.setPointerCursor(this.grabbedElement ? 'MOVE_OR_RESIZE_WINDOW' : 'DEFAULT');
-        else if (!this.currentElement || (this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING))
+        else if (!this.currentElement || (this.currentElement.shape == Shapes.TEXT && this.isWriting))
             this.setPointerCursor(this.currentTool == Shapes.NONE ? 'POINTING_HAND' : 'CROSSHAIR');
         else if (this.currentElement.shape != Shapes.NONE && controlPressed)
             this.setPointerCursor('MOVE_OR_RESIZE_WINDOW');
@@ -730,9 +749,9 @@ var DrawingArea = new Lang.Class({
     },
     
     erase: function() {
+        this.deleteLastElement();
         this.elements = [];
         this.undoneElements = [];
-        this.currentElement = null;
         this._redisplay();
     },
     
@@ -746,8 +765,9 @@ var DrawingArea = new Lang.Class({
                 this.disconnect(this.buttonReleasedHandler);
                 this.buttonReleasedHandler = null;
             }
+            if (this.isWriting)
+                this._stopWriting();
             this.currentElement = null;
-            this._stopTextCursorTimeout();
         } else {
             this.elements.pop();
         }
@@ -877,10 +897,15 @@ var DrawingArea = new Lang.Class({
     },
     
     toggleHelp: function() {
-        if (this.helper.visible)
+        if (this.helper.visible) {
             this.helper.hideHelp();
-        else
+            if (this.textEntry)
+                this.textEntry.grab_key_focus();
+        } else {
             this.helper.showHelp();
+            this.grab_key_focus();
+        }
+        
     },
     
     // The area is reactive when it is modal.
@@ -888,7 +913,9 @@ var DrawingArea = new Lang.Class({
         if (this.hasGrid)
             this._redisplay();
         if (this.helper.visible)
-            this.helper.hideHelp();
+            this.toggleHelp();
+        if (this.textEntry && this.reactive)
+            this.textEntry.grab_key_focus();
     },
     
     _onDestroy: function() {
@@ -896,6 +923,10 @@ var DrawingArea = new Lang.Class({
         this.erase();
         if (this._menu)
             this._menu.disable();
+    },
+    
+    updateActionMode: function() {
+        this.emit('update-action-mode');
     },
     
     enterDrawingMode: function() {
@@ -958,7 +989,7 @@ var DrawingArea = new Lang.Class({
     
     saveAsSvg: function() {
         // stop drawing or writing
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING) {
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting) {
             this._stopWriting();
         } else if (this.currentElement && this.currentElement.shape != Shapes.TEXT) {
             this._stopDrawing();
@@ -1002,7 +1033,7 @@ var DrawingArea = new Lang.Class({
     
     _saveAsJson: function(name, notify) {
         // stop drawing or writing
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.currentElement.textState == TextStates.WRITING) {
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting) {
             this._stopWriting();
         } else if (this.currentElement && this.currentElement.shape != Shapes.TEXT) {
             this._stopDrawing();
@@ -1067,6 +1098,15 @@ var DrawingArea = new Lang.Class({
     },
     
     _loadJson: function(name, notify) {
+        // stop drawing or writing
+        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting) {
+            this._stopWriting();
+        } else if (this.currentElement && this.currentElement.shape != Shapes.TEXT) {
+            this._stopDrawing();
+        }
+        this.elements = [];
+        this.currentElement = null;
+        
         let dir = GLib.get_user_data_dir();
         let path = GLib.build_filenamev([dir, Me.metadata['data-dir'], `${name}.json`]);
         
@@ -1092,9 +1132,6 @@ var DrawingArea = new Lang.Class({
     },
     
     loadJson: function(name, notify) {
-        this.elements = [];
-        this.currentElement = null;
-        this._stopTextCursorTimeout();
         this._loadJson(name, notify);
         this._redisplay();
     },
@@ -1294,27 +1331,40 @@ const DrawingElement = new Lang.Class({
             cr.selectFontFace(this.font.family, this.font.style, this.font.weight);
             cr.setFontSize(Math.abs(points[1][1] - points[0][1]));
             
-            let textWidth;
+            let textWidth = 0;
+            
             if (this.rtl) {
-                cr.save()
+                cr.save();
                 cr.setSourceRGBA(0, 0, 0, 0);
+                cr.setOperator(Cairo.Operator.OVER);
                 cr.moveTo(points[1][0], Math.max(points[0][1], points[1][1]));
-                cr.showText(params.showTextCursor ? ("_" + this.text) : this.text);
+                cr.showText(this.text);
                 textWidth = cr.getCurrentPoint()[0] - points[1][0];
                 cr.restore();
+            }
+            
+            if (params.showTextCursor) {
+                let cursorPosition = this.cursorPosition == -1 ? this.text.length : this.cursorPosition;
+                let texts = [this.text.slice(0, cursorPosition), this.text.slice(cursorPosition)];
                 cr.moveTo(points[1][0] - textWidth, Math.max(points[0][1], points[1][1]));
-                cr.showText(params.showTextCursor ? ("_" + this.text) : this.text);
+                cr.showText(texts[0]);
+                let currentPoint1 = cr.getCurrentPoint();
+                cr.rectangle(currentPoint1[0], currentPoint1[1], Math.abs(points[1][1] - points[0][1]) / 25, - Math.abs(points[1][1] - points[0][1]));
+                cr.fill();
+                cr.moveTo(currentPoint1[0], currentPoint1[1]);
+                cr.showText(texts[1]);
+                textWidth = this.rtl ? textWidth : (cr.getCurrentPoint()[0] - points[1][0]);
             } else {
-                cr.moveTo(points[1][0], Math.max(points[0][1], points[1][1]));
-                cr.showText(params.showTextCursor ? (this.text + "_") : this.text);
-                textWidth = cr.getCurrentPoint()[0] - points[1][0];
+                cr.moveTo(points[1][0] - textWidth, Math.max(points[0][1], points[1][1]));
+                cr.showText(this.text);
+                textWidth = this.rtl ? textWidth : (cr.getCurrentPoint()[0] - points[1][0]);
             }
             
             if (!params.showTextCursor)
                 this.textWidth = textWidth;
             
             if (params.showTextRectangle || params.drawTextRectangle) {
-                cr.rectangle(points[1][0] - this.rtl * textWidth, Math.max(points[0][1], points[1][1]),
+                cr.rectangle(points[1][0] - (this.rtl ? textWidth : 0), Math.max(points[0][1], points[1][1]),
                              textWidth, - Math.abs(points[1][1] - points[0][1]));
                 if (params.showTextRectangle)
                     setDummyStroke(cr);
@@ -2004,7 +2054,7 @@ const DrawingMenu = new Lang.Class({
         } else {
             this.area.updatePointerCursor();
             // actionMode has changed, set previous actionMode in order to keep internal shortcuts working
-            Main.actionMode = Extension.DRAWING_ACTION_MODE | Shell.ActionMode.NORMAL;
+            this.area.updateActionMode();
             this.area.grab_key_focus();
         }
     },
@@ -2273,7 +2323,7 @@ const DrawingMenu = new Lang.Class({
             if (!item.menu.isOpen)
                 this._populateOpenDrawingSubMenu();
             item.menu.openOld();
-        }
+        };
         
         menu.addMenuItem(item);
     },
@@ -2326,7 +2376,7 @@ const DrawingMenu = new Lang.Class({
             if (!item.menu.isOpen)
                 this._populateSaveDrawingSubMenu();
             item.menu.openOld();
-        }
+        };
         menu.addMenuItem(item);
     },
     

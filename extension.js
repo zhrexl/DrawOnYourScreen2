@@ -41,8 +41,9 @@ const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const GS_VERSION = Config.PACKAGE_VERSION;
 const HIDE_TIMEOUT_LONG = 2500; // ms, default is 1500 ms
 
-// DRAWING_ACTION_MODE is a custom Shell.ActionMode
-var DRAWING_ACTION_MODE = Math.pow(2,14);
+// custom Shell.ActionMode, assuming that they are unused
+const DRAWING_ACTION_MODE = Math.pow(2,14);
+const WRITING_ACTION_MODE = Math.pow(2,15);
 // use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
 var WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
 
@@ -167,24 +168,19 @@ var AreaManager = new Lang.Class({
             container.set_size(monitor.width, monitor.height);
             area.set_size(monitor.width, monitor.height);
             area.leaveDrawingHandler = area.connect('leave-drawing-mode', this.toggleDrawing.bind(this));
+            area.updateActionModeHandler = area.connect('update-action-mode', this.updateActionMode.bind(this));
             area.showOsdHandler = area.connect('show-osd', this.showOsd.bind(this));
             this.areas.push(area);
         }
     },
     
     addInternalKeybindings: function() {
-        this.internalKeybindings = {
+        // unavailable when writing
+        this.internalKeybindings1 = {
             'undo': this.activeArea.undo.bind(this.activeArea),
             'redo': this.activeArea.redo.bind(this.activeArea),
             'delete-last-element': this.activeArea.deleteLastElement.bind(this.activeArea),
             'smooth-last-element': this.activeArea.smoothLastElement.bind(this.activeArea),
-            'save-as-svg': this.activeArea.saveAsSvg.bind(this.activeArea),
-            'save-as-json': this.activeArea.saveAsJson.bind(this.activeArea),
-            'open-previous-json': this.activeArea.loadPreviousJson.bind(this.activeArea),
-            'open-next-json': this.activeArea.loadNextJson.bind(this.activeArea),
-            'toggle-background': this.activeArea.toggleBackground.bind(this.activeArea),
-            'toggle-grid': this.activeArea.toggleGrid.bind(this.activeArea),
-            'toggle-square-area': this.activeArea.toggleSquareArea.bind(this.activeArea),
             'increment-line-width': () => this.activeArea.incrementLineWidth(1),
             'decrement-line-width': () => this.activeArea.incrementLineWidth(-1),
             'increment-line-width-more': () => this.activeArea.incrementLineWidth(5),
@@ -203,7 +199,18 @@ var AreaManager = new Lang.Class({
             'select-polyline-shape': () => this.activeArea.selectTool(Draw.Tools.POLYLINE),
             'select-move-tool': () => this.activeArea.selectTool(Draw.Tools.MOVE),
             'select-resize-tool': () => this.activeArea.selectTool(Draw.Tools.RESIZE),
-            'select-mirror-tool': () => this.activeArea.selectTool(Draw.Tools.MIRROR),
+            'select-mirror-tool': () => this.activeArea.selectTool(Draw.Tools.MIRROR)
+        };
+        
+        // available when writing
+        this.internalKeybindings2 = {
+            'save-as-svg': this.activeArea.saveAsSvg.bind(this.activeArea),
+            'save-as-json': this.activeArea.saveAsJson.bind(this.activeArea),
+            'open-previous-json': this.activeArea.loadPreviousJson.bind(this.activeArea),
+            'open-next-json': this.activeArea.loadNextJson.bind(this.activeArea),
+            'toggle-background': this.activeArea.toggleBackground.bind(this.activeArea),
+            'toggle-grid': this.activeArea.toggleGrid.bind(this.activeArea),
+            'toggle-square-area': this.activeArea.toggleSquareArea.bind(this.activeArea),
             'toggle-font-family': this.activeArea.toggleFontFamily.bind(this.activeArea),
             'toggle-font-weight': this.activeArea.toggleFontWeight.bind(this.activeArea),
             'toggle-font-style': this.activeArea.toggleFontStyle.bind(this.activeArea),
@@ -213,12 +220,20 @@ var AreaManager = new Lang.Class({
             'open-preferences': this.openPreferences.bind(this)
         };
         
-        for (let key in this.internalKeybindings) {
+        for (let key in this.internalKeybindings1) {
             Main.wm.addKeybinding(key,
                                   this.settings,
                                   Meta.KeyBindingFlags.NONE,
                                   DRAWING_ACTION_MODE,
-                                  this.internalKeybindings[key]);
+                                  this.internalKeybindings1[key]);
+        }
+        
+        for (let key in this.internalKeybindings2) {
+            Main.wm.addKeybinding(key,
+                                  this.settings,
+                                  Meta.KeyBindingFlags.NONE,
+                                  DRAWING_ACTION_MODE | WRITING_ACTION_MODE,
+                                  this.internalKeybindings2[key]);
         }
         
         for (let i = 1; i < 10; i++) {
@@ -226,19 +241,20 @@ var AreaManager = new Lang.Class({
             Main.wm.addKeybinding('select-color' + i,
                                   this.settings,
                                   Meta.KeyBindingFlags.NONE,
-                                  DRAWING_ACTION_MODE,
+                                  DRAWING_ACTION_MODE | WRITING_ACTION_MODE,
                                   () => this.activeArea.selectColor(iCaptured));
         }
     },
     
     removeInternalKeybindings: function() {
-        for (let key in this.internalKeybindings) {
+        for (let key in this.internalKeybindings1)
             Main.wm.removeKeybinding(key);
-        }
         
-        for (let i = 1; i < 10; i++) {
+        for (let key in this.internalKeybindings2)
+            Main.wm.removeKeybinding(key);
+        
+        for (let i = 1; i < 10; i++)
             Main.wm.removeKeybinding('select-color' + i);
-        }
     },
     
     openPreferences: function() {
@@ -320,6 +336,7 @@ var AreaManager = new Lang.Class({
         let activeIndex = this.areas.indexOf(this.activeArea);
         
         if (activeContainer.get_parent() == Main.uiGroup) {
+            Main.uiGroup.set_child_at_index(Main.layoutManager.keyboardBox, this.oldKeyboardIndex);
             Main.uiGroup.remove_actor(activeContainer);
             Main.layoutManager._backgroundGroup.insert_child_above(activeContainer, Main.layoutManager._bgManagers[activeIndex].backgroundActor);
             if (!this.settings.get_boolean("drawing-on-desktop")) 
@@ -327,6 +344,9 @@ var AreaManager = new Lang.Class({
         } else {
             Main.layoutManager._backgroundGroup.remove_actor(activeContainer);
             Main.uiGroup.add_child(activeContainer);
+            // move the keyboard above the area to make it available with text entries
+            this.oldKeyboardIndex = Main.uiGroup.get_children().indexOf(Main.layoutManager.keyboardBox);
+            Main.uiGroup.set_child_above_sibling(Main.layoutManager.keyboardBox, activeContainer);
         }
     },
     
@@ -334,7 +354,6 @@ var AreaManager = new Lang.Class({
         if (!this.activeArea)
             return;
         
-        // The menu changes Main.actionMode.
         this.activeArea.closeMenu();
         
         if (Main._findModal(this.activeArea) != -1) {
@@ -344,7 +363,8 @@ var AreaManager = new Lang.Class({
             this.removeInternalKeybindings();
         } else {
             // add Shell.ActionMode.NORMAL to keep system keybindings enabled (e.g. Alt + F2 ...)
-            if (!Main.pushModal(this.activeArea, { actionMode: DRAWING_ACTION_MODE | Shell.ActionMode.NORMAL }))
+            let actionMode = (this.activeArea.isWriting ? WRITING_ACTION_MODE : DRAWING_ACTION_MODE) | Shell.ActionMode.NORMAL;
+            if (!Main.pushModal(this.activeArea, { actionMode: actionMode }))
                 return false;
             this.addInternalKeybindings();
             this.activeArea.reactive = true;
@@ -387,6 +407,10 @@ var AreaManager = new Lang.Class({
         
         if (this.indicator)
             this.indicator.sync(Boolean(this.activeArea));
+    },
+    
+    updateActionMode: function() {
+        Main.actionMode = (this.activeArea.isWriting ? WRITING_ACTION_MODE : DRAWING_ACTION_MODE) | Shell.ActionMode.NORMAL;
     },
     
     // Use level -1 to set no level through a signal.
@@ -477,6 +501,7 @@ var AreaManager = new Lang.Class({
         for (let i = 0; i < this.areas.length; i++) {
             let area = this.areas[i];
             area.disconnect(area.leaveDrawingHandler);
+            area.disconnect(area.updateActionModeHandler);
             area.disconnect(area.showOsdHandler);
             let container = area.get_parent();
             container.get_parent().remove_actor(container);
