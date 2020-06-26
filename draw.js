@@ -191,6 +191,18 @@ var DrawingArea = new Lang.Class({
             this._stopElementGrabber();
     },
     
+    vfunc_repaint: function() {
+        let cr = this.get_context();
+        
+        try {
+            this._repaint(cr);
+        } catch(e) {
+            logError(e, "An error occured while painting");
+        }
+        
+        cr.$dispose();
+    },
+    
     _redisplay: function() {
         // force area to emit 'repaint'
         this.queue_repaint();
@@ -247,8 +259,7 @@ var DrawingArea = new Lang.Class({
         this.gridColor = this.gridColor && this.gridColor.alpha ? this.gridColor : Clutter.Color.new(127, 127, 127, 255);
     },
     
-    vfunc_repaint: function() {
-        let cr = this.get_context();
+    _repaint: function(cr) {
         if (CAIRO_DEBUG_EXTENDS) {
             cr.scale(0.5, 0.5);
             cr.translate(this.monitor.width, this.monitor.height);
@@ -304,8 +315,6 @@ var DrawingArea = new Lang.Class({
             }
             cr.restore();
         }
-        
-        cr.$dispose();
     },
     
     _onButtonPressed: function(actor, event) {
