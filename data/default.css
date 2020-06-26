@@ -29,9 +29,6 @@
  * Only one family : no comma separated list of families like "font1, font2, ..., Sans-Serif".
  * Font family can be any font installed, or a generic family name (Serif, Sans-Serif, Monospace, Cursive, Fantasy).
  * Font weight and font style : no upper case when string.
- * Weight <= 500 (or lighter, normal, medium) is rendered as normal.
- * Weight > 500 (or bolder, bold) is rendered as bold.
- * Oblique and italic style supports depend on the font family and seem to be rendered identically.
  *
  */
 

@@ -28,7 +28,8 @@ const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
-const PangoMatrix = imports.gi.Pango.Matrix;
+const Pango = imports.gi.Pango;
+const PangoCairo = imports.gi.PangoCairo;
 const St = imports.gi.St;
 
 const BoxPointer = imports.ui.boxpointer;
@@ -63,17 +64,25 @@ const FILLRULE_EVENODD_ICON_PATH = ICON_DIR.get_child('fillrule-evenodd-symbolic
 const DASHED_LINE_ICON_PATH = ICON_DIR.get_child('dashed-line-symbolic.svg').get_path();
 const FULL_LINE_ICON_PATH = ICON_DIR.get_child('full-line-symbolic.svg').get_path();
 
+const reverseEnumeration = function(obj) {
+    return Object.fromEntries(Object.entries(obj).map(entry => [entry[1], entry[0].slice(0,1) + entry[0].slice(1).toLowerCase()]));
+};
+
 const Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
 const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
 var   Tools = Object.assign({}, Shapes, Manipulations);
 const Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
 const ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move", 101: "Resize", 102: "Mirror" };
-const LineCapNames = { 0: 'Butt', 1: 'Round', 2: 'Square' };
-const LineJoinNames = { 0: 'Miter', 1: 'Round', 2: 'Bevel' };
+const LineCapNames = reverseEnumeration(Cairo.LineCap);
+const LineJoinNames = reverseEnumeration(Cairo.LineJoin);
 const FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
-const FontWeightNames = { 0: 'Normal', 1: 'Bold' };
-const FontStyleNames = { 0: 'Normal', 1: 'Italic', 2: 'Oblique' };
-const FontFamilyNames = {  0: 'Theme', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
+const FontGenericNames = {  0: 'Theme', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
+const FontStyleNames = reverseEnumeration(Pango.Style);
+const FontWeightNames = Object.assign(
+    reverseEnumeration(Pango.Weight),
+    { 200: "Ultra-light", 350: "Semi-light", 600: "Semi-bold", 800: "Ultra-bold" }
+);
+delete FontWeightNames[Pango.Weight.ULTRAHEAVY];
 
 const getDateString = function() {
     let date = GLib.DateTime.new_now_local();
@@ -136,7 +145,7 @@ var DrawingArea = new Lang.Class({
         this.undoneElements = [];
         this.currentElement = null;
         this.currentTool = Shapes.NONE;
-        this.currentFontFamilyId = 0;
+        this.currentFontGeneric = 0;
         this.isSquareArea = false;
         this.hasGrid = false;
         this.hasBackground = false;
@@ -191,7 +200,7 @@ var DrawingArea = new Lang.Class({
             }
             let font = themeNode.get_font();
             this.newThemeAttributes.ThemeFontFamily = font.get_family();
-            this.newThemeAttributes.FontWeight = font.get_weight();
+            try { this.newThemeAttributes.FontWeight = font.get_weight(); } catch(e) { this.newThemeAttributes.FontWeight = Pango.Weight.NORMAL; }
             this.newThemeAttributes.FontStyle = font.get_style();
             this.newThemeAttributes.LineWidth = themeNode.get_length('-drawing-line-width');
             this.newThemeAttributes.LineJoin = themeNode.get_double('-drawing-line-join');
@@ -214,13 +223,12 @@ var DrawingArea = new Lang.Class({
             this.colors[i] = this.colors[i].alpha ? this.colors[i] : this.colors[0];
         }
         this.currentColor = this.currentColor || this.colors[1];
+        // SVG does not support 'Ultra-heavy' weight (1000)
+        this.newThemeAttributes.FontWeight = Math.min(this.newThemeAttributes.FontWeight, 900);
         this.newThemeAttributes.LineWidth = (this.newThemeAttributes.LineWidth > 0) ? this.newThemeAttributes.LineWidth : 3;
         this.newThemeAttributes.LineJoin = ([0, 1, 2].indexOf(this.newThemeAttributes.LineJoin) != -1) ? this.newThemeAttributes.LineJoin : Cairo.LineJoin.ROUND;
         this.newThemeAttributes.LineCap = ([0, 1, 2].indexOf(this.newThemeAttributes.LineCap) != -1) ? this.newThemeAttributes.LineCap : Cairo.LineCap.ROUND;
         this.newThemeAttributes.FillRule = ([0, 1].indexOf(this.newThemeAttributes.FillRule) != -1) ? this.newThemeAttributes.FillRule : Cairo.FillRule.WINDING;
-        this.newThemeAttributes.FontWeight = this.newThemeAttributes.FontWeight > 500 ? 1 : 0 ;
-        // font style enum order of Cairo and Pango are different
-        this.newThemeAttributes.FontStyle = this.newThemeAttributes.FontStyle == 2 ? 1 : ( this.newThemeAttributes.FontStyle == 1 ? 2 : 0);
         for (const attributeName in this.newThemeAttributes) {
             if (this.newThemeAttributes[attributeName] != this.oldThemeAttributes[attributeName]) {
                 this.oldThemeAttributes[attributeName] = this.newThemeAttributes[attributeName];
@@ -559,13 +567,13 @@ var DrawingArea = new Lang.Class({
             fillRule: this.currentFillRule,
             eraser: eraser,
             transform: { active: false, center: [0, 0], angle: 0, startAngle: 0, ratio: 1 },
-            text: '',
-            font: { family: (this.currentFontFamilyId == 0 ? this.currentThemeFontFamily : FontFamilyNames[this.currentFontFamilyId]), weight: this.currentFontWeight, style: this.currentFontStyle },
             points: []
         });
         
         if (this.currentTool == Shapes.TEXT) {
             this.currentElement.fill = false;
+            this.currentElement.font = { family: (this.currentFontGeneric == 0 ? this.currentThemeFontFamily : FontGenericNames[this.currentFontGeneric]),
+                                         weight: this.currentFontWeight, style: this.currentFontStyle };
             this.currentElement.text = _("Text");
             this.currentElement.rtl = ENABLE_RTL && this.get_text_direction() == Clutter.TextDirection.RTL;
         }
@@ -869,17 +877,19 @@ var DrawingArea = new Lang.Class({
     },
     
     toggleFontWeight: function() {
-        this.currentFontWeight = this.currentFontWeight == 1 ? 0 : this.currentFontWeight + 1;
-        if (this.currentElement) {
+        let fontWeights = Object.keys(FontWeightNames).map(key => Number(key));
+        let index = fontWeights.indexOf(this.currentFontWeight);
+        this.currentFontWeight = index == fontWeights.length - 1 ? fontWeights[0] : fontWeights[index + 1];
+        if (this.currentElement && this.currentElement.font) {
             this.currentElement.font.weight = this.currentFontWeight;
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_weight="${FontWeightNames[this.currentFontWeight].toLowerCase()}">${_(FontWeightNames[this.currentFontWeight])}</span>`, "", -1);
+        this.emit('show-osd', null, `<span font_weight="${this.currentFontWeight}">${_(FontWeightNames[this.currentFontWeight])}</span>`, "", -1);
     },
     
     toggleFontStyle: function() {
         this.currentFontStyle = this.currentFontStyle == 2 ? 0 : this.currentFontStyle + 1;
-        if (this.currentElement) {
+        if (this.currentElement && this.currentElement.font) {
             this.currentElement.font.style = this.currentFontStyle;
             this._redisplay();
         }
@@ -887,9 +897,9 @@ var DrawingArea = new Lang.Class({
     },
     
     toggleFontFamily: function() {
-        this.currentFontFamilyId = this.currentFontFamilyId == 5 ? 0 : this.currentFontFamilyId + 1;
-        let currentFontFamily = this.currentFontFamilyId == 0 ? this.currentThemeFontFamily : FontFamilyNames[this.currentFontFamilyId];
-        if (this.currentElement) {
+        this.currentFontGeneric = this.currentFontGeneric == 5 ? 0 : this.currentFontGeneric + 1;
+        let currentFontFamily = this.currentFontGeneric == 0 ? this.currentThemeFontFamily : FontGenericNames[this.currentFontGeneric];
+        if (this.currentElement && this.currentElement.font) {
             this.currentElement.font.family = currentFontFamily;
             this._redisplay();
         }
@@ -1187,8 +1197,14 @@ const DrawingElement = new Lang.Class({
             this.fillRule = Cairo.FillRule.WINDING;
         if (params.transformations === undefined)
             this.transformations = [];
-        if (params.shape == Shapes.TEXT && params.rtl === undefined)
-            this.rtl = false;
+        if (params.shape == Shapes.TEXT) {
+            if (params.rtl === undefined)
+                this.rtl = false;
+            if (params.font && params.font.weight === 0)
+                this.font.weight = 400;
+            if (params.font && params.font.weight === 1)
+                this.font.weight = 700;
+        }
         
         if (params.transform && params.transform.center) {
             let angle = (params.transform.angle || 0) + (params.transform.startAngle || 0);
@@ -1328,44 +1344,32 @@ const DrawingElement = new Lang.Class({
                 cr.closePath();
             
         } else if (shape == Shapes.TEXT && points.length == 2) {
-            cr.selectFontFace(this.font.family, this.font.style, this.font.weight);
-            cr.setFontSize(Math.abs(points[1][1] - points[0][1]));
-            
-            let textWidth = 0;
-            
-            if (this.rtl) {
-                cr.save();
-                cr.setSourceRGBA(0, 0, 0, 0);
-                cr.setOperator(Cairo.Operator.OVER);
-                cr.moveTo(points[1][0], Math.max(points[0][1], points[1][1]));
-                cr.showText(this.text);
-                textWidth = cr.getCurrentPoint()[0] - points[1][0];
-                cr.restore();
-            }
+            let layout = PangoCairo.create_layout(cr);
+            let fontSize = Math.abs(points[1][1] - points[0][1]) * Pango.SCALE;
+            let fontDescription = new Pango.FontDescription();
+            fontDescription.set_family(this.font.family);
+            fontDescription.set_style(this.font.style);
+            fontDescription.set_weight(this.font.weight);
+            fontDescription.set_absolute_size(fontSize);
+            layout.set_font_description(fontDescription);
+            layout.set_text(this.text, -1);
+            this.textWidth = layout.get_pixel_size()[0];
+            cr.moveTo(points[1][0] - (this.rtl ? this.textWidth : 0), Math.max(points[0][1],points[1][1]) - layout.get_baseline() / Pango.SCALE);
+            layout.set_text(this.text, -1);
+            PangoCairo.show_layout(cr, layout);
             
             if (params.showTextCursor) {
                 let cursorPosition = this.cursorPosition == -1 ? this.text.length : this.cursorPosition;
-                let texts = [this.text.slice(0, cursorPosition), this.text.slice(cursorPosition)];
-                cr.moveTo(points[1][0] - textWidth, Math.max(points[0][1], points[1][1]));
-                cr.showText(texts[0]);
-                let currentPoint1 = cr.getCurrentPoint();
-                cr.rectangle(currentPoint1[0], currentPoint1[1], Math.abs(points[1][1] - points[0][1]) / 25, - Math.abs(points[1][1] - points[0][1]));
+                layout.set_text(this.text.slice(0, cursorPosition), -1);
+                let width = layout.get_pixel_size()[0];
+                cr.rectangle(points[1][0] - (this.rtl ? this.textWidth : 0) + width, Math.max(points[0][1],points[1][1]),
+                             Math.abs(points[1][1] - points[0][1]) / 25, - Math.abs(points[1][1] - points[0][1]));
                 cr.fill();
-                cr.moveTo(currentPoint1[0], currentPoint1[1]);
-                cr.showText(texts[1]);
-                textWidth = this.rtl ? textWidth : (cr.getCurrentPoint()[0] - points[1][0]);
-            } else {
-                cr.moveTo(points[1][0] - textWidth, Math.max(points[0][1], points[1][1]));
-                cr.showText(this.text);
-                textWidth = this.rtl ? textWidth : (cr.getCurrentPoint()[0] - points[1][0]);
             }
             
-            if (!params.showTextCursor)
-                this.textWidth = textWidth;
-            
             if (params.showTextRectangle || params.drawTextRectangle) {
-                cr.rectangle(points[1][0] - (this.rtl ? textWidth : 0), Math.max(points[0][1], points[1][1]),
-                             textWidth, - Math.abs(points[1][1] - points[0][1]));
+                cr.rectangle(points[1][0] - (this.rtl ? this.textWidth : 0), Math.max(points[0][1], points[1][1]),
+                             this.textWidth, - Math.abs(points[1][1] - points[0][1]));
                 if (params.showTextRectangle)
                     setDummyStroke(cr);
                 else
@@ -1490,7 +1494,7 @@ const DrawingElement = new Lang.Class({
                          `stroke-opacity="0" ` +
                          `font-family="${this.font.family}" ` +
                          `font-size="${Math.abs(points[1][1] - points[0][1])}" ` +
-                         `font-weight="${FontWeightNames[this.font.weight].toLowerCase()}" ` +
+                         `font-weight="${this.font.weight}" ` +
                          `font-style="${FontStyleNames[this.font.style].toLowerCase()}"`;
             
             row += `<text ${attributes} x="${points[1][0] - this.rtl * this.textWidth}" `;
@@ -1716,7 +1720,7 @@ const DrawingElement = new Lang.Class({
     // The figure rotation center, whose position is affected by all transformations done before 'transformation'.
     _getTransformedCenter: function(transformation) {
         if (!transformation.elementTransformedCenter) {
-            let matrix = new PangoMatrix({ xx: 1, xy: 0, yx: 0, yy: 1, x0: 0, y0: 0 });
+            let matrix = new Pango.Matrix({ xx: 1, xy: 0, yx: 0, yy: 1, x0: 0, y0: 0 });
             
             // Apply transformations to the matrice in reverse order
             // because Pango multiply matrices by the left when applying a transformation
@@ -2114,9 +2118,9 @@ const DrawingMenu = new Lang.Class({
         this.lineSection = lineSection;
         
         let fontSection = new PopupMenu.PopupMenuSection();
-        let FontFamilyNamesCopy = Object.create(FontFamilyNames);
-        FontFamilyNamesCopy[0] = this.area.currentThemeFontFamily;
-        this._addSubMenuItem(fontSection, 'font-x-generic-symbolic', FontFamilyNamesCopy, this.area, 'currentFontFamilyId');
+        let FontGenericNamesCopy = Object.create(FontGenericNames);
+        FontGenericNamesCopy[0] = this.area.currentThemeFontFamily;
+        this._addSubMenuItem(fontSection, 'font-x-generic-symbolic', FontGenericNamesCopy, this.area, 'currentFontGeneric');
         this._addSubMenuItem(fontSection, 'format-text-bold-symbolic', FontWeightNames, this.area, 'currentFontWeight');
         this._addSubMenuItem(fontSection, 'format-text-italic-symbolic', FontStyleNames, this.area, 'currentFontStyle');
         this._addSeparator(fontSection);
@@ -2236,10 +2240,10 @@ const DrawingMenu = new Lang.Class({
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             for (let i in obj) {
                 let text;
-                if (targetProperty == 'currentFontFamilyId')
+                if (targetProperty == 'currentFontGeneric')
                     text = `<span font_family="${obj[i]}">${_(obj[i])}</span>`;
                 else if (targetProperty == 'currentFontWeight')
-                    text = `<span font_weight="${obj[i].toLowerCase()}">${_(obj[i])}</span>`;
+                    text = `<span font_weight="${i}">${_(obj[i])}</span>`;
                 else if (targetProperty == 'currentFontStyle')
                     text = `<span font_style="${obj[i].toLowerCase()}">${_(obj[i])}</span>`;
                 else

@@ -436,10 +436,37 @@ msgstr ""
 #msgid "Evenodd"
 #msgstr ""
 
+#msgid "Thin"
+#msgstr ""
+
+#msgid "Ultra-light"
+#msgstr ""
+
+#msgid "Light"
+#msgstr ""
+
+#msgid "Semi-light"
+#msgstr ""
+
+#msgid "Book"
+#msgstr ""
+
 #msgid "Normal"
 #msgstr ""
 
+#msgid "Medium"
+#msgstr ""
+
+#msgid "Semi-bold"
+#msgstr ""
+
 #msgid "Bold"
+#msgstr ""
+
+#msgid "Ultra-bold"
+#msgstr ""
+
+#msgid "Heavy"
 #msgstr ""
 
 #msgid "Italic"
