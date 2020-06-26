@@ -65,7 +65,9 @@ const DASHED_LINE_ICON_PATH = ICON_DIR.get_child('dashed-line-symbolic.svg').get
 const FULL_LINE_ICON_PATH = ICON_DIR.get_child('full-line-symbolic.svg').get_path();
 
 const reverseEnumeration = function(obj) {
-    return Object.fromEntries(Object.entries(obj).map(entry => [entry[1], entry[0].slice(0,1) + entry[0].slice(1).toLowerCase()]));
+    return Object.fromEntries(Object.entries(obj).map(entry => 
+        [entry[1], entry[0].slice(0,1) + entry[0].slice(1).toLowerCase().replace('_', '-')]
+    ));
 };
 
 const Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
@@ -77,12 +79,14 @@ const LineCapNames = reverseEnumeration(Cairo.LineCap);
 const LineJoinNames = reverseEnumeration(Cairo.LineJoin);
 const FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
 const FontGenericNames = {  0: 'Theme', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
-const FontStyleNames = reverseEnumeration(Pango.Style);
 const FontWeightNames = Object.assign(
     reverseEnumeration(Pango.Weight),
     { 200: "Ultra-light", 350: "Semi-light", 600: "Semi-bold", 800: "Ultra-bold" }
 );
 delete FontWeightNames[Pango.Weight.ULTRAHEAVY];
+const FontStyleNames = reverseEnumeration(Pango.Style);
+const FontStretchNames = reverseEnumeration(Pango.Stretch);
+const FontVariantNames = reverseEnumeration(Pango.Variant);
 
 const getDateString = function() {
     let date = GLib.DateTime.new_now_local();
@@ -202,6 +206,8 @@ var DrawingArea = new Lang.Class({
             this.newThemeAttributes.ThemeFontFamily = font.get_family();
             try { this.newThemeAttributes.FontWeight = font.get_weight(); } catch(e) { this.newThemeAttributes.FontWeight = Pango.Weight.NORMAL; }
             this.newThemeAttributes.FontStyle = font.get_style();
+            this.newThemeAttributes.FontStretch = font.get_stretch();
+            this.newThemeAttributes.FontVariant = font.get_variant();
             this.newThemeAttributes.LineWidth = themeNode.get_length('-drawing-line-width');
             this.newThemeAttributes.LineJoin = themeNode.get_double('-drawing-line-join');
             this.newThemeAttributes.LineCap = themeNode.get_double('-drawing-line-cap');
@@ -572,8 +578,12 @@ var DrawingArea = new Lang.Class({
         
         if (this.currentTool == Shapes.TEXT) {
             this.currentElement.fill = false;
-            this.currentElement.font = { family: (this.currentFontGeneric == 0 ? this.currentThemeFontFamily : FontGenericNames[this.currentFontGeneric]),
-                                         weight: this.currentFontWeight, style: this.currentFontStyle };
+            this.currentElement.font = {
+                family: (this.currentFontGeneric == 0 ? this.currentThemeFontFamily : FontGenericNames[this.currentFontGeneric]),
+                weight: this.currentFontWeight,
+                style: this.currentFontStyle,
+                stretch: this.currentFontStretch,
+                variant: this.currentFontVariant };
             this.currentElement.text = _("Text");
             this.currentElement.rtl = ENABLE_RTL && this.get_text_direction() == Clutter.TextDirection.RTL;
         }
@@ -1347,10 +1357,13 @@ const DrawingElement = new Lang.Class({
             let layout = PangoCairo.create_layout(cr);
             let fontSize = Math.abs(points[1][1] - points[0][1]) * Pango.SCALE;
             let fontDescription = new Pango.FontDescription();
-            fontDescription.set_family(this.font.family);
-            fontDescription.set_style(this.font.style);
-            fontDescription.set_weight(this.font.weight);
             fontDescription.set_absolute_size(fontSize);
+            ['family', 'weight', 'style', 'stretch', 'variant'].forEach(attribute => {
+                if (this.font[attribute] !== undefined)
+                    try {
+                        fontDescription[`set_${attribute}`](this.font[attribute]);
+                    } catch(e) {}
+            });
             layout.set_font_description(fontDescription);
             layout.set_text(this.text, -1);
             this.textWidth = layout.get_pixel_size()[0];
@@ -1492,10 +1505,18 @@ const DrawingElement = new Lang.Class({
             attributes = `fill="${color}" ` +
                          `stroke="transparent" ` +
                          `stroke-opacity="0" ` +
-                         `font-family="${this.font.family}" ` +
-                         `font-size="${Math.abs(points[1][1] - points[0][1])}" ` +
-                         `font-weight="${this.font.weight}" ` +
-                         `font-style="${FontStyleNames[this.font.style].toLowerCase()}"`;
+                         `font-size="${Math.abs(points[1][1] - points[0][1])}"`;
+            
+            if (this.font.family)
+                attributes += ` font-family="${this.font.family}"`;
+            if (this.font.weight && this.font.weight != Pango.Weight.NORMAL)
+                attributes += ` font-weight="${this.font.weight}"`;
+            if (this.font.style && FontStyleNames[this.font.style])
+                attributes += ` font-style="${FontStyleNames[this.font.style].toLowerCase()}"`;
+            if (FontStretchNames[this.font.stretch] && this.font.stretch != Pango.Stretch.NORMAL)
+                attributes += ` font-stretch="${FontStretchNames[this.font.stretch].toLowerCase()}"`;
+            if (this.font.variant && FontVariantNames[this.font.variant])
+                attributes += ` font-variant="${FontVariantNames[this.font.variant].toLowerCase()}"`;
             
             row += `<text ${attributes} x="${points[1][0] - this.rtl * this.textWidth}" `;
             row += `y="${Math.max(points[0][1], points[1][1])}"${transAttribute}>${this.text}</text>`;
