@@ -443,6 +443,9 @@ var DrawingArea = new Lang.Class({
     },
     
     _startElementGrabber: function() {
+        if (this.elementGrabberHandler)
+            return;
+        
         this.elementGrabberHandler = this.connect('motion-event', (actor, event) => {
             if (this.motionHandler || this.grabbedElementLocked) {
                 this.grabPoint = null;
@@ -1005,10 +1008,6 @@ var DrawingArea = new Lang.Class({
         if (this._onKeyboardPopupMenuHandler) {
             this.disconnect(this._onKeyboardPopupMenuHandler);
             this._onKeyboardPopupMenuHandler = null;
-        }
-        if (this.elementGrabberHandler) {
-            this.disconnect(this.elementGrabberHandler);
-            this.elementGrabberHandler = null;
         }
         if (this.motionHandler) {
             this.disconnect(this.motionHandler);
