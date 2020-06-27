@@ -55,6 +55,7 @@ const TEXT_CURSOR_TIME = 600; // ms
 const ENABLE_RTL = false;
 
 const ICON_DIR = Me.dir.get_child('data').get_child('icons');
+const COLOR_ICON_PATH = ICON_DIR.get_child('color-symbolic.svg').get_path();
 const FILL_ICON_PATH = ICON_DIR.get_child('fill-symbolic.svg').get_path();
 const STROKE_ICON_PATH = ICON_DIR.get_child('stroke-symbolic.svg').get_path();
 const LINEJOIN_ICON_PATH = ICON_DIR.get_child('linejoin-symbolic.svg').get_path();
@@ -2066,6 +2067,7 @@ const DrawingMenu = new Lang.Class({
             menuCloseFunc.bind(this.menu)(animate);
         };
         
+        this.colorIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(COLOR_ICON_PATH) });
         this.strokeIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(STROKE_ICON_PATH) });
         this.fillIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FILL_ICON_PATH) });
         this.fillRuleNonzeroIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FILLRULE_NONZERO_ICON_PATH) });
@@ -2129,7 +2131,7 @@ const DrawingMenu = new Lang.Class({
         this.menu.addAction(_("Smooth"), this.area.smoothLastElement.bind(this.area), 'format-text-strikethrough-symbolic');
         this._addSeparator(this.menu);
         
-        this._addSubMenuItem(this.menu, null, ToolNames, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
+        this._addSubMenuItem(this.menu, 'document-edit-symbolic', ToolNames, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
         this._addColorSubMenuItem(this.menu);
         this.fillItem = this._addSwitchItem(this.menu, _("Fill"), this.strokeIcon, this.fillIcon, this.area, 'fill', this._updateSectionVisibility.bind(this));
         this.fillSection = new PopupMenu.PopupMenuSection();
@@ -2302,7 +2304,7 @@ const DrawingMenu = new Lang.Class({
     
     _addColorSubMenuItem: function(menu) {
         let item = new PopupMenu.PopupSubMenuMenuItem(_("Color"), true);
-        item.icon.set_icon_name('document-edit-symbolic');
+        item.icon.set_gicon(this.colorIcon);
         item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
         
         item.menu.itemActivated = () => {
