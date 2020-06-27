@@ -421,14 +421,10 @@ var AreaManager = new Lang.Class({
             return;
         
         let hideTimeoutSave;
-        if (long)
-            try {
-                hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
-                OsdWindow.HIDE_TIMEOUT = HIDE_TIMEOUT_LONG;
-            } catch(e) {
-                // HIDE_TIMEOUT is not exportable.
-                hideTimeoutSave = null;
-            }
+        if (long && GS_VERSION >= '3.28.0') {
+            hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
+            OsdWindow.HIDE_TIMEOUT = HIDE_TIMEOUT_LONG;
+        }
         
         let maxLevel;
         if (level == -1)

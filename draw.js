@@ -65,9 +65,11 @@ const DASHED_LINE_ICON_PATH = ICON_DIR.get_child('dashed-line-symbolic.svg').get
 const FULL_LINE_ICON_PATH = ICON_DIR.get_child('full-line-symbolic.svg').get_path();
 
 const reverseEnumeration = function(obj) {
-    return Object.fromEntries(Object.entries(obj).map(entry => 
-        [entry[1], entry[0].slice(0,1) + entry[0].slice(1).toLowerCase().replace('_', '-')]
-    ));
+    let reversed = {};
+    Object.keys(obj).forEach(key => {
+        reversed[obj[key]] = key.slice(0,1) + key.slice(1).toLowerCase().replace('_', '-');
+    });
+    return reversed;
 };
 
 const Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
@@ -182,10 +184,15 @@ var DrawingArea = new Lang.Class({
     
     set currentTool(tool) {
         this._currentTool = tool;
-        if (Object.values(Manipulations).indexOf(tool) != -1)
+        if (this.hasManipulationTool)
             this._startElementGrabber();
         else
             this._stopElementGrabber();
+    },
+    
+    get hasManipulationTool() {
+        // No Object.values method in GS 3.24.
+        return Object.keys(Manipulations).map(key => Manipulations[key]).indexOf(this.currentTool) != -1;
     },
     
     // Boolean wrapper for switch menu item.
@@ -254,7 +261,7 @@ var DrawingArea = new Lang.Class({
         this.newThemeAttributes.LineJoin = ([0, 1, 2].indexOf(this.newThemeAttributes.LineJoin) != -1) ? this.newThemeAttributes.LineJoin : Cairo.LineJoin.ROUND;
         this.newThemeAttributes.LineCap = ([0, 1, 2].indexOf(this.newThemeAttributes.LineCap) != -1) ? this.newThemeAttributes.LineCap : Cairo.LineCap.ROUND;
         this.newThemeAttributes.FillRule = ([0, 1].indexOf(this.newThemeAttributes.FillRule) != -1) ? this.newThemeAttributes.FillRule : Cairo.FillRule.WINDING;
-        for (const attributeName in this.newThemeAttributes) {
+        for (let attributeName in this.newThemeAttributes) {
             if (this.newThemeAttributes[attributeName] != this.oldThemeAttributes[attributeName]) {
                 this.oldThemeAttributes[attributeName] = this.newThemeAttributes[attributeName];
                 this[`current${attributeName}`] = this.newThemeAttributes[attributeName];
@@ -344,7 +351,7 @@ var DrawingArea = new Lang.Class({
         }
         
         if (button == 1) {
-            if (Object.values(Manipulations).indexOf(this.currentTool) != -1) {
+            if (this.hasManipulationTool) {
                 if (this.grabbedElement)
                     this._startTransforming(x, y, controlPressed, shiftPressed);
             } else {
@@ -755,7 +762,7 @@ var DrawingArea = new Lang.Class({
     updatePointerCursor: function(controlPressed) {
         if (this.currentTool == Manipulations.MIRROR && this.grabbedElementLocked)
             this.setPointerCursor('CROSSHAIR');
-        else if (Object.values(Manipulations).indexOf(this.currentTool) != -1)
+        else if (this.hasManipulationTool)
             this.setPointerCursor(this.grabbedElement ? 'MOVE_OR_RESIZE_WINDOW' : 'DEFAULT');
         else if (!this.currentElement || (this.currentElement.shape == Shapes.TEXT && this.isWriting))
             this.setPointerCursor(this.currentTool == Shapes.NONE ? 'POINTING_HAND' : 'CROSSHAIR');
