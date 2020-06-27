@@ -76,14 +76,11 @@ const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
 var   Tools = Object.assign({}, Shapes, Manipulations);
 const Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
 const ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move", 101: "Resize", 102: "Mirror" };
-const LineCapNames = reverseEnumeration(Cairo.LineCap);
+const LineCapNames = Object.assign(reverseEnumeration(Cairo.LineCap), { 2: 'Square' });
 const LineJoinNames = reverseEnumeration(Cairo.LineJoin);
 const FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
 const FontGenericNames = {  0: 'Theme', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
-const FontWeightNames = Object.assign(
-    reverseEnumeration(Pango.Weight),
-    { 200: "Ultra-light", 350: "Semi-light", 600: "Semi-bold", 800: "Ultra-bold" }
-);
+const FontWeightNames = Object.assign(reverseEnumeration(Pango.Weight), { 200: "Ultra-light", 350: "Semi-light", 600: "Semi-bold", 800: "Ultra-bold" });
 delete FontWeightNames[Pango.Weight.ULTRAHEAVY];
 const FontStyleNames = reverseEnumeration(Pango.Style);
 const FontStretchNames = reverseEnumeration(Pango.Stretch);
@@ -190,6 +187,15 @@ var DrawingArea = new Lang.Class({
             this._startElementGrabber();
         else
             this._stopElementGrabber();
+    },
+    
+    // Boolean wrapper for switch menu item.
+    get currentEvenodd() {
+        return this.currentFillRule == Cairo.FillRule.EVEN_ODD;
+    },
+    
+    set currentEvenodd(evenodd) {
+        this.currentFillRule = evenodd ? Cairo.FillRule.EVEN_ODD : Cairo.FillRule.WINDING;
     },
     
     vfunc_repaint: function() {
@@ -1278,9 +1284,10 @@ const DrawingElement = new Lang.Class({
         cr.setLineCap(this.line.lineCap);
         cr.setLineJoin(this.line.lineJoin);
         cr.setLineWidth(this.line.lineWidth);
-        cr.setFillRule(this.fillRule);
+        if (this.fillRule)
+            cr.setFillRule(this.fillRule);
         
-        if (this.dash.active)
+        if (this.dash && this.dash.active && this.dash.array && this.dash.array[0] && this.dash.array[1])
             cr.setDash(this.dash.array, this.dash.offset);
         
         if (this.eraser)
@@ -1423,22 +1430,28 @@ const DrawingElement = new Lang.Class({
         let points = this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100]);
         let color = this.eraser ? bgColor : this.color;
         let fill = this.fill && !this.isStraightLine;
-        let attributes;
+        let attributes = '';
         
-        if (this.isStraightLine)
-            attributes = `stroke="${color}" ` +
-                         `stroke-width="${this.line.lineWidth}" ` +
-                         `stroke-linecap="${LineCapNames[this.line.lineCap].toLowerCase()}"`;
-        else
-            attributes = `fill="${fill ? color : 'transparent'}" ` +
-                         (fill ? `fill-rule="${FillRuleNames[this.fillRule].toLowerCase()}" ` : `fill-opacity="0" `) +
-                         `stroke="${color}" ` +
-                         `stroke-width="${this.line.lineWidth}" ` +
-                         `stroke-linecap="${LineCapNames[this.line.lineCap].toLowerCase()}" ` +
-                         `stroke-linejoin="${LineJoinNames[this.line.lineJoin].toLowerCase()}"`;
-                          
-        if (this.dash.active)
-            attributes += ` stroke-dasharray="${this.dash.array[0]} ${this.dash.array[1]}" stroke-dashoffset="${this.dash.offset}"`;
+        if (fill) {
+            attributes = `fill="${color}"`;
+            if (this.fillRule)
+                attributes += ` fill-rule="${FillRuleNames[this.fillRule].toLowerCase()}"`;
+        } else {
+            attributes = `fill="none"`;
+        }
+        
+        if (this.line && this.line.lineWidth) {
+            attributes += ` stroke="${color}"` +
+                          ` stroke-width="${this.line.lineWidth}"`;
+            if (this.line.lineCap)
+                attributes += ` stroke-linecap="${LineCapNames[this.line.lineCap].toLowerCase()}"`;
+            if (this.line.lineJoin && !this.isStraightLine)
+                attributes += ` stroke-linejoin="${LineJoinNames[this.line.lineJoin].toLowerCase()}"`;
+            if (this.dash && this.dash.active && this.dash.array && this.dash.array[0] && this.dash.array[1])
+                attributes += ` stroke-dasharray="${this.dash.array[0]} ${this.dash.array[1]}" stroke-dashoffset="${this.dash.offset}"`;
+        } else {
+            attributes += ` stroke="none"`;
+        }
         
         let transAttribute = '';
         this.transformations.slice(0).reverse().forEach(transformation => {
@@ -2135,7 +2148,8 @@ const DrawingMenu = new Lang.Class({
         this._addColorSubMenuItem(this.menu);
         this.fillItem = this._addSwitchItem(this.menu, _("Fill"), this.strokeIcon, this.fillIcon, this.area, 'fill', this._updateSectionVisibility.bind(this));
         this.fillSection = new PopupMenu.PopupMenuSection();
-        this._addSubMenuItem(this.fillSection, this.fillRuleNonzeroIcon, FillRuleNames, this.area, 'currentFillRule', this._updateFillRuleIcon.bind(this));
+        this.fillSection.itemActivated = () => {};
+        this.fillRuleItem = this._addSwitchItem(this.fillSection, _("Evenodd"), this.fillRuleNonzeroIcon, this.fillRuleEvenoddIcon, this.area, 'currentEvenodd');
         this.menu.addMenuItem(this.fillSection);
         this._addSeparator(this.menu);
         
@@ -2175,7 +2189,6 @@ const DrawingMenu = new Lang.Class({
         this.menu.addAction(_("Show help"), () => { this.close(); this.area.toggleHelp(); }, 'preferences-desktop-keyboard-shortcuts-symbolic');
         
         this._updateSectionVisibility();
-        this._updateFillRuleIcon();
     },
     
     _updateSectionVisibility: function() {
@@ -2195,11 +2208,6 @@ const DrawingMenu = new Lang.Class({
             this.fillSection.actor.show();
         else
             this.fillSection.actor.hide();
-    },
-    
-    _updateFillRuleIcon: function() {
-        let fillRuleIcon = this.area.currentFillRule == Cairo.FillRule.EVEN_ODD ? this.fillRuleEvenoddIcon : this.fillRuleNonzeroIcon;
-        this.fillSection.firstMenuItem.icon.set_gicon(fillRuleIcon);
     },
     
     _addSwitchItem: function(menu, label, iconFalse, iconTrue, target, targetProperty, onToggled) {

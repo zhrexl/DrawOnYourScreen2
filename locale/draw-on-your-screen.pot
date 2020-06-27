@@ -135,6 +135,10 @@ msgstr ""
 msgid "Smooth"
 msgstr ""
 
+# Evenodd is a fill rule SVG attribute (even as 2,4,6,... and odd as 1,3,5,...)
+msgid "Evenodd"
+msgstr ""
+
 msgid "Dashed"
 msgstr ""
 
@@ -433,6 +437,7 @@ msgstr ""
 #msgid "Nonzero"
 #msgstr ""
 
+#already in menu
 #msgid "Evenodd"
 #msgstr ""
 
