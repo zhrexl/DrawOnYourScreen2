@@ -30,6 +30,8 @@
  * Font family can be any font installed, or a generic family name (Serif, Sans-Serif, Monospace, Cursive, Fantasy).
  * Font weight and font style : no upper case when string.
  *
+ * text-align: left or right.
+ *
  */
 
 .draw-on-your-screen {
@@ -50,6 +52,7 @@
     font-family: Cantarell;
     font-weight: normal;
     font-style: normal;
+    text-align: left;
 }
 
 /* Palette */

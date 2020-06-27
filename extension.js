@@ -214,6 +214,7 @@ var AreaManager = new Lang.Class({
             'toggle-font-family': this.activeArea.toggleFontFamily.bind(this.activeArea),
             'toggle-font-weight': this.activeArea.toggleFontWeight.bind(this.activeArea),
             'toggle-font-style': this.activeArea.toggleFontStyle.bind(this.activeArea),
+            'toggle-text-alignment': this.activeArea.toggleTextAlignment.bind(this.activeArea),
             'toggle-panel-and-dock-visibility': this.togglePanelAndDockOpacity.bind(this),
             'toggle-help': this.activeArea.toggleHelp.bind(this.activeArea),
             'open-user-stylesheet': this.openUserStyleFile.bind(this),

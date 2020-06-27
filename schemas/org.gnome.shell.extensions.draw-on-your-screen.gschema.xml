@@ -231,6 +231,11 @@
       <summary>toggle font style</summary>
       <description>toggle font style</description>
     </key>
+    <key type="as" name="toggle-text-alignment">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;a"]</default>
+      <summary>toggle text alignment</summary>
+      <description>toggle text alignment</description>
+    </key>
     <key type="as" name="open-user-stylesheet">
       <default>["&lt;Primary&gt;o"]</default>
       <summary>open user stylesheet to edit style</summary>

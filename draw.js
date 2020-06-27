@@ -52,7 +52,6 @@ const CAIRO_DEBUG_EXTENDS = false;
 const SVG_DEBUG_EXTENDS = false;
 const SVG_DEBUG_SUPERPOSES_CAIRO = false;
 const TEXT_CURSOR_TIME = 600; // ms
-const ENABLE_RTL = false;
 
 const ICON_DIR = Me.dir.get_child('data').get_child('icons');
 const COLOR_ICON_PATH = ICON_DIR.get_child('color-symbolic.svg').get_path();
@@ -227,6 +226,7 @@ var DrawingArea = new Lang.Class({
             this.newThemeAttributes.FontStyle = font.get_style();
             this.newThemeAttributes.FontStretch = font.get_stretch();
             this.newThemeAttributes.FontVariant = font.get_variant();
+            this.newThemeAttributes.TextRightAligned = themeNode.get_text_align() == St.TextAlign.RIGHT;
             this.newThemeAttributes.LineWidth = themeNode.get_length('-drawing-line-width');
             this.newThemeAttributes.LineJoin = themeNode.get_double('-drawing-line-join');
             this.newThemeAttributes.LineCap = themeNode.get_double('-drawing-line-cap');
@@ -601,7 +601,7 @@ var DrawingArea = new Lang.Class({
                 stretch: this.currentFontStretch,
                 variant: this.currentFontVariant };
             this.currentElement.text = _("Text");
-            this.currentElement.rtl = ENABLE_RTL && this.get_text_direction() == Clutter.TextDirection.RTL;
+            this.currentElement.textRightAligned = this.currentTextRightAligned;
         }
         
         this.currentElement.startDrawing(startX, startY);
@@ -932,6 +932,15 @@ var DrawingArea = new Lang.Class({
         this.emit('show-osd', null, `<span font_family="${currentFontFamily}">${_(currentFontFamily)}</span>`, "", -1);
     },
     
+    toggleTextAlignment: function() {
+        this.currentTextRightAligned = !this.currentTextRightAligned;
+        if (this.currentElement && this.currentElement.textRightAligned !== undefined) {
+            this.currentElement.textRightAligned = this.currentTextRightAligned;
+            this._redisplay();
+        }
+        this.emit('show-osd', null, this.currentTextRightAligned ? _("Right aligned") : _("Left aligned"), "", -1);
+    },
+    
     toggleHelp: function() {
         if (this.helper.visible) {
             this.helper.hideHelp();
@@ -1224,8 +1233,6 @@ const DrawingElement = new Lang.Class({
         if (params.transformations === undefined)
             this.transformations = [];
         if (params.shape == Shapes.TEXT) {
-            if (params.rtl === undefined)
-                this.rtl = false;
             if (params.font && params.font.weight === 0)
                 this.font.weight = 400;
             if (params.font && params.font.weight === 1)
@@ -1258,7 +1265,7 @@ const DrawingElement = new Lang.Class({
             transformations: this.transformations,
             text: this.text,
             lineIndex: this.lineIndex !== undefined ? this.lineIndex : undefined,
-            rtl: this.rtl,
+            textRightAligned: this.textRightAligned,
             font: this.font,
             points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
         };
@@ -1384,7 +1391,7 @@ const DrawingElement = new Lang.Class({
             layout.set_font_description(fontDescription);
             layout.set_text(this.text, -1);
             this.textWidth = layout.get_pixel_size()[0];
-            cr.moveTo(points[1][0] - (this.rtl ? this.textWidth : 0), Math.max(points[0][1],points[1][1]) - layout.get_baseline() / Pango.SCALE);
+            cr.moveTo(points[1][0] - (this.textRightAligned ? this.textWidth : 0), Math.max(points[0][1],points[1][1]) - layout.get_baseline() / Pango.SCALE);
             layout.set_text(this.text, -1);
             PangoCairo.show_layout(cr, layout);
             
@@ -1392,13 +1399,13 @@ const DrawingElement = new Lang.Class({
                 let cursorPosition = this.cursorPosition == -1 ? this.text.length : this.cursorPosition;
                 layout.set_text(this.text.slice(0, cursorPosition), -1);
                 let width = layout.get_pixel_size()[0];
-                cr.rectangle(points[1][0] - (this.rtl ? this.textWidth : 0) + width, Math.max(points[0][1],points[1][1]),
+                cr.rectangle(points[1][0] - (this.textRightAligned ? this.textWidth : 0) + width, Math.max(points[0][1],points[1][1]),
                              Math.abs(points[1][1] - points[0][1]) / 25, - Math.abs(points[1][1] - points[0][1]));
                 cr.fill();
             }
             
             if (params.showTextRectangle || params.drawTextRectangle) {
-                cr.rectangle(points[1][0] - (this.rtl ? this.textWidth : 0), Math.max(points[0][1], points[1][1]),
+                cr.rectangle(points[1][0] - (this.textRightAligned ? this.textWidth : 0), Math.max(points[0][1], points[1][1]),
                              this.textWidth, - Math.abs(points[1][1] - points[0][1]));
                 if (params.showTextRectangle)
                     setDummyStroke(cr);
@@ -1541,7 +1548,8 @@ const DrawingElement = new Lang.Class({
             if (this.font.variant && FontVariantNames[this.font.variant])
                 attributes += ` font-variant="${FontVariantNames[this.font.variant].toLowerCase()}"`;
             
-            row += `<text ${attributes} x="${points[1][0] - this.rtl * this.textWidth}" `;
+            // this.textWidth is computed during Cairo building.
+            row += `<text ${attributes} x="${points[1][0] - (this.textRightAligned ? this.textWidth : 0)}" `;
             row += `y="${Math.max(points[0][1], points[1][1])}"${transAttribute}>${this.text}</text>`;
         }
         
@@ -1747,6 +1755,7 @@ const DrawingElement = new Lang.Class({
     },
     
     // The figure rotation center before transformations (original).
+    // this.textWidth is computed during Cairo building.
     _getOriginalCenter: function() {
         if (!this._originalCenter) {
             let points = this.points;
@@ -2169,8 +2178,10 @@ const DrawingMenu = new Lang.Class({
         this._addSubMenuItem(fontSection, 'font-x-generic-symbolic', FontGenericNamesCopy, this.area, 'currentFontGeneric');
         this._addSubMenuItem(fontSection, 'format-text-bold-symbolic', FontWeightNames, this.area, 'currentFontWeight');
         this._addSubMenuItem(fontSection, 'format-text-italic-symbolic', FontStyleNames, this.area, 'currentFontStyle');
+        this._addSwitchItem(fontSection, _("Right aligned"), 'format-justify-left-symbolic', 'format-justify-right-symbolic', this.area, 'currentTextRightAligned');
         this._addSeparator(fontSection);
         this.menu.addMenuItem(fontSection);
+        fontSection.itemActivated = () => {};
         this.fontSection = fontSection;
         
         let manager = Extension.manager;
@@ -2215,11 +2226,19 @@ const DrawingMenu = new Lang.Class({
         
         item.icon = new St.Icon({ style_class: 'popup-menu-icon' });
         getActor(item).insert_child_at_index(item.icon, 1);
-        item.icon.set_gicon(target[targetProperty] ? iconTrue : iconFalse);
+        let icon = target[targetProperty] ? iconTrue : iconFalse;
+        if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, Gio.Icon))
+            item.icon.set_gicon(icon);
+        else if (icon)
+            item.icon.set_icon_name(icon);
         
         item.connect('toggled', (item, state) => {
             target[targetProperty] = state;
-            item.icon.set_gicon(target[targetProperty] ? iconTrue : iconFalse);
+            let icon = target[targetProperty] ? iconTrue : iconFalse;
+            if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, Gio.Icon))
+                item.icon.set_gicon(icon);
+            else if (icon)
+                item.icon.set_icon_name(icon);
             if (onToggled)
                 onToggled();
         });

@@ -108,6 +108,12 @@ msgstr ""
 msgid "%d px"
 msgstr ""
 
+msgid "Right aligned"
+msgstr ""
+
+msgid "Left aligned"
+msgstr ""
+
 #: helper
 
 msgid "Screenshot"
@@ -239,7 +245,7 @@ msgstr ""
 msgid "Change linecap"
 msgstr ""
 
-msgid "Change fill rule"
+msgid "Toggle fill rule"
 msgstr ""
 
 #: already in draw.js
@@ -253,6 +259,9 @@ msgid "Change font weight"
 msgstr ""
 
 msgid "Change font style"
+msgstr ""
+
+msgid "Toggle text alignment"
 msgstr ""
 
 msgid "Hide panel and dock"
