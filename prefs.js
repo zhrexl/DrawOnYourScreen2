@@ -105,8 +105,8 @@ var OTHER_SHORTCUTS = [
     { desc: "Ignore pointer movement", get shortcut() { return _("%s held").format(getKeyLabel('space')); } },
     { desc: "Leave", shortcut: getKeyLabel('Escape') },
     { desc: "-separator-1", shortcut: "" },
-    { desc: "Select eraser <span alpha=\"50%\">(while starting a drawing)</span>", shortcut: "%s".format(getKeyLabel('<Shift>')) },
-    { desc: "Duplicate <span alpha=\"50%\">(while starting a transformation)</span>", shortcut: "%s".format(getKeyLabel('<Shift>')) },
+    { desc: "Select eraser <span alpha=\"50%\">(while starting drawing)</span>", shortcut: getKeyLabel('<Shift>') },
+    { desc: "Duplicate <span alpha=\"50%\">(while starting moving, resizing or mirroring)</span>", shortcut: getKeyLabel('<Shift>') },
     { desc: "Rotate rectangle, polygon, polyline", shortcut: getKeyLabel('<Primary>') },
     { desc: "Translate text area", shortcut: getKeyLabel('<Primary>') },
     { desc: "Extend circle to ellipse", shortcut: getKeyLabel('<Primary>') },
@@ -303,22 +303,6 @@ const PrefsPage = new GObject.Class({
             otherBox.pack_start(otherLabel2, false, false, 4);
             listBox.add(otherBox);
         }
-        
-        let controlBox = new Gtk.Box({ margin: MARGIN, margin_top: 2*MARGIN });
-        let controlLabel = new Gtk.Label({
-            wrap: true,
-            xalign: 0,
-            use_markup: true,
-            label: _("By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you can:\n" +
-                     " . rotate a rectangle or a text area\n" +
-                     " . extend and rotate an ellipse\n" +
-                     " . curve a line (cubic Bezier curve)\n" +
-                     " . smooth a free drawing stroke (you may prefer to smooth the stroke afterward, see <i>“%s”</i>)").format(_("Smooth last brushstroke"))
-        });
-        controlLabel.set_halign(1);
-        controlLabel.get_style_context().add_class('dim-label');
-        controlBox.pack_start(controlLabel, true, true, 4);
-        listBox.add(controlBox);
         
         let internalKeybindingsWidget = new KeybindingsWidget(INTERNAL_KEYBINDINGS, this.settings);
         internalKeybindingsWidget.margin = MARGIN;

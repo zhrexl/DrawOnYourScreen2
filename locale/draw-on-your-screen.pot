@@ -338,10 +338,10 @@ msgstr ""
 msgid "Leave"
 msgstr ""
 
-msgid "Select eraser (when starting a drawing)"
+msgid "Select eraser <span alpha=\"50%\">(while starting drawing)</span>"
 msgstr ""
 
-msgid "Duplicate (when starting a transformation)"
+msgid "Duplicate <span alpha=\"50%\">(while starting moving, resizing or mirroring)</span>"
 msgstr ""
 
 msgid "Rotate rectangle, polygon, polyline"
@@ -359,13 +359,13 @@ msgstr ""
 msgid "Smooth free drawing stroke"
 msgstr ""
 
-msgid "Rotate (when moving)"
+msgid "Rotate <span alpha=\"50%\">(while moving)</span>"
 msgstr ""
 
-msgid "Stretch (when resizing)"
+msgid "Stretch <span alpha=\"50%\">(while resizing)</span>"
 msgstr ""
 
-msgid "Inverse (when mirroring)"
+msgid "Inverse <span alpha=\"50%\">(while mirroring)</span>"
 msgstr ""
 
 #: About page
@@ -407,14 +407,6 @@ msgid "Internal"
 msgstr ""
 
 msgid "(in drawing mode)"
-msgstr ""
-
-msgid ""
-"By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you can:\n"
-" . rotate a rectangle or a text area\n"
-" . extend and rotate an ellipse\n"
-" . curve a line (cubic Bezier curve)\n"
-" . smooth a free drawing stroke (you may prefer to smooth the stroke afterward, see <i>“%s”</i>)"
 msgstr ""
 
 msgid ""
