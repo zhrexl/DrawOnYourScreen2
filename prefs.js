@@ -37,8 +37,8 @@ const MARGIN = 10;
 
 var GLOBAL_KEYBINDINGS = {
     'toggle-drawing': "Enter/leave drawing mode",
-    'erase-drawing': "Erase all drawings",
-    'toggle-modal': "Toggle modeless/modal"
+    'toggle-modal': "Toggle modeless/modal",
+    'erase-drawing': "Erase all drawings"
 };
 
 var INTERNAL_KEYBINDINGS = {
@@ -58,7 +58,7 @@ var INTERNAL_KEYBINDINGS = {
     'select-resize-tool': "Select resize",
     'select-mirror-tool': "Select mirror",
     '-separator-2': '',
-    'toggle-fill': "Toggle fill/stroke",
+    'toggle-fill': "Toggle fill/outline",
     'toggle-fill-rule': "Toggle fill rule",
     '-separator-3': '',
     'increment-line-width': "Increment line width",
@@ -99,16 +99,15 @@ function getKeyLabel(accel) {
 var OTHER_SHORTCUTS = [
     { desc: "Draw", get shortcut() { return _("Left click"); } },
     { desc: "Menu", get shortcut() { return _("Right click"); } },
-    { desc: "Toggle fill/stroke", get shortcut() { return _("Center click"); } },
+    { desc: "Toggle fill/outline", get shortcut() { return _("Center click"); } },
     { desc: "Increment/decrement line width", get shortcut() { return _("Scroll"); } },
     { desc: "Select color", get shortcut() { return _("%s … %s").format(getKeyLabel('<Primary>1'), getKeyLabel('<Primary>9')); } },
     { desc: "Ignore pointer movement", get shortcut() { return _("%s held").format(getKeyLabel('space')); } },
     { desc: "Leave", shortcut: getKeyLabel('Escape') },
     { desc: "-separator-1", shortcut: "" },
     { desc: "Select eraser <span alpha=\"50%\">(while starting drawing)</span>", shortcut: getKeyLabel('<Shift>') },
-    { desc: "Duplicate <span alpha=\"50%\">(while starting moving, resizing or mirroring)</span>", shortcut: getKeyLabel('<Shift>') },
+    { desc: "Duplicate <span alpha=\"50%\">(while starting handling)</span>", shortcut: getKeyLabel('<Shift>') },
     { desc: "Rotate rectangle, polygon, polyline", shortcut: getKeyLabel('<Primary>') },
-    { desc: "Translate text area", shortcut: getKeyLabel('<Primary>') },
     { desc: "Extend circle to ellipse", shortcut: getKeyLabel('<Primary>') },
     { desc: "Curve line", shortcut: getKeyLabel('<Primary>') },
     { desc: "Smooth free drawing stroke", shortcut: getKeyLabel('<Primary>') },
@@ -326,7 +325,7 @@ const PrefsPage = new GObject.Class({
             wrap: true,
             xalign: 0,
             use_markup: true,
-            label: _("<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file, " +
+            label: _("When you save elements made with <b>eraser</b> in a <b>SVG</b> file, " +
                      "they are colored with background color, transparent if it is disabled.\n" +
                      "See <i>“%s”</i> or edit the SVG file afterwards.").format(_("Add a drawing background"))
         });

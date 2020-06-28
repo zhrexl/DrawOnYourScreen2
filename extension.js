@@ -81,17 +81,17 @@ var AreaManager = new Lang.Class({
                               Shell.ActionMode.ALL,
                               this.toggleDrawing.bind(this));
         
-        Main.wm.addKeybinding('erase-drawing',
-                              this.settings,
-                              Meta.KeyBindingFlags.NONE,
-                              Shell.ActionMode.ALL,
-                              this.eraseDrawing.bind(this));
-        
         Main.wm.addKeybinding('toggle-modal',
                               this.settings,
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
                               this.toggleModal.bind(this));
+        
+        Main.wm.addKeybinding('erase-drawing',
+                              this.settings,
+                              Meta.KeyBindingFlags.NONE,
+                              Shell.ActionMode.ALL,
+                              this.eraseDrawing.bind(this));
         
         this.updateAreas();
         this.monitorChangedHandler = Main.layoutManager.connect('monitors-changed', this.updateAreas.bind(this));
@@ -536,8 +536,8 @@ var AreaManager = new Lang.Class({
         if (this.activeArea)
             this.toggleDrawing();
         Main.wm.removeKeybinding('toggle-drawing');
-        Main.wm.removeKeybinding('erase-drawing');
         Main.wm.removeKeybinding('toggle-modal');
+        Main.wm.removeKeybinding('erase-drawing');
         this.removeAreas();
         if (this.indicator)
             this.indicator.disable();

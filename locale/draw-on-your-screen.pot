@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen VERSION\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2020-01-03 08:00+0100\n"
+"POT-Creation-Date: 2019-03-04 16:40+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -74,7 +74,9 @@ msgstr ""
 msgid "Mirror"
 msgstr ""
 
-msgid "Press <i>%s</i> to get a fourth control point"
+msgid ""
+"Press <i>%s</i> to get\n"
+"a fourth control point"
 msgstr ""
 
 msgid "Mark a point of symmetry"
@@ -115,7 +117,6 @@ msgid "Left aligned"
 msgstr ""
 
 #: helper
-
 msgid "Screenshot"
 msgstr ""
 
@@ -132,7 +133,6 @@ msgid "System"
 msgstr ""
 
 #: menu
-
 msgid "Undo"
 msgstr ""
 
@@ -162,7 +162,6 @@ msgid "Save drawing"
 msgstr ""
 
 #: prefs.js
-
 msgid "Preferences"
 msgstr ""
 
@@ -170,18 +169,16 @@ msgid "About"
 msgstr ""
 
 #: GLOBAL_KEYBINDINGS
-
 msgid "Enter/leave drawing mode"
-msgstr ""
-
-msgid "Erase all drawings"
 msgstr ""
 
 msgid "Toggle modeless/modal"
 msgstr ""
 
-#: INTERNAL_KEYBINDINGS
+msgid "Erase all drawings"
+msgstr ""
 
+#: INTERNAL_KEYBINDINGS
 msgid "Undo last brushstroke"
 msgstr ""
 
@@ -192,9 +189,6 @@ msgid "Erase last brushstroke"
 msgstr ""
 
 msgid "Smooth last brushstroke"
-msgstr ""
-
-msgid "Free drawing"
 msgstr ""
 
 msgid "Select line"
@@ -248,10 +242,6 @@ msgstr ""
 msgid "Toggle fill rule"
 msgstr ""
 
-#: already in draw.js
-#:msgid "Dashed line"
-#:msgstr ""
-
 msgid "Change font family (generic name)"
 msgstr ""
 
@@ -282,10 +272,6 @@ msgstr ""
 msgid "Open next drawing"
 msgstr ""
 
-#: already in draw.js
-#:msgid "Save drawing"
-#:msgstr ""
-
 msgid "Save drawing as a SVG file"
 msgstr ""
 
@@ -299,7 +285,6 @@ msgid "Show help"
 msgstr ""
 
 #: OTHER_SHORTCUTS
-
 msgid "Draw"
 msgstr ""
 
@@ -341,13 +326,10 @@ msgstr ""
 msgid "Select eraser <span alpha=\"50%\">(while starting drawing)</span>"
 msgstr ""
 
-msgid "Duplicate <span alpha=\"50%\">(while starting moving, resizing or mirroring)</span>"
+msgid "Duplicate <span alpha=\"50%\">(while starting handling)</span>"
 msgstr ""
 
 msgid "Rotate rectangle, polygon, polyline"
-msgstr ""
-
-msgid "Translate text area"
 msgstr ""
 
 msgid "Extend circle to ellipse"
@@ -369,7 +351,6 @@ msgid "Inverse <span alpha=\"50%\">(while mirroring)</span>"
 msgstr ""
 
 #: About page
-
 # You are free to translate the extension name, that is displayed in About page, or not.
 msgid "Draw On You Screen"
 msgstr ""
@@ -381,7 +362,6 @@ msgid "Start drawing with Super+Alt+D and save your beautiful work by taking a s
 msgstr ""
 
 #: Prefs page
-
 msgid "Global"
 msgstr ""
 
@@ -415,7 +395,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file, "
+"When you save elements made with <b>eraser</b> in a <b>SVG</b> file, "
 "they are colored with background color, transparent if it is disabled.\n"
 "See <i>“%s”</i> or edit the SVG file afterwards."
 msgstr ""

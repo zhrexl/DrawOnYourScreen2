@@ -130,7 +130,7 @@ const getJsonFiles = function() {
 var DrawingArea = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingArea',
     Extends: St.DrawingArea,
-    Signals: { 'show-osd': { param_types: [GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE] },
+    Signals: { 'show-osd': { param_types: [GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
                'update-action-mode': {},
                'leave-drawing-mode': {} },
 
@@ -397,8 +397,8 @@ var DrawingArea = new Lang.Class({
                 event.get_key_symbol() == Clutter.KEY_KP_Enter ||
                 event.get_key_symbol() == Clutter.KEY_Control_L) {
                 if (this.currentElement.points.length == 2)
-                    this.emit('show-osd', null, _("Press <i>%s</i> to get a fourth control point")
-                                                .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1);
+                    this.emit('show-osd', null, _("Press <i>%s</i> to get\na fourth control point")
+                                                .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
                 this.currentElement.addPoint();
                 this.updatePointerCursor(true);
                 this._redisplay();
@@ -494,7 +494,7 @@ var DrawingArea = new Lang.Class({
             if (this.grabbedElementLocked) {
                 this.updatePointerCursor();
                 let label = controlPressed ? _("Mark a point of symmetry") : _("Draw a line of symmetry");
-                this.emit('show-osd', null, label, "", -1);
+                this.emit('show-osd', null, label, "", -1, true);
                 return;
             }
         }
@@ -617,7 +617,8 @@ var DrawingArea = new Lang.Class({
         this.currentElement.startDrawing(startX, startY);
         
         if (this.currentTool == Shapes.POLYGON || this.currentTool == Shapes.POLYLINE)
-            this.emit('show-osd', null, _("Press <i>%s</i> to mark vertices").format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1);
+            this.emit('show-osd', null, _("Press <i>%s</i> to mark vertices")
+                                        .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
         
         this.motionHandler = this.connect('motion-event', (actor, event) => {
             if (this.spaceKeyPressed)
@@ -676,7 +677,8 @@ var DrawingArea = new Lang.Class({
     _startWriting: function() {
         this.currentElement.text = '';
         this.currentElement.cursorPosition = 0;
-        this.emit('show-osd', null, _("Type your text and press <i>%s</i>").format(Gtk.accelerator_get_label(Clutter.KEY_Escape, 0)), "", -1);
+        this.emit('show-osd', null, _("Type your text and press <i>%s</i>")
+                                    .format(Gtk.accelerator_get_label(Clutter.KEY_Escape, 0)), "", -1, true);
         this._updateTextCursorTimeout();
         this.textHasCursor = true;
         this._redisplay();
@@ -873,43 +875,43 @@ var DrawingArea = new Lang.Class({
             this._redisplay();
         }
         // Foreground color markup is not displayed since 3.36, use style instead but the transparency is lost.
-        this.emit('show-osd', null, this.currentColor.to_string(), this.currentColor.to_string().slice(0, 7), -1);
+        this.emit('show-osd', null, this.currentColor.to_string(), this.currentColor.to_string().slice(0, 7), -1, false);
     },
     
     selectTool: function(tool) {
         this.currentTool = tool;
-        this.emit('show-osd', null, _(ToolNames[tool]), "", -1);
+        this.emit('show-osd', null, _(ToolNames[tool]), "", -1, false);
         this.updatePointerCursor();
     },
     
     toggleFill: function() {
         this.fill = !this.fill;
-        this.emit('show-osd', null, this.fill ? _("Fill") : _("Stroke"), "", -1);
+        this.emit('show-osd', null, this.fill ? _("Fill") : _("Outline"), "", -1, false);
     },
     
     toggleDash: function() {
         this.dashedLine = !this.dashedLine;
-        this.emit('show-osd', null, this.dashedLine ? _("Dashed line") : _("Full line"), "", -1);
+        this.emit('show-osd', null, this.dashedLine ? _("Dashed line") : _("Full line"), "", -1, false);
     },
     
     incrementLineWidth: function(increment) {
         this.currentLineWidth = Math.max(this.currentLineWidth + increment, 0);
-        this.emit('show-osd', null, _("%d px").format(this.currentLineWidth), "", 2 * this.currentLineWidth);
+        this.emit('show-osd', null, _("%d px").format(this.currentLineWidth), "", 2 * this.currentLineWidth, false);
     },
     
     toggleLineJoin: function() {
         this.currentLineJoin = this.currentLineJoin == 2 ? 0 : this.currentLineJoin + 1;
-        this.emit('show-osd', null, _(LineJoinNames[this.currentLineJoin]), "", -1);
+        this.emit('show-osd', null, _(LineJoinNames[this.currentLineJoin]), "", -1, false);
     },
     
     toggleLineCap: function() {
         this.currentLineCap = this.currentLineCap == 2 ? 0 : this.currentLineCap + 1;
-        this.emit('show-osd', null, _(LineCapNames[this.currentLineCap]), "", -1);
+        this.emit('show-osd', null, _(LineCapNames[this.currentLineCap]), "", -1, false);
     },
     
     toggleFillRule: function() {
         this.currentFillRule = this.currentFillRule == 1 ? 0 : this.currentFillRule + 1;
-        this.emit('show-osd', null, _(FillRuleNames[this.currentFillRule]), "", -1);
+        this.emit('show-osd', null, _(FillRuleNames[this.currentFillRule]), "", -1, false);
     },
     
     toggleFontWeight: function() {
@@ -920,7 +922,8 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.weight = this.currentFontWeight;
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_weight="${this.currentFontWeight}">${_(FontWeightNames[this.currentFontWeight])}</span>`, "", -1);
+        this.emit('show-osd', null, `<span font_weight="${this.currentFontWeight}">` +
+                                    `${_(FontWeightNames[this.currentFontWeight])}</span>`, "", -1, false);
     },
     
     toggleFontStyle: function() {
@@ -929,7 +932,8 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.style = this.currentFontStyle;
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_style="${FontStyleNames[this.currentFontStyle].toLowerCase()}">${_(FontStyleNames[this.currentFontStyle])}</span>`, "", -1);
+        this.emit('show-osd', null, `<span font_style="${FontStyleNames[this.currentFontStyle].toLowerCase()}">` + 
+                                    `${_(FontStyleNames[this.currentFontStyle])}</span>`, "", -1, false);
     },
     
     toggleFontFamily: function() {
@@ -939,7 +943,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.family = currentFontFamily;
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_family="${currentFontFamily}">${_(currentFontFamily)}</span>`, "", -1);
+        this.emit('show-osd', null, `<span font_family="${currentFontFamily}">${_(currentFontFamily)}</span>`, "", -1, false);
     },
     
     toggleTextAlignment: function() {
@@ -948,7 +952,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.textRightAligned = this.currentTextRightAligned;
             this._redisplay();
         }
-        this.emit('show-osd', null, this.currentTextRightAligned ? _("Right aligned") : _("Left aligned"), "", -1);
+        this.emit('show-osd', null, this.currentTextRightAligned ? _("Right aligned") : _("Left aligned"), "", -1, false);
     },
     
     toggleHelp: function() {
@@ -1119,7 +1123,7 @@ var DrawingArea = new Lang.Class({
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             GLib.file_set_contents(path, contents);
             if (notify)
-                this.emit('show-osd', 'document-save-symbolic', name, "", -1);
+                this.emit('show-osd', 'document-save-symbolic', name, "", -1, false);
             if (name != Me.metadata['persistent-file-name']) {
                 this.jsonName = name;
                 this.lastJsonContents = contents;
@@ -1171,7 +1175,7 @@ var DrawingArea = new Lang.Class({
         this.elements.push(...JSON.parse(contents).map(object => new DrawingElement(object)));
         
         if (notify)
-            this.emit('show-osd', 'document-open-symbolic', name, "", -1);
+            this.emit('show-osd', 'document-open-symbolic', name, "", -1, false);
         if (name != Me.metadata['persistent-file-name']) {
             this.jsonName = name;
             this.lastJsonContents = contents;

@@ -26,15 +26,15 @@
       <summary>toggle drawing</summary>
       <description>enter or leave drawing mode</description>
     </key>
-    <key type="as" name="erase-drawing">
-      <default>["&lt;Alt&gt;&lt;Super&gt;e"]</default>
-      <summary>erase drawing</summary>
-      <description>erase drawing</description>
-    </key>
     <key type="as" name="toggle-modal">
       <default>["&lt;Primary&gt;&lt;Alt&gt;&lt;Super&gt;d"]</default>
       <summary>toggle modeless/modal</summary>
       <description>toggle modeless/modal</description>
+    </key>
+    <key type="as" name="erase-drawing">
+      <default>["&lt;Alt&gt;&lt;Super&gt;e"]</default>
+      <summary>erase drawing</summary>
+      <description>erase drawing</description>
     </key>
     <key type="as" name="undo">
       <default>["&lt;Primary&gt;z"]</default>
