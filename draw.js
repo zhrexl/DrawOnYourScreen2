@@ -682,12 +682,12 @@ var DrawingArea = new Lang.Class({
         this._updateTextCursorTimeout();
         this.textHasCursor = true;
         this._redisplay();
-        this.updatePointerCursor();
         
         this.textEntry = new St.Entry({ visible: false });
         this.get_parent().add_child(this.textEntry);
         this.textEntry.grab_key_focus();
         this.updateActionMode();
+        this.updatePointerCursor();
         
         this.textEntry.clutterText.connect('activate', (clutterText) => {
             let startNewLine = true;
@@ -749,6 +749,7 @@ var DrawingArea = new Lang.Class({
             delete this.textEntry;
             this.grab_key_focus();
             this.updateActionMode();
+            this.updatePointerCursor();
         }
         
         this._redisplay();
@@ -766,7 +767,9 @@ var DrawingArea = new Lang.Class({
             this.setPointerCursor('CROSSHAIR');
         else if (this.hasManipulationTool)
             this.setPointerCursor(this.grabbedElement ? 'MOVE_OR_RESIZE_WINDOW' : 'DEFAULT');
-        else if (!this.currentElement || (this.currentElement.shape == Shapes.TEXT && this.isWriting))
+        else if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting)
+            this.setPointerCursor('IBEAM');
+        else if (!this.currentElement)
             this.setPointerCursor(this.currentTool == Shapes.NONE ? 'POINTING_HAND' : 'CROSSHAIR');
         else if (this.currentElement.shape != Shapes.NONE && controlPressed)
             this.setPointerCursor('MOVE_OR_RESIZE_WINDOW');
