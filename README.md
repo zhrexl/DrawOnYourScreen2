@@ -35,5 +35,5 @@ Then save your beautiful work by taking a screenshot.
 
 * Screenshot Tool extension:
 
- [Screenshot Tool](https://extensions.gnome.org/extension/1112/screenshot-tool/) is a convenient extension to “create, copy, store and upload screenshots”. To use it while drawing mode is active, toggle the area selection mode thanks to the Screenshot Tool shortcut (`Super + F11` by default, see its preferences) and **hold** the `space` key when selecting the area with pointer to avoid drawing.
+ [Screenshot Tool](https://extensions.gnome.org/extension/1112/screenshot-tool/) is a convenient extension to “create, copy, store and upload screenshots”. In order to select a screenshoot area with your pointer while keeping the drawing in place, you need first to tell DrawOnYourScreen to ungrab the pointer (`Ctrl + Super + Alt + D`).
 

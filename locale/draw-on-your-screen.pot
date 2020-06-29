@@ -56,7 +56,8 @@ msgstr ""
 msgid "Enter/leave drawing mode"
 msgstr ""
 
-msgid "Toggle modeless/modal"
+# There is a similar text in GNOME Boxes (https://gitlab.gnome.org/GNOME/gnome-boxes/tree/master/po)
+msgid "Grab/ungrab keyboard and pointer"
 msgstr ""
 
 msgid "Erase all drawings"
@@ -449,6 +450,13 @@ msgid "<small>Press <i>%s</i> for help</small>"
 msgstr ""
 
 msgid "Entering drawing mode"
+msgstr ""
+
+# "released" as the opposite of "grabbed"
+msgid "Keyboard and pointer released"
+msgstr ""
+
+msgid "Keyboard and pointer grabbed"
 msgstr ""
 
 # %s is a key label

@@ -351,7 +351,7 @@ var AreaManager = new Lang.Class({
         }
     },
     
-    toggleModal: function() {
+    toggleModal: function(source) {
         if (!this.activeArea)
             return;
         
@@ -359,6 +359,8 @@ var AreaManager = new Lang.Class({
         
         if (Main._findModal(this.activeArea) != -1) {
             Main.popModal(this.activeArea);
+            if (source && source == global.display)
+                this.showOsd(null, 'touchpad-disabled-symbolic', _("Keyboard and pointer released"), null, null, false);
             setCursor('DEFAULT');
             this.activeArea.reactive = false;
             this.removeInternalKeybindings();
@@ -370,6 +372,8 @@ var AreaManager = new Lang.Class({
             this.addInternalKeybindings();
             this.activeArea.reactive = true;
             this.activeArea.initPointerCursor();
+            if (source && source == global.display)
+                this.showOsd(null, 'input-touchpad-symbolic', _("Keyboard and pointer grabbed"), null, null, false);
         }
         
         return true;
