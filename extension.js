@@ -39,9 +39,11 @@ const Draw = Me.imports.draw;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
+const HIDE_TIMEOUT_LONG = 2500; // ms, default is 1500 ms
 
-// DRAWING_ACTION_MODE is a custom Shell.ActionMode
-var DRAWING_ACTION_MODE = Math.pow(2,14);
+// custom Shell.ActionMode, assuming that they are unused
+const DRAWING_ACTION_MODE = Math.pow(2,14);
+const WRITING_ACTION_MODE = Math.pow(2,15);
 // use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
 var WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
 
@@ -78,6 +80,12 @@ var AreaManager = new Lang.Class({
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
                               this.toggleDrawing.bind(this));
+        
+        Main.wm.addKeybinding('toggle-modal',
+                              this.settings,
+                              Meta.KeyBindingFlags.NONE,
+                              Shell.ActionMode.ALL,
+                              this.toggleModal.bind(this));
         
         Main.wm.addKeybinding('erase-drawing',
                               this.settings,
@@ -159,51 +167,74 @@ var AreaManager = new Lang.Class({
             container.set_position(monitor.x, monitor.y);
             container.set_size(monitor.width, monitor.height);
             area.set_size(monitor.width, monitor.height);
-            area.stopDrawingHandler = area.connect('stop-drawing', this.toggleDrawing.bind(this));
+            area.leaveDrawingHandler = area.connect('leave-drawing-mode', this.toggleDrawing.bind(this));
+            area.updateActionModeHandler = area.connect('update-action-mode', this.updateActionMode.bind(this));
             area.showOsdHandler = area.connect('show-osd', this.showOsd.bind(this));
             this.areas.push(area);
         }
     },
     
     addInternalKeybindings: function() {
-        this.internalKeybindings = {
+        // unavailable when writing
+        this.internalKeybindings1 = {
             'undo': this.activeArea.undo.bind(this.activeArea),
             'redo': this.activeArea.redo.bind(this.activeArea),
             'delete-last-element': this.activeArea.deleteLastElement.bind(this.activeArea),
             'smooth-last-element': this.activeArea.smoothLastElement.bind(this.activeArea),
-            'save-as-svg': this.activeArea.saveAsSvg.bind(this.activeArea),
-            'save-as-json': this.activeArea.saveAsJson.bind(this.activeArea),
-            'open-previous-json': this.activeArea.loadPreviousJson.bind(this.activeArea),
-            'open-next-json': this.activeArea.loadNextJson.bind(this.activeArea),
-            'toggle-background': this.activeArea.toggleBackground.bind(this.activeArea),
-            'toggle-square-area': this.activeArea.toggleSquareArea.bind(this.activeArea),
             'increment-line-width': () => this.activeArea.incrementLineWidth(1),
             'decrement-line-width': () => this.activeArea.incrementLineWidth(-1),
             'increment-line-width-more': () => this.activeArea.incrementLineWidth(5),
             'decrement-line-width-more': () => this.activeArea.incrementLineWidth(-5),
             'toggle-linejoin': this.activeArea.toggleLineJoin.bind(this.activeArea),
             'toggle-linecap': this.activeArea.toggleLineCap.bind(this.activeArea),
+            'toggle-fill-rule': this.activeArea.toggleFillRule.bind(this.activeArea),
             'toggle-dash' : this.activeArea.toggleDash.bind(this.activeArea),
             'toggle-fill' : this.activeArea.toggleFill.bind(this.activeArea),
-            'select-none-shape': () => this.activeArea.selectShape(Draw.Shapes.NONE),
-            'select-line-shape': () => this.activeArea.selectShape(Draw.Shapes.LINE),
-            'select-ellipse-shape': () => this.activeArea.selectShape(Draw.Shapes.ELLIPSE),
-            'select-rectangle-shape': () => this.activeArea.selectShape(Draw.Shapes.RECTANGLE),
-            'select-text-shape': () => this.activeArea.selectShape(Draw.Shapes.TEXT),
+            'select-none-shape': () => this.activeArea.selectTool(Draw.Tools.NONE),
+            'select-line-shape': () => this.activeArea.selectTool(Draw.Tools.LINE),
+            'select-ellipse-shape': () => this.activeArea.selectTool(Draw.Tools.ELLIPSE),
+            'select-rectangle-shape': () => this.activeArea.selectTool(Draw.Tools.RECTANGLE),
+            'select-text-shape': () => this.activeArea.selectTool(Draw.Tools.TEXT),
+            'select-polygon-shape': () => this.activeArea.selectTool(Draw.Tools.POLYGON),
+            'select-polyline-shape': () => this.activeArea.selectTool(Draw.Tools.POLYLINE),
+            'select-move-tool': () => this.activeArea.selectTool(Draw.Tools.MOVE),
+            'select-resize-tool': () => this.activeArea.selectTool(Draw.Tools.RESIZE),
+            'select-mirror-tool': () => this.activeArea.selectTool(Draw.Tools.MIRROR)
+        };
+        
+        // available when writing
+        this.internalKeybindings2 = {
+            'save-as-svg': this.activeArea.saveAsSvg.bind(this.activeArea),
+            'save-as-json': this.activeArea.saveAsJson.bind(this.activeArea),
+            'open-previous-json': this.activeArea.loadPreviousJson.bind(this.activeArea),
+            'open-next-json': this.activeArea.loadNextJson.bind(this.activeArea),
+            'toggle-background': this.activeArea.toggleBackground.bind(this.activeArea),
+            'toggle-grid': this.activeArea.toggleGrid.bind(this.activeArea),
+            'toggle-square-area': this.activeArea.toggleSquareArea.bind(this.activeArea),
             'toggle-font-family': this.activeArea.toggleFontFamily.bind(this.activeArea),
             'toggle-font-weight': this.activeArea.toggleFontWeight.bind(this.activeArea),
             'toggle-font-style': this.activeArea.toggleFontStyle.bind(this.activeArea),
+            'toggle-text-alignment': this.activeArea.toggleTextAlignment.bind(this.activeArea),
             'toggle-panel-and-dock-visibility': this.togglePanelAndDockOpacity.bind(this),
             'toggle-help': this.activeArea.toggleHelp.bind(this.activeArea),
-            'open-user-stylesheet': this.openUserStyleFile.bind(this)
+            'open-user-stylesheet': this.openUserStyleFile.bind(this),
+            'open-preferences': this.openPreferences.bind(this)
         };
         
-        for (let key in this.internalKeybindings) {
+        for (let key in this.internalKeybindings1) {
             Main.wm.addKeybinding(key,
                                   this.settings,
                                   Meta.KeyBindingFlags.NONE,
                                   DRAWING_ACTION_MODE,
-                                  this.internalKeybindings[key]);
+                                  this.internalKeybindings1[key]);
+        }
+        
+        for (let key in this.internalKeybindings2) {
+            Main.wm.addKeybinding(key,
+                                  this.settings,
+                                  Meta.KeyBindingFlags.NONE,
+                                  DRAWING_ACTION_MODE | WRITING_ACTION_MODE,
+                                  this.internalKeybindings2[key]);
         }
         
         for (let i = 1; i < 10; i++) {
@@ -211,18 +242,28 @@ var AreaManager = new Lang.Class({
             Main.wm.addKeybinding('select-color' + i,
                                   this.settings,
                                   Meta.KeyBindingFlags.NONE,
-                                  DRAWING_ACTION_MODE,
+                                  DRAWING_ACTION_MODE | WRITING_ACTION_MODE,
                                   () => this.activeArea.selectColor(iCaptured));
         }
     },
     
     removeInternalKeybindings: function() {
-        for (let key in this.internalKeybindings) {
+        for (let key in this.internalKeybindings1)
             Main.wm.removeKeybinding(key);
-        }
         
-        for (let i = 1; i < 10; i++) {
+        for (let key in this.internalKeybindings2)
+            Main.wm.removeKeybinding(key);
+        
+        for (let i = 1; i < 10; i++)
             Main.wm.removeKeybinding('select-color' + i);
+    },
+    
+    openPreferences: function() {
+        // since GS 3.36
+        if (ExtensionUtils.openPrefs) {
+            if (this.activeArea)
+                this.toggleDrawing();
+            ExtensionUtils.openPrefs();
         }
     },
     
@@ -262,18 +303,22 @@ var AreaManager = new Lang.Class({
             // dash-to-dock
             let dtdContainers = Main.uiGroup.get_children().filter((actor) => {
                 return actor.name && actor.name == 'dashtodockContainer' &&
-                       actor._delegate &&
+                       ((actor._delegate &&
                        actor._delegate._monitorIndex !== undefined &&
-                       actor._delegate._monitorIndex == activeIndex;
+                       actor._delegate._monitorIndex == activeIndex) ||
+                       // dtd v68+
+                       (actor._monitorIndex !== undefined &&
+                       actor._monitorIndex == activeIndex));
             });
             
             // for simplicity, we assume that main dash-to-panel panel is displayed on primary monitor
             // and we hide all secondary panels together if the active area is not on the primary
             let name = activeIndex == Main.layoutManager.primaryIndex ? 'panelBox' : 'dashtopanelSecondaryPanelBox';
             let panelBoxes = Main.uiGroup.get_children().filter((actor) => {
-                return actor.name && actor.name == name;
+                return actor.name && actor.name == name ||
+                       // dtp v37+
+                       actor.get_children().length && actor.get_children()[0].name && actor.get_children()[0].name == name;
             });
-            
             
             let actorToHide = dtdContainers.concat(panelBoxes);
             this.hiddenList = [];
@@ -284,100 +329,183 @@ var AreaManager = new Lang.Class({
         }
     },
     
-    toggleDrawing: function() {
-        if (this.activeArea) {
-            let activeIndex = this.areas.indexOf(this.activeArea);
-            let activeContainer = this.activeArea.get_parent();
-            let save = activeIndex == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
-            
-            if (this.hiddenList)
-                this.togglePanelAndDockOpacity();
-            
-            Main.popModal(this.activeArea);
-            this.removeInternalKeybindings();
-            this.activeArea.reactive = false;
-            this.activeArea.leaveDrawingMode(save);
-            this.activeArea = null;
-            
-            activeContainer.get_parent().remove_actor(activeContainer);
+    toggleContainer: function() {
+        if (!this.activeArea)
+            return;
+        
+        let activeContainer = this.activeArea.get_parent();
+        let activeIndex = this.areas.indexOf(this.activeArea);
+        
+        if (activeContainer.get_parent() == Main.uiGroup) {
+            Main.uiGroup.set_child_at_index(Main.layoutManager.keyboardBox, this.oldKeyboardIndex);
+            Main.uiGroup.remove_actor(activeContainer);
             Main.layoutManager._backgroundGroup.insert_child_above(activeContainer, Main.layoutManager._bgManagers[activeIndex].backgroundActor);
             if (!this.settings.get_boolean("drawing-on-desktop")) 
                 activeContainer.hide();
-            
-            setCursor('DEFAULT');
-            if (!this.osdDisabled)
-                Main.osdWindowManager.show(activeIndex, this.leaveGicon, _("Leaving drawing mode"), null);
-        } else  {
-            // avoid to deal with Meta changes (global.display/global.screen)
-            let currentIndex = Main.layoutManager.monitors.indexOf(Main.layoutManager.currentMonitor);
-            let activeContainer = this.areas[currentIndex].get_parent();
-            
-            activeContainer.get_parent().remove_actor(activeContainer);
+        } else {
+            Main.layoutManager._backgroundGroup.remove_actor(activeContainer);
             Main.uiGroup.add_child(activeContainer);
-            
+            // move the keyboard above the area to make it available with text entries
+            this.oldKeyboardIndex = Main.uiGroup.get_children().indexOf(Main.layoutManager.keyboardBox);
+            Main.uiGroup.set_child_above_sibling(Main.layoutManager.keyboardBox, activeContainer);
+        }
+    },
+    
+    toggleModal: function(source) {
+        if (!this.activeArea)
+            return;
+        
+        this.activeArea.closeMenu();
+        
+        if (Main._findModal(this.activeArea) != -1) {
+            Main.popModal(this.activeArea);
+            if (source && source == global.display)
+                this.showOsd(null, 'touchpad-disabled-symbolic', _("Keyboard and pointer released"), null, null, false);
+            setCursor('DEFAULT');
+            this.activeArea.reactive = false;
+            this.removeInternalKeybindings();
+        } else {
             // add Shell.ActionMode.NORMAL to keep system keybindings enabled (e.g. Alt + F2 ...)
-            if (!Main.pushModal(this.areas[currentIndex], { actionMode: DRAWING_ACTION_MODE | Shell.ActionMode.NORMAL }))
-                return;
-            this.activeArea = this.areas[currentIndex];
+            let actionMode = (this.activeArea.isWriting ? WRITING_ACTION_MODE : DRAWING_ACTION_MODE) | Shell.ActionMode.NORMAL;
+            if (!Main.pushModal(this.activeArea, { actionMode: actionMode }))
+                return false;
             this.addInternalKeybindings();
             this.activeArea.reactive = true;
-            this.activeArea.enterDrawingMode();
+            this.activeArea.initPointerCursor();
+            if (source && source == global.display)
+                this.showOsd(null, 'input-touchpad-symbolic', _("Keyboard and pointer grabbed"), null, null, false);
+        }
+        
+        return true;
+    },
+    
+    toggleDrawing: function() {
+        if (this.activeArea) {
+            let activeIndex = this.areas.indexOf(this.activeArea);
+            let save = activeIndex == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
             
-            setCursor('POINTING_HAND');
-            this.osdDisabled = this.settings.get_boolean('osd-disabled');
-            if (!this.osdDisabled) {
-                // increase OSD display time
-                let hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
-                try { OsdWindow.HIDE_TIMEOUT = 2000; } catch(e) { /* HIDE_TIMEOUT is not exported with 'var' */ }
-                Main.osdWindowManager.show(currentIndex, this.enterGicon, _("Press Ctrl + F1 for help") + "\n\n" + _("Entering drawing mode"), null);
-                try { OsdWindow.HIDE_TIMEOUT = hideTimeoutSave; } catch(e) {}
+            this.showOsd(null, this.leaveGicon, _("Leaving drawing mode"));
+            this.activeArea.leaveDrawingMode(save);
+            if (this.hiddenList)
+                this.togglePanelAndDockOpacity();
+            
+            if (Main._findModal(this.activeArea) != -1)
+                this.toggleModal();
+            this.toggleContainer();
+            this.activeArea = null;
+        } else {
+            // avoid to deal with Meta changes (global.display/global.screen)
+            let currentIndex = Main.layoutManager.monitors.indexOf(Main.layoutManager.currentMonitor);
+            this.activeArea = this.areas[currentIndex];
+            this.toggleContainer();
+            if (!this.toggleModal()) {
+                this.toggleContainer();
+                this.activeArea = null;
+                return;
             }
+            
+            this.activeArea.enterDrawingMode();
+            this.osdDisabled = this.settings.get_boolean('osd-disabled');
+            let label = _("<small>Press <i>%s</i> for help</small>").format(this.activeArea.helper.helpKeyLabel) + "\n\n" + _("Entering drawing mode");
+            this.showOsd(null, this.enterGicon, label, null, null, true);
         }
         
         if (this.indicator)
-            this.indicator.sync(this.activeArea != null);
+            this.indicator.sync(Boolean(this.activeArea));
     },
     
-    // use level -1 to set no level (null)
-    showOsd: function(emitter, iconName, label, level) {
-        if (this.osdDisabled)
-            return;
+    updateActionMode: function() {
+        Main.actionMode = (this.activeArea.isWriting ? WRITING_ACTION_MODE : DRAWING_ACTION_MODE) | Shell.ActionMode.NORMAL;
+    },
+    
+    // Use level -1 to set no level through a signal.
+    showOsd: function(emitter, icon, label, color, level, long) {
         let activeIndex = this.areas.indexOf(this.activeArea);
-        if (activeIndex != -1) {
-            let maxLevel;
-            if (level == -1)
-                level = null;
-            else if (level > 100)
-                maxLevel = 2;
+        if (activeIndex == -1 || this.osdDisabled)
+            return;
+        
+        let hideTimeoutSave;
+        if (long && GS_VERSION >= '3.28.0') {
+            hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
+            OsdWindow.HIDE_TIMEOUT = HIDE_TIMEOUT_LONG;
+        }
+        
+        let maxLevel;
+        if (level == -1)
+            level = null;
+        else if (level > 100)
+            maxLevel = 2;
+        
+        // GS 3.32- : bar from 0 to 100
+        // GS 3.34+ : bar from 0 to 1
+        if (level && GS_VERSION > '3.33.0')
+            level = level / 100;
+        
+        if (icon && typeof icon == 'string')
+            icon = new Gio.ThemedIcon({ name: icon });
+        else if (!icon)
+            icon = this.enterGicon;
+        
+        let osdWindow = Main.osdWindowManager._osdWindows[activeIndex];
+        
+        try {
+            if (!this.osdWindowConstraint)
+                this.osdWindowConstraint = new OsdWindowConstraint();
             
-            // GS 3.32- : bar from 0 to 100
-            // GS 3.34+ : bar from 0 to 1
-            if (level && GS_VERSION > '3.33.0')
-                level = level / 100;
-            
-            let icon = iconName && new Gio.ThemedIcon({ name: iconName });
-            Main.osdWindowManager.show(activeIndex, icon || this.enterGicon, label, level, maxLevel);
-            Main.osdWindowManager._osdWindows[activeIndex]._label.get_clutter_text().set_use_markup(true);
-            
-            if (level === 0) {
-                Main.osdWindowManager._osdWindows[activeIndex]._label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
-                // the same label is shared by all GS OSD so the style must be removed after being used
-                let osdLabelChangedHandler = Main.osdWindowManager._osdWindows[activeIndex]._label.connect('notify::text', () => {
-                    Main.osdWindowManager._osdWindows[activeIndex]._label.remove_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
-                    Main.osdWindowManager._osdWindows[activeIndex]._label.disconnect(osdLabelChangedHandler);
+            if (!osdWindow._box.get_constraint(this.osdWindowConstraint.constructor.name)) {
+                osdWindow._box.remove_constraint(osdWindow._boxConstraint);
+                osdWindow._box.add_constraint_with_name(this.osdWindowConstraint.constructor.name, this.osdWindowConstraint);
+                this.osdWindowConstraint._minSize = osdWindow._boxConstraint._minSize;
+                osdWindow._boxConstraintOld = osdWindow._boxConstraint;
+                osdWindow._boxConstraint = this.osdWindowConstraint;
+                let osdConstraintHandler = osdWindow._box.connect('notify::mapped', (box) => {
+                    if (!box.mapped) {
+                        osdWindow._boxConstraint = osdWindow._boxConstraintOld;
+                        osdWindow._boxConstraint._minSize = this.osdWindowConstraint._minSize;
+                        osdWindow._box.remove_constraint(this.osdWindowConstraint);
+                        osdWindow._box.add_constraint(osdWindow._boxConstraint);
+                        osdWindow._box.disconnect(osdConstraintHandler);
+                    }
                 });
             }
+        } catch(e) {
+            logError(e);
         }
+        
+        Main.osdWindowManager.show(activeIndex, icon, label, level, maxLevel);
+        osdWindow._label.get_clutter_text().set_use_markup(true);
+        
+        if (color) {
+            osdWindow._icon.set_style(`color:${color};`);
+            osdWindow._label.set_style(`color:${color};`);
+            let osdColorChangedHandler = osdWindow._label.connect('notify::text', () => {
+                osdWindow._icon.set_style(`color:;`);
+                osdWindow._label.set_style(`color:;`);
+                osdWindow._label.disconnect(osdColorChangedHandler);
+            });
+        }
+        
+        if (level === 0) {
+            osdWindow._label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
+            // the same label is shared by all GS OSD so the style must be removed after being used
+            let osdLabelChangedHandler = osdWindow._label.connect('notify::text', () => {
+                osdWindow._label.remove_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
+                osdWindow._label.disconnect(osdLabelChangedHandler);
+            });
+        }
+        
+        if (hideTimeoutSave)
+            OsdWindow.HIDE_TIMEOUT = hideTimeoutSave;
     },
     
     removeAreas: function() {
         for (let i = 0; i < this.areas.length; i++) {
             let area = this.areas[i];
+            area.disconnect(area.leaveDrawingHandler);
+            area.disconnect(area.updateActionModeHandler);
+            area.disconnect(area.showOsdHandler);
             let container = area.get_parent();
             container.get_parent().remove_actor(container);
-            area.disconnect(area.stopDrawingHandler);
-            area.disconnect(area.showOsdHandler);
-            area.disable();
             container.destroy();
         }
         this.areas = [];
@@ -412,6 +540,7 @@ var AreaManager = new Lang.Class({
         if (this.activeArea)
             this.toggleDrawing();
         Main.wm.removeKeybinding('toggle-drawing');
+        Main.wm.removeKeybinding('toggle-modal');
         Main.wm.removeKeybinding('erase-drawing');
         this.removeAreas();
         if (this.indicator)
@@ -419,7 +548,30 @@ var AreaManager = new Lang.Class({
     }
 });
 
-var DrawingIndicator = new Lang.Class({
+// The same as the original, without forcing a ratio of 1.
+const OsdWindowConstraint = new Lang.Class({
+    Name: 'DrawOnYourScreenOsdWindowConstraint',
+    Extends: OsdWindow.OsdWindowConstraint,
+
+    vfunc_update_allocation: function(actor, actorBox) {
+        // Clutter will adjust the allocation for margins,
+        // so add it to our minimum size
+        let minSize = this._minSize + actor.margin_top + actor.margin_bottom;
+        let [width, height] = actorBox.get_size();
+
+        // DO NOT Enforce a ratio of 1
+        let newWidth = Math.ceil(Math.max(minSize, width, height));
+        let newHeight = Math.ceil(Math.max(minSize, height));
+        actorBox.set_size(newWidth, newHeight);
+
+        // Recenter
+        let [x, y] = actorBox.get_origin();
+        actorBox.set_origin(Math.ceil(x + width / 2 - newWidth / 2),
+                            Math.ceil(y + height / 2 - newHeight / 2));
+    }
+});
+
+const DrawingIndicator = new Lang.Class({
     Name: 'DrawOnYourScreenIndicator',
 
     _init: function() {

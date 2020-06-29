@@ -1,3 +1,24 @@
+v6.1 - June 2020
+=================
+
+* Fix empty media-keys settings case #28
+* Fix label color in OSD and menu #31
+* Fix OSD width
+* Fix "Hide panel and dock"
+* Small menu on small monitor
+* Start a new text line with the `Enter` key #30
+* IBus inputs #29 #34
+* Non-latin and emoji characters rendered
+* GS keyboard is now available to type text
+* Grid overlay
+* Polygon and polyline shapes
+* Move, resize and mirror tools
+* Fill rule and text alignment style attributes
+* An optional fourth control point for Bézier curves
+* Keybinding to toggle modeless/modal #6 #9 #20 #24 #33
+  (ungrabs keyboard and mouse while drawing remains at the top)
+* Attributes are now persistent through drawing mode toggling #27
+
 v6 - March 2020
 =================
 

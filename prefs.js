@@ -20,21 +20,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
-const Mainloop = imports.mainloop;
 
+const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const _GTK = imports.gettext.domain('gtk30').gettext;
 
+const GS_VERSION = Config.PACKAGE_VERSION;
 const MARGIN = 10;
 
 var GLOBAL_KEYBINDINGS = {
     'toggle-drawing': "Enter/leave drawing mode",
+    'toggle-modal': "Grab/ungrab keyboard and pointer",
     'erase-drawing': "Erase all drawings"
 };
 
@@ -44,13 +47,20 @@ var INTERNAL_KEYBINDINGS = {
     'delete-last-element' : "Erase last brushstroke",
     'smooth-last-element': "Smooth last brushstroke",
     '-separator-1': '',
+    'select-none-shape': "Free drawing",
     'select-line-shape': "Select line",
     'select-ellipse-shape': "Select ellipse",
     'select-rectangle-shape': "Select rectangle",
+    'select-polygon-shape': "Select polygon",
+    'select-polyline-shape': "Select polyline",
     'select-text-shape': "Select text",
-    'select-none-shape': "Unselect shape (free drawing)",
-    'toggle-fill': "Toggle fill/stroke",
+    'select-move-tool': "Select move",
+    'select-resize-tool': "Select resize",
+    'select-mirror-tool': "Select mirror",
     '-separator-2': '',
+    'toggle-fill': "Toggle fill/outline",
+    'toggle-fill-rule': "Toggle fill rule",
+    '-separator-3': '',
     'increment-line-width': "Increment line width",
     'decrement-line-width': "Decrement line width",
     'increment-line-width-more': "Increment line width even more",
@@ -58,33 +68,52 @@ var INTERNAL_KEYBINDINGS = {
     'toggle-linejoin': "Change linejoin",
     'toggle-linecap': "Change linecap",
     'toggle-dash': "Dashed line",
-    '-separator-3': '',
+    '-separator-4': '',
     'toggle-font-family': "Change font family (generic name)",
     'toggle-font-weight': "Change font weight",
     'toggle-font-style': "Change font style",
-    '-separator-4': '',
+    'toggle-text-alignment': "Toggle text alignment",
+    '-separator-5': '',
     'toggle-panel-and-dock-visibility': "Hide panel and dock",
     'toggle-background': "Add a drawing background",
+    'toggle-grid': "Add a grid overlay",
     'toggle-square-area': "Square drawing area",
-    '-separator-5': '',
+    '-separator-6': '',
     'open-previous-json': "Open previous drawing",
     'open-next-json': "Open next drawing",
     'save-as-json': "Save drawing",
     'save-as-svg': "Save drawing as a SVG file",
     'open-user-stylesheet': "Edit style",
+    'open-preferences': "Open preferences",
     'toggle-help': "Show help"
 };
 
+if (GS_VERSION < "3.36")
+    delete INTERNAL_KEYBINDINGS['open-preferences'];
+
+function getKeyLabel(accel) {
+    let [keyval, mods] = Gtk.accelerator_parse(accel);
+    return Gtk.accelerator_get_label(keyval, mods);
+}
+
 var OTHER_SHORTCUTS = [
-    { desc: "Draw", shortcut: "Left click" },
-    { desc: "Menu", shortcut: "Right click" },
-    { desc: "Toggle fill/stroke", shortcut: "Center click" },
-    { desc: "Transform shape (when drawing)", shortcut: "Ctrl key" },
-    { desc: "Increment/decrement line width", shortcut: "Scroll" },
-    { desc: "Select color", shortcut: "Ctrl+1...9" },
-    { desc: "Select eraser", shortcut: "Shift key held" },
-    { desc: "Ignore pointer movement", shortcut: "Space key held" },
-    { desc: "Leave", shortcut: "Escape key" }
+    { desc: "Draw", get shortcut() { return _("Left click"); } },
+    { desc: "Menu", get shortcut() { return _("Right click"); } },
+    { desc: "Toggle fill/outline", get shortcut() { return _("Center click"); } },
+    { desc: "Increment/decrement line width", get shortcut() { return _("Scroll"); } },
+    { desc: "Select color", get shortcut() { return _("%s … %s").format(getKeyLabel('<Primary>1'), getKeyLabel('<Primary>9')); } },
+    { desc: "Ignore pointer movement", get shortcut() { return _("%s held").format(getKeyLabel('space')); } },
+    { desc: "Leave", shortcut: getKeyLabel('Escape') },
+    { desc: "-separator-1", shortcut: "" },
+    { desc: "Select eraser <span alpha=\"50%\">(while starting drawing)</span>", shortcut: getKeyLabel('<Shift>') },
+    { desc: "Duplicate <span alpha=\"50%\">(while starting handling)</span>", shortcut: getKeyLabel('<Shift>') },
+    { desc: "Rotate rectangle, polygon, polyline", shortcut: getKeyLabel('<Primary>') },
+    { desc: "Extend circle to ellipse", shortcut: getKeyLabel('<Primary>') },
+    { desc: "Curve line", shortcut: getKeyLabel('<Primary>') },
+    { desc: "Smooth free drawing stroke", shortcut: getKeyLabel('<Primary>') },
+    { desc: "Rotate <span alpha=\"50%\">(while moving)</span>", shortcut: getKeyLabel('<Primary>') },
+    { desc: "Stretch <span alpha=\"50%\">(while resizing)</span>", shortcut: getKeyLabel('<Primary>') },
+    { desc: "Inverse <span alpha=\"50%\">(while mirroring)</span>", shortcut: getKeyLabel('<Primary>') }
 ];
 
 function init() {
@@ -94,7 +123,7 @@ function init() {
 function buildPrefsWidget() {
     let topStack = new TopStack();
     let switcher = new Gtk.StackSwitcher({halign: Gtk.Align.CENTER, visible: true, stack: topStack});
-    Mainloop.timeout_add(0, () => {
+    GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
         let window = topStack.get_toplevel();
         window.resize(720,500);
         let headerBar = window.get_titlebar();
@@ -266,29 +295,13 @@ const PrefsPage = new GObject.Class({
                 continue;
             }
             let otherBox = new Gtk.Box({ margin_left: MARGIN, margin_right: MARGIN });
-            let otherLabel = new Gtk.Label({ label: _(OTHER_SHORTCUTS[i].desc) });
+            let otherLabel = new Gtk.Label({ label: _(OTHER_SHORTCUTS[i].desc), use_markup: true });
             otherLabel.set_halign(1);
-            let otherLabel2 = new Gtk.Label({ label: _(OTHER_SHORTCUTS[i].shortcut) });
+            let otherLabel2 = new Gtk.Label({ label: OTHER_SHORTCUTS[i].shortcut });
             otherBox.pack_start(otherLabel, true, true, 4);
             otherBox.pack_start(otherLabel2, false, false, 4);
             listBox.add(otherBox);
         }
-        
-        let controlBox = new Gtk.Box({ margin: MARGIN, margin_top: 2*MARGIN });
-        let controlLabel = new Gtk.Label({
-            wrap: true,
-            xalign: 0,
-            use_markup: true,
-            label: _("By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you can:\n" +
-                     " . rotate a rectangle or a text area\n" +
-                     " . extend and rotate an ellipse\n" +
-                     " . curve a line (cubic Bezier curve)\n" +
-                     " . smooth a free drawing stroke (you may prefer to smooth the stroke afterward, see <i>“%s”</i>)").format(_("Smooth last brushstroke"))
-        });
-        controlLabel.set_halign(1);
-        controlLabel.get_style_context().add_class('dim-label');
-        controlBox.pack_start(controlLabel, true, true, 4);
-        listBox.add(controlBox);
         
         let internalKeybindingsWidget = new KeybindingsWidget(INTERNAL_KEYBINDINGS, this.settings);
         internalKeybindingsWidget.margin = MARGIN;
@@ -312,7 +325,7 @@ const PrefsPage = new GObject.Class({
             wrap: true,
             xalign: 0,
             use_markup: true,
-            label: _("<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file, " +
+            label: _("When you save elements made with <b>eraser</b> in a <b>SVG</b> file, " +
                      "they are colored with background color, transparent if it is disabled.\n" +
                      "See <i>“%s”</i> or edit the SVG file afterwards.").format(_("Add a drawing background"))
         });

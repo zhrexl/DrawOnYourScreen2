@@ -26,6 +26,11 @@
       <summary>toggle drawing</summary>
       <description>enter or leave drawing mode</description>
     </key>
+    <key type="as" name="toggle-modal">
+      <default>["&lt;Primary&gt;&lt;Alt&gt;&lt;Super&gt;d"]</default>
+      <summary>toggle modeless/modal</summary>
+      <description>toggle modeless/modal</description>
+    </key>
     <key type="as" name="erase-drawing">
       <default>["&lt;Alt&gt;&lt;Super&gt;e"]</default>
       <summary>erase drawing</summary>
@@ -53,8 +58,13 @@
     </key>
     <key type="as" name="toggle-background">
       <default>["&lt;Primary&gt;b"]</default>
-      <summary>toggle background</summary>
-      <description>toggle background</description>
+      <summary>toggle drawing background</summary>
+      <description>toggle drawing background</description>
+    </key>
+    <key type="as" name="toggle-grid">
+      <default>["&lt;Primary&gt;g"]</default>
+      <summary>toggle grid overlay</summary>
+      <description>toggle grid overlay</description>
     </key>
     <key type="as" name="toggle-panel-and-dock-visibility">
       <default>["&lt;Primary&gt;h"]</default>
@@ -76,6 +86,16 @@
       <summary>select rectangle</summary>
       <description>select rectangle</description>
     </key>
+    <key type="as" name="select-polygon-shape">
+      <default>["&lt;Primary&gt;y"]</default>
+      <summary>select polygon</summary>
+      <description>select polygon</description>
+    </key>
+    <key type="as" name="select-polyline-shape">
+      <default>["&lt;Primary&gt;u"]</default>
+      <summary>select polyline</summary>
+      <description>select polyline</description>
+    </key>
     <key type="as" name="select-line-shape">
       <default>["&lt;Primary&gt;l"]</default>
       <summary>select line</summary>
@@ -91,13 +111,28 @@
       <summary>unselect shape (free drawing)</summary>
       <description>unselect shape (free drawing)</description>
     </key>
+    <key type="as" name="select-move-tool">
+      <default>["&lt;Primary&gt;m"]</default>
+      <summary>select move tool</summary>
+      <description>select move tool</description>
+    </key>
+    <key type="as" name="select-resize-tool">
+      <default>["&lt;Primary&gt;x"]</default>
+      <summary>select resize tool</summary>
+      <description>select resize tool</description>
+    </key>
+    <key type="as" name="select-mirror-tool">
+      <default>["&lt;Primary&gt;c"]</default>
+      <summary>select mirror tool</summary>
+      <description>select mirror tool</description>
+    </key>
     <key type="as" name="increment-line-width">
-      <default>["&lt;Primary&gt;KP_Add"]</default>
+      <default><![CDATA[['<Primary>KP_Add','<Primary><Shift>plus']]]></default>
       <summary>increment the line width</summary>
       <description>increment the line width</description>
     </key>
     <key type="as" name="decrement-line-width">
-      <default>["&lt;Primary&gt;KP_Subtract"]</default>
+      <default><![CDATA[['<Primary>KP_Subtract','<Primary>minus','<Primary><Shift>minus']]]></default>
       <summary>decrement the line width</summary>
       <description>decrement the line width</description>
     </key>
@@ -120,6 +155,11 @@
       <default>["&lt;Primary&gt;k"]</default>
       <summary>toggle linecap</summary>
       <description>toggle linecap</description>
+    </key>
+    <key type="as" name="toggle-fill-rule">
+      <default><![CDATA[['<Primary>KP_Multiply','<Primary>asterisk','<Primary><Shift>asterisk']]]></default>
+      <summary>toggle fill rule</summary>
+      <description>toggle fill rule</description>
     </key>
     <key type="as" name="toggle-dash">
       <default>["&lt;Primary&gt;period"]</default>
@@ -191,6 +231,11 @@
       <summary>toggle font style</summary>
       <description>toggle font style</description>
     </key>
+    <key type="as" name="toggle-text-alignment">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;a"]</default>
+      <summary>toggle text alignment</summary>
+      <description>toggle text alignment</description>
+    </key>
     <key type="as" name="open-user-stylesheet">
       <default>["&lt;Primary&gt;o"]</default>
       <summary>open user stylesheet to edit style</summary>
@@ -215,6 +260,11 @@
       <default>["&lt;Primary&gt;Page_Up"]</default>
       <summary>Open next json file</summary>
       <description>Open next json file</description>
+    </key>
+    <key type="as" name="open-preferences">
+      <default>["&lt;Primary&gt;comma"]</default>
+      <summary>Open preferences</summary>
+      <description>Open preferences</description>
     </key>
     <key type="as" name="toggle-help">
       <default>["&lt;Primary&gt;F1"]</default>

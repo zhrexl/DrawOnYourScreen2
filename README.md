@@ -8,6 +8,7 @@ Then save your beautiful work by taking a screenshot.
 ## Features
 
 * Basic shapes (rectangle, circle, ellipse, line, curve, text, free)
+* Basic transformations (move, rotate, resize, stretch, mirror, inverse)
 * Smooth stroke
 * Draw over applications
 * Keep drawings on desktop background with persistence (notes, children's art ...)
@@ -33,7 +34,13 @@ Then save your beautiful work by taking a screenshot.
 
  ![How to draw an arrow](https://framagit.org/abakkk/DrawOnYourScreen/uploads/af8f96d33cfeff49bb922a1ef9f4a4ce/arrow-screencast.webm)
 
+* Duplicate an element:
+
+ Hold the `Shift` key while starting moving.
+ 
+ ![How to duplicate an element](https://framagit.org/abakkk/DrawOnYourScreen/-/raw/ressources/duplicate.webm)
+
 * Screenshot Tool extension:
 
- [Screenshot Tool](https://extensions.gnome.org/extension/1112/screenshot-tool/) is a convenient extension to “create, copy, store and upload screenshots”. To use it while drawing mode is active, toggle the area selection mode thanks to the Screenshot Tool shortcut (`Super + F11` by default, see its preferences) and **hold** the `space` key when selecting the area with pointer to avoid drawing.
+ [Screenshot Tool](https://extensions.gnome.org/extension/1112/screenshot-tool/) is a convenient extension to “create, copy, store and upload screenshots”. In order to select a screenshoot area with your pointer while keeping the drawing in place, you need first to tell DrawOnYourScreen to ungrab the pointer (`Ctrl + Super + Alt + D`).
 

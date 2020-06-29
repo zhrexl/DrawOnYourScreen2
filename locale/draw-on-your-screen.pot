@@ -4,11 +4,13 @@
 # This file is distributed under the same license as Draw On Your Screen.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
+# Some words refer to SVG attributes (font, line, fill rule ...).
+# You are free to translate them or not.
 msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen VERSION\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2020-01-03 08:00+0100\n"
+"POT-Creation-Date: 2019-03-04 16:40+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +18,19 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+msgid "About"
+msgstr ""
+
+# You are free to translate the extension name, that is displayed in About page, or not.
+msgid "Draw On You Screen"
+msgstr ""
+
+msgid "Version %d"
+msgstr ""
+
+msgid "Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot"
+msgstr ""
 
 # Add your name here, for example:
 # (add "\n" as separator if there is many translators)
@@ -32,47 +47,225 @@ msgstr ""
 msgid "translator-credits"
 msgstr ""
 
-#: extension.js
-msgid "Leaving drawing mode"
+msgid "Preferences"
 msgstr ""
 
-msgid "Press Ctrl + F1 for help"
+msgid "Global"
 msgstr ""
 
-msgid "Entering drawing mode"
+msgid "Enter/leave drawing mode"
 msgstr ""
 
-#: draw.js
-msgid "Free drawing"
+# There is a similar text in GNOME Boxes (https://gitlab.gnome.org/GNOME/gnome-boxes/tree/master/po)
+msgid "Grab/ungrab keyboard and pointer"
 msgstr ""
 
-msgid "Line"
+msgid "Erase all drawings"
 msgstr ""
 
-msgid "Ellipse"
+msgid "Persistent"
 msgstr ""
 
-msgid "Rectangle"
+msgid "Persistent drawing through session restart"
 msgstr ""
 
-msgid "Text"
+msgid "Drawing on the desktop"
 msgstr ""
 
-msgid "Fill"
+msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
 msgstr ""
 
-msgid "Stroke"
+msgid "Disable on-screen notifications"
 msgstr ""
 
-msgid "Dashed line"
+msgid "Disable panel indicator"
 msgstr ""
 
-msgid "Full line"
+msgid "Draw"
+msgstr ""
+
+msgid "Left click"
+msgstr ""
+
+msgid "Menu"
+msgstr ""
+
+msgid "Right click"
+msgstr ""
+
+msgid "Center click"
+msgstr ""
+
+msgid "Increment/decrement line width"
+msgstr ""
+
+msgid "Scroll"
+msgstr ""
+
+msgid "Select color"
+msgstr ""
+
+# %s are key labels (Ctrl+F1 and Ctrl+F9)
+msgid "%s … %s"
+msgstr ""
+
+msgid "Ignore pointer movement"
+msgstr ""
+
+# %s is a key label
+msgid "%s held"
+msgstr ""
+
+msgid "Leave"
+msgstr ""
+
+msgid "Select eraser <span alpha=\"50%\">(while starting drawing)</span>"
+msgstr ""
+
+msgid "Duplicate <span alpha=\"50%\">(while starting handling)</span>"
+msgstr ""
+
+msgid "Rotate rectangle, polygon, polyline"
+msgstr ""
+
+msgid "Extend circle to ellipse"
+msgstr ""
+
+msgid "Curve line"
+msgstr ""
+
+msgid "Smooth free drawing stroke"
+msgstr ""
+
+msgid "Rotate <span alpha=\"50%\">(while moving)</span>"
+msgstr ""
+
+msgid "Stretch <span alpha=\"50%\">(while resizing)</span>"
+msgstr ""
+
+msgid "Inverse <span alpha=\"50%\">(while mirroring)</span>"
+msgstr ""
+
+msgid "Internal"
+msgstr ""
+
+msgid "(in drawing mode)"
+msgstr ""
+
+msgid "Undo last brushstroke"
+msgstr ""
+
+msgid "Redo last brushstroke"
+msgstr ""
+
+msgid "Erase last brushstroke"
+msgstr ""
+
+msgid "Smooth last brushstroke"
+msgstr ""
+
+msgid "Select line"
+msgstr ""
+
+msgid "Select ellipse"
+msgstr ""
+
+msgid "Select rectangle"
+msgstr ""
+
+msgid "Select polygon"
+msgstr ""
+
+msgid "Select polyline"
+msgstr ""
+
+msgid "Select text"
+msgstr ""
+
+msgid "Select move"
+msgstr ""
+
+msgid "Select resize"
+msgstr ""
+
+msgid "Select mirror"
+msgstr ""
+
+msgid "Toggle fill/stroke"
+msgstr ""
+
+msgid "Increment line width"
+msgstr ""
+
+msgid "Decrement line width"
+msgstr ""
+
+msgid "Increment line width even more"
+msgstr ""
+
+msgid "Decrement line width even more"
+msgstr ""
+
+msgid "Change linejoin"
+msgstr ""
+
+msgid "Change linecap"
+msgstr ""
+
+msgid "Toggle fill rule"
+msgstr ""
+
+msgid "Change font family (generic name)"
+msgstr ""
+
+msgid "Change font weight"
+msgstr ""
+
+msgid "Change font style"
+msgstr ""
+
+msgid "Toggle text alignment"
+msgstr ""
+
+msgid "Hide panel and dock"
+msgstr ""
+
+msgid "Add a drawing background"
+msgstr ""
+
+msgid "Add a grid overlay"
+msgstr ""
+
+msgid "Square drawing area"
+msgstr ""
+
+msgid "Open previous drawing"
+msgstr ""
+
+msgid "Open next drawing"
+msgstr ""
+
+msgid "Save drawing as a SVG file"
+msgstr ""
+
+msgid "Edit style"
+msgstr ""
+
+msgid "Open preferences"
+msgstr ""
+
+msgid "Show help"
 msgstr ""
 
 msgid ""
-"Type your text\n"
-"and press Enter"
+"<b>Default</b> drawing style attributes (color palette, font, line, dash) are defined in an editable <b>css</b> file.\n"
+"See <i>“%s”</i>."
+msgstr ""
+
+msgid ""
+"When you save elements made with <b>eraser</b> in a <b>SVG</b> file, "
+"they are colored with background color, transparent if it is disabled.\n"
+"See <i>“%s”</i> or edit the SVG file afterwards."
 msgstr ""
 
 msgid "Screenshot"
@@ -102,10 +295,145 @@ msgstr ""
 msgid "Smooth"
 msgstr ""
 
-msgid "Dashed"
+msgid "Free drawing"
+msgstr ""
+
+msgid "Line"
+msgstr ""
+
+msgid "Ellipse"
+msgstr ""
+
+msgid "Rectangle"
+msgstr ""
+
+msgid "Text"
+msgstr ""
+
+msgid "Polygon"
+msgstr ""
+
+msgid "Polyline"
+msgstr ""
+
+msgid "Move"
+msgstr ""
+
+msgid "Resize"
+msgstr ""
+
+msgid "Mirror"
 msgstr ""
 
 msgid "Color"
+msgstr ""
+
+msgid "Fill"
+msgstr ""
+
+# fill-rule SVG attribute
+msgid "Evenodd"
+msgstr ""
+
+msgid "%d px"
+msgstr ""
+
+# stroke-linejoin SVG attribute
+msgid "Miter"
+msgstr ""
+
+# stroke-linejoin and stroke-linecap SVG attribute
+msgid "Round"
+msgstr ""
+
+# stroke-linejoin SVG attribute
+msgid "Bevel"
+msgstr ""
+
+# stroke-linecap SVG attribute
+msgid "Butt"
+msgstr ""
+
+# stroke-linecap SVG attribute
+msgid "Square"
+msgstr ""
+
+msgid "Dashed"
+msgstr ""
+
+# generic font-family SVG attribute
+msgid "Sans-Serif"
+msgstr ""
+
+# generic font-family SVG attribute
+msgid "Serif"
+msgstr ""
+
+# generic font-family SVG attribute
+msgid "Monospace"
+msgstr ""
+
+# generic font-family SVG attribute
+msgid "Cursive"
+msgstr ""
+
+# generic font-family SVG attribute
+msgid "Fantasy"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Thin"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Ultra-light"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Light"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Semi-light"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Book"
+msgstr ""
+
+# font-weight and font-style SVG attribute
+msgid "Normal"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Medium"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Semi-bold"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Bold"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Ultra-bold"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Heavy"
+msgstr ""
+
+# font-style SVG attribute
+msgid "Italic"
+msgstr ""
+
+# font-style SVG attribute
+msgid "Oblique"
+msgstr ""
+
+msgid "Right aligned"
 msgstr ""
 
 msgid "Open drawing"
@@ -114,272 +442,59 @@ msgstr ""
 msgid "Save drawing"
 msgstr ""
 
-#: prefs.js
-
-msgid "Preferences"
+msgid "Leaving drawing mode"
 msgstr ""
 
-msgid "About"
+# %s is a key label
+msgid "<small>Press <i>%s</i> for help</small>"
 msgstr ""
 
-# GLOBAL_KEYBINDINGS
-
-msgid "Enter/leave drawing mode"
+msgid "Entering drawing mode"
 msgstr ""
 
-msgid "Erase all drawings"
+# "released" as the opposite of "grabbed"
+msgid "Keyboard and pointer released"
 msgstr ""
 
-# INTERNAL_KEYBINDINGS
-
-msgid "Undo last brushstroke"
+msgid "Keyboard and pointer grabbed"
 msgstr ""
 
-msgid "Redo last brushstroke"
-msgstr ""
-
-msgid "Erase last brushstroke"
-msgstr ""
-
-msgid "Smooth last brushstroke"
-msgstr ""
-
-msgid "Select line"
-msgstr ""
-
-msgid "Select ellipse"
-msgstr ""
-
-msgid "Select rectangle"
-msgstr ""
-
-msgid "Select text"
-msgstr ""
-
-msgid "Unselect shape (free drawing)"
-msgstr ""
-
-msgid "Toggle fill/stroke"
-msgstr ""
-
-msgid "Increment line width"
-msgstr ""
-
-msgid "Decrement line width"
-msgstr ""
-
-msgid "Increment line width even more"
-msgstr ""
-
-msgid "Decrement line width even more"
-msgstr ""
-
-msgid "Change linejoin"
-msgstr ""
-
-msgid "Change linecap"
-msgstr ""
-
-# already in draw.js
-#msgid "Dashed line"
-#msgstr ""
-
-msgid "Change font family (generic name)"
-msgstr ""
-
-msgid "Change font weight"
-msgstr ""
-
-msgid "Change font style"
-msgstr ""
-
-msgid "Hide panel and dock"
-msgstr ""
-
-msgid "Add a drawing background"
-msgstr ""
-
-msgid "Square drawing area"
-msgstr ""
-
-msgid "Open previous drawing"
-msgstr ""
-
-msgid "Open next drawing"
-msgstr ""
-
-# already in draw.js
-#msgid "Save drawing"
-#msgstr ""
-
-msgid "Save drawing as a SVG file"
-msgstr ""
-
-msgid "Edit style"
-msgstr ""
-
-msgid "Show help"
-msgstr ""
-
-# OTHER_SHORTCUTS
-
-msgid "Draw"
-msgstr ""
-
-msgid "Left click"
-msgstr ""
-
-msgid "Menu"
-msgstr ""
-
-msgid "Right click"
-msgstr ""
-
-msgid "Center click"
-msgstr ""
-
-msgid "Transform shape (when drawing)"
-msgstr ""
-
-msgid "Ctrl key"
-msgstr ""
-
-msgid "Increment/decrement line width"
-msgstr ""
-
-msgid "Scroll"
-msgstr ""
-
-msgid "Select color"
-msgstr ""
-
-msgid "Ctrl+1...9"
-msgstr ""
-
-msgid "Select eraser"
-msgstr ""
-
-msgid "Shift key held"
-msgstr ""
-
-msgid "Ignore pointer movement"
-msgstr ""
-
-msgid "Space key held"
-msgstr ""
-
-msgid "Leave"
-msgstr ""
-
-msgid "Escape key"
-msgstr ""
-
-# About page
-
-# you are free to translate the extension name
-#msgid "Draw On You Screen"
-#msgstr ""
-
-msgid "Version %d"
-msgstr ""
-
-msgid "Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot"
-msgstr ""
-
-# Prefs page
-
-msgid "Global"
-msgstr ""
-
-msgid "Persistent"
-msgstr ""
-
-msgid "Persistent drawing through session restart"
-msgstr ""
-
-msgid "Drawing on the desktop"
-msgstr ""
-
-msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
-msgstr ""
-
-msgid "Disable on-screen notifications"
-msgstr ""
-
-msgid "Disable panel indicator"
-msgstr ""
-
-msgid "Internal"
-msgstr ""
-
-msgid "(in drawing mode)"
-msgstr ""
-
+# %s is a key label
 msgid ""
-"By pressing <b>Ctrl</b> key <b>during</b> the drawing process, you can:\n"
-" . rotate a rectangle or a text area\n"
-" . extend and rotate an ellipse\n"
-" . curve a line (cubic Bezier curve)\n"
-" . smooth a free drawing stroke (you may prefer to smooth the stroke afterward, see <i>“%s”</i>)"
+"Press <i>%s</i> to get\n"
+"a fourth control point"
 msgstr ""
 
+msgid "Mark a point of symmetry"
+msgstr ""
+
+msgid "Draw a line of symmetry"
+msgstr ""
+
+# %s is a key label
 msgid ""
-"<b>Default</b> drawing style attributes (color palette, font, line, dash) are defined in an editable <b>css</b> file.\n"
-"See <i>“%s”</i>."
+"Press <i>%s</i> to mark vertices"
 msgstr ""
 
+# %s is a key label
 msgid ""
-"<u>Note</u>: When you save elements made with <b>eraser</b> in a <b>SVG</b> file, "
-"they are colored with background color, transparent if it is disabled.\n"
-"See <i>“%s”</i> or edit the SVG file afterwards."
+"Type your text and press <i>%s</i>"
 msgstr ""
 
+# as the alternative to "Fill"
+msgid "Outline"
+msgstr ""
 
-# The following words refer to SVG attributes.
-# You are free to translate them or not.
+msgid "Dashed line"
+msgstr ""
 
-#msgid "Butt"
-#msgstr ""
+msgid "Full line"
+msgstr ""
 
-#msgid "Round"
-#msgstr ""
+msgid "Left aligned"
+msgstr ""
 
-#msgid "Square"
-#msgstr ""
+msgid "Nonzero"
+msgstr ""
 
-#msgid "Miter"
-#msgstr ""
-
-#msgid "Bevel"
-#msgstr ""
-
-#msgid "Normal"
-#msgstr ""
-
-#msgid "Bold"
-#msgstr ""
-
-#msgid "Italic"
-#msgstr ""
-
-#msgid "Oblique"
-#msgstr ""
-
-#msgid "Sans-Serif"
-#msgstr ""
-
-#msgid "Serif"
-#msgstr ""
-
-#msgid "Monospace"
-#msgstr ""
-
-#msgid "Cursive"
-#msgstr ""
-
-#msgid "Fantasy"
-#msgstr ""
-
-#msgid "px"
-#msgstr ""
 
