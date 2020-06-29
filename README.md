@@ -8,6 +8,7 @@ Then save your beautiful work by taking a screenshot.
 ## Features
 
 * Basic shapes (rectangle, circle, ellipse, line, curve, text, free)
+* Basic transformations (move, rotate, resize, stretch, mirror, inverse)
 * Smooth stroke
 * Draw over applications
 * Keep drawings on desktop background with persistence (notes, children's art ...)
