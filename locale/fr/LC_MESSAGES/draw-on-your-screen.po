@@ -1,0 +1,519 @@
+# <language> translations for Draw On Your Screen.
+# Copyright (C) 2019 Listed translators
+#
+# This file is distributed under the same license as Draw On Your Screen.
+# Abakkk, 2020.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Draw On Your Screen 6.1\n"
+"Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
+"POT-Creation-Date: 2019-03-04 16:40+0100\n"
+"PO-Revision-Date: 2020-06-28 17:29+0200\n"
+"Last-Translator: Abakkk\n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 2.3\n"
+
+msgid "About"
+msgstr "À propos"
+
+# You are free to translate the extension name, that is displayed in About page, or not.
+msgid "Draw On You Screen"
+msgstr "Dessine Sur Ton Écran"
+
+msgid "Version %d"
+msgstr "Version %d"
+
+msgid ""
+"Start drawing with Super+Alt+D and save your beautiful work by taking a "
+"screenshot"
+msgstr ""
+"Commence à dessiner avec Super+Alt+D et sauvegarde ton beau travail en "
+"faisant une capture d’écran"
+
+# Add your name here, for example:
+# (add "\n" as separator if there is many translators)
+# msgid "translator-credits"
+# msgstr "Me"
+# or, with mail:
+# msgid "translator-credits"
+# msgstr "<a href=\"mailto:me@mail.org\">Me</a>"
+# or, with page:
+# msgid "translator-credits"
+# msgstr "<a href=\"https://...\">Me</a>"
+# else keep it empty.
+# It will be displayed in about page
+msgid "translator-credits"
+msgstr "<a href=\"https://framagit.org/abakkk\">Abakkk</a>"
+
+msgid "Preferences"
+msgstr "Préférences"
+
+msgid "Global"
+msgstr "Global"
+
+msgid "Enter/leave drawing mode"
+msgstr "Entrer/sortir du mode dessin"
+
+# There is a similar text in GNOME Boxes (https://gitlab.gnome.org/GNOME/gnome-boxes/tree/master/po)
+msgid "Grab/ungrab keyboard and pointer"
+msgstr "Saisir/libérer le clavier et le pointeur"
+
+msgid "Erase all drawings"
+msgstr "Effacer tous les dessins"
+
+msgid "Persistent"
+msgstr "Persistant"
+
+msgid "Persistent drawing through session restart"
+msgstr "Dessin persistant au redémarrage de la session"
+
+msgid "Drawing on the desktop"
+msgstr "Dessin sur le bureau"
+
+msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
+msgstr "<i>Dessine Sur Ton Écran</i> deviens <i>Dessine Sur Ton Bureau</i>"
+
+msgid "Disable on-screen notifications"
+msgstr "Désactiver les notifications à l’écran"
+
+msgid "Disable panel indicator"
+msgstr "Désactiver l’indicateur du panneau"
+
+msgid "Draw"
+msgstr "Dessiner"
+
+msgid "Left click"
+msgstr "Clic gauche"
+
+msgid "Menu"
+msgstr "Menu"
+
+msgid "Right click"
+msgstr "Clic droit"
+
+msgid "Center click"
+msgstr "Clic du milieu"
+
+msgid "Increment/decrement line width"
+msgstr "Augmenter/diminuer l’épaisseur du trait"
+
+msgid "Scroll"
+msgstr "Molette"
+
+msgid "Select color"
+msgstr "Sélectionner une couleur"
+
+# %s are key labels (Ctrl+F1 and Ctrl+F9)
+msgid "%s … %s"
+msgstr "%s … %s"
+
+msgid "Ignore pointer movement"
+msgstr "Ignorer le déplacement du pointeur"
+
+# %s is a key label
+msgid "%s held"
+msgstr "%s tenu"
+
+msgid "Leave"
+msgstr "Quitter"
+
+msgid "Select eraser <span alpha=\"50%\">(while starting drawing)</span>"
+msgstr ""
+"Sélectionner la gomme <span alpha=\"50%\">(en commençant à dessiner)</span>"
+
+msgid "Duplicate <span alpha=\"50%\">(while starting handling)</span>"
+msgstr "Dupliquer <span alpha=\"50%\">(en commençant à manipuler)</span>"
+
+msgid "Rotate rectangle, polygon, polyline"
+msgstr "Faire pivoter un rectangle, un polygone ou une ligne brisée"
+
+msgid "Extend circle to ellipse"
+msgstr "Étirer un cercle en ellipse"
+
+msgid "Curve line"
+msgstr "Courber une ligne"
+
+msgid "Smooth free drawing outline"
+msgstr "Lisser le contour d’un tracé libre"
+
+msgid "Rotate <span alpha=\"50%\">(while moving)</span>"
+msgstr "Faire pivoter <span alpha=\"50%\">(lors d’un déplacement)</span>"
+
+msgid "Stretch <span alpha=\"50%\">(while resizing)</span>"
+msgstr "Étirer <span alpha=\"50%\">(lors d’un redimensionnement)</span>"
+
+msgid "Inverse <span alpha=\"50%\">(while mirroring)</span>"
+msgstr "Inverser <span alpha=\"50%\">(lors d’une réflexion)</span>"
+
+msgid "Internal"
+msgstr "Interne"
+
+msgid "(in drawing mode)"
+msgstr "(dans le mode dessin)"
+
+msgid "Undo last brushstroke"
+msgstr "Retirer le dernier tracé"
+
+msgid "Redo last brushstroke"
+msgstr "Rétablir le dernier tracé"
+
+msgid "Erase last brushstroke"
+msgstr "Effacer le dernier tracé"
+
+msgid "Smooth last brushstroke"
+msgstr "Lisser le dernier tracé"
+
+msgid "Select line"
+msgstr "Sélectionner l’outil ligne"
+
+msgid "Select ellipse"
+msgstr "Sélectionner l’outil ellipse"
+
+msgid "Select rectangle"
+msgstr "Sélectionner l’outil rectangle"
+
+msgid "Select polygon"
+msgstr "Sélectionner l’outil polygone"
+
+msgid "Select polyline"
+msgstr "Sélectionner l’outil ligne brisée"
+
+msgid "Select text"
+msgstr "Sélectionner l’outil texte"
+
+msgid "Select move"
+msgstr "Sélectionner l’outil déplacement"
+
+msgid "Select resize"
+msgstr "Sélectionner l’outil redimensionnement"
+
+msgid "Select mirror"
+msgstr "Sélectionner l’outil miroir"
+
+msgid "Toggle fill/outline"
+msgstr "Alterner remplissage/contour"
+
+msgid "Increment line width"
+msgstr "Augmenter l’épaisseur du trait"
+
+msgid "Decrement line width"
+msgstr "Diminuer l’épaisseur du trait"
+
+msgid "Increment line width even more"
+msgstr "Augmenter encore plus l’épaisseur du trait"
+
+msgid "Decrement line width even more"
+msgstr "Diminuer encore plus l’épaisseur du trait"
+
+msgid "Change linejoin"
+msgstr "Modifier la jointure des segments de ligne"
+
+msgid "Change linecap"
+msgstr "Modifier la forme de l’extrémité des lignes"
+
+msgid "Toggle fill rule"
+msgstr "Alterner la règle de remplissage"
+
+msgid "Change font family (generic name)"
+msgstr "Changer de police (noms génériques)"
+
+msgid "Change font weight"
+msgstr "Changer de graisse de police"
+
+msgid "Change font style"
+msgstr "Changer de style de police"
+
+msgid "Toggle text alignment"
+msgstr "Alterner l’alignement du texte"
+
+msgid "Hide panel and dock"
+msgstr "Cacher le panneau et le dock"
+
+msgid "Add a drawing background"
+msgstr "Ajouter une couleur de fond au dessin"
+
+msgid "Add a grid overlay"
+msgstr "Ajouter une grille en surcouche"
+
+msgid "Square drawing area"
+msgstr "Rendre la zone de dessin carrée"
+
+msgid "Open previous drawing"
+msgstr "Ouvrir le dessin précédent"
+
+msgid "Open next drawing"
+msgstr "Ouvrir le dessin suivant"
+
+msgid "Save drawing as a SVG file"
+msgstr "Enregistrer le dessin comme un fichier SVG"
+
+msgid "Edit style"
+msgstr "Modifier le style"
+
+msgid "Open preferences"
+msgstr "Ouvrir les préférences"
+
+msgid "Show help"
+msgstr "Afficher l’aide"
+
+msgid ""
+"<b>Default</b> drawing style attributes (color palette, font, line, dash) "
+"are defined in an editable <b>css</b> file.\n"
+"See <i>“%s”</i>."
+msgstr ""
+"Les attributs de style <b>par défault</b> (palette de couleurs, police, "
+"contour, pointillés) sont définis dans un fichier <b>css</b> modifiable.\n"
+"Voir <i>“%s”</i>."
+
+msgid ""
+"When you save elements made with <b>eraser</b> in a <b>SVG</b> file, they "
+"are colored with background color, transparent if it is disabled.\n"
+"See <i>“%s”</i> or edit the SVG file afterwards."
+msgstr ""
+"Quand vous exportez des éléments fais à la <b>gomme</b> dans un fichier "
+"<b>SVG</b>, ils prennent la couleur de fond du dessin, transparente si il "
+"n’y en a pas.\n"
+"Voir <i>“%s”</i> ou bien modifier le fichier SVG ultérieurement."
+
+msgid "Screenshot"
+msgstr "Capture d’écran"
+
+msgid "Screenshot to clipboard"
+msgstr "Capture d’écran vers le presse-papiers"
+
+msgid "Area screenshot"
+msgstr "Capture de la zone"
+
+msgid "Area screenshot to clipboard"
+msgstr "Capture de la zone vers le presse-papiers"
+
+msgid "System"
+msgstr "Système"
+
+msgid "Undo"
+msgstr "Retirer"
+
+msgid "Redo"
+msgstr "Rétablir"
+
+msgid "Erase"
+msgstr "Effacer"
+
+msgid "Smooth"
+msgstr "Lisser"
+
+msgid "Free drawing"
+msgstr "Dessin libre"
+
+msgid "Line"
+msgstr "Ligne"
+
+msgid "Ellipse"
+msgstr "Ellipse"
+
+msgid "Rectangle"
+msgstr "Rectangle"
+
+msgid "Text"
+msgstr "Texte"
+
+msgid "Polygon"
+msgstr "Polygone"
+
+msgid "Polyline"
+msgstr "Ligne brisée"
+
+msgid "Move"
+msgstr "Déplacer"
+
+msgid "Resize"
+msgstr "Redimensionner"
+
+msgid "Mirror"
+msgstr "Miroir"
+
+msgid "Color"
+msgstr "Couleur"
+
+msgid "Fill"
+msgstr "Remplir"
+
+# fill-rule SVG attribute
+msgid "Evenodd"
+msgstr "Evenodd"
+
+msgid "%d px"
+msgstr "%d px"
+
+# stroke-linejoin SVG attribute
+msgid "Miter"
+msgstr "Pointu"
+
+# stroke-linejoin and stroke-linecap SVG attribute
+msgid "Round"
+msgstr "Arrondi"
+
+# stroke-linejoin SVG attribute
+msgid "Bevel"
+msgstr "Biseauté"
+
+# stroke-linecap SVG attribute
+msgid "Butt"
+msgstr "Net"
+
+# stroke-linecap SVG attribute
+msgid "Square"
+msgstr "Carré"
+
+msgid "Dashed"
+msgstr "En pointillés"
+
+# generic font-family SVG attribute
+msgid "Sans-Serif"
+msgstr ""
+
+# generic font-family SVG attribute
+msgid "Serif"
+msgstr ""
+
+# generic font-family SVG attribute
+msgid "Monospace"
+msgstr ""
+
+# generic font-family SVG attribute
+msgid "Cursive"
+msgstr ""
+
+# generic font-family SVG attribute
+msgid "Fantasy"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Thin"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Ultra-light"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Light"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Semi-light"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Book"
+msgstr ""
+
+# font-weight and font-style SVG attribute
+msgid "Normal"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Medium"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Semi-bold"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Bold"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Ultra-bold"
+msgstr ""
+
+# font-weight SVG attribute
+msgid "Heavy"
+msgstr ""
+
+# font-style SVG attribute
+msgid "Italic"
+msgstr ""
+
+# font-style SVG attribute
+msgid "Oblique"
+msgstr ""
+
+msgid "Right aligned"
+msgstr "Aligné à droite"
+
+msgid "Open drawing"
+msgstr "Ouvrir un dessin"
+
+msgid "Save drawing"
+msgstr "Enregister le dessin"
+
+msgid "Leaving drawing mode"
+msgstr "Sortie du mode dessin"
+
+# %s is a key label
+msgid "<small>Press <i>%s</i> for help</small>"
+msgstr ""
+"<small>Appuyez sur <i>%s</i>\n"
+"pour accéder à l’aide</small>"
+
+msgid "Entering drawing mode"
+msgstr "Entrée dans le mode dessin"
+
+# "released" as the opposite of "grabbed"
+msgid "Keyboard and pointer released"
+msgstr "Clavier et pointeur libérés"
+
+msgid "Keyboard and pointer grabbed"
+msgstr "Clavier et pointeur saisis"
+
+# %s is a key label
+msgid ""
+"Press <i>%s</i> to get\n"
+"a fourth control point"
+msgstr ""
+"Appuyez sur <i>%s</i> pour avoir\n"
+"un quatrième point de contrôle"
+
+msgid "Mark a point of symmetry"
+msgstr "Marquez un centre de symétrie"
+
+msgid "Draw a line of symmetry"
+msgstr "Tracez un axe de symétrie"
+
+# %s is a key label
+msgid "Press <i>%s</i> to mark vertices"
+msgstr ""
+"Appuyez sur <i>%s</i> \n"
+"pour marquer un sommet"
+
+# %s is a key label
+msgid "Type your text and press <i>%s</i>"
+msgstr ""
+"Saisissez votre texte\n"
+"et appuyez sur <i>%s</i>"
+
+# as the alternative to "Fill"
+msgid "Outline"
+msgstr "Contour"
+
+msgid "Dashed line"
+msgstr "Ligne en pointillés"
+
+msgid "Full line"
+msgstr "Ligne pleine"
+
+msgid "Left aligned"
+msgstr "Aligné à gauche"
+
+msgid "Nonzero"
+msgstr ""
+
+
