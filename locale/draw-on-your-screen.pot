@@ -134,7 +134,7 @@ msgstr ""
 msgid "Curve line"
 msgstr ""
 
-msgid "Smooth free drawing stroke"
+msgid "Smooth free drawing outline"
 msgstr ""
 
 msgid "Rotate <span alpha=\"50%\">(while moving)</span>"
@@ -191,7 +191,7 @@ msgstr ""
 msgid "Select mirror"
 msgstr ""
 
-msgid "Toggle fill/stroke"
+msgid "Toggle fill/outline"
 msgstr ""
 
 msgid "Increment line width"

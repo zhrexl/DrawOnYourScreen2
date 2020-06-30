@@ -110,7 +110,7 @@ var OTHER_SHORTCUTS = [
     { desc: "Rotate rectangle, polygon, polyline", shortcut: getKeyLabel('<Primary>') },
     { desc: "Extend circle to ellipse", shortcut: getKeyLabel('<Primary>') },
     { desc: "Curve line", shortcut: getKeyLabel('<Primary>') },
-    { desc: "Smooth free drawing stroke", shortcut: getKeyLabel('<Primary>') },
+    { desc: "Smooth free drawing outline", shortcut: getKeyLabel('<Primary>') },
     { desc: "Rotate <span alpha=\"50%\">(while moving)</span>", shortcut: getKeyLabel('<Primary>') },
     { desc: "Stretch <span alpha=\"50%\">(while resizing)</span>", shortcut: getKeyLabel('<Primary>') },
     { desc: "Inverse <span alpha=\"50%\">(while mirroring)</span>", shortcut: getKeyLabel('<Primary>') }
