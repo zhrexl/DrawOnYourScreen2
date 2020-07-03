@@ -20,16 +20,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const ByteArray = imports.byteArray;
-const Cairo = imports.cairo;
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
-const Pango = imports.gi.Pango;
-const PangoCairo = imports.gi.PangoCairo;
 const St = imports.gi.St;
 
 const BoxPointer = imports.ui.boxpointer;
@@ -37,21 +33,14 @@ const Config = imports.misc.config;
 const Main = imports.ui.main;
 const PopupMenu = imports.ui.popupMenu;
 const Slider = imports.ui.slider;
-const Screenshot = imports.ui.screenshot;
-const Tweener = imports.ui.tweener;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
+const Draw = Me.imports.draw;
 const Extension = Me.imports.extension;
-const Prefs = Me.imports.prefs;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
-const CAIRO_DEBUG_EXTENDS = false;
-const SVG_DEBUG_EXTENDS = false;
-const SVG_DEBUG_SUPERPOSES_CAIRO = false;
-const TEXT_CURSOR_TIME = 600; // ms
 
 const ICON_DIR = Me.dir.get_child('data').get_child('icons');
 const COLOR_ICON_PATH = ICON_DIR.get_child('color-symbolic.svg').get_path();
@@ -64,71 +53,11 @@ const FILLRULE_EVENODD_ICON_PATH = ICON_DIR.get_child('fillrule-evenodd-symbolic
 const DASHED_LINE_ICON_PATH = ICON_DIR.get_child('dashed-line-symbolic.svg').get_path();
 const FULL_LINE_ICON_PATH = ICON_DIR.get_child('full-line-symbolic.svg').get_path();
 
-const reverseEnumeration = function(obj) {
-    let reversed = {};
-    Object.keys(obj).forEach(key => {
-        reversed[obj[key]] = key.slice(0,1) + key.slice(1).toLowerCase().replace('_', '-');
-    });
-    return reversed;
-};
-
-const Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
-const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
-var   Tools = Object.assign({}, Shapes, Manipulations);
-const Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
-const ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move", 101: "Resize", 102: "Mirror" };
-const LineCapNames = Object.assign(reverseEnumeration(Cairo.LineCap), { 2: 'Square' });
-const LineJoinNames = reverseEnumeration(Cairo.LineJoin);
-const FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
-const FontGenericNames = {  0: 'Theme', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
-const FontWeightNames = Object.assign(reverseEnumeration(Pango.Weight), { 200: "Ultra-light", 350: "Semi-light", 600: "Semi-bold", 800: "Ultra-bold" });
-delete FontWeightNames[Pango.Weight.ULTRAHEAVY];
-const FontStyleNames = reverseEnumeration(Pango.Style);
-const FontStretchNames = reverseEnumeration(Pango.Stretch);
-const FontVariantNames = reverseEnumeration(Pango.Variant);
-
-const getDateString = function() {
-    let date = GLib.DateTime.new_now_local();
-    return `${date.format("%F")} ${date.format("%X")}`;
-};
-
-const getJsonFiles = function() {
-    let directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir']]));
-    
-    let enumerator;
-    try {
-        enumerator = directory.enumerate_children('standard::name,standard::display-name,standard::content-type,time::modified', Gio.FileQueryInfoFlags.NONE, null);
-    } catch(e) {
-        return [];
-    }
-    
-    let jsonFiles = [];
-    let fileInfo = enumerator.next_file(null);
-    while (fileInfo) {
-        if (fileInfo.get_content_type().indexOf('json') != -1 && fileInfo.get_name() != `${Me.metadata['persistent-file-name']}.json`) {
-            let file = enumerator.get_child(fileInfo);
-            jsonFiles.push({ name: fileInfo.get_name().slice(0, -5),
-                             displayName: fileInfo.get_display_name().slice(0, -5),
-                             // fileInfo.get_modification_date_time: Gio 2.62+
-                             modificationUnixTime: fileInfo.get_attribute_uint64('time::modified'),
-                             delete: () => file.delete(null) });
-        }
-        fileInfo = enumerator.next_file(null);
-    }
-    enumerator.close(null);
-    
-    jsonFiles.sort((a, b) => {
-        return b.modificationUnixTime - a.modificationUnixTime;
-    });
-    
-    return jsonFiles;
-};
-
 const getActor = function(object) {
     return GS_VERSION < '3.33.0' ? object.actor : object;
 };
 
-const DrawingMenu = new Lang.Class({
+var DrawingMenu = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingMenu',
     
     _init: function(area, monitor) {
@@ -224,7 +153,7 @@ const DrawingMenu = new Lang.Class({
         this.menu.addAction(_("Smooth"), this.area.smoothLastElement.bind(this.area), 'format-text-strikethrough-symbolic');
         this._addSeparator(this.menu);
         
-        this._addSubMenuItem(this.menu, 'document-edit-symbolic', ToolNames, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
+        this._addSubMenuItem(this.menu, 'document-edit-symbolic', Draw.ToolNames, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
         this._addColorSubMenuItem(this.menu);
         this.fillItem = this._addSwitchItem(this.menu, _("Fill"), this.strokeIcon, this.fillIcon, this.area, 'fill', this._updateSectionVisibility.bind(this));
         this.fillSection = new PopupMenu.PopupMenuSection();
@@ -235,8 +164,8 @@ const DrawingMenu = new Lang.Class({
         
         let lineSection = new PopupMenu.PopupMenuSection();
         this._addSliderItem(lineSection, this.area, 'currentLineWidth');
-        this._addSubMenuItem(lineSection, this.linejoinIcon, LineJoinNames, this.area, 'currentLineJoin');
-        this._addSubMenuItem(lineSection, this.linecapIcon, LineCapNames, this.area, 'currentLineCap');
+        this._addSubMenuItem(lineSection, this.linejoinIcon, Draw.LineJoinNames, this.area, 'currentLineJoin');
+        this._addSubMenuItem(lineSection, this.linecapIcon, Draw.LineCapNames, this.area, 'currentLineCap');
         this._addSwitchItem(lineSection, _("Dashed"), this.fullLineIcon, this.dashedLineIcon, this.area, 'dashedLine');
         this._addSeparator(lineSection);
         this.menu.addMenuItem(lineSection);
@@ -244,11 +173,11 @@ const DrawingMenu = new Lang.Class({
         this.lineSection = lineSection;
         
         let fontSection = new PopupMenu.PopupMenuSection();
-        let FontGenericNamesCopy = Object.create(FontGenericNames);
+        let FontGenericNamesCopy = Object.create(Draw.FontGenericNames);
         FontGenericNamesCopy[0] = this.area.currentThemeFontFamily;
         this._addSubMenuItem(fontSection, 'font-x-generic-symbolic', FontGenericNamesCopy, this.area, 'currentFontGeneric');
-        this._addSubMenuItem(fontSection, 'format-text-bold-symbolic', FontWeightNames, this.area, 'currentFontWeight');
-        this._addSubMenuItem(fontSection, 'format-text-italic-symbolic', FontStyleNames, this.area, 'currentFontStyle');
+        this._addSubMenuItem(fontSection, 'format-text-bold-symbolic', Draw.FontWeightNames, this.area, 'currentFontWeight');
+        this._addSubMenuItem(fontSection, 'format-text-italic-symbolic', Draw.FontStyleNames, this.area, 'currentFontStyle');
         this._addSwitchItem(fontSection, _("Right aligned"), 'format-justify-left-symbolic', 'format-justify-right-symbolic', this.area, 'currentTextRightAligned');
         this._addSeparator(fontSection);
         this.menu.addMenuItem(fontSection);
@@ -274,7 +203,7 @@ const DrawingMenu = new Lang.Class({
     },
     
     _updateSectionVisibility: function() {
-        if (this.area.currentTool != Shapes.TEXT) {
+        if (this.area.currentTool != Draw.Tools.TEXT) {
             this.lineSection.actor.show();
             this.fontSection.actor.hide();
             this.fillItem.setSensitive(true);
@@ -390,9 +319,9 @@ const DrawingMenu = new Lang.Class({
                 subItem.label.get_clutter_text().set_use_markup(true);
                 
                 // change the display order of tools
-                if (obj == ToolNames && i == Shapes.POLYGON)
+                if (obj == Draw.ToolNames && i == Draw.Tools.POLYGON)
                     item.menu.moveMenuItem(subItem, 4);
-                else if (obj == ToolNames && i == Shapes.POLYLINE)
+                else if (obj == Draw.ToolNames && i == Draw.Tools.POLYLINE)
                     item.menu.moveMenuItem(subItem, 5);
             }
             return GLib.SOURCE_REMOVE;
@@ -464,7 +393,7 @@ const DrawingMenu = new Lang.Class({
     
     _populateOpenDrawingSubMenu: function() {
         this.openDrawingSubMenu.removeAll();
-        let jsonFiles = getJsonFiles();
+        let jsonFiles = Draw.getJsonFiles();
         jsonFiles.forEach(file => {
             let item = this.openDrawingSubMenu.addAction(`<i>${file.displayName}</i>`, () => {
                 this.area.loadJson(file.name);
@@ -520,7 +449,7 @@ const DrawingMenu = new Lang.Class({
     
     _populateSaveDrawingSubMenu: function() {
         this.saveDrawingSubMenu.removeAll();
-        let saveEntry = new DrawingMenuEntry({ initialTextGetter: getDateString,
+        let saveEntry = new DrawingMenuEntry({ initialTextGetter: Draw.getDateString,
                                                 entryActivateCallback: (text) => {
                                                     this.area.saveAsJsonWithName(text);
                                                     this.saveDrawingSubMenu.toggle();

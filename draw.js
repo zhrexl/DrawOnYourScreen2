@@ -32,11 +32,7 @@ const Pango = imports.gi.Pango;
 const PangoCairo = imports.gi.PangoCairo;
 const St = imports.gi.St;
 
-const BoxPointer = imports.ui.boxpointer;
 const Config = imports.misc.config;
-const Main = imports.ui.main;
-const PopupMenu = imports.ui.popupMenu;
-const Slider = imports.ui.slider;
 const Screenshot = imports.ui.screenshot;
 const Tweener = imports.ui.tweener;
 
@@ -44,6 +40,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
 const Extension = Me.imports.extension;
+const Menu = Me.imports.menu;
 const Prefs = Me.imports.prefs;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
@@ -52,17 +49,6 @@ const CAIRO_DEBUG_EXTENDS = false;
 const SVG_DEBUG_EXTENDS = false;
 const SVG_DEBUG_SUPERPOSES_CAIRO = false;
 const TEXT_CURSOR_TIME = 600; // ms
-
-const ICON_DIR = Me.dir.get_child('data').get_child('icons');
-const COLOR_ICON_PATH = ICON_DIR.get_child('color-symbolic.svg').get_path();
-const FILL_ICON_PATH = ICON_DIR.get_child('fill-symbolic.svg').get_path();
-const STROKE_ICON_PATH = ICON_DIR.get_child('stroke-symbolic.svg').get_path();
-const LINEJOIN_ICON_PATH = ICON_DIR.get_child('linejoin-symbolic.svg').get_path();
-const LINECAP_ICON_PATH = ICON_DIR.get_child('linecap-symbolic.svg').get_path();
-const FILLRULE_NONZERO_ICON_PATH = ICON_DIR.get_child('fillrule-nonzero-symbolic.svg').get_path();
-const FILLRULE_EVENODD_ICON_PATH = ICON_DIR.get_child('fillrule-evenodd-symbolic.svg').get_path();
-const DASHED_LINE_ICON_PATH = ICON_DIR.get_child('dashed-line-symbolic.svg').get_path();
-const FULL_LINE_ICON_PATH = ICON_DIR.get_child('full-line-symbolic.svg').get_path();
 
 const reverseEnumeration = function(obj) {
     let reversed = {};
@@ -74,25 +60,25 @@ const reverseEnumeration = function(obj) {
 
 const Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
 const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
-var   Tools = Object.assign({}, Shapes, Manipulations);
 const Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
-const ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move", 101: "Resize", 102: "Mirror" };
-const LineCapNames = Object.assign(reverseEnumeration(Cairo.LineCap), { 2: 'Square' });
-const LineJoinNames = reverseEnumeration(Cairo.LineJoin);
-const FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
-const FontGenericNames = {  0: 'Theme', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
-const FontWeightNames = Object.assign(reverseEnumeration(Pango.Weight), { 200: "Ultra-light", 350: "Semi-light", 600: "Semi-bold", 800: "Ultra-bold" });
+var Tools = Object.assign({}, Shapes, Manipulations);
+var ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move", 101: "Resize", 102: "Mirror" };
+var LineCapNames = Object.assign(reverseEnumeration(Cairo.LineCap), { 2: 'Square' });
+var LineJoinNames = reverseEnumeration(Cairo.LineJoin);
+var FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
+var FontGenericNames = {  0: 'Theme', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
+var FontWeightNames = Object.assign(reverseEnumeration(Pango.Weight), { 200: "Ultra-light", 350: "Semi-light", 600: "Semi-bold", 800: "Ultra-bold" });
 delete FontWeightNames[Pango.Weight.ULTRAHEAVY];
-const FontStyleNames = reverseEnumeration(Pango.Style);
-const FontStretchNames = reverseEnumeration(Pango.Stretch);
-const FontVariantNames = reverseEnumeration(Pango.Variant);
+var FontStyleNames = reverseEnumeration(Pango.Style);
+var FontStretchNames = reverseEnumeration(Pango.Stretch);
+var FontVariantNames = reverseEnumeration(Pango.Variant);
 
-const getDateString = function() {
+var getDateString = function() {
     let date = GLib.DateTime.new_now_local();
     return `${date.format("%F")} ${date.format("%X")}`;
 };
 
-const getJsonFiles = function() {
+var getJsonFiles = function() {
     let directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir']]));
     
     let enumerator;
@@ -165,7 +151,7 @@ var DrawingArea = new Lang.Class({
     
     get menu() {
         if (!this._menu)
-            this._menu = new DrawingMenu(this, this.monitor);
+            this._menu = new Menu.DrawingMenu(this, this.monitor);
         return this._menu;
     },
     
