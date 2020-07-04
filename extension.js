@@ -36,7 +36,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
 const Draw = Me.imports.draw;
-const Osd = Me.imports.osd;
+const Helper = Me.imports.helper;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
@@ -155,7 +155,7 @@ var AreaManager = new Lang.Class({
         for (let i = 0; i < this.monitors.length; i++) {
             let monitor = this.monitors[i];
             let container = new St.Widget({ name: 'drawOnYourSreenContainer' + i });
-            let helper = new Osd.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
+            let helper = new Helper.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
             let loadPersistent = i == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
             let area = new Draw.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, loadPersistent);
             container.add_child(area);

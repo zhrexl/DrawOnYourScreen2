@@ -45,28 +45,11 @@ const CAIRO_DEBUG_EXTENDS = false;
 const SVG_DEBUG_EXTENDS = false;
 const TEXT_CURSOR_TIME = 600; // ms
 
-const reverseEnumeration = function(obj) {
-    let reversed = {};
-    Object.keys(obj).forEach(key => {
-        reversed[obj[key]] = key.slice(0,1) + key.slice(1).toLowerCase().replace('_', '-');
-    });
-    return reversed;
-};
-
-const Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
-const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
-const Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
+const { Shapes, Manipulations, Transformations, LineCapNames, LineJoinNames, FillRuleNames,
+        FontWeightNames, FontStyleNames, FontStretchNames, FontVariantNames } = Elements;
 var Tools = Object.assign({}, Shapes, Manipulations);
 var ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move", 101: "Resize", 102: "Mirror" };
-var LineCapNames = Object.assign(reverseEnumeration(Cairo.LineCap), { 2: 'Square' });
-var LineJoinNames = reverseEnumeration(Cairo.LineJoin);
-var FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
 var FontGenericNames = {  0: 'Theme', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
-var FontWeightNames = Object.assign(reverseEnumeration(Pango.Weight), { 200: "Ultra-light", 350: "Semi-light", 600: "Semi-bold", 800: "Ultra-bold" });
-delete FontWeightNames[Pango.Weight.ULTRAHEAVY];
-var FontStyleNames = reverseEnumeration(Pango.Style);
-var FontStretchNames = reverseEnumeration(Pango.Stretch);
-var FontVariantNames = reverseEnumeration(Pango.Variant);
 
 var getDateString = function() {
     let date = GLib.DateTime.new_now_local();

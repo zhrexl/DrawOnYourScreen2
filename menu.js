@@ -37,6 +37,7 @@ const Slider = imports.ui.slider;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Draw = Me.imports.draw;
+const Elements = Me.imports.elements;
 const Extension = Me.imports.extension;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
@@ -164,8 +165,8 @@ var DrawingMenu = new Lang.Class({
         
         let lineSection = new PopupMenu.PopupMenuSection();
         this._addSliderItem(lineSection, this.area, 'currentLineWidth');
-        this._addSubMenuItem(lineSection, this.linejoinIcon, Draw.LineJoinNames, this.area, 'currentLineJoin');
-        this._addSubMenuItem(lineSection, this.linecapIcon, Draw.LineCapNames, this.area, 'currentLineCap');
+        this._addSubMenuItem(lineSection, this.linejoinIcon, Elements.LineJoinNames, this.area, 'currentLineJoin');
+        this._addSubMenuItem(lineSection, this.linecapIcon, Elements.LineCapNames, this.area, 'currentLineCap');
         this._addSwitchItem(lineSection, _("Dashed"), this.fullLineIcon, this.dashedLineIcon, this.area, 'dashedLine');
         this._addSeparator(lineSection);
         this.menu.addMenuItem(lineSection);
@@ -176,8 +177,8 @@ var DrawingMenu = new Lang.Class({
         let FontGenericNamesCopy = Object.create(Draw.FontGenericNames);
         FontGenericNamesCopy[0] = this.area.currentThemeFontFamily;
         this._addSubMenuItem(fontSection, 'font-x-generic-symbolic', FontGenericNamesCopy, this.area, 'currentFontGeneric');
-        this._addSubMenuItem(fontSection, 'format-text-bold-symbolic', Draw.FontWeightNames, this.area, 'currentFontWeight');
-        this._addSubMenuItem(fontSection, 'format-text-italic-symbolic', Draw.FontStyleNames, this.area, 'currentFontStyle');
+        this._addSubMenuItem(fontSection, 'format-text-bold-symbolic', Elements.FontWeightNames, this.area, 'currentFontWeight');
+        this._addSubMenuItem(fontSection, 'format-text-italic-symbolic', Elements.FontStyleNames, this.area, 'currentFontStyle');
         this._addSwitchItem(fontSection, _("Right aligned"), 'format-justify-left-symbolic', 'format-justify-right-symbolic', this.area, 'currentTextRightAligned');
         this._addSeparator(fontSection);
         this.menu.addMenuItem(fontSection);

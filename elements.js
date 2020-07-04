@@ -30,8 +30,6 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
-const SVG_DEBUG_SUPERPOSES_CAIRO = false;
-
 const reverseEnumeration = function(obj) {
     let reversed = {};
     Object.keys(obj).forEach(key => {
@@ -40,21 +38,20 @@ const reverseEnumeration = function(obj) {
     return reversed;
 };
 
-const Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
-const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
-const Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
-var Tools = Object.assign({}, Shapes, Manipulations);
-var ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move", 101: "Resize", 102: "Mirror" };
+var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
+var Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
+var Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
 var LineCapNames = Object.assign(reverseEnumeration(Cairo.LineCap), { 2: 'Square' });
 var LineJoinNames = reverseEnumeration(Cairo.LineJoin);
 var FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
-var FontGenericNames = {  0: 'Theme', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
 var FontWeightNames = Object.assign(reverseEnumeration(Pango.Weight), { 200: "Ultra-light", 350: "Semi-light", 600: "Semi-bold", 800: "Ultra-bold" });
 delete FontWeightNames[Pango.Weight.ULTRAHEAVY];
 var FontStyleNames = reverseEnumeration(Pango.Style);
 var FontStretchNames = reverseEnumeration(Pango.Stretch);
 var FontVariantNames = reverseEnumeration(Pango.Variant);
 
+
+const SVG_DEBUG_SUPERPOSES_CAIRO = false;
 const RADIAN = 180 / Math.PI;               // degree
 const INVERSION_CIRCLE_RADIUS = 12;         // px
 const REFLECTION_TOLERANCE = 5;             // px,  to select vertical and horizontal directions
@@ -67,7 +64,7 @@ const MIN_DRAWING_SIZE = 3;                 // px
 // DrawingElement represents a "brushstroke".
 // It can be converted into a cairo path as well as a svg element.
 // See DrawingArea._startDrawing() to know its params.
-const DrawingElement = new Lang.Class({
+var DrawingElement = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingElement',
     
     _init: function(params) {
