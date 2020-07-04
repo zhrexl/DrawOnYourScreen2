@@ -26,10 +26,6 @@ const Lang = imports.lang;
 const Pango = imports.gi.Pango;
 const PangoCairo = imports.gi.PangoCairo;
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
-
 const reverseEnumeration = function(obj) {
     let reversed = {};
     Object.keys(obj).forEach(key => {

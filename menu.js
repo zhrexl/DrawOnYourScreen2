@@ -36,7 +36,7 @@ const Slider = imports.ui.slider;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Draw = Me.imports.draw;
+const Area = Me.imports.area;
 const Elements = Me.imports.elements;
 const Extension = Me.imports.extension;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
@@ -154,7 +154,7 @@ var DrawingMenu = new Lang.Class({
         this.menu.addAction(_("Smooth"), this.area.smoothLastElement.bind(this.area), 'format-text-strikethrough-symbolic');
         this._addSeparator(this.menu);
         
-        this._addSubMenuItem(this.menu, 'document-edit-symbolic', Draw.ToolNames, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
+        this._addSubMenuItem(this.menu, 'document-edit-symbolic', Area.ToolNames, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
         this._addColorSubMenuItem(this.menu);
         this.fillItem = this._addSwitchItem(this.menu, _("Fill"), this.strokeIcon, this.fillIcon, this.area, 'fill', this._updateSectionVisibility.bind(this));
         this.fillSection = new PopupMenu.PopupMenuSection();
@@ -174,7 +174,7 @@ var DrawingMenu = new Lang.Class({
         this.lineSection = lineSection;
         
         let fontSection = new PopupMenu.PopupMenuSection();
-        let FontGenericNamesCopy = Object.create(Draw.FontGenericNames);
+        let FontGenericNamesCopy = Object.create(Area.FontGenericNames);
         FontGenericNamesCopy[0] = this.area.currentThemeFontFamily;
         this._addSubMenuItem(fontSection, 'font-x-generic-symbolic', FontGenericNamesCopy, this.area, 'currentFontGeneric');
         this._addSubMenuItem(fontSection, 'format-text-bold-symbolic', Elements.FontWeightNames, this.area, 'currentFontWeight');
@@ -204,7 +204,7 @@ var DrawingMenu = new Lang.Class({
     },
     
     _updateSectionVisibility: function() {
-        if (this.area.currentTool != Draw.Tools.TEXT) {
+        if (this.area.currentTool != Area.Tools.TEXT) {
             this.lineSection.actor.show();
             this.fontSection.actor.hide();
             this.fillItem.setSensitive(true);
@@ -320,9 +320,9 @@ var DrawingMenu = new Lang.Class({
                 subItem.label.get_clutter_text().set_use_markup(true);
                 
                 // change the display order of tools
-                if (obj == Draw.ToolNames && i == Draw.Tools.POLYGON)
+                if (obj == Area.ToolNames && i == Area.Tools.POLYGON)
                     item.menu.moveMenuItem(subItem, 4);
-                else if (obj == Draw.ToolNames && i == Draw.Tools.POLYLINE)
+                else if (obj == Area.ToolNames && i == Area.Tools.POLYLINE)
                     item.menu.moveMenuItem(subItem, 5);
             }
             return GLib.SOURCE_REMOVE;
@@ -394,7 +394,7 @@ var DrawingMenu = new Lang.Class({
     
     _populateOpenDrawingSubMenu: function() {
         this.openDrawingSubMenu.removeAll();
-        let jsonFiles = Draw.getJsonFiles();
+        let jsonFiles = Area.getJsonFiles();
         jsonFiles.forEach(file => {
             let item = this.openDrawingSubMenu.addAction(`<i>${file.displayName}</i>`, () => {
                 this.area.loadJson(file.name);
@@ -450,7 +450,7 @@ var DrawingMenu = new Lang.Class({
     
     _populateSaveDrawingSubMenu: function() {
         this.saveDrawingSubMenu.removeAll();
-        let saveEntry = new DrawingMenuEntry({ initialTextGetter: Draw.getDateString,
+        let saveEntry = new DrawingMenuEntry({ initialTextGetter: Area.getDateString,
                                                 entryActivateCallback: (text) => {
                                                     this.area.saveAsJsonWithName(text);
                                                     this.saveDrawingSubMenu.toggle();

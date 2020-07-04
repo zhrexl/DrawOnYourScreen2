@@ -35,7 +35,7 @@ const PanelMenu = imports.ui.panelMenu;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
-const Draw = Me.imports.draw;
+const Area = Me.imports.area;
 const Helper = Me.imports.helper;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
@@ -157,7 +157,7 @@ var AreaManager = new Lang.Class({
             let container = new St.Widget({ name: 'drawOnYourSreenContainer' + i });
             let helper = new Helper.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
             let loadPersistent = i == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
-            let area = new Draw.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, loadPersistent);
+            let area = new Area.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, loadPersistent);
             container.add_child(area);
             container.add_child(helper);
             
@@ -191,16 +191,16 @@ var AreaManager = new Lang.Class({
             'toggle-fill-rule': this.activeArea.toggleFillRule.bind(this.activeArea),
             'toggle-dash' : this.activeArea.toggleDash.bind(this.activeArea),
             'toggle-fill' : this.activeArea.toggleFill.bind(this.activeArea),
-            'select-none-shape': () => this.activeArea.selectTool(Draw.Tools.NONE),
-            'select-line-shape': () => this.activeArea.selectTool(Draw.Tools.LINE),
-            'select-ellipse-shape': () => this.activeArea.selectTool(Draw.Tools.ELLIPSE),
-            'select-rectangle-shape': () => this.activeArea.selectTool(Draw.Tools.RECTANGLE),
-            'select-text-shape': () => this.activeArea.selectTool(Draw.Tools.TEXT),
-            'select-polygon-shape': () => this.activeArea.selectTool(Draw.Tools.POLYGON),
-            'select-polyline-shape': () => this.activeArea.selectTool(Draw.Tools.POLYLINE),
-            'select-move-tool': () => this.activeArea.selectTool(Draw.Tools.MOVE),
-            'select-resize-tool': () => this.activeArea.selectTool(Draw.Tools.RESIZE),
-            'select-mirror-tool': () => this.activeArea.selectTool(Draw.Tools.MIRROR)
+            'select-none-shape': () => this.activeArea.selectTool(Area.Tools.NONE),
+            'select-line-shape': () => this.activeArea.selectTool(Area.Tools.LINE),
+            'select-ellipse-shape': () => this.activeArea.selectTool(Area.Tools.ELLIPSE),
+            'select-rectangle-shape': () => this.activeArea.selectTool(Area.Tools.RECTANGLE),
+            'select-text-shape': () => this.activeArea.selectTool(Area.Tools.TEXT),
+            'select-polygon-shape': () => this.activeArea.selectTool(Area.Tools.POLYGON),
+            'select-polyline-shape': () => this.activeArea.selectTool(Area.Tools.POLYLINE),
+            'select-move-tool': () => this.activeArea.selectTool(Area.Tools.MOVE),
+            'select-resize-tool': () => this.activeArea.selectTool(Area.Tools.RESIZE),
+            'select-mirror-tool': () => this.activeArea.selectTool(Area.Tools.MIRROR)
         };
         
         // available when writing
