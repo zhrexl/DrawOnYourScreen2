@@ -471,7 +471,7 @@ var DrawingArea = new Lang.Class({
         
         if (duplicate) {
             // deep cloning
-            let copy = new Elements.DrawingElement(JSON.parse(JSON.stringify(this.grabbedElement)));
+            let copy = new this.grabbedElement.constructor(JSON.parse(JSON.stringify(this.grabbedElement)));
             this.elements.push(copy);
             this.grabbedElement = copy;
         }
@@ -554,28 +554,32 @@ var DrawingArea = new Lang.Class({
             this._stopDrawing();
         });
         
-        this.currentElement = new Elements.DrawingElement ({
-            shape: this.currentTool,
-            color: this.currentColor.to_string(),
-            line: { lineWidth: this.currentLineWidth, lineJoin: this.currentLineJoin, lineCap: this.currentLineCap },
-            dash: { active: this.dashedLine, array: this.dashedLine ? [this.dashArray[0] || this.currentLineWidth, this.dashArray[1] || this.currentLineWidth * 3] : [0, 0] , offset: this.dashOffset },
-            fill: this.fill,
-            fillRule: this.currentFillRule,
-            eraser: eraser,
-            transform: { active: false, center: [0, 0], angle: 0, startAngle: 0, ratio: 1 },
-            points: []
-        });
-        
         if (this.currentTool == Shapes.TEXT) {
-            this.currentElement.fill = false;
-            this.currentElement.font = {
-                family: (this.currentFontGeneric == 0 ? this.currentThemeFontFamily : FontGenericNames[this.currentFontGeneric]),
-                weight: this.currentFontWeight,
-                style: this.currentFontStyle,
-                stretch: this.currentFontStretch,
-                variant: this.currentFontVariant };
-            this.currentElement.text = _("Text");
-            this.currentElement.textRightAligned = this.currentTextRightAligned;
+            this.currentElement = new Elements.DrawingElement({
+                shape: this.currentTool,
+                color: this.currentColor.to_string(),
+                eraser: eraser,
+                font: {
+                    family: (this.currentFontGeneric == 0 ? this.currentThemeFontFamily : FontGenericNames[this.currentFontGeneric]),
+                    weight: this.currentFontWeight,
+                    style: this.currentFontStyle,
+                    stretch: this.currentFontStretch,
+                    variant: this.currentFontVariant },
+                text: _("Text"),
+                textRightAligned: this.currentTextRightAligned,
+                points: []
+            });
+        } else {
+            this.currentElement = new Elements.DrawingElement({
+                shape: this.currentTool,
+                color: this.currentColor.to_string(),
+                eraser: eraser,
+                fill: this.fill,
+                fillRule: this.currentFillRule,
+                line: { lineWidth: this.currentLineWidth, lineJoin: this.currentLineJoin, lineCap: this.currentLineCap },
+                dash: { active: this.dashedLine, array: this.dashedLine ? [this.dashArray[0] || this.currentLineWidth, this.dashArray[1] || this.currentLineWidth * 3] : [0, 0] , offset: this.dashOffset },
+                points: []
+            });
         }
         
         this.currentElement.startDrawing(startX, startY);
