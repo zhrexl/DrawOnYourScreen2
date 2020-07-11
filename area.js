@@ -31,9 +31,10 @@ const Lang = imports.lang;
 const Pango = imports.gi.Pango;
 const St = imports.gi.St;
 
+const ExtensionUtils = imports.misc.extensionUtils;
+const Main = imports.ui.main;
 const Screenshot = imports.ui.screenshot;
 
-const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
 const Extension = Me.imports.extension;
@@ -643,6 +644,7 @@ var DrawingArea = new Lang.Class({
     },
     
     _startWriting: function() {
+        let [x, y] = [this.currentElement.x, this.currentElement.y];
         this.currentElement.text = '';
         this.currentElement.cursorPosition = 0;
         this.emit('show-osd', null, _("Type your text and press <i>%s</i>")
@@ -651,11 +653,18 @@ var DrawingArea = new Lang.Class({
         this.textHasCursor = true;
         this._redisplay();
         
-        this.textEntry = new St.Entry({ visible: false });
+        this.textEntry = new St.Entry({ visible: false, x, y });
         this.get_parent().add_child(this.textEntry);
         this.textEntry.grab_key_focus();
         this.updateActionMode();
         this.updatePointerCursor();
+        
+        let ibusCandidatePopup = Main.layoutManager.uiGroup.get_children().filter(child =>
+            child.has_style_class_name && child.has_style_class_name('candidate-popup-boxpointer'))[0] || null;
+        if (ibusCandidatePopup) {
+            this.ibusHandler = ibusCandidatePopup.connect('notify::visible', popup => popup.visible && (this.textEntry.visible = true));
+            this.textEntry.connect('destroy', () => ibusCandidatePopup.disconnect(this.ibusHandler));
+        }
         
         this.textEntry.clutterText.connect('activate', (clutterText) => {
             let startNewLine = true;
@@ -703,13 +712,13 @@ var DrawingArea = new Lang.Class({
             // copy object, the original keep existing in this.elements
             this.currentElement = Object.create(this.currentElement);
             this.currentElement.lineIndex ++;
-            let height = Math.abs(this.currentElement.points[1][1] - this.currentElement.points[0][1]);
             // define a new 'points' array, the original keep existing in this.elements
             this.currentElement.points = [
-                [this.currentElement.points[0][0], this.currentElement.points[0][1] + height],
-                [this.currentElement.points[1][0], this.currentElement.points[1][1] + height]
+                [this.currentElement.points[0][0], this.currentElement.points[0][1] + this.currentElement.height],
+                [this.currentElement.points[1][0], this.currentElement.points[1][1] + this.currentElement.height]
             ];
             this.currentElement.text = "";
+            this.textEntry.set_y(this.currentElement.y);
         } else {
             this.currentElement = null;
             this._stopTextCursorTimeout();

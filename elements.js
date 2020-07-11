@@ -600,12 +600,28 @@ const TextElement = new Lang.Class({
         };
     },
     
+    get x() {
+        // this.textWidth is computed during Cairo building.
+        return this.points[1][0] - (this.textRightAligned ? this.textWidth : 0);
+    },
+    
+    get y() {
+        return Math.max(this.points[0][1], this.points[1][1]);
+    },
+    
+    get height() {
+        return Math.abs(this.points[1][1] - this.points[0][1]);
+    },
+    
+    // When rotating grouped lines, lineOffset is used to retrieve the rotation center of the first line.
+    get lineOffset() {
+        return (this.lineIndex || 0) * this.height;
+    },
+    
     _drawCairo: function(cr, params) {
-        let points = this.points;
-        
-        if (points.length == 2) {
+        if (this.points.length == 2) {
             let layout = PangoCairo.create_layout(cr);
-            let fontSize = Math.abs(points[1][1] - points[0][1]) * Pango.SCALE;
+            let fontSize = this.height * Pango.SCALE;
             let fontDescription = new Pango.FontDescription();
             fontDescription.set_absolute_size(fontSize);
             ['family', 'weight', 'style', 'stretch', 'variant'].forEach(attribute => {
@@ -617,7 +633,7 @@ const TextElement = new Lang.Class({
             layout.set_font_description(fontDescription);
             layout.set_text(this.text, -1);
             this.textWidth = layout.get_pixel_size()[0];
-            cr.moveTo(points[1][0] - (this.textRightAligned ? this.textWidth : 0), Math.max(points[0][1],points[1][1]) - layout.get_baseline() / Pango.SCALE);
+            cr.moveTo(this.x, this.y - layout.get_baseline() / Pango.SCALE);
             layout.set_text(this.text, -1);
             PangoCairo.show_layout(cr, layout);
             
@@ -625,19 +641,20 @@ const TextElement = new Lang.Class({
                 let cursorPosition = this.cursorPosition == -1 ? this.text.length : this.cursorPosition;
                 layout.set_text(this.text.slice(0, cursorPosition), -1);
                 let width = layout.get_pixel_size()[0];
-                cr.rectangle(points[1][0] - (this.textRightAligned ? this.textWidth : 0) + width, Math.max(points[0][1],points[1][1]),
-                             Math.abs(points[1][1] - points[0][1]) / 25, - Math.abs(points[1][1] - points[0][1]));
+                cr.rectangle(this.x + width, this.y,
+                             this.height / 25, - this.height);
                 cr.fill();
             }
             
-            if (params.showTextRectangle || params.drawTextRectangle) {
-                cr.rectangle(points[1][0] - (this.textRightAligned ? this.textWidth : 0), Math.max(points[0][1], points[1][1]),
-                             this.textWidth, - Math.abs(points[1][1] - points[0][1]));
-                if (params.showTextRectangle)
-                    setDummyStroke(cr);
-                else
-                    // Only draw the rectangle to find the element, not to show it.
-                    cr.setLineWidth(0);
+            if (params.showTextRectangle) {
+                cr.rectangle(this.x, this.y - this.lineOffset,
+                             this.textWidth, - this.height);
+                setDummyStroke(cr);
+            } else if (params.drawTextRectangle) {
+                cr.rectangle(this.x, this.y,
+                             this.textWidth, - this.height);
+                // Only draw the rectangle to find the element, not to show it.
+                cr.setLineWidth(0);
             }
         }
     },
@@ -648,15 +665,15 @@ const TextElement = new Lang.Class({
     
     _drawSvg: function(transAttribute) {
         let row = "\n  ";
-        let points = this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100]);
+        let [x, y, height] = [Math.round(this.x*100)/100, Math.round(this.y*100)/100, Math.round(this.height*100)/100];
         let color = this.eraser ? bgColor : this.color;
         let attributes = '';
         
-        if (points.length == 2) {
+        if (this.points.length == 2) {
             attributes = `fill="${color}" ` +
                          `stroke="transparent" ` +
                          `stroke-opacity="0" ` +
-                         `font-size="${Math.abs(points[1][1] - points[0][1])}"`;
+                         `font-size="${height}"`;
             
             if (this.font.family)
                 attributes += ` font-family="${this.font.family}"`;
@@ -669,9 +686,8 @@ const TextElement = new Lang.Class({
             if (this.font.variant && FontVariantNames[this.font.variant])
                 attributes += ` font-variant="${FontVariantNames[this.font.variant].toLowerCase()}"`;
             
-            // this.textWidth is computed during Cairo building.
-            row += `<text ${attributes} x="${points[1][0] - (this.textRightAligned ? this.textWidth : 0)}" `;
-            row += `y="${Math.max(points[0][1], points[1][1])}"${transAttribute}>${this.text}</text>`;
+            row += `<text ${attributes} x="${x}" `;
+            row += `y="${y}"${transAttribute}>${this.text}</text>`;
         }
         
         return row;
@@ -698,15 +714,10 @@ const TextElement = new Lang.Class({
         }
     },
     
-    // When rotating grouped lines, lineOffset is used to retrieve the rotation center of the first line.
-    _getLineOffset: function() {
-        return (this.lineIndex || 0) * Math.abs(this.points[1][1] - this.points[0][1]);
-    },
-    
     _getOriginalCenter: function() {
         if (!this._originalCenter) {
             let points = this.points;
-            this._originalCenter = this.textWidth ? [points[1][0], Math.max(points[0][1], points[1][1]) - this._getLineOffset()] :
+            this._originalCenter = this.textWidth ? [points[1][0], Math.max(points[0][1], points[1][1]) - this.lineOffset] :
                                    points.length >= 3 ? getCentroid(points) :
                                    getNaiveCenter(points);
         }
