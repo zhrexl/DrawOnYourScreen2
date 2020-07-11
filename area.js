@@ -277,18 +277,22 @@ var DrawingArea = new Lang.Class({
             cr.save();
             Clutter.cairo_set_source_color(cr, this.gridColor);
             
-            let [gridX, gridY] = [this.gridGap, this.gridGap];
-            while (gridX < this.monitor.width) {
+            let [gridX, gridY] = [0, 0];
+            while (gridX < this.monitor.width / 2) {
                 cr.setLineWidth((gridX / this.gridGap) % 5 ? this.gridInterlineWidth : this.gridLineWidth);
-                cr.moveTo(gridX, 0);
-                cr.lineTo(gridX, this.monitor.height);
+                cr.moveTo(this.monitor.width / 2 + gridX, 0);
+                cr.lineTo(this.monitor.width / 2 + gridX, this.monitor.height);
+                cr.moveTo(this.monitor.width / 2 - gridX, 0);
+                cr.lineTo(this.monitor.width / 2 - gridX, this.monitor.height);
                 gridX += this.gridGap;
                 cr.stroke();
             }
-            while (gridY < this.monitor.height) {
+            while (gridY < this.monitor.height / 2) {
                 cr.setLineWidth((gridY / this.gridGap) % 5 ? this.gridInterlineWidth : this.gridLineWidth);
-                cr.moveTo(0, gridY);
-                cr.lineTo(this.monitor.width, gridY);
+                cr.moveTo(0, this.monitor.height / 2 + gridY);
+                cr.lineTo(this.monitor.width, this.monitor.height / 2 + gridY);
+                cr.moveTo(0, this.monitor.height / 2 - gridY);
+                cr.lineTo(this.monitor.width, this.monitor.height / 2 - gridY);
                 gridY += this.gridGap;
                 cr.stroke();
             }
