@@ -58,6 +58,7 @@
 }
 
 .draw-on-your-screen-menu-separator-item {
+    margin-top: 0;
     padding-top: 0.14em;
     padding-bottom: 0.14em;
 }
@@ -69,6 +70,40 @@
 .draw-on-your-screen-menu-separator-item .popup-separator-menu-item {
     margin-top: 0.2em; /* default 6px */
     margin-bottom: 0.2em; /* default 6px */
+}
+
+.draw-on-your-screen-menu-separator-item .popup-separator-menu-item-separator {
+    background-color: transparent;
+}
+
+.draw-on-your-screen-menu-thin-separator-item .popup-separator-menu-item-separator {
+    margin-top: 0;
+}
+
+/* system-menu-action: from GS 3.34- */
+.draw-on-your-screen-menu .system-menu-action {
+  background-color: #353535;
+  color: #eeeeec;
+  border-radius: 32px;
+  padding: 12px;
+  border: none;
+}
+
+.draw-on-your-screen-menu .system-menu-action:hover,
+.draw-on-your-screen-menu .system-menu-action:focus {
+    background-color: #484848;
+    color: #eeeeec;
+    border: none;
+    padding: 12px;
+}
+
+.draw-on-your-screen-menu .system-menu-action:active {
+    background-color: #1b6acb;
+    color: #ffffff;
+}
+
+.draw-on-your-screen-menu .system-menu-action > StIcon {
+    icon-size: 16px;
 }
 
 .draw-on-your-screen-menu-slider-label {

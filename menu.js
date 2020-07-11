@@ -44,6 +44,7 @@ const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const GS_VERSION = Config.PACKAGE_VERSION;
 
 const ICON_DIR = Me.dir.get_child('data').get_child('icons');
+const SMOOTH_ICON_PATH = ICON_DIR.get_child('smooth-symbolic.svg').get_path();
 const COLOR_ICON_PATH = ICON_DIR.get_child('color-symbolic.svg').get_path();
 const FILL_ICON_PATH = ICON_DIR.get_child('fill-symbolic.svg').get_path();
 const STROKE_ICON_PATH = ICON_DIR.get_child('stroke-symbolic.svg').get_path();
@@ -91,6 +92,7 @@ var DrawingMenu = new Lang.Class({
         };
         
         this.colorIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(COLOR_ICON_PATH) });
+        this.smoothIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(SMOOTH_ICON_PATH) });
         this.strokeIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(STROKE_ICON_PATH) });
         this.fillIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FILL_ICON_PATH) });
         this.fillRuleNonzeroIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FILLRULE_NONZERO_ICON_PATH) });
@@ -148,11 +150,13 @@ var DrawingMenu = new Lang.Class({
     _redisplay: function() {
         this.menu.removeAll();
         
-        this.menu.addAction(_("Undo"), this.area.undo.bind(this.area), 'edit-undo-symbolic');
-        this.menu.addAction(_("Redo"), this.area.redo.bind(this.area), 'edit-redo-symbolic');
-        this.menu.addAction(_("Erase"), this.area.deleteLastElement.bind(this.area), 'edit-clear-all-symbolic');
-        this.menu.addAction(_("Smooth"), this.area.smoothLastElement.bind(this.area), 'format-text-strikethrough-symbolic');
-        this._addSeparator(this.menu);
+        let groupItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, style_class: "draw-on-your-screen-menu-group-item" });
+        groupItem.add_child(this._createActionButton(_("Undo"), this.area.undo.bind(this.area), 'edit-undo-symbolic'));
+        groupItem.add_child(this._createActionButton(_("Redo"), this.area.redo.bind(this.area), 'edit-redo-symbolic'));
+        groupItem.add_child(this._createActionButton(_("Erase"), this.area.deleteLastElement.bind(this.area), 'edit-clear-all-symbolic'));
+        groupItem.add_child(this._createActionButton(_("Smooth"), this.area.smoothLastElement.bind(this.area), this.smoothIcon)/*, { expand: true, x_fill: false }*/);
+        this.menu.addMenuItem(groupItem);
+        this._addSeparator(this.menu, true);
         
         this._addSubMenuItem(this.menu, 'document-edit-symbolic', Area.ToolNames, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
         this._addColorSubMenuItem(this.menu);
@@ -201,6 +205,19 @@ var DrawingMenu = new Lang.Class({
         this.menu.addAction(_("Show help"), () => { this.close(); this.area.toggleHelp(); }, 'preferences-desktop-keyboard-shortcuts-symbolic');
         
         this._updateSectionVisibility();
+    },
+    
+    // from system.js (GS 3.34-)
+    _createActionButton: function(accessibleName, callback, icon) {
+        let button = new St.Button({ reactive: true,
+                                     can_focus: true,
+                                     track_hover: true,
+                                     x_align: Clutter.ActorAlign.CENTER,
+                                     accessible_name: accessibleName,
+                                     style_class: 'system-menu-action' });
+        button.child = new St.Icon(typeof icon == 'string' ? { icon_name: icon } : { gicon: icon });
+        button.connect('clicked', callback);
+        return new St.Bin({ child: button, x_expand: true });
     },
     
     _updateSectionVisibility: function() {
@@ -461,10 +478,12 @@ var DrawingMenu = new Lang.Class({
         this.saveDrawingSubMenu.addMenuItem(saveEntry.item);
     },
     
-    _addSeparator: function(menu) {
+    _addSeparator: function(menu, thin) {
         if (this.hasSeparators) {
             let separatorItem = new PopupMenu.PopupSeparatorMenuItem(' ');
             getActor(separatorItem).add_style_class_name('draw-on-your-screen-menu-separator-item');
+            if (thin)
+                getActor(separatorItem).add_style_class_name('draw-on-your-screen-menu-thin-separator-item');
             menu.addMenuItem(separatorItem);
         }
     }
