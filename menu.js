@@ -150,16 +150,17 @@ var DrawingMenu = new Lang.Class({
     _redisplay: function() {
         this.menu.removeAll();
         
+        this.actionButtons = [];
         let groupItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, style_class: "draw-on-your-screen-menu-group-item" });
         groupItem.add_child(this._createActionButton(_("Undo"), this.area.undo.bind(this.area), 'edit-undo-symbolic'));
         groupItem.add_child(this._createActionButton(_("Redo"), this.area.redo.bind(this.area), 'edit-redo-symbolic'));
         groupItem.add_child(this._createActionButton(_("Erase"), this.area.deleteLastElement.bind(this.area), 'edit-clear-all-symbolic'));
-        groupItem.add_child(this._createActionButton(_("Smooth"), this.area.smoothLastElement.bind(this.area), this.smoothIcon)/*, { expand: true, x_fill: false }*/);
+        groupItem.add_child(this._createActionButton(_("Smooth"), this.area.smoothLastElement.bind(this.area), this.smoothIcon));
         this.menu.addMenuItem(groupItem);
         this._addSeparator(this.menu, true);
         
         this._addSubMenuItem(this.menu, 'document-edit-symbolic', Area.ToolNames, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
-        this._addColorSubMenuItem(this.menu);
+        this.colorItem = this._addColorSubMenuItem(this.menu);
         this.fillItem = this._addSwitchItem(this.menu, _("Fill"), this.strokeIcon, this.fillIcon, this.area, 'fill', this._updateSectionVisibility.bind(this));
         this.fillSection = new PopupMenu.PopupMenuSection();
         this.fillSection.itemActivated = () => {};
@@ -204,33 +205,48 @@ var DrawingMenu = new Lang.Class({
         this.menu.addAction(_("Edit style"), manager.openUserStyleFile.bind(manager), 'document-page-setup-symbolic');
         this.menu.addAction(_("Show help"), () => { this.close(); this.area.toggleHelp(); }, 'preferences-desktop-keyboard-shortcuts-symbolic');
         
+        this._updateActionSensitivity();
         this._updateSectionVisibility();
     },
     
     // from system.js (GS 3.34-)
     _createActionButton: function(accessibleName, callback, icon) {
-        let button = new St.Button({ reactive: true,
-                                     can_focus: true,
-                                     track_hover: true,
+        let button = new St.Button({ track_hover: true,
                                      x_align: Clutter.ActorAlign.CENTER,
                                      accessible_name: accessibleName,
-                                     style_class: 'system-menu-action' });
+                                     // use 'popup-menu' and 'popup-menu-item' style classes to provide theme colors
+                                     style_class: 'system-menu-action popup-menu-item popup-menu' });
         button.child = new St.Icon(typeof icon == 'string' ? { icon_name: icon } : { gicon: icon });
-        button.connect('clicked', callback);
+        button.connect('clicked', () => {
+            callback();
+            this._updateActionSensitivity();
+        });
+        button.bind_property('reactive', button, 'can_focus', GObject.BindingFlags.DEFAULT);
+        this.actionButtons.push(button);
         return new St.Bin({ child: button, x_expand: true });
     },
     
+    _updateActionSensitivity: function() {
+        let [undoButton, redoButton, eraseButton, smoothButton] = this.actionButtons;
+        undoButton.reactive = this.area.elements.length > 0;
+        redoButton.reactive = this.area.undoneElements.length > 0;
+        eraseButton.reactive = this.area.elements.length > 0;
+        smoothButton.reactive = this.area.elements.length > 0 && this.area.elements[this.area.elements.length - 1].shape == Area.Tools.NONE;
+    },
+    
     _updateSectionVisibility: function() {
-        if (this.area.currentTool != Area.Tools.TEXT) {
-            this.lineSection.actor.show();
-            this.fontSection.actor.hide();
-            this.fillItem.setSensitive(true);
-            this.fillSection.setSensitive(true);
-        } else {
+        if (this.area.currentTool == Area.Tools.TEXT) {
             this.lineSection.actor.hide();
             this.fontSection.actor.show();
+            this.colorItem.setSensitive(true);
             this.fillItem.setSensitive(false);
             this.fillSection.setSensitive(false);
+        } else {
+            this.lineSection.actor.show();
+            this.fontSection.actor.hide();
+            this.colorItem.setSensitive(true);
+            this.fillItem.setSensitive(true);
+            this.fillSection.setSensitive(true);
         }
         
         if (this.area.fill)
@@ -371,6 +387,7 @@ var DrawingMenu = new Lang.Class({
             return GLib.SOURCE_REMOVE;
         });
         menu.addMenuItem(item);
+        return item;
     },
     
     _addDrawingNameItem: function(menu) {

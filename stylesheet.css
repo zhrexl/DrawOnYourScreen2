@@ -82,24 +82,17 @@
 
 /* system-menu-action: from GS 3.34- */
 .draw-on-your-screen-menu .system-menu-action {
-  background-color: #353535;
-  color: #eeeeec;
+  min-width: 0;
+  border: none;
   border-radius: 32px;
   padding: 12px;
-  border: none;
+  margin: 0;
 }
 
 .draw-on-your-screen-menu .system-menu-action:hover,
 .draw-on-your-screen-menu .system-menu-action:focus {
-    background-color: #484848;
-    color: #eeeeec;
     border: none;
     padding: 12px;
-}
-
-.draw-on-your-screen-menu .system-menu-action:active {
-    background-color: #1b6acb;
-    color: #ffffff;
 }
 
 .draw-on-your-screen-menu .system-menu-action > StIcon {
