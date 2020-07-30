@@ -179,6 +179,9 @@ msgstr ""
 msgid "Select polyline"
 msgstr ""
 
+msgid "Select image"
+msgstr ""
+
 msgid "Select text"
 msgstr ""
 
@@ -225,6 +228,9 @@ msgid "Change font style"
 msgstr ""
 
 msgid "Toggle text alignment"
+msgstr ""
+
+msgid "Change image file"
 msgstr ""
 
 msgid "Hide panel and dock"
@@ -314,6 +320,9 @@ msgid "Polygon"
 msgstr ""
 
 msgid "Polyline"
+msgstr ""
+
+msgid "Image"
 msgstr ""
 
 msgid "Move"

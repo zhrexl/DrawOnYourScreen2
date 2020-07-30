@@ -171,6 +171,7 @@ var AreaManager = new Lang.Class({
             area.leaveDrawingHandler = area.connect('leave-drawing-mode', this.toggleDrawing.bind(this));
             area.updateActionModeHandler = area.connect('update-action-mode', this.updateActionMode.bind(this));
             area.showOsdHandler = area.connect('show-osd', this.showOsd.bind(this));
+            area.showOsdGiconHandler = area.connect('show-osd-gicon', this.showOsd.bind(this));
             this.areas.push(area);
         }
     },
@@ -191,11 +192,13 @@ var AreaManager = new Lang.Class({
             'toggle-fill-rule': this.activeArea.toggleFillRule.bind(this.activeArea),
             'toggle-dash' : this.activeArea.toggleDash.bind(this.activeArea),
             'toggle-fill' : this.activeArea.toggleFill.bind(this.activeArea),
+            'toggle-image-file' : this.activeArea.toggleImageFile.bind(this.activeArea),
             'select-none-shape': () => this.activeArea.selectTool(Area.Tools.NONE),
             'select-line-shape': () => this.activeArea.selectTool(Area.Tools.LINE),
             'select-ellipse-shape': () => this.activeArea.selectTool(Area.Tools.ELLIPSE),
             'select-rectangle-shape': () => this.activeArea.selectTool(Area.Tools.RECTANGLE),
             'select-text-shape': () => this.activeArea.selectTool(Area.Tools.TEXT),
+            'select-image-shape': () => this.activeArea.selectTool(Area.Tools.IMAGE),
             'select-polygon-shape': () => this.activeArea.selectTool(Area.Tools.POLYGON),
             'select-polyline-shape': () => this.activeArea.selectTool(Area.Tools.POLYLINE),
             'select-move-tool': () => this.activeArea.selectTool(Area.Tools.MOVE),
@@ -505,6 +508,7 @@ var AreaManager = new Lang.Class({
             area.disconnect(area.leaveDrawingHandler);
             area.disconnect(area.updateActionModeHandler);
             area.disconnect(area.showOsdHandler);
+            area.disconnect(area.showOsdGiconHandler);
             let container = area.get_parent();
             container.get_parent().remove_actor(container);
             container.destroy();

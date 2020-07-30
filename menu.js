@@ -190,6 +190,18 @@ var DrawingMenu = new Lang.Class({
         fontSection.itemActivated = () => {};
         this.fontSection = fontSection;
         
+        let imageSection = new PopupMenu.PopupMenuSection();
+        let images = this.area.getImages();
+        if (images.length) {
+            if (this.area.currentImage > images.length - 1)
+                this.area.currentImage = images.length - 1;
+            this._addSubMenuItem(imageSection, null, images, this.area, 'currentImage');
+        }
+        this._addSeparator(imageSection);
+        this.menu.addMenuItem(imageSection);
+        imageSection.itemActivated = () => {};
+        this.imageSection = imageSection;
+        
         let manager = Extension.manager;
         this._addSimpleSwitchItem(this.menu, _("Hide panel and dock"), manager.hiddenList ? true : false, manager.togglePanelAndDockOpacity.bind(manager));
         this._addSimpleSwitchItem(this.menu, _("Add a drawing background"), this.area.hasBackground, this.area.toggleBackground.bind(this.area));
@@ -235,19 +247,13 @@ var DrawingMenu = new Lang.Class({
     },
     
     _updateSectionVisibility: function() {
-        if (this.area.currentTool == Area.Tools.TEXT) {
-            this.lineSection.actor.hide();
-            this.fontSection.actor.show();
-            this.colorItem.setSensitive(true);
-            this.fillItem.setSensitive(false);
-            this.fillSection.setSensitive(false);
-        } else {
-            this.lineSection.actor.show();
-            this.fontSection.actor.hide();
-            this.colorItem.setSensitive(true);
-            this.fillItem.setSensitive(true);
-            this.fillSection.setSensitive(true);
-        }
+        let [isText, isImage] = [this.area.currentTool == Area.Tools.TEXT, this.area.currentTool == Area.Tools.IMAGE];
+        this.lineSection.actor.visible = !isText && !isImage;
+        this.fontSection.actor.visible = isText;
+        this.imageSection.actor.visible = isImage;
+        this.colorItem.setSensitive(!isImage);
+        this.fillItem.setSensitive(!isText && !isImage);
+        this.fillSection.setSensitive(!isText && !isImage);
         
         if (this.area.fill)
             this.fillSection.actor.show();
@@ -320,7 +326,9 @@ var DrawingMenu = new Lang.Class({
     },
     
     _addSubMenuItem: function(menu, icon, obj, target, targetProperty, callback) {
-        let item = new PopupMenu.PopupSubMenuMenuItem(_(obj[target[targetProperty]]), icon ? true : false);
+        if (targetProperty == 'currentImage')
+            icon = obj[target[targetProperty]].gicon;
+        let item = new PopupMenu.PopupSubMenuMenuItem(_(String(obj[target[targetProperty]])), icon ? true : false);
         if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, Gio.Icon))
             item.icon.set_gicon(icon);
         else if (icon)
@@ -340,12 +348,14 @@ var DrawingMenu = new Lang.Class({
                 else if (targetProperty == 'currentFontStyle')
                     text = `<span font_style="${obj[i].toLowerCase()}">${_(obj[i])}</span>`;
                 else
-                    text = _(obj[i]);
+                    text = _(String(obj[i]));
                 
                 let iCaptured = Number(i);
                 let subItem = item.menu.addAction(text, () => {
-                    item.label.set_text(_(obj[iCaptured]));
+                    item.label.set_text(_(String(obj[iCaptured])));
                     target[targetProperty] = iCaptured;
+                    if (targetProperty == 'currentImage')
+                        item.icon.set_gicon(obj[iCaptured].gicon);
                     if (callback)
                         callback();
                 });

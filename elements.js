@@ -34,8 +34,8 @@ const reverseEnumeration = function(obj) {
     return reversed;
 };
 
-var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6 };
-var Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
+var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
+var ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 7: "Image" };
 var Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
 var LineCapNames = Object.assign(reverseEnumeration(Cairo.LineCap), { 2: 'Square' });
 var LineJoinNames = reverseEnumeration(Cairo.LineJoin);
@@ -45,7 +45,6 @@ delete FontWeightNames[Pango.Weight.ULTRAHEAVY];
 var FontStyleNames = reverseEnumeration(Pango.Style);
 var FontStretchNames = reverseEnumeration(Pango.Stretch);
 var FontVariantNames = reverseEnumeration(Pango.Variant);
-
 
 const SVG_DEBUG_SUPERPOSES_CAIRO = false;
 const RADIAN = 180 / Math.PI;               // degree
@@ -58,7 +57,9 @@ const MIN_ROTATION_ANGLE = Math.PI / 1000;  // rad
 const MIN_DRAWING_SIZE = 3;                 // px
 
 var DrawingElement = function(params) {
-    return params.shape == Shapes.TEXT ? new TextElement(params) : new _DrawingElement(params);
+    return params.shape == Shapes.TEXT ? new TextElement(params) :
+           params.shape == Shapes.IMAGE ? new ImageElement(params) :
+           new _DrawingElement(params);
 };
 
 // DrawingElement represents a "brushstroke".
@@ -109,9 +110,11 @@ const _DrawingElement = new Lang.Class({
     },
     
     buildCairo: function(cr, params) {
-        let [success, color] = Clutter.Color.from_string(this.color);
-        if (success)
-            Clutter.cairo_set_source_color(cr, color);
+        if (this.color) {
+            let [success, color] = Clutter.Color.from_string(this.color);
+            if (success)
+                Clutter.cairo_set_source_color(cr, color);
+        }
         
         if (this.showSymmetryElement) {
             let transformation = this.lastTransformation;
@@ -724,6 +727,85 @@ const TextElement = new Lang.Class({
         
         return this._originalCenter;
     },
+});
+
+const ImageElement = new Lang.Class({
+    Name: 'DrawOnYourScreenImageElement',
+    Extends: _DrawingElement,
+    
+    _init: function(params) {
+        params.fill = false;
+        this.parent(params);
+    },
+    
+    toJSON: function() {
+        return {
+            shape: this.shape,
+            color: this.color,
+            fill: this.fill,
+            eraser: this.eraser,
+            transformations: this.transformations,
+            image: this.image.toJson(),
+            preserveAspectRatio: this.preserveAspectRatio,
+            points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
+        };
+    },
+    
+    _drawCairo: function(cr, params) {
+        if (this.points.length < 2)
+            return;
+        
+        let points = this.points;
+        let [x, y] = [Math.min(points[0][0], points[1][0]), Math.min(points[0][1], points[1][1])];
+        let [width, height] = [Math.abs(points[1][0] - points[0][0]), Math.abs(points[1][1] - points[0][1])];
+        
+        if (width < 1 || height < 1)
+            return;
+        
+        cr.save();
+        this.image.setCairoSource(cr, x, y, width, height, this.preserveAspectRatio);
+        cr.rectangle(x, y, width, height);
+        cr.fill();
+        cr.restore();
+        
+        if (params.showTextRectangle) {
+            cr.rectangle(x, y, width, height);
+            setDummyStroke(cr);
+        } else if (params.drawTextRectangle) {
+            cr.rectangle(x, y, width, height);
+            // Only draw the rectangle to find the element, not to show it.
+            cr.setLineWidth(0);
+        }
+    },
+    
+    getContainsPoint: function(cr, x, y) {
+        return cr.inFill(x, y);
+    },
+    
+    _drawSvg: function(transAttribute) {
+        let points = this.points;
+        let row = "\n  ";
+        let attributes = '';
+        
+        if (points.length == 2) {
+            attributes = `fill="none"`;
+            row += `<image ${attributes} x="${Math.min(points[0][0], points[1][0])}" y="${Math.min(points[0][1], points[1][1])}" ` +
+                   `width="${Math.abs(points[1][0] - points[0][0])}" height="${Math.abs(points[1][1] - points[0][1])}"${transAttribute} ` +
+                   `preserveAspectRatio="${this.preserveAspectRatio ? 'xMinYMin' : 'none'}" ` +
+                   `id="${this.image.displayName}" xlink:href="data:${this.image.contentType};base64,${this.image.base64}"/>`;
+        }
+        
+        return row;
+    },
+    
+    updateDrawing: function(x, y, transform) {
+        let points = this.points;
+        if (x == points[0][0] || y == points[0][1])
+            return;
+        
+        points[1] = [x, y];
+        this.preserveAspectRatio = !transform;
+    }
 });
 
 const setDummyStroke = function(cr) {

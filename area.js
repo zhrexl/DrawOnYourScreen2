@@ -30,6 +30,7 @@ const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const Pango = imports.gi.Pango;
 const St = imports.gi.St;
+const System = imports.system;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Main = imports.ui.main;
@@ -39,6 +40,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
 const Extension = Me.imports.extension;
 const Elements = Me.imports.elements;
+const Files = Me.imports.files;
 const Menu = Me.imports.menu;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
@@ -46,10 +48,13 @@ const CAIRO_DEBUG_EXTENDS = false;
 const SVG_DEBUG_EXTENDS = false;
 const TEXT_CURSOR_TIME = 600; // ms
 
-const { Shapes, Manipulations, Transformations, LineCapNames, LineJoinNames, FillRuleNames,
+const { Shapes, ShapeNames, Transformations, LineCapNames, LineJoinNames, FillRuleNames,
         FontWeightNames, FontStyleNames, FontStretchNames, FontVariantNames } = Elements;
+const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
+const ManipulationNames = { 100: "Move", 101: "Resize", 102: "Mirror" };
 var Tools = Object.assign({}, Shapes, Manipulations);
-var ToolNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 100: "Move", 101: "Resize", 102: "Mirror" };
+var ToolNames = Object.assign({}, ShapeNames, ManipulationNames);
+
 var FontGenericNames = {  0: 'Theme', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
 
 var getDateString = function() {
@@ -96,6 +101,7 @@ var DrawingArea = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingArea',
     Extends: St.DrawingArea,
     Signals: { 'show-osd': { param_types: [GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
+               'show-osd-gicon': { param_types: [Gio.Icon.$gtype, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
                'update-action-mode': {},
                'leave-drawing-mode': {} },
 
@@ -113,6 +119,7 @@ var DrawingArea = new Lang.Class({
         this.undoneElements = [];
         this.currentElement = null;
         this.currentTool = Shapes.NONE;
+        this.currentImage = 0;
         this.currentFontGeneric = 0;
         this.isSquareArea = false;
         this.hasGrid = false;
@@ -169,6 +176,13 @@ var DrawingArea = new Lang.Class({
         this.currentFillRule = evenodd ? Cairo.FillRule.EVEN_ODD : Cairo.FillRule.WINDING;
     },
     
+    getImages() {
+        let images = Files.getImages();
+        if (!images[this.currentImage])
+            this.currentImage = Math.max(images.length - 1, 0);
+        return images;
+    },
+    
     vfunc_repaint: function() {
         let cr = this.get_context();
         
@@ -179,6 +193,8 @@ var DrawingArea = new Lang.Class({
         }
         
         cr.$dispose();
+        if (this.elements.some(element => element.shape == Shapes.IMAGE) || this.currentElement && this.currentElement.shape == Shapes.IMAGE)
+            System.gc();
     },
     
     _redisplay: function() {
@@ -266,7 +282,7 @@ var DrawingArea = new Lang.Class({
         if (this.currentElement) {
             cr.save();
             this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
-                                                 showTextRectangle: this.currentElement.shape == Shapes.TEXT && !this.isWriting,
+                                                 showTextRectangle: this.currentElement.shape != Shapes.TEXT || !this.isWriting,
                                                  dummyStroke: this.currentElement.fill && this.currentElement.line.lineWidth == 0 });
             
             cr.stroke();
@@ -477,6 +493,8 @@ var DrawingArea = new Lang.Class({
         if (duplicate) {
             // deep cloning
             let copy = new this.grabbedElement.constructor(JSON.parse(JSON.stringify(this.grabbedElement)));
+            if (this.grabbedElement.image)
+                copy.image = this.grabbedElement.image;
             this.elements.push(copy);
             this.grabbedElement = copy;
         }
@@ -572,6 +590,18 @@ var DrawingArea = new Lang.Class({
                     variant: this.currentFontVariant },
                 text: _("Text"),
                 textRightAligned: this.currentTextRightAligned,
+                points: []
+            });
+        } else if (this.currentTool == Shapes.IMAGE) {
+            let images = this.getImages();
+            if (!images.length)
+                return;
+            this.currentElement = new Elements.DrawingElement({
+                shape: this.currentTool,
+                color: this.currentColor.to_string(),
+                eraser: eraser,
+                image: images[this.currentImage],
+                operator: this.currentOperator,
                 points: []
             });
         } else {
@@ -939,6 +969,15 @@ var DrawingArea = new Lang.Class({
         this.emit('show-osd', null, this.currentTextRightAligned ? _("Right aligned") : _("Left aligned"), "", -1, false);
     },
     
+    toggleImageFile: function() {
+        let images = this.getImages();
+        if (!images.length)
+            return;
+        if (images.length > 1)
+            this.currentImage = this.currentImage == images.length - 1 ? 0 : this.currentImage + 1;
+        this.emit('show-osd-gicon', images[this.currentImage].gicon, images[this.currentImage].toString(), "", -1, false);
+    },
+    
     toggleHelp: function() {
         if (this.helper.visible) {
             this.helper.hideHelp();
@@ -1034,7 +1073,10 @@ var DrawingArea = new Lang.Class({
             this._stopDrawing();
         }
         
-        let content = `<svg viewBox="0 0 ${this.width} ${this.height}" xmlns="http://www.w3.org/2000/svg">`;
+        let prefixes = 'xmlns="http://www.w3.org/2000/svg"';
+        if (this.elements.some(element => element.shape == Shapes.IMAGE))
+            prefixes += ' xmlns:xlink="http://www.w3.org/1999/xlink"';
+        let content = `<svg viewBox="0 0 ${this.width} ${this.height}" ${prefixes}>`;
         if (SVG_DEBUG_EXTENDS)
             content = `<svg viewBox="${-this.width} ${-this.height} ${2 * this.width} ${2 * this.height}" xmlns="http://www.w3.org/2000/svg">`;
         let backgroundColorString = this.hasBackground ? this.activeBackgroundColor.to_string() : 'transparent';
@@ -1156,7 +1198,11 @@ var DrawingArea = new Lang.Class({
             return;
         if (contents instanceof Uint8Array)
             contents = ByteArray.toString(contents);
-        this.elements.push(...JSON.parse(contents).map(object => new Elements.DrawingElement(object)));
+        this.elements.push(...JSON.parse(contents).map(object => {
+            if (object.image)
+                object.image = new Files.Image(object.image);
+            return new Elements.DrawingElement(object);
+        }));
         
         if (notify)
             this.emit('show-osd', 'document-open-symbolic', name, "", -1, false);

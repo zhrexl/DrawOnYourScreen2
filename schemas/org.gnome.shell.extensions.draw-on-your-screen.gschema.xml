@@ -106,6 +106,11 @@
       <summary>select text</summary>
       <description>select text</description>
     </key>
+    <key type="as" name="select-image-shape">
+      <default>["&lt;Primary&gt;i"]</default>
+      <summary>select image</summary>
+      <description>select image</description>
+    </key>
     <key type="as" name="select-none-shape">
       <default>["&lt;Primary&gt;p"]</default>
       <summary>unselect shape (free drawing)</summary>
@@ -227,7 +232,7 @@
       <description>toggle font weight</description>
     </key>
     <key type="as" name="toggle-font-style">
-      <default>["&lt;Primary&gt;i"]</default>
+      <default>["&lt;Primary&gt;&lt;Shift&gt;w"]</default>
       <summary>toggle font style</summary>
       <description>toggle font style</description>
     </key>
@@ -235,6 +240,11 @@
       <default>["&lt;Primary&gt;&lt;Shift&gt;a"]</default>
       <summary>toggle text alignment</summary>
       <description>toggle text alignment</description>
+    </key>
+    <key type="as" name="toggle-image-file">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;i"]</default>
+      <summary>toggle image file</summary>
+      <description>toggle image file</description>
     </key>
     <key type="as" name="open-user-stylesheet">
       <default>["&lt;Primary&gt;o"]</default>
