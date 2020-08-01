@@ -394,26 +394,24 @@ const KeybindingsWidget = new GObject.Class({
             accel_mode: Gtk.CellRendererAccelMode.GTK,
             xalign: 1
         });
-        keybinding_renderer.connect('accel-edited',
-            Lang.bind(this, function(renderer, iter, key, mods) {
-                let value = Gtk.accelerator_name(key, mods);
-                let [success, iterator ] =
-                    this._store.get_iter_from_string(iter);
+        keybinding_renderer.connect('accel-edited', (renderer, iter, key, mods) => {
+            let value = Gtk.accelerator_name(key, mods);
+            let [success, iterator ] =
+                this._store.get_iter_from_string(iter);
 
-                if(!success) {
-                    printerr("Can't change keybinding");
-                }
+            if(!success) {
+                printerr("Can't change keybinding");
+            }
 
-                let name = this._store.get_value(iterator, 0);
+            let name = this._store.get_value(iterator, 0);
 
-                this._store.set(
-                    iterator,
-                    [this._columns.MODS, this._columns.KEY],
-                    [mods, key]
-                );
-                this._settings.set_strv(name, [value]);
-            })
-        );
+            this._store.set(
+                iterator,
+                [this._columns.MODS, this._columns.KEY],
+                [mods, key]
+            );
+            this._settings.set_strv(name, [value]);
+        });
 
         let keybinding_column = new Gtk.TreeViewColumn({
             title: "",
