@@ -420,6 +420,7 @@ var DrawingMenu = new Lang.Class({
     _addOpenDrawingSubMenuItem: function(menu) {
         let item = new PopupMenu.PopupSubMenuMenuItem(_("Open drawing"), true);
         this.openDrawingSubMenuItem = item;
+        this.openDrawingSubMenuItem.setSensitive(Boolean(Files.getJsons().length));
         this.openDrawingSubMenu = item.menu;
         item.icon.set_icon_name('document-open-symbolic');
         
@@ -463,6 +464,7 @@ var DrawingMenu = new Lang.Class({
             deleteButton.connect('clicked', () => {
                 json.delete();
                 item.destroy();
+                this.openDrawingSubMenuItem.setSensitive(!this.openDrawingSubMenu.isEmpty());
             });
         });
         
@@ -493,13 +495,17 @@ var DrawingMenu = new Lang.Class({
         this.saveDrawingSubMenuItem.setSensitive(this.area.elements.length > 0);
     },
     
+    _onDrawingSaved() {
+        this._updateDrawingNameMenuItem();
+        this.openDrawingSubMenuItem.setSensitive(true);
+    },
+    
     _populateSaveDrawingSubMenu: function() {
         this.saveDrawingSubMenu.removeAll();
         let saveEntry = new DrawingMenuEntry({ initialTextGetter: Files.getDateString,
                                                 entryActivateCallback: (text) => {
-                                                    this.area.saveAsJsonWithName(text);
+                                                    this.area.saveAsJsonWithName(text, this._onDrawingSaved.bind(this));
                                                     this.saveDrawingSubMenu.toggle();
-                                                    this._updateDrawingNameMenuItem();
                                                 },
                                                 invalidStrings: [Me.metadata['persistent-file-name'], '/'],
                                                 primaryIconName: 'insert-text' });

@@ -1074,7 +1074,7 @@ var DrawingArea = new Lang.Class({
         }
     },
     
-    _saveAsJson: function(name, notify) {
+    _saveAsJson: function(name, notify, callback) {
         // stop drawing or writing
         if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting) {
             this._stopWriting();
@@ -1107,11 +1107,13 @@ var DrawingArea = new Lang.Class({
                 this.jsonName = name;
                 this.lastJsonContents = contents;
             }
+            if (callback)
+                callback();
         });
     },
     
-    saveAsJsonWithName: function(name) {
-        this._saveAsJson(name);
+    saveAsJsonWithName: function(name, callback) {
+        this._saveAsJson(name, false, callback);
     },
     
     saveAsJson: function() {
