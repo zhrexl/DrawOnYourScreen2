@@ -46,6 +46,10 @@ var FontStyleNames = reverseEnumeration(Pango.Style);
 var FontStretchNames = reverseEnumeration(Pango.Stretch);
 var FontVariantNames = reverseEnumeration(Pango.Variant);
 
+var getPangoFontFamilies = function() {
+    return PangoCairo.font_map_get_default().list_families().map(fontFamily => fontFamily.get_name()).sort((a,b) => a.localeCompare(b));
+};
+
 const SVG_DEBUG_SUPERPOSES_CAIRO = false;
 const RADIAN = 180 / Math.PI;               // degree
 const INVERSION_CIRCLE_RADIUS = 12;         // px

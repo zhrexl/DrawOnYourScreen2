@@ -56,6 +56,9 @@ const FILLRULE_EVENODD_ICON_PATH = ICON_DIR.get_child('fillrule-evenodd-symbolic
 const DASHED_LINE_ICON_PATH = ICON_DIR.get_child('dashed-line-symbolic.svg').get_path();
 const FULL_LINE_ICON_PATH = ICON_DIR.get_child('full-line-symbolic.svg').get_path();
 
+// 150 labels with font-family style take ~15Mo
+const FONT_FAMILY_STYLE = true;
+
 const getActor = function(object) {
     return GS_VERSION < '3.33.0' ? object.actor : object;
 };
@@ -180,9 +183,7 @@ var DrawingMenu = new Lang.Class({
         this.lineSection = lineSection;
         
         let fontSection = new PopupMenu.PopupMenuSection();
-        let FontGenericNamesCopy = Object.create(Area.FontGenericNames);
-        FontGenericNamesCopy[0] = this.area.currentThemeFontFamily;
-        this._addSubMenuItem(fontSection, 'font-x-generic-symbolic', FontGenericNamesCopy, this.area, 'currentFontGeneric');
+        this._addFontFamilySubMenuItem(fontSection, 'font-x-generic-symbolic');
         this._addSubMenuItem(fontSection, 'format-text-bold-symbolic', Elements.FontWeightNames, this.area, 'currentFontWeight');
         this._addSubMenuItem(fontSection, 'format-text-italic-symbolic', Elements.FontStyleNames, this.area, 'currentFontStyle');
         this._addSwitchItem(fontSection, _("Right aligned"), 'format-justify-left-symbolic', 'format-justify-right-symbolic', this.area, 'currentTextRightAligned');
@@ -342,9 +343,7 @@ var DrawingMenu = new Lang.Class({
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             for (let i in obj) {
                 let text;
-                if (targetProperty == 'currentFontGeneric')
-                    text = `<span font_family="${obj[i]}">${_(obj[i])}</span>`;
-                else if (targetProperty == 'currentFontWeight')
+                if (targetProperty == 'currentFontWeight')
                     text = `<span font_weight="${i}">${_(obj[i])}</span>`;
                 else if (targetProperty == 'currentFontStyle')
                     text = `<span font_style="${obj[i].toLowerCase()}">${_(obj[i])}</span>`;
@@ -391,7 +390,6 @@ var DrawingMenu = new Lang.Class({
                     this.area.currentColor = this.area.colors[iCaptured];
                     item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
                 });
-                colorItem.label.get_clutter_text().set_use_markup(true);
                 // Foreground color markup is not displayed since 3.36, use style instead but the transparency is lost.
                 colorItem.label.set_style(`color:${this.area.colors[i].to_string().slice(0, 7)};`);
             }
@@ -399,6 +397,32 @@ var DrawingMenu = new Lang.Class({
         });
         menu.addMenuItem(item);
         return item;
+    },
+    
+    _addFontFamilySubMenuItem: function(menu, icon) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(this.area.currentFontFamily, true);
+        item.icon.set_icon_name(icon);
+        
+        item.menu.itemActivated = () => {
+            item.menu.close();
+        };
+        
+        item.menu.openOld = item.menu.open;
+        item.menu.open = (animate) => {
+            if (!item.menu.isOpen && item.menu.isEmpty()) {
+                this.area.fontFamilies.forEach(family => {
+                    let subItem = item.menu.addAction(_(family), () => {
+                        item.label.set_text(_(family));
+                        this.area.currentFontFamily = family;
+                    });
+                    if (FONT_FAMILY_STYLE)
+                        subItem.label.set_style(`font-family:${family}`);
+                });
+            }
+            item.menu.openOld();
+        };
+        
+        menu.addMenuItem(item);
     },
     
     _addDrawingNameItem: function(menu) {
@@ -420,8 +444,8 @@ var DrawingMenu = new Lang.Class({
     _addOpenDrawingSubMenuItem: function(menu) {
         let item = new PopupMenu.PopupSubMenuMenuItem(_("Open drawing"), true);
         this.openDrawingSubMenuItem = item;
-        this.openDrawingSubMenuItem.setSensitive(Boolean(Files.getJsons().length));
         this.openDrawingSubMenu = item.menu;
+        item.setSensitive(Boolean(Files.getJsons().length));
         item.icon.set_icon_name('document-open-symbolic');
         
         item.menu.itemActivated = () => {

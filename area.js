@@ -54,7 +54,7 @@ const ManipulationNames = { 100: "Move", 101: "Resize", 102: "Mirror" };
 var Tools = Object.assign({}, Shapes, Manipulations);
 var ToolNames = Object.assign({}, ShapeNames, ManipulationNames);
 
-var FontGenericNames = {  0: 'Theme', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
+var FontGenericFamilies = ['Sans-Serif', 'Serif', 'Monospace', 'Cursive', 'Fantasy'];
 
 // DrawingArea is the widget in which we draw, thanks to Cairo.
 // It creates and manages a DrawingElement for each "brushstroke".
@@ -82,7 +82,6 @@ var DrawingArea = new Lang.Class({
         this.currentElement = null;
         this.currentTool = Shapes.NONE;
         this.currentImage = 0;
-        this.currentFontGeneric = 0;
         this.isSquareArea = false;
         this.hasGrid = false;
         this.hasBackground = false;
@@ -145,6 +144,24 @@ var DrawingArea = new Lang.Class({
         return images;
     },
     
+    get currentFontFamily() {
+        return this._currentFontFamily || this.currentThemeFontFamily;
+    },
+    
+    set currentFontFamily(fontFamily) {
+        this._currentFontFamily = fontFamily;
+    },
+    
+    get fontFamilies() {
+        if (!this._fontFamilies) {
+            let pangoFontFamilies = Elements.getPangoFontFamilies().filter(family => {
+                return family != this.currentThemeFontFamily && FontGenericFamilies.indexOf(family) == -1;
+            });
+            this._fontFamilies = [this.currentThemeFontFamily].concat(FontGenericFamilies, pangoFontFamilies);
+        }
+        return this._fontFamilies;
+    },
+    
     vfunc_repaint: function() {
         let cr = this.get_context();
         
@@ -198,6 +215,7 @@ var DrawingArea = new Lang.Class({
             this.colors[i] = this.colors[i].alpha ? this.colors[i] : this.colors[0];
         }
         this.currentColor = this.currentColor || this.colors[1];
+        this._fontFamilies = null;
         // SVG does not support 'Ultra-heavy' weight (1000)
         this.newThemeAttributes.FontWeight = Math.min(this.newThemeAttributes.FontWeight, 900);
         this.newThemeAttributes.LineWidth = (this.newThemeAttributes.LineWidth > 0) ? this.newThemeAttributes.LineWidth : 3;
@@ -545,7 +563,7 @@ var DrawingArea = new Lang.Class({
                 color: this.currentColor.to_string(),
                 eraser: eraser,
                 font: {
-                    family: (this.currentFontGeneric == 0 ? this.currentThemeFontFamily : FontGenericNames[this.currentFontGeneric]),
+                    family: this.currentFontFamily,
                     weight: this.currentFontWeight,
                     style: this.currentFontStyle,
                     stretch: this.currentFontStretch,
@@ -913,13 +931,13 @@ var DrawingArea = new Lang.Class({
     },
     
     toggleFontFamily: function() {
-        this.currentFontGeneric = this.currentFontGeneric == 5 ? 0 : this.currentFontGeneric + 1;
-        let currentFontFamily = this.currentFontGeneric == 0 ? this.currentThemeFontFamily : FontGenericNames[this.currentFontGeneric];
+        let index = Math.max(0, this.fontFamilies.indexOf(this.currentFontFamily));
+        this.currentFontFamily = (index == this.fontFamilies.length - 1) ? 0 : this.fontFamilies[index + 1];
         if (this.currentElement && this.currentElement.font) {
-            this.currentElement.font.family = currentFontFamily;
+            this.currentElement.font.family = this.currentFontFamily;
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_family="${currentFontFamily}">${_(currentFontFamily)}</span>`, "", -1, false);
+        this.emit('show-osd', null, `<span font_family="${this.currentFontFamily}">${_(this.currentFontFamily)}</span>`, "", -1, false);
     },
     
     toggleTextAlignment: function() {
@@ -978,7 +996,7 @@ var DrawingArea = new Lang.Class({
         this.stageKeyReleasedHandler = global.stage.connect('key-release-event', this._onStageKeyReleased.bind(this));
         this.keyPressedHandler = this.connect('key-press-event', this._onKeyPressed.bind(this));
         this.buttonPressedHandler = this.connect('button-press-event', this._onButtonPressed.bind(this));
-        this._onKeyboardPopupMenuHandler = this.connect('popup-menu', this._onKeyboardPopupMenu.bind(this));
+        this.keyboardPopupMenuHandler = this.connect('popup-menu', this._onKeyboardPopupMenu.bind(this));
         this.scrollHandler = this.connect('scroll-event', this._onScroll.bind(this));
         this.get_parent().set_background_color(this.reactive && this.hasBackground ? this.activeBackgroundColor : null);
         this._updateStyle();
@@ -1001,9 +1019,9 @@ var DrawingArea = new Lang.Class({
             this.disconnect(this.buttonPressedHandler);
             this.buttonPressedHandler = null;
         }
-        if (this._onKeyboardPopupMenuHandler) {
-            this.disconnect(this._onKeyboardPopupMenuHandler);
-            this._onKeyboardPopupMenuHandler = null;
+        if (this.keyboardPopupMenuHandler) {
+            this.disconnect(this.keyboardPopupMenuHandler);
+            this.keyboardPopupMenuHandler = null;
         }
         if (this.motionHandler) {
             this.disconnect(this.motionHandler);
