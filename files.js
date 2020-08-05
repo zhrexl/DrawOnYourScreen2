@@ -49,8 +49,8 @@ var Image = new Lang.Class({
         return {
             displayName: this.displayName,
             contentType: this.contentType,
-            _base64: this.base64,
-            _hash: this.hash
+            base64: this.base64,
+            hash: this.hash
         };
     },
     
@@ -66,7 +66,7 @@ var Image = new Lang.Class({
             if (this.file)
                 this._bytes = this.file.load_bytes(null)[0];
             else
-                this._bytes = new GLib.Bytes(GLib.base64_decode(this._base64));
+                this._bytes = new GLib.Bytes(GLib.base64_decode(this.base64));
         }
         return this._bytes;
     },
@@ -77,10 +77,19 @@ var Image = new Lang.Class({
         return this._base64;
     },
     
+    set base64(base64) {
+        this._base64 = base64;
+    },
+    
+    // hash is not used
     get hash() {
         if (!this._hash)
             this._hash = this.bytes.hash();
         return this._hash;
+    },
+    
+    set hash(hash) {
+        this._hash = hash;
     },
     
     get pixbuf() {
