@@ -324,7 +324,7 @@ var DrawingArea = new Lang.Class({
             }
             return Clutter.EVENT_STOP;
         } else if (button == 2) {
-            this.toggleFill();
+            this.switchFill();
         } else if (button == 3) {
             this._stopDrawing();
             this.menu.open(x, y);
@@ -858,7 +858,7 @@ var DrawingArea = new Lang.Class({
         }
     },
     
-    toggleColor: function() {
+    switchColor: function() {
         this.selectColor((this.currentColor == this.colors[1]) ? 2 : 1);
     },
     
@@ -878,12 +878,12 @@ var DrawingArea = new Lang.Class({
         this.updatePointerCursor();
     },
     
-    toggleFill: function() {
+    switchFill: function() {
         this.fill = !this.fill;
         this.emit('show-osd', null, this.fill ? _("Fill") : _("Outline"), "", -1, false);
     },
     
-    toggleDash: function() {
+    switchDash: function() {
         this.dashedLine = !this.dashedLine;
         this.emit('show-osd', null, this.dashedLine ? _("Dashed line") : _("Full line"), "", -1, false);
     },
@@ -893,22 +893,22 @@ var DrawingArea = new Lang.Class({
         this.emit('show-osd', null, _("%d px").format(this.currentLineWidth), "", 2 * this.currentLineWidth, false);
     },
     
-    toggleLineJoin: function() {
+    switchLineJoin: function() {
         this.currentLineJoin = this.currentLineJoin == 2 ? 0 : this.currentLineJoin + 1;
         this.emit('show-osd', null, _(LineJoinNames[this.currentLineJoin]), "", -1, false);
     },
     
-    toggleLineCap: function() {
+    switchLineCap: function() {
         this.currentLineCap = this.currentLineCap == 2 ? 0 : this.currentLineCap + 1;
         this.emit('show-osd', null, _(LineCapNames[this.currentLineCap]), "", -1, false);
     },
     
-    toggleFillRule: function() {
+    switchFillRule: function() {
         this.currentFillRule = this.currentFillRule == 1 ? 0 : this.currentFillRule + 1;
         this.emit('show-osd', null, _(FillRuleNames[this.currentFillRule]), "", -1, false);
     },
     
-    toggleFontWeight: function() {
+    switchFontWeight: function() {
         let fontWeights = Object.keys(FontWeightNames).map(key => Number(key));
         let index = fontWeights.indexOf(this.currentFontWeight);
         this.currentFontWeight = index == fontWeights.length - 1 ? fontWeights[0] : fontWeights[index + 1];
@@ -920,7 +920,7 @@ var DrawingArea = new Lang.Class({
                                     `${_(FontWeightNames[this.currentFontWeight])}</span>`, "", -1, false);
     },
     
-    toggleFontStyle: function() {
+    switchFontStyle: function() {
         this.currentFontStyle = this.currentFontStyle == 2 ? 0 : this.currentFontStyle + 1;
         if (this.currentElement && this.currentElement.font) {
             this.currentElement.font.style = this.currentFontStyle;
@@ -930,7 +930,7 @@ var DrawingArea = new Lang.Class({
                                     `${_(FontStyleNames[this.currentFontStyle])}</span>`, "", -1, false);
     },
     
-    toggleFontFamily: function() {
+    switchFontFamily: function() {
         let index = Math.max(0, this.fontFamilies.indexOf(this.currentFontFamily));
         this.currentFontFamily = (index == this.fontFamilies.length - 1) ? 0 : this.fontFamilies[index + 1];
         if (this.currentElement && this.currentElement.font) {
@@ -940,7 +940,7 @@ var DrawingArea = new Lang.Class({
         this.emit('show-osd', null, `<span font_family="${this.currentFontFamily}">${_(this.currentFontFamily)}</span>`, "", -1, false);
     },
     
-    toggleTextAlignment: function() {
+    switchTextAlignment: function() {
         this.currentTextRightAligned = !this.currentTextRightAligned;
         if (this.currentElement && this.currentElement.textRightAligned !== undefined) {
             this.currentElement.textRightAligned = this.currentTextRightAligned;
@@ -949,7 +949,7 @@ var DrawingArea = new Lang.Class({
         this.emit('show-osd', null, this.currentTextRightAligned ? _("Right aligned") : _("Left aligned"), "", -1, false);
     },
     
-    toggleImageFile: function() {
+    switchImageFile: function() {
         let images = this.getImages();
         if (!images.length)
             return;
