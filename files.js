@@ -136,7 +136,7 @@ var getImages = function() {
     });
     
     images.sort((a, b) => {
-        return b.displayName < a.displayName;
+        return a.displayName.localeCompare(b.displayName);
     });
     
     return images;
