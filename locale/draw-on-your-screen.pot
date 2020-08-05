@@ -218,7 +218,10 @@ msgstr ""
 msgid "Toggle fill rule"
 msgstr ""
 
-msgid "Change font family (generic name)"
+msgid "Change font family"
+msgstr ""
+
+msgid "Change font family (reverse)"
 msgstr ""
 
 msgid "Change font weight"

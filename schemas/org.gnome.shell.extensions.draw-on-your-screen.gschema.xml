@@ -226,6 +226,11 @@
       <summary>switch font family</summary>
       <description>switch font family</description>
     </key>
+    <key type="as" name="reverse-switch-font-family">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;f"]</default>
+      <summary>switch font family (reverse)</summary>
+      <description>switch font family (reverse)</description>
+    </key>
     <key type="as" name="switch-font-weight">
       <default>["&lt;Primary&gt;w"]</default>
       <summary>switch font weight</summary>

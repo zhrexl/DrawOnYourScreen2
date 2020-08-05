@@ -930,9 +930,12 @@ var DrawingArea = new Lang.Class({
                                     `${_(FontStyleNames[this.currentFontStyle])}</span>`, "", -1, false);
     },
     
-    switchFontFamily: function() {
+    switchFontFamily: function(reverse) {
         let index = Math.max(0, this.fontFamilies.indexOf(this.currentFontFamily));
-        this.currentFontFamily = (index == this.fontFamilies.length - 1) ? 0 : this.fontFamilies[index + 1];
+        if (reverse)
+            this.currentFontFamily = (index == 0) ? this.fontFamilies[this.fontFamilies.length - 1] : this.fontFamilies[index - 1];
+        else
+            this.currentFontFamily = (index == this.fontFamilies.length - 1) ? this.fontFamilies[0] : this.fontFamilies[index + 1];
         if (this.currentElement && this.currentElement.font) {
             this.currentElement.font.family = this.currentFontFamily;
             this._redisplay();
