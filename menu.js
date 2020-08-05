@@ -39,6 +39,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Area = Me.imports.area;
 const Elements = Me.imports.elements;
 const Extension = Me.imports.extension;
+const Files = Me.imports.files;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
@@ -438,10 +439,10 @@ var DrawingMenu = new Lang.Class({
     
     _populateOpenDrawingSubMenu: function() {
         this.openDrawingSubMenu.removeAll();
-        let jsonFiles = Area.getJsonFiles();
-        jsonFiles.forEach(file => {
-            let item = this.openDrawingSubMenu.addAction(`<i>${file.displayName}</i>`, () => {
-                this.area.loadJson(file.name);
+        let jsons = Files.getJsons();
+        jsons.forEach(json => {
+            let item = this.openDrawingSubMenu.addAction(`<i>${String(json)}</i>`, () => {
+                this.area.loadJson(json.name);
                 this._updateDrawingNameMenuItem();
                 this._updateSaveDrawingSubMenuItemSensitivity();
             });
@@ -460,7 +461,7 @@ var DrawingMenu = new Lang.Class({
             getActor(item).add_child(deleteButton);
             
             deleteButton.connect('clicked', () => {
-                file.delete();
+                json.delete();
                 item.destroy();
             });
         });
@@ -494,7 +495,7 @@ var DrawingMenu = new Lang.Class({
     
     _populateSaveDrawingSubMenu: function() {
         this.saveDrawingSubMenu.removeAll();
-        let saveEntry = new DrawingMenuEntry({ initialTextGetter: Area.getDateString,
+        let saveEntry = new DrawingMenuEntry({ initialTextGetter: Files.getDateString,
                                                 entryActivateCallback: (text) => {
                                                     this.area.saveAsJsonWithName(text);
                                                     this.saveDrawingSubMenu.toggle();

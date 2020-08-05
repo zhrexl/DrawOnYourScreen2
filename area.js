@@ -20,7 +20,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const ByteArray = imports.byteArray;
 const Cairo = imports.cairo;
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
@@ -56,43 +55,6 @@ var Tools = Object.assign({}, Shapes, Manipulations);
 var ToolNames = Object.assign({}, ShapeNames, ManipulationNames);
 
 var FontGenericNames = {  0: 'Theme', 1: 'Sans-Serif', 2: 'Serif', 3: 'Monospace', 4: 'Cursive', 5: 'Fantasy' };
-
-var getDateString = function() {
-    let date = GLib.DateTime.new_now_local();
-    return `${date.format("%F")} ${date.format("%X")}`;
-};
-
-var getJsonFiles = function() {
-    let directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir']]));
-    
-    let enumerator;
-    try {
-        enumerator = directory.enumerate_children('standard::name,standard::display-name,standard::content-type,time::modified', Gio.FileQueryInfoFlags.NONE, null);
-    } catch(e) {
-        return [];
-    }
-    
-    let jsonFiles = [];
-    let fileInfo = enumerator.next_file(null);
-    while (fileInfo) {
-        if (fileInfo.get_content_type().indexOf('json') != -1 && fileInfo.get_name() != `${Me.metadata['persistent-file-name']}.json`) {
-            let file = enumerator.get_child(fileInfo);
-            jsonFiles.push({ name: fileInfo.get_name().slice(0, -5),
-                             displayName: fileInfo.get_display_name().slice(0, -5),
-                             // fileInfo.get_modification_date_time: Gio 2.62+
-                             modificationUnixTime: fileInfo.get_attribute_uint64('time::modified'),
-                             delete: () => file.delete(null) });
-        }
-        fileInfo = enumerator.next_file(null);
-    }
-    enumerator.close(null);
-    
-    jsonFiles.sort((a, b) => {
-        return b.modificationUnixTime - a.modificationUnixTime;
-    });
-    
-    return jsonFiles;
-};
 
 // DrawingArea is the widget in which we draw, thanks to Cairo.
 // It creates and manages a DrawingElement for each "brushstroke".
@@ -1092,7 +1054,7 @@ var DrawingArea = new Lang.Class({
         }
         content += "\n</svg>";
         
-        let filename = `${Me.metadata['svg-file-name']} ${getDateString()}.svg`;
+        let filename = `${Me.metadata['svg-file-name']} ${Files.getDateString()}.svg`;
         let dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES);
         let path = GLib.build_filenamev([dir, filename]);
         if (GLib.file_test(path, GLib.FileTest.EXISTS))
@@ -1120,34 +1082,25 @@ var DrawingArea = new Lang.Class({
             this._stopDrawing();
         }
         
-        let dir = GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir']]);
-        if (!GLib.file_test(dir, GLib.FileTest.EXISTS))
-            GLib.mkdir_with_parents(dir, 0o700);
-        let path = GLib.build_filenamev([dir, `${name}.json`]);
-        
+        let json = new Files.Json({ name });
         let oldContents;
         
         if (name == Me.metadata['persistent-file-name']) {
-            if (GLib.file_test(path, GLib.FileTest.EXISTS)) {
-                oldContents = GLib.file_get_contents(path)[1];
-                if (oldContents instanceof Uint8Array)
-                    oldContents = ByteArray.toString(oldContents);
-            }
-            
+            let oldContents = json.contents;
             // do not create a file to write just an empty array
             if (!oldContents && this.elements.length == 0)
                 return;
         }
         
         // do not use "content = JSON.stringify(this.elements, null, 2);", neither "content = JSON.stringify(this.elements);"
-        // because of compromise between disk usage and human readability
+        // do compromise between disk usage and human readability
         let contents = `[\n  ` + new Array(...this.elements.map(element => JSON.stringify(element))).join(`,\n\n  `) + `\n]`;
         
         if (name == Me.metadata['persistent-file-name'] && contents == oldContents)
             return;
         
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-            GLib.file_set_contents(path, contents);
+            json.contents = contents;
             if (notify)
                 this.emit('show-osd', 'document-save-symbolic', name, "", -1, false);
             if (name != Me.metadata['persistent-file-name']) {
@@ -1162,7 +1115,7 @@ var DrawingArea = new Lang.Class({
     },
     
     saveAsJson: function() {
-        this._saveAsJson(getDateString(), true);
+        this._saveAsJson(Files.getDateString(), true);
     },
     
     savePersistent: function() {
@@ -1188,16 +1141,10 @@ var DrawingArea = new Lang.Class({
         this.elements = [];
         this.currentElement = null;
         
-        let dir = GLib.get_user_data_dir();
-        let path = GLib.build_filenamev([dir, Me.metadata['data-dir'], `${name}.json`]);
+        let contents = (new Files.Json({ name })).contents;
+        if (!contents)
+            return;
         
-        if (!GLib.file_test(path, GLib.FileTest.EXISTS))
-            return;
-        let [success, contents] = GLib.file_get_contents(path);
-        if (!success)
-            return;
-        if (contents instanceof Uint8Array)
-            contents = ByteArray.toString(contents);
         this.elements.push(...JSON.parse(contents).map(object => {
             if (object.image)
                 object.image = new Files.Image(object.image);
@@ -1222,7 +1169,7 @@ var DrawingArea = new Lang.Class({
     },
     
     loadNextJson: function() {
-        let names = getJsonFiles().map(file => file.name);
+        let names = Files.getJsons().map(json => json.name);
         
         if (!names.length)
             return;
@@ -1232,7 +1179,7 @@ var DrawingArea = new Lang.Class({
     },
     
     loadPreviousJson: function() {
-        let names = getJsonFiles().map(file => file.name);
+        let names = Files.getJsons().map(json => json.name);
         
         if (!names.length)
             return;
