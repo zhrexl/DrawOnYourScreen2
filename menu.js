@@ -361,6 +361,7 @@ var DrawingMenu = new Lang.Class({
                 });
                 
                 subItem.label.get_clutter_text().set_use_markup(true);
+                getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
                 
                 // change the display order of tools
                 if (obj == Area.ToolNames && i == Area.Tools.POLYGON)
@@ -392,6 +393,7 @@ var DrawingMenu = new Lang.Class({
                 });
                 // Foreground color markup is not displayed since 3.36, use style instead but the transparency is lost.
                 colorItem.label.set_style(`color:${this.area.colors[i].to_string().slice(0, 7)};`);
+                getActor(colorItem).connect('key-focus-in', updateSubMenuAdjustment);
             }
             return GLib.SOURCE_REMOVE;
         });
@@ -417,6 +419,7 @@ var DrawingMenu = new Lang.Class({
                     });
                     if (FONT_FAMILY_STYLE)
                         subItem.label.set_style(`font-family:${family}`);
+                    getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
                 });
             }
             item.menu.openOld();
@@ -466,28 +469,29 @@ var DrawingMenu = new Lang.Class({
         this.openDrawingSubMenu.removeAll();
         let jsons = Files.getJsons();
         jsons.forEach(json => {
-            let item = this.openDrawingSubMenu.addAction(`<i>${String(json)}</i>`, () => {
+            let subItem = this.openDrawingSubMenu.addAction(`<i>${String(json)}</i>`, () => {
                 this.area.loadJson(json.name);
                 this._updateDrawingNameMenuItem();
                 this._updateSaveDrawingSubMenuItemSensitivity();
             });
-            item.label.get_clutter_text().set_use_markup(true);
+            subItem.label.get_clutter_text().set_use_markup(true);
+            getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
             
             let expander = new St.Bin({
                 style_class: 'popup-menu-item-expander',
                 x_expand: true,
             });
-            getActor(item).add_child(expander);
+            getActor(subItem).add_child(expander);
             
             let deleteButton = new St.Button({ style_class: 'draw-on-your-screen-menu-delete-button',
                                                child: new St.Icon({ icon_name: 'edit-delete-symbolic',
                                                                     style_class: 'popup-menu-icon',
                                                                     x_align: Clutter.ActorAlign.END }) });
-            getActor(item).add_child(deleteButton);
+            getActor(subItem).add_child(deleteButton);
             
             deleteButton.connect('clicked', () => {
                 json.delete();
-                item.destroy();
+                subItem.destroy();
                 this.openDrawingSubMenuItem.setSensitive(!this.openDrawingSubMenu.isEmpty());
             });
         });
@@ -546,6 +550,23 @@ var DrawingMenu = new Lang.Class({
         }
     }
 });
+
+// based on ApplicationsButton.scrollToButton , https://gitlab.gnome.org/GNOME/gnome-shell-extensions/blob/master/extensions/apps-menu/extension.js
+const updateSubMenuAdjustment = function(itemActor) {
+    let scrollView = itemActor.get_parent().get_parent();
+    let adjustment = scrollView.get_vscroll_bar().get_adjustment();
+    let scrollViewAlloc = scrollView.get_allocation_box();
+    let currentScrollValue = adjustment.get_value();
+    let height = scrollViewAlloc.y2 - scrollViewAlloc.y1;
+    let itemActorAlloc = itemActor.get_allocation_box();
+    let newScrollValue = currentScrollValue;
+    if (currentScrollValue > itemActorAlloc.y1 - 10)
+        newScrollValue = itemActorAlloc.y1 - 10;
+    if (height + currentScrollValue < itemActorAlloc.y2 + 10)
+        newScrollValue = itemActorAlloc.y2 - height + 10;
+    if (newScrollValue != currentScrollValue)
+        adjustment.set_value(newScrollValue);
+};
 
 // based on searchItem.js, https://github.com/leonardo-bartoli/gnome-shell-extension-Recents
 const DrawingMenuEntry = new Lang.Class({
