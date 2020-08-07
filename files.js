@@ -64,7 +64,16 @@ var Image = new Lang.Class({
     get bytes() {
         if (!this._bytes) {
             if (this.file)
-                this._bytes = this.file.load_bytes(null)[0];
+                try {
+                    // load_bytes available in GLib 2.56+
+                    this._bytes = this.file.load_bytes(null)[0];
+                } catch(e) {
+                    let [success_, contents] = this.file.load_contents(null);
+                    if (contents instanceof Uint8Array)
+                        this._bytes = ByteArray.toGBytes(contents);
+                    else
+                        this._bytes = contents.toGBytes();
+                }
             else
                 this._bytes = new GLib.Bytes(GLib.base64_decode(this.base64));
         }
