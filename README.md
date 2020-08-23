@@ -7,7 +7,7 @@ Then save your beautiful work by taking a screenshot.
 
 ## Features
 
-* Basic shapes (rectangle, circle, ellipse, line, curve, text, free)
+* Basic shapes (rectangle, circle, ellipse, line, curve, text, image, free)
 * Basic transformations (move, rotate, resize, stretch, mirror, inverse)
 * Smooth stroke
 * Draw over applications
@@ -39,6 +39,10 @@ Then save your beautiful work by taking a screenshot.
  Hold the `Shift` key while starting moving.
  
  ![How to duplicate an element](https://framagit.org/abakkk/DrawOnYourScreen/-/raw/ressources/duplicate.webm)
+
+* Insertable images:
+
+ Add your images (jpeg, png, svg) to `~/.local/share/drawOnYourScreen/images/`.
 
 * Screenshot Tool extension:
 

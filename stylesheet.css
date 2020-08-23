@@ -58,6 +58,7 @@
 }
 
 .draw-on-your-screen-menu-separator-item {
+    margin-top: 0;
     padding-top: 0.14em;
     padding-bottom: 0.14em;
 }
@@ -69,6 +70,33 @@
 .draw-on-your-screen-menu-separator-item .popup-separator-menu-item {
     margin-top: 0.2em; /* default 6px */
     margin-bottom: 0.2em; /* default 6px */
+}
+
+.draw-on-your-screen-menu-separator-item .popup-separator-menu-item-separator {
+    background-color: transparent;
+}
+
+.draw-on-your-screen-menu-thin-separator-item .popup-separator-menu-item-separator {
+    margin-top: 0;
+}
+
+/* system-menu-action: from GS 3.34- */
+.draw-on-your-screen-menu .system-menu-action {
+  min-width: 0;
+  border: none;
+  border-radius: 32px;
+  padding: 12px;
+  margin: 0;
+}
+
+.draw-on-your-screen-menu .system-menu-action:hover,
+.draw-on-your-screen-menu .system-menu-action:focus {
+    border: none;
+    padding: 12px;
+}
+
+.draw-on-your-screen-menu .system-menu-action > StIcon {
+    icon-size: 16px;
 }
 
 .draw-on-your-screen-menu-slider-label {

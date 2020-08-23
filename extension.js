@@ -35,7 +35,8 @@ const PanelMenu = imports.ui.panelMenu;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
-const Draw = Me.imports.draw;
+const Area = Me.imports.area;
+const Helper = Me.imports.helper;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
@@ -154,9 +155,9 @@ var AreaManager = new Lang.Class({
         for (let i = 0; i < this.monitors.length; i++) {
             let monitor = this.monitors[i];
             let container = new St.Widget({ name: 'drawOnYourSreenContainer' + i });
-            let helper = new Draw.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
+            let helper = new Helper.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
             let loadPersistent = i == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
-            let area = new Draw.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, loadPersistent);
+            let area = new Area.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, loadPersistent);
             container.add_child(area);
             container.add_child(helper);
             
@@ -170,6 +171,7 @@ var AreaManager = new Lang.Class({
             area.leaveDrawingHandler = area.connect('leave-drawing-mode', this.toggleDrawing.bind(this));
             area.updateActionModeHandler = area.connect('update-action-mode', this.updateActionMode.bind(this));
             area.showOsdHandler = area.connect('show-osd', this.showOsd.bind(this));
+            area.showOsdGiconHandler = area.connect('show-osd-gicon', this.showOsd.bind(this));
             this.areas.push(area);
         }
     },
@@ -185,21 +187,23 @@ var AreaManager = new Lang.Class({
             'decrement-line-width': () => this.activeArea.incrementLineWidth(-1),
             'increment-line-width-more': () => this.activeArea.incrementLineWidth(5),
             'decrement-line-width-more': () => this.activeArea.incrementLineWidth(-5),
-            'toggle-linejoin': this.activeArea.toggleLineJoin.bind(this.activeArea),
-            'toggle-linecap': this.activeArea.toggleLineCap.bind(this.activeArea),
-            'toggle-fill-rule': this.activeArea.toggleFillRule.bind(this.activeArea),
-            'toggle-dash' : this.activeArea.toggleDash.bind(this.activeArea),
-            'toggle-fill' : this.activeArea.toggleFill.bind(this.activeArea),
-            'select-none-shape': () => this.activeArea.selectTool(Draw.Tools.NONE),
-            'select-line-shape': () => this.activeArea.selectTool(Draw.Tools.LINE),
-            'select-ellipse-shape': () => this.activeArea.selectTool(Draw.Tools.ELLIPSE),
-            'select-rectangle-shape': () => this.activeArea.selectTool(Draw.Tools.RECTANGLE),
-            'select-text-shape': () => this.activeArea.selectTool(Draw.Tools.TEXT),
-            'select-polygon-shape': () => this.activeArea.selectTool(Draw.Tools.POLYGON),
-            'select-polyline-shape': () => this.activeArea.selectTool(Draw.Tools.POLYLINE),
-            'select-move-tool': () => this.activeArea.selectTool(Draw.Tools.MOVE),
-            'select-resize-tool': () => this.activeArea.selectTool(Draw.Tools.RESIZE),
-            'select-mirror-tool': () => this.activeArea.selectTool(Draw.Tools.MIRROR)
+            'switch-linejoin': this.activeArea.switchLineJoin.bind(this.activeArea),
+            'switch-linecap': this.activeArea.switchLineCap.bind(this.activeArea),
+            'switch-fill-rule': this.activeArea.switchFillRule.bind(this.activeArea),
+            'switch-dash' : this.activeArea.switchDash.bind(this.activeArea),
+            'switch-fill' : this.activeArea.switchFill.bind(this.activeArea),
+            'switch-image-file' : this.activeArea.switchImageFile.bind(this.activeArea),
+            'select-none-shape': () => this.activeArea.selectTool(Area.Tools.NONE),
+            'select-line-shape': () => this.activeArea.selectTool(Area.Tools.LINE),
+            'select-ellipse-shape': () => this.activeArea.selectTool(Area.Tools.ELLIPSE),
+            'select-rectangle-shape': () => this.activeArea.selectTool(Area.Tools.RECTANGLE),
+            'select-text-shape': () => this.activeArea.selectTool(Area.Tools.TEXT),
+            'select-image-shape': () => this.activeArea.selectTool(Area.Tools.IMAGE),
+            'select-polygon-shape': () => this.activeArea.selectTool(Area.Tools.POLYGON),
+            'select-polyline-shape': () => this.activeArea.selectTool(Area.Tools.POLYLINE),
+            'select-move-tool': () => this.activeArea.selectTool(Area.Tools.MOVE),
+            'select-resize-tool': () => this.activeArea.selectTool(Area.Tools.RESIZE),
+            'select-mirror-tool': () => this.activeArea.selectTool(Area.Tools.MIRROR)
         };
         
         // available when writing
@@ -211,10 +215,11 @@ var AreaManager = new Lang.Class({
             'toggle-background': this.activeArea.toggleBackground.bind(this.activeArea),
             'toggle-grid': this.activeArea.toggleGrid.bind(this.activeArea),
             'toggle-square-area': this.activeArea.toggleSquareArea.bind(this.activeArea),
-            'toggle-font-family': this.activeArea.toggleFontFamily.bind(this.activeArea),
-            'toggle-font-weight': this.activeArea.toggleFontWeight.bind(this.activeArea),
-            'toggle-font-style': this.activeArea.toggleFontStyle.bind(this.activeArea),
-            'toggle-text-alignment': this.activeArea.toggleTextAlignment.bind(this.activeArea),
+            'reverse-switch-font-family': this.activeArea.switchFontFamily.bind(this.activeArea, true),
+            'switch-font-family': this.activeArea.switchFontFamily.bind(this.activeArea, false),
+            'switch-font-weight': this.activeArea.switchFontWeight.bind(this.activeArea),
+            'switch-font-style': this.activeArea.switchFontStyle.bind(this.activeArea),
+            'switch-text-alignment': this.activeArea.switchTextAlignment.bind(this.activeArea),
             'toggle-panel-and-dock-visibility': this.togglePanelAndDockOpacity.bind(this),
             'toggle-help': this.activeArea.toggleHelp.bind(this.activeArea),
             'open-user-stylesheet': this.openUserStyleFile.bind(this),
@@ -504,6 +509,7 @@ var AreaManager = new Lang.Class({
             area.disconnect(area.leaveDrawingHandler);
             area.disconnect(area.updateActionModeHandler);
             area.disconnect(area.showOsdHandler);
+            area.disconnect(area.showOsdGiconHandler);
             let container = area.get_parent();
             container.get_parent().remove_actor(container);
             container.destroy();

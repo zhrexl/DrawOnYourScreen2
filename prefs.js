@@ -54,25 +54,28 @@ var INTERNAL_KEYBINDINGS = {
     'select-polygon-shape': "Select polygon",
     'select-polyline-shape': "Select polyline",
     'select-text-shape': "Select text",
+    'select-image-shape': "Select image",
     'select-move-tool': "Select move",
     'select-resize-tool': "Select resize",
     'select-mirror-tool': "Select mirror",
     '-separator-2': '',
-    'toggle-fill': "Toggle fill/outline",
-    'toggle-fill-rule': "Toggle fill rule",
+    'switch-fill': "Toggle fill/outline",
+    'switch-fill-rule': "Toggle fill rule",
     '-separator-3': '',
     'increment-line-width': "Increment line width",
     'decrement-line-width': "Decrement line width",
     'increment-line-width-more': "Increment line width even more",
     'decrement-line-width-more': "Decrement line width even more",
-    'toggle-linejoin': "Change linejoin",
-    'toggle-linecap': "Change linecap",
-    'toggle-dash': "Dashed line",
+    'switch-linejoin': "Change linejoin",
+    'switch-linecap': "Change linecap",
+    'switch-dash': "Dashed line",
     '-separator-4': '',
-    'toggle-font-family': "Change font family (generic name)",
-    'toggle-font-weight': "Change font weight",
-    'toggle-font-style': "Change font style",
-    'toggle-text-alignment': "Toggle text alignment",
+    'switch-font-family': "Change font family",
+    'reverse-switch-font-family': "Change font family (reverse)",
+    'switch-font-weight': "Change font weight",
+    'switch-font-style': "Change font style",
+    'switch-text-alignment': "Toggle text alignment",
+    'switch-image-file': "Change image file",
     '-separator-5': '',
     'toggle-panel-and-dock-visibility': "Hide panel and dock",
     'toggle-background': "Add a drawing background",
@@ -392,26 +395,24 @@ const KeybindingsWidget = new GObject.Class({
             accel_mode: Gtk.CellRendererAccelMode.GTK,
             xalign: 1
         });
-        keybinding_renderer.connect('accel-edited',
-            Lang.bind(this, function(renderer, iter, key, mods) {
-                let value = Gtk.accelerator_name(key, mods);
-                let [success, iterator ] =
-                    this._store.get_iter_from_string(iter);
+        keybinding_renderer.connect('accel-edited', (renderer, iter, key, mods) => {
+            let value = Gtk.accelerator_name(key, mods);
+            let [success, iterator ] =
+                this._store.get_iter_from_string(iter);
 
-                if(!success) {
-                    printerr("Can't change keybinding");
-                }
+            if(!success) {
+                printerr("Can't change keybinding");
+            }
 
-                let name = this._store.get_value(iterator, 0);
+            let name = this._store.get_value(iterator, 0);
 
-                this._store.set(
-                    iterator,
-                    [this._columns.MODS, this._columns.KEY],
-                    [mods, key]
-                );
-                this._settings.set_strv(name, [value]);
-            })
-        );
+            this._store.set(
+                iterator,
+                [this._columns.MODS, this._columns.KEY],
+                [mods, key]
+            );
+            this._settings.set_strv(name, [value]);
+        });
 
         let keybinding_column = new Gtk.TreeViewColumn({
             title: "",

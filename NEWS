@@ -1,5 +1,15 @@
+v6.2 - August 2020
+==================
+
+* Show the text entry when ibusCandidatePopup is used
+* Regroup first menu items
+* Center grid overlay
+* Image shape
+* Extend font family choices
+* Fix sub-menu scroll view adjustment
+
 v6.1 - June 2020
-=================
+================
 
 * Fix empty media-keys settings case #28
 * Fix label color in OSD and menu #31
@@ -20,7 +30,7 @@ v6.1 - June 2020
 * Attributes are now persistent through drawing mode toggling #27
 
 v6 - March 2020
-=================
+===============
 
 * GS 3.36 compatibility
 

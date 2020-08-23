@@ -106,6 +106,11 @@
       <summary>select text</summary>
       <description>select text</description>
     </key>
+    <key type="as" name="select-image-shape">
+      <default>["&lt;Primary&gt;i"]</default>
+      <summary>select image</summary>
+      <description>select image</description>
+    </key>
     <key type="as" name="select-none-shape">
       <default>["&lt;Primary&gt;p"]</default>
       <summary>unselect shape (free drawing)</summary>
@@ -146,30 +151,30 @@
       <summary>decrement the line width even more</summary>
       <description>decrement the line width even more</description>
     </key>
-    <key type="as" name="toggle-linejoin">
+    <key type="as" name="switch-linejoin">
       <default>["&lt;Primary&gt;j"]</default>
-      <summary>toggle linejoin</summary>
-      <description>toggle linejoin</description>
+      <summary>switch linejoin</summary>
+      <description>switch linejoin</description>
     </key>
-    <key type="as" name="toggle-linecap">
+    <key type="as" name="switch-linecap">
       <default>["&lt;Primary&gt;k"]</default>
-      <summary>toggle linecap</summary>
-      <description>toggle linecap</description>
+      <summary>switch linecap</summary>
+      <description>switch linecap</description>
     </key>
-    <key type="as" name="toggle-fill-rule">
+    <key type="as" name="switch-fill-rule">
       <default><![CDATA[['<Primary>KP_Multiply','<Primary>asterisk','<Primary><Shift>asterisk']]]></default>
-      <summary>toggle fill rule</summary>
-      <description>toggle fill rule</description>
+      <summary>switch fill rule</summary>
+      <description>switch fill rule</description>
     </key>
-    <key type="as" name="toggle-dash">
+    <key type="as" name="switch-dash">
       <default>["&lt;Primary&gt;period"]</default>
-      <summary>toggle dash</summary>
-      <description>toggle dash</description>
+      <summary>switch dash</summary>
+      <description>switch dash</description>
     </key>
-    <key type="as" name="toggle-fill">
+    <key type="as" name="switch-fill">
       <default>["&lt;Primary&gt;a"]</default>
-      <summary>toggle fill</summary>
-      <description>toggle fill</description>
+      <summary>switch fill</summary>
+      <description>switch fill</description>
     </key>
     <key type="as" name="select-color1">
       <default><![CDATA[['<Primary>KP_1','<Primary>1']]]></default>
@@ -216,25 +221,35 @@
       <summary>select color9</summary>
       <description>select color9</description>
     </key>
-    <key type="as" name="toggle-font-family">
+    <key type="as" name="switch-font-family">
       <default>["&lt;Primary&gt;f"]</default>
-      <summary>toggle font family</summary>
-      <description>toggle font family</description>
+      <summary>switch font family</summary>
+      <description>switch font family</description>
     </key>
-    <key type="as" name="toggle-font-weight">
+    <key type="as" name="reverse-switch-font-family">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;f"]</default>
+      <summary>switch font family (reverse)</summary>
+      <description>switch font family (reverse)</description>
+    </key>
+    <key type="as" name="switch-font-weight">
       <default>["&lt;Primary&gt;w"]</default>
-      <summary>toggle font weight</summary>
-      <description>toggle font weight</description>
+      <summary>switch font weight</summary>
+      <description>switch font weight</description>
     </key>
-    <key type="as" name="toggle-font-style">
-      <default>["&lt;Primary&gt;i"]</default>
-      <summary>toggle font style</summary>
-      <description>toggle font style</description>
+    <key type="as" name="switch-font-style">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;w"]</default>
+      <summary>switch font style</summary>
+      <description>switch font style</description>
     </key>
-    <key type="as" name="toggle-text-alignment">
+    <key type="as" name="switch-text-alignment">
       <default>["&lt;Primary&gt;&lt;Shift&gt;a"]</default>
-      <summary>toggle text alignment</summary>
-      <description>toggle text alignment</description>
+      <summary>switch text alignment</summary>
+      <description>switch text alignment</description>
+    </key>
+    <key type="as" name="switch-image-file">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;i"]</default>
+      <summary>switch image file</summary>
+      <description>switch image file</description>
     </key>
     <key type="as" name="open-user-stylesheet">
       <default>["&lt;Primary&gt;o"]</default>
