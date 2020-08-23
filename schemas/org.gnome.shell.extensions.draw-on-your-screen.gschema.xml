@@ -36,6 +36,9 @@
       <summary>erase drawing</summary>
       <description>erase drawing</description>
     </key>
+    <child name="internal-shortcuts" schema="org.gnome.shell.extensions.draw-on-your-screen.internal-shortcuts"/>
+  </schema>
+  <schema path="/org/gnome/shell/extensions/draw-on-your-screen/internal-shortcuts/" id="org.gnome.shell.extensions.draw-on-your-screen.internal-shortcuts">
     <key type="as" name="undo">
       <default>["&lt;Primary&gt;z"]</default>
       <summary>undo</summary>

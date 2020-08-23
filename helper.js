@@ -25,9 +25,9 @@ const Lang = imports.lang;
 const St = imports.gi.St;
 
 const Config = imports.misc.config;
+const ExtensionUtils = imports.misc.extensionUtils;
 const Tweener = imports.ui.tweener;
 
-const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
 const Prefs = Me.imports.prefs;
@@ -55,24 +55,27 @@ var DrawingHelper = new Lang.Class({
         this.parent(params);
         this.monitor = monitor;
         this.hide();
-        this.settings = Convenience.getSettings();
         
-        this.settingHandler = this.settings.connect('changed', this._onSettingChanged.bind(this));
-        this.connect('destroy', () => this.settings.disconnect(this.settingHandler));
+        this.settingsHandler = Me.settings.connect('changed', this._onSettingsChanged.bind(this));
+        this.internalShortcutsettingsHandler = Me.internalShortcutSettings.connect('changed', this._onSettingsChanged.bind(this));
+        this.connect('destroy', () => {
+            Me.settings.disconnect(this.settingsHandler);
+            Me.internalShortcutSettings.disconnect(this.internalShortcutsettingsHandler);
+        });
     },
     
-    _onSettingChanged: function(settings, key) {
+    _onSettingsChanged: function(settings, key) {
         if (key == 'toggle-help')
             this._updateHelpKeyLabel();
         
         if (this.vbox) {
             this.vbox.destroy();
-            this.vbox = null;
+            delete this.vbox;
         }
     },
     
     _updateHelpKeyLabel: function() {
-        let [keyval, mods] = Gtk.accelerator_parse(this.settings.get_strv('toggle-help')[0]);
+        let [keyval, mods] = Gtk.accelerator_parse(Me.internalShortcutSettings.get_strv('toggle-help')[0]);
         this._helpKeyLabel = Gtk.accelerator_get_label(keyval, mods);
     },
     
@@ -94,9 +97,9 @@ var DrawingHelper = new Lang.Class({
                 this.vbox.add_child(hbox);
                 continue;
             }
-            if (!this.settings.get_strv(settingKey)[0])
+            if (!Me.settings.get_strv(settingKey)[0])
                 continue;
-            let [keyval, mods] = Gtk.accelerator_parse(this.settings.get_strv(settingKey)[0]);
+            let [keyval, mods] = Gtk.accelerator_parse(Me.settings.get_strv(settingKey)[0]);
             hbox.add_child(new St.Label({ text: _(Prefs.GLOBAL_KEYBINDINGS[settingKey]) }));
             hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));
             this.vbox.add_child(hbox);
@@ -124,9 +127,9 @@ var DrawingHelper = new Lang.Class({
                 continue;
             }
             let hbox = new St.BoxLayout({ vertical: false });
-            if (!this.settings.get_strv(settingKey)[0])
+            if (!Me.internalShortcutSettings.get_strv(settingKey)[0])
                 continue;
-            let [keyval, mods] = Gtk.accelerator_parse(this.settings.get_strv(settingKey)[0]);
+            let [keyval, mods] = Gtk.accelerator_parse(Me.internalShortcutSettings.get_strv(settingKey)[0]);
             hbox.add_child(new St.Label({ text: _(Prefs.INTERNAL_KEYBINDINGS[settingKey]) }));
             hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));
             this.vbox.add_child(hbox);

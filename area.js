@@ -36,7 +36,6 @@ const Main = imports.ui.main;
 const Screenshot = imports.ui.screenshot;
 
 const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
 const Extension = Me.imports.extension;
 const Elements = Me.imports.elements;
 const Files = Me.imports.files;
@@ -73,7 +72,6 @@ var DrawingArea = new Lang.Class({
         this.connect('destroy', this._onDestroy.bind(this));
         this.reactiveHandler = this.connect('notify::reactive', this._onReactiveChanged.bind(this));
         
-        this.settings = Convenience.getSettings();
         this.monitor = monitor;
         this.helper = helper;
         

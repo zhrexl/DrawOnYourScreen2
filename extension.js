@@ -28,11 +28,11 @@ const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 
 const Config = imports.misc.config;
+const ExtensionUtils = imports.misc.extensionUtils;
 const Main = imports.ui.main;
 const OsdWindow = imports.ui.osdWindow;
 const PanelMenu = imports.ui.panelMenu;
 
-const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
 const Area = Me.imports.area;
@@ -55,12 +55,16 @@ function init() {
 }
 
 function enable() {
+    Me.settings = Convenience.getSettings();
+    Me.internalShortcutSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
     manager = new AreaManager();
 }
 
 function disable() {
     manager.disable();
     manager = null;
+    delete Me.settings;
+    delete Me.internalShortcutSettings;
 }
 
 // AreaManager assigns one DrawingArea per monitor (updateAreas()),
@@ -70,26 +74,25 @@ var AreaManager = new Lang.Class({
     Name: 'DrawOnYourScreenAreaManager',
 
     _init: function() {
-        this.settings = Convenience.getSettings();
         this.areas = [];
         this.activeArea = null;
         this.enterGicon = new Gio.ThemedIcon({ name: 'applications-graphics-symbolic' });
         this.leaveGicon = new Gio.ThemedIcon({ name: 'application-exit-symbolic' });
         
         Main.wm.addKeybinding('toggle-drawing',
-                              this.settings,
+                              Me.settings,
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
                               this.toggleDrawing.bind(this));
         
         Main.wm.addKeybinding('toggle-modal',
-                              this.settings,
+                              Me.settings,
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
                               this.toggleModal.bind(this));
         
         Main.wm.addKeybinding('erase-drawing',
-                              this.settings,
+                              Me.settings,
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
                               this.eraseDrawing.bind(this));
@@ -98,10 +101,10 @@ var AreaManager = new Lang.Class({
         this.monitorChangedHandler = Main.layoutManager.connect('monitors-changed', this.updateAreas.bind(this));
         
         this.updateIndicator();
-        this.indicatorSettingHandler = this.settings.connect('changed::indicator-disabled', this.updateIndicator.bind(this));
+        this.indicatorSettingHandler = Me.settings.connect('changed::indicator-disabled', this.updateIndicator.bind(this));
         
-        this.desktopSettingHandler = this.settings.connect('changed::drawing-on-desktop', this.onDesktopSettingChanged.bind(this));
-        this.persistentSettingHandler = this.settings.connect('changed::persistent-drawing', this.onPersistentSettingChanged.bind(this));
+        this.desktopSettingHandler = Me.settings.connect('changed::drawing-on-desktop', this.onDesktopSettingChanged.bind(this));
+        this.persistentSettingHandler = Me.settings.connect('changed::persistent-drawing', this.onPersistentSettingChanged.bind(this));
         
         this.userStyleFile = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir'], 'user.css']));
         
@@ -125,14 +128,14 @@ var AreaManager = new Lang.Class({
     },
     
     onDesktopSettingChanged: function() {
-        if (this.settings.get_boolean("drawing-on-desktop"))
+        if (Me.settings.get_boolean("drawing-on-desktop"))
             this.areas.forEach(area => area.get_parent().show());
         else
             this.areas.forEach(area => area.get_parent().hide());
     },
     
     onPersistentSettingChanged: function() {
-        if (this.settings.get_boolean('persistent-drawing'))
+        if (Me.settings.get_boolean('persistent-drawing'))
             this.areas[Main.layoutManager.primaryIndex].syncPersistent();
     },
     
@@ -141,7 +144,7 @@ var AreaManager = new Lang.Class({
             this.indicator.disable();
             this.indicator = null;
         }
-        if (!this.settings.get_boolean('indicator-disabled'))
+        if (!Me.settings.get_boolean('indicator-disabled'))
             this.indicator = new DrawingIndicator();
     },
     
@@ -156,13 +159,13 @@ var AreaManager = new Lang.Class({
             let monitor = this.monitors[i];
             let container = new St.Widget({ name: 'drawOnYourSreenContainer' + i });
             let helper = new Helper.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
-            let loadPersistent = i == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
+            let loadPersistent = i == Main.layoutManager.primaryIndex && Me.settings.get_boolean('persistent-drawing');
             let area = new Area.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, loadPersistent);
             container.add_child(area);
             container.add_child(helper);
             
             Main.layoutManager._backgroundGroup.insert_child_above(container, Main.layoutManager._bgManagers[i].backgroundActor);
-            if (!this.settings.get_boolean("drawing-on-desktop")) 
+            if (!Me.settings.get_boolean("drawing-on-desktop"))
                 container.hide();
             
             container.set_position(monitor.x, monitor.y);
@@ -228,7 +231,7 @@ var AreaManager = new Lang.Class({
         
         for (let key in this.internalKeybindings1) {
             Main.wm.addKeybinding(key,
-                                  this.settings,
+                                  Me.internalShortcutSettings,
                                   Meta.KeyBindingFlags.NONE,
                                   DRAWING_ACTION_MODE,
                                   this.internalKeybindings1[key]);
@@ -236,7 +239,7 @@ var AreaManager = new Lang.Class({
         
         for (let key in this.internalKeybindings2) {
             Main.wm.addKeybinding(key,
-                                  this.settings,
+                                  Me.internalShortcutSettings,
                                   Meta.KeyBindingFlags.NONE,
                                   DRAWING_ACTION_MODE | WRITING_ACTION_MODE,
                                   this.internalKeybindings2[key]);
@@ -245,7 +248,7 @@ var AreaManager = new Lang.Class({
         for (let i = 1; i < 10; i++) {
             let iCaptured = i;
             Main.wm.addKeybinding('select-color' + i,
-                                  this.settings,
+                                  Me.internalShortcutSettings,
                                   Meta.KeyBindingFlags.NONE,
                                   DRAWING_ACTION_MODE | WRITING_ACTION_MODE,
                                   () => this.activeArea.selectColor(iCaptured));
@@ -292,7 +295,7 @@ var AreaManager = new Lang.Class({
     eraseDrawing: function() {
         for (let i = 0; i < this.areas.length; i++)
             this.areas[i].erase();
-        if (this.settings.get_boolean('persistent-drawing'))
+        if (Me.settings.get_boolean('persistent-drawing'))
             this.areas[Main.layoutManager.primaryIndex].savePersistent();
     },
     
@@ -345,7 +348,7 @@ var AreaManager = new Lang.Class({
             Main.uiGroup.set_child_at_index(Main.layoutManager.keyboardBox, this.oldKeyboardIndex);
             Main.uiGroup.remove_actor(activeContainer);
             Main.layoutManager._backgroundGroup.insert_child_above(activeContainer, Main.layoutManager._bgManagers[activeIndex].backgroundActor);
-            if (!this.settings.get_boolean("drawing-on-desktop")) 
+            if (!Me.settings.get_boolean("drawing-on-desktop"))
                 activeContainer.hide();
         } else {
             Main.layoutManager._backgroundGroup.remove_actor(activeContainer);
@@ -387,7 +390,7 @@ var AreaManager = new Lang.Class({
     toggleDrawing: function() {
         if (this.activeArea) {
             let activeIndex = this.areas.indexOf(this.activeArea);
-            let save = activeIndex == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
+            let save = activeIndex == Main.layoutManager.primaryIndex && Me.settings.get_boolean('persistent-drawing');
             
             this.showOsd(null, this.leaveGicon, _("Leaving drawing mode"));
             this.activeArea.leaveDrawingMode(save);
@@ -410,7 +413,7 @@ var AreaManager = new Lang.Class({
             }
             
             this.activeArea.enterDrawingMode();
-            this.osdDisabled = this.settings.get_boolean('osd-disabled');
+            this.osdDisabled = Me.settings.get_boolean('osd-disabled');
             let label = _("<small>Press <i>%s</i> for help</small>").format(this.activeArea.helper.helpKeyLabel) + "\n\n" + _("Entering drawing mode");
             this.showOsd(null, this.enterGicon, label, null, null, true);
         }
@@ -531,15 +534,15 @@ var AreaManager = new Lang.Class({
             this.monitorChangedHandler = null;
         }
         if (this.indicatorSettingHandler) {
-            this.settings.disconnect(this.indicatorSettingHandler);
+            Me.settings.disconnect(this.indicatorSettingHandler);
             this.indicatorSettingHandler = null;
         }
         if (this.desktopSettingHandler) {
-            this.settings.disconnect(this.desktopSettingHandler);
+            Me.settings.disconnect(this.desktopSettingHandler);
             this.desktopSettingHandler = null;
         }
         if (this.persistentSettingHandler) {
-            this.settings.disconnect(this.persistentSettingHandler);
+            Me.settings.disconnect(this.persistentSettingHandler);
             this.persistentSettingHandler = null;
         }
         

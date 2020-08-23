@@ -207,7 +207,8 @@ const PrefsPage = new GObject.Class({
     _init: function(params) {
         this.parent();
 
-        this.settings = Convenience.getSettings();
+        let settings = Convenience.getSettings();
+        let internalShortcutSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
         
         let box = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN*3 });
         this.add(box);
@@ -222,7 +223,7 @@ const PrefsPage = new GObject.Class({
         let styleContext = listBox.get_style_context();
         styleContext.add_class('background');
         
-        let globalKeybindingsWidget = new KeybindingsWidget(GLOBAL_KEYBINDINGS, this.settings);
+        let globalKeybindingsWidget = new KeybindingsWidget(GLOBAL_KEYBINDINGS, settings);
         globalKeybindingsWidget.margin = MARGIN;
         listBox.add(globalKeybindingsWidget);
         
@@ -235,7 +236,7 @@ const PrefsPage = new GObject.Class({
         persistentLabelBox.pack_start(persistentLabel1, true, true, 0);
         persistentLabelBox.pack_start(persistentLabel2, true, true, 0);
         let persistentSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind('persistent-drawing', persistentSwitch, 'active', 0);
+        settings.bind('persistent-drawing', persistentSwitch, 'active', 0);
         persistentBox.pack_start(persistentLabelBox, true, true, 4);
         persistentBox.pack_start(persistentSwitch, false, false, 4);
         listBox.add(persistentBox);
@@ -249,7 +250,7 @@ const PrefsPage = new GObject.Class({
         desktopLabelBox.pack_start(desktopLabel1, true, true, 0);
         desktopLabelBox.pack_start(desktopLabel2, true, true, 0);
         let desktopSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind('drawing-on-desktop', desktopSwitch, 'active', 0);
+        settings.bind('drawing-on-desktop', desktopSwitch, 'active', 0);
         desktopBox.pack_start(desktopLabelBox, true, true, 4);
         desktopBox.pack_start(desktopSwitch, false, false, 4);
         listBox.add(desktopBox);
@@ -260,7 +261,7 @@ const PrefsPage = new GObject.Class({
         osdLabel1.set_halign(1);
         osdLabelBox.pack_start(osdLabel1, true, true, 0);
         let osdSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind('osd-disabled', osdSwitch, 'active', 0);
+        settings.bind('osd-disabled', osdSwitch, 'active', 0);
         osdBox.pack_start(osdLabelBox, true, true, 4);
         osdBox.pack_start(osdSwitch, false, false, 4);
         listBox.add(osdBox);
@@ -271,7 +272,7 @@ const PrefsPage = new GObject.Class({
         indicatorLabel1.set_halign(1);
         indicatorLabelBox.pack_start(indicatorLabel1, true, true, 0);
         let indicatorSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind('indicator-disabled', indicatorSwitch, 'active', 0);
+        settings.bind('indicator-disabled', indicatorSwitch, 'active', 0);
         indicatorBox.pack_start(indicatorLabelBox, true, true, 4);
         indicatorBox.pack_start(indicatorSwitch, false, false, 4);
         listBox.add(indicatorBox);
@@ -306,7 +307,7 @@ const PrefsPage = new GObject.Class({
             listBox.add(otherBox);
         }
         
-        let internalKeybindingsWidget = new KeybindingsWidget(INTERNAL_KEYBINDINGS, this.settings);
+        let internalKeybindingsWidget = new KeybindingsWidget(INTERNAL_KEYBINDINGS, internalShortcutSettings);
         internalKeybindingsWidget.margin = MARGIN;
         listBox.add(internalKeybindingsWidget);
         
