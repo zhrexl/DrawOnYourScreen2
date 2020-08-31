@@ -37,7 +37,6 @@ const Main = imports.ui.main;
 const Screenshot = imports.ui.screenshot;
 
 const Me = ExtensionUtils.getCurrentExtension();
-const Extension = Me.imports.extension;
 const Elements = Me.imports.elements;
 const Files = Me.imports.files;
 const Menu = Me.imports.menu;
@@ -759,7 +758,7 @@ var DrawingArea = new Lang.Class({
     setPointerCursor: function(pointerCursorName) {
         if (!this.currentPointerCursorName || this.currentPointerCursorName != pointerCursorName) {
             this.currentPointerCursorName = pointerCursorName;
-            Extension.setCursor(pointerCursorName);
+            Me.stateObj.areaManager.setCursor(pointerCursorName);
         }
     },
     

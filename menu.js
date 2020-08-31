@@ -39,7 +39,6 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Area = Me.imports.area;
 const Elements = Me.imports.elements;
-const Extension = Me.imports.extension;
 const Files = Me.imports.files;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
@@ -210,8 +209,8 @@ var DrawingMenu = new Lang.Class({
         imageSection.itemActivated = () => {};
         this.imageSection = imageSection;
         
-        let manager = Extension.manager;
-        this._addSimpleSwitchItem(this.menu, _("Hide panel and dock"), manager.hiddenList ? true : false, manager.togglePanelAndDockOpacity.bind(manager));
+        let areaManager = Me.stateObj.areaManager;
+        this._addSimpleSwitchItem(this.menu, _("Hide panel and dock"), areaManager.hiddenList ? true : false, areaManager.togglePanelAndDockOpacity.bind(areaManager));
         this._addSimpleSwitchItem(this.menu, _("Add a drawing background"), this.area.hasBackground, this.area.toggleBackground.bind(this.area));
         this._addSimpleSwitchItem(this.menu, _("Add a grid overlay"), this.area.hasGrid, this.area.toggleGrid.bind(this.area));
         this._addSimpleSwitchItem(this.menu, _("Square drawing area"), this.area.isSquareArea, this.area.toggleSquareArea.bind(this.area));
@@ -222,7 +221,7 @@ var DrawingMenu = new Lang.Class({
         this._addSaveDrawingSubMenuItem(this.menu);
         
         this.menu.addAction(_("Save drawing as a SVG file"), this.area.saveAsSvg.bind(this.area), 'image-x-generic-symbolic');
-        this.menu.addAction(_("Open preferences"), manager.openPreferences.bind(manager), 'document-page-setup-symbolic');
+        this.menu.addAction(_("Open preferences"), areaManager.openPreferences.bind(areaManager), 'document-page-setup-symbolic');
         this.menu.addAction(_("Show help"), () => { this.close(); this.area.toggleHelp(); }, 'preferences-desktop-keyboard-shortcuts-symbolic');
         
         this._updateActionSensitivity();

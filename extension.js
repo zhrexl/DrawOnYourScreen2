@@ -1,5 +1,5 @@
 /* jslint esversion: 6 */
-/* exported manager, init, enable, disable, setCursor */
+/* exported init */
 
 /*
  * Copyright 2019 Abakkk
@@ -48,28 +48,34 @@ const WRITING_ACTION_MODE = Math.pow(2,15);
 // use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
 const WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
 
-var manager;
-
 function init() {
-    Convenience.initTranslations();
+    return new Extension();
 }
 
-function enable() {
-    if (ExtensionUtils.isOutOfDate(Me))
-        log(`${Me.metadata.uuid}: GNOME Shell ${Number.parseFloat(GS_VERSION)} is not supported.`);
+const Extension = new Lang.Class({
+    Name: 'DrawOnYourScreenExtension',
     
-    Me.settings = Convenience.getSettings();
-    Me.internalShortcutSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
-    Me.drawingSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.drawing');
-    manager = new AreaManager();
-}
+    _init: function() {
+        Convenience.initTranslations();
+    },
 
-function disable() {
-    manager.disable();
-    manager = null;
-    delete Me.settings;
-    delete Me.internalShortcutSettings;
-}
+    enable() {
+        if (ExtensionUtils.isOutOfDate(Me))
+            log(`${Me.metadata.uuid}: GNOME Shell ${Number.parseFloat(GS_VERSION)} is not supported.`);
+        
+        Me.settings = Convenience.getSettings();
+        Me.internalShortcutSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
+        Me.drawingSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.drawing');
+        this.areaManager = new AreaManager();
+    },
+
+    disable() {
+        this.areaManager.disable();
+        delete this.areaManager;
+        delete Me.settings;
+        delete Me.internalShortcutSettings;
+    }
+});
 
 // AreaManager assigns one DrawingArea per monitor (updateAreas()),
 // distributes keybinding callbacks to the active area
@@ -337,7 +343,7 @@ const AreaManager = new Lang.Class({
             Main.popModal(this.activeArea);
             if (source && source == global.display)
                 this.showOsd(null, 'touchpad-disabled-symbolic', _("Keyboard and pointer released"), null, null, false);
-            setCursor('DEFAULT');
+            this.setCursor('DEFAULT');
             this.activeArea.reactive = false;
             this.removeInternalKeybindings();
         } else {
@@ -474,6 +480,14 @@ const AreaManager = new Lang.Class({
             OsdWindow.HIDE_TIMEOUT = hideTimeoutSave;
     },
     
+    setCursor: function(cursorName) {
+        // check display or screen (API changes)
+        if (global.display.set_cursor)
+            global.display.set_cursor(Meta.Cursor[cursorName]);
+        else if (global.screen && global.screen.set_cursor)
+            global.screen.set_cursor(Meta.Cursor[cursorName]);
+    },
+    
     removeAreas: function() {
         for (let i = 0; i < this.areas.length; i++) {
             let area = this.areas[i];
@@ -563,13 +577,4 @@ const DrawingIndicator = new Lang.Class({
         this.button.destroy();
     }
 });
-
-function setCursor(cursorName) {
-    // check display or screen (API changes)
-    if (global.display.set_cursor)
-        global.display.set_cursor(Meta.Cursor[cursorName]);
-    else if (global.screen && global.screen.set_cursor)
-        global.screen.set_cursor(Meta.Cursor[cursorName]);
-}
-
 
