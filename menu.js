@@ -1,4 +1,5 @@
 /* jslint esversion: 6 */
+/* exported DrawingMenu */
 
 /*
  * Copyright 2019 Abakkk
@@ -59,6 +60,8 @@ const FULL_LINE_ICON_PATH = ICON_DIR.get_child('full-line-symbolic.svg').get_pat
 
 // 150 labels with font-family style take ~15Mo
 const FONT_FAMILY_STYLE = true;
+// use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
+const WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
 
 const getActor = function(object) {
     return GS_VERSION < '3.33.0' ? object.actor : object;
@@ -308,18 +311,18 @@ var DrawingMenu = new Lang.Class({
                 target[targetProperty] = Math.max(Math.round(value * 50), 0);
                 label.set_text(target[targetProperty] + " px");
                 if (target[targetProperty] === 0)
-                    label.add_style_class_name(Extension.WARNING_COLOR_STYLE_CLASS_NAME);
+                    label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
                 else
-                    label.remove_style_class_name(Extension.WARNING_COLOR_STYLE_CLASS_NAME);
+                    label.remove_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
             });
         } else {
             slider.connect('notify::value', () => {
                 target[targetProperty] = Math.max(Math.round(slider.value * 50), 0);
                 label.set_text(target[targetProperty] + " px");
                 if (target[targetProperty] === 0)
-                    label.add_style_class_name(Extension.WARNING_COLOR_STYLE_CLASS_NAME);
+                    label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
                 else
-                    label.remove_style_class_name(Extension.WARNING_COLOR_STYLE_CLASS_NAME);
+                    label.remove_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
             });
         }
         

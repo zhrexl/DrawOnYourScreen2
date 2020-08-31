@@ -1,4 +1,5 @@
 /* jslint esversion: 6 */
+/* exported manager, init, enable, disable, setCursor */
 
 /*
  * Copyright 2019 Abakkk
@@ -45,7 +46,7 @@ const HIDE_TIMEOUT_LONG = 2500; // ms, default is 1500 ms
 const DRAWING_ACTION_MODE = Math.pow(2,14);
 const WRITING_ACTION_MODE = Math.pow(2,15);
 // use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
-var WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
+const WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
 
 var manager;
 
@@ -70,7 +71,7 @@ function disable() {
 // AreaManager assigns one DrawingArea per monitor (updateAreas()),
 // distributes keybinding callbacks to the active area
 // and handles stylesheet and monitor changes.
-var AreaManager = new Lang.Class({
+const AreaManager = new Lang.Class({
     Name: 'DrawOnYourScreenAreaManager',
 
     _init: function() {

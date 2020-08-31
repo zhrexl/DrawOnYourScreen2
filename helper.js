@@ -1,4 +1,5 @@
 /* jslint esversion: 6 */
+/* exported DrawingHelper */
 
 /*
  * Copyright 2019 Abakkk

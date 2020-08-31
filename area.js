@@ -1,4 +1,5 @@
 /* jslint esversion: 6 */
+/* exported Tools, ToolNames, FontGenericFamilies, DrawingArea */
 
 /*
  * Copyright 2019 Abakkk
@@ -47,8 +48,7 @@ const SVG_DEBUG_EXTENDS = false;
 const TEXT_CURSOR_TIME = 600; // ms
 const GRID_TILES_HORIZONTAL_NUMBER = 30;
 
-const { Shapes, ShapeNames, Transformations, LineCapNames, LineJoinNames, FillRuleNames,
-        FontWeightNames, FontStyleNames, FontStretchNames, FontVariantNames } = Elements;
+const { Shapes, ShapeNames, Transformations, LineCapNames, LineJoinNames, FillRuleNames, FontWeightNames, FontStyleNames } = Elements;
 const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
 const ManipulationNames = { 100: "Move", 101: "Resize", 102: "Mirror" };
 var Tools = Object.assign({}, Shapes, Manipulations);

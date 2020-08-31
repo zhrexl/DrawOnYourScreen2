@@ -1,4 +1,5 @@
 /* jslint esversion: 6 */
+/* exported GLOBAL_KEYBINDINGS, INTERNAL_KEYBINDINGS, OTHER_SHORTCUTS, init, buildPrefsWidget */
 
 /*
  * Copyright 2019 Abakkk
@@ -100,10 +101,10 @@ var INTERNAL_KEYBINDINGS = {
 if (GS_VERSION < "3.36")
     delete INTERNAL_KEYBINDINGS['open-preferences'];
 
-function getKeyLabel(accel) {
+const getKeyLabel = function(accel) {
     let [keyval, mods] = Gtk.accelerator_parse(accel);
     return Gtk.accelerator_get_label(keyval, mods);
-}
+};
 
 var OTHER_SHORTCUTS = [
     { desc: "Draw", get shortcut() { return _("Left click"); } },

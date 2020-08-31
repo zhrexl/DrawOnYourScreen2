@@ -1,5 +1,3 @@
-/* jslint esversion: 6 */
-
 /*
  * Copyright 2019 Abakkk
  *
@@ -19,6 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+/* jslint esversion: 6 */
+/* exported Shapes, ShapeNames, Transformations, LineCapNames, LineJoinNames, FillRuleNames, FontWeightNames, FontStyleNames, getPangoFontFamilies, DrawingElement */
 
 const Cairo = imports.cairo;
 const Clutter = imports.gi.Clutter;
@@ -43,8 +44,8 @@ var FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
 var FontWeightNames = Object.assign(reverseEnumeration(Pango.Weight), { 200: "Ultra-light", 350: "Semi-light", 600: "Semi-bold", 800: "Ultra-bold" });
 delete FontWeightNames[Pango.Weight.ULTRAHEAVY];
 var FontStyleNames = reverseEnumeration(Pango.Style);
-var FontStretchNames = reverseEnumeration(Pango.Stretch);
-var FontVariantNames = reverseEnumeration(Pango.Variant);
+const FontStretchNames = reverseEnumeration(Pango.Stretch);
+const FontVariantNames = reverseEnumeration(Pango.Variant);
 
 var getPangoFontFamilies = function() {
     return PangoCairo.font_map_get_default().list_families().map(fontFamily => fontFamily.get_name()).sort((a,b) => a.localeCompare(b));
