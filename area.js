@@ -45,6 +45,7 @@ const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const CAIRO_DEBUG_EXTENDS = false;
 const SVG_DEBUG_EXTENDS = false;
 const TEXT_CURSOR_TIME = 600; // ms
+const ELEMENT_GRABBER_TIME = 80; // ms, default is about 16 ms
 const GRID_TILES_HORIZONTAL_NUMBER = 30;
 
 const { Shapes, ShapeNames, Transformations, LineCapNames, LineJoinNames, FillRuleNames, FontWeightNames, FontStyleNames } = Elements;
@@ -434,8 +435,9 @@ var DrawingArea = new Lang.Class({
             }
             
             // Reduce computing without notable effect.
-            if (Math.random() <= 0.75)
+            if (event.get_time() - (this.elementGrabberTimestamp || 0) < ELEMENT_GRABBER_TIME)
                 return;
+            this.elementGrabberTimestamp = event.get_time();
             
             let coords = event.get_coords();
             let [s, x, y] = this.transform_stage_point(coords[0], coords[1]);
