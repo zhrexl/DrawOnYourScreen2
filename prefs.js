@@ -20,16 +20,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+const Gdk = imports.gi.Gdk;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
-const Lang = imports.lang;
 
 const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
-const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+const gettext = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+const _ = function(string) {
+    if (!string)
+        return "";
+    return gettext(string);
+};
 const _GTK = imports.gettext.domain('gtk30').gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
@@ -61,6 +66,8 @@ var INTERNAL_KEYBINDINGS = {
     '-separator-2': '',
     'switch-fill': "Toggle fill/outline",
     'switch-fill-rule': "Toggle fill rule",
+    'switch-color-palette': "Change color palette",
+    'switch-color-palette-reverse': "Change color palette (reverse)",
     '-separator-3': '',
     'increment-line-width': "Increment line width",
     'decrement-line-width': "Decrement line width",
@@ -71,7 +78,7 @@ var INTERNAL_KEYBINDINGS = {
     'switch-dash': "Dashed line",
     '-separator-4': '',
     'switch-font-family': "Change font family",
-    'reverse-switch-font-family': "Change font family (reverse)",
+    'switch-font-family-reverse': "Change font family (reverse)",
     'switch-font-weight': "Change font weight",
     'switch-font-style': "Change font style",
     'switch-text-alignment': "Toggle text alignment",
@@ -86,7 +93,6 @@ var INTERNAL_KEYBINDINGS = {
     'open-next-json': "Open next drawing",
     'save-as-json': "Save drawing",
     'save-as-svg': "Save drawing as a SVG file",
-    'open-user-stylesheet': "Edit style",
     'open-preferences': "Open preferences",
     'toggle-help': "Show help"
 };
@@ -128,7 +134,6 @@ function buildPrefsWidget() {
     let switcher = new Gtk.StackSwitcher({halign: Gtk.Align.CENTER, visible: true, stack: topStack});
     GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
         let window = topStack.get_toplevel();
-        window.resize(720,500);
         let headerBar = window.get_titlebar();
         headerBar.custom_title = switcher;
         return false;
@@ -147,6 +152,8 @@ const TopStack = new GObject.Class({
         this.parent({ transition_type: 1, transition_duration: 500, expand: true });
         this.prefsPage = new PrefsPage();
         this.add_titled(this.prefsPage, 'prefs', _("Preferences"));
+        this.drawingPage = new DrawingPage();
+        this.add_titled(this.drawingPage, 'drawing', _("Drawing"));
         this.aboutPage = new AboutPage();
         this.add_titled(this.aboutPage, 'about', _("About"));
     }
@@ -158,7 +165,7 @@ const AboutPage = new GObject.Class({
     Extends: Gtk.ScrolledWindow,
 
     _init: function(params) {
-        this.parent();
+        this.parent({ hscrollbar_policy: Gtk.PolicyType.NEVER });
 
         let vbox= new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN*3 });
         this.add(vbox);
@@ -199,13 +206,213 @@ const AboutPage = new GObject.Class({
     
 });
 
+const DrawingPage = new GObject.Class({
+    Name: 'DrawOnYourScreenDrawingPage',
+    GTypeName: 'DrawOnYourScreenDrawingPage',
+    Extends: Gtk.ScrolledWindow,
+
+    _init: function(params) {
+        this.parent({ hscrollbar_policy: Gtk.PolicyType.NEVER });
+
+        this.settings = Convenience.getSettings(Me.metadata['settings-schema'] + '.drawing');
+        this.schema = this.settings.settings_schema;
+        
+        let box = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN*3 });
+        this.add(box);
+        
+        let palettesFrame = new Gtk.Frame({ label_yalign: 1.0 });
+        palettesFrame.set_label_widget(new Gtk.Label({ margin_bottom: MARGIN/2, use_markup: true, label: "<b><big>" + _("Palettes") + "</big></b>" }));
+        box.add(palettesFrame);
+        
+        let palettesScrolledWindow = new Gtk.ScrolledWindow({ vscrollbar_policy: Gtk.PolicyType.NEVER, margin_top: MARGIN/2, margin_bottom: MARGIN/2 });
+        palettesFrame.add(palettesScrolledWindow);
+        this.palettesListBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true });
+        this.palettesListBox.get_style_context().add_class('background');
+        palettesScrolledWindow.add(this.palettesListBox);
+        
+        this.settings.connect('changed::palettes', this._updatePalettes.bind(this));
+        this._updatePalettes();
+        
+        this.addBox = new Gtk.Box({ margin_top: MARGIN/2, margin_bottom: MARGIN/2, margin_left: MARGIN, margin_right: MARGIN, tooltip_text: _("Add a new palette") });
+        let addButton = Gtk.Button.new_from_icon_name('list-add-symbolic', Gtk.IconSize.BUTTON);
+        this.addBox.pack_start(addButton, true, true, 4);
+        addButton.connect('clicked', this._addNewPalette.bind(this));
+        this.palettesListBox.add(this.addBox);
+        this.addBox.get_parent().set_activatable(false);
+        
+        let areaFrame = new Gtk.Frame({ margin_top: 3*MARGIN, label_yalign: 1.0 });
+        areaFrame.set_label_widget(new Gtk.Label({ margin_bottom: MARGIN/2, use_markup: true, label: "<b><big>" + _("Area") + "</big></b>" }));
+        box.add(areaFrame);
+        
+        let areaListBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN/2, margin_bottom: MARGIN/2 });
+        areaListBox.get_style_context().add_class('background');
+        areaFrame.add(areaListBox);
+        
+        let squareAreaRow = new PrefRow({ label: _("Square area size") });
+        let squareAreaAutoButton = new Gtk.CheckButton({ label: _("Auto"), tooltip_text: _(this.schema.get_key('square-area-auto').get_description()) });
+        let squareAreaSizeButton = new PixelSpinButton({ width_chars: 5, digits: 0,
+                                                         adjustment: Gtk.Adjustment.new(0, 64, 32768, 1, 10, 0),
+                                                         tooltip_text: _(this.schema.get_key('square-area-size').get_description()) });
+        this.settings.bind('square-area-auto', squareAreaAutoButton, 'active', 0);
+        this.settings.bind('square-area-size', squareAreaSizeButton, 'value', 0);
+        squareAreaAutoButton.bind_property('active', squareAreaSizeButton, 'sensitive', GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN);
+        squareAreaRow.addWidget(squareAreaAutoButton);
+        squareAreaRow.addWidget(squareAreaSizeButton);
+        areaListBox.add(squareAreaRow);
+        
+        let backgroundColorRow = new PrefRow({ label: _("Background color") });
+        let backgroundColorButton = new ColorStringButton({ use_alpha: true, show_editor: true,
+                                                          tooltip_text: _(this.schema.get_key('area-background-color').get_description()) });
+        this.settings.bind('area-background-color', backgroundColorButton, 'color-string', 0);
+        backgroundColorRow.addWidget(backgroundColorButton);
+        areaListBox.add(backgroundColorRow);
+        
+        let gridLineRow = new PrefRow({ label: _("Grid overlay line") });
+        let gridLineAutoButton = new Gtk.CheckButton({ label: _("Auto"), tooltip_text: _(this.schema.get_key('grid-line-auto').get_description()) });
+        let gridLineWidthButton = new PixelSpinButton({ width_chars: 5, digits: 1,
+                                                               adjustment: Gtk.Adjustment.new(0, 0.1, 10, 0.1, 1, 0),
+                                                               tooltip_text: _(this.schema.get_key('grid-line-width').get_description()) });
+        let gridLineSpacingButton = new PixelSpinButton({ width_chars: 5, digits: 1,
+                                                                 adjustment: Gtk.Adjustment.new(0, 1, 16384, 1, 10, 0),
+                                                                 tooltip_text: _(this.schema.get_key('grid-line-spacing').get_description()) });
+        this.settings.bind('grid-line-auto', gridLineAutoButton, 'active', 0);
+        this.settings.bind('grid-line-width', gridLineWidthButton, 'value', 0);
+        this.settings.bind('grid-line-spacing', gridLineSpacingButton, 'value', 0);
+        gridLineAutoButton.bind_property('active', gridLineWidthButton, 'sensitive', GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN);
+        gridLineAutoButton.bind_property('active', gridLineSpacingButton, 'sensitive', GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN);
+        gridLineRow.addWidget(gridLineAutoButton);
+        gridLineRow.addWidget(gridLineWidthButton);
+        gridLineRow.addWidget(gridLineSpacingButton);
+        areaListBox.add(gridLineRow);
+        
+        let gridColorRow = new PrefRow({ label: _("Grid overlay color") });
+        let gridColorButton = new ColorStringButton({ use_alpha: true, show_editor: true,
+                                                             tooltip_text: _(this.schema.get_key('grid-color').get_description()) });
+        this.settings.bind('grid-color', gridColorButton, 'color-string', 0);
+        gridColorRow.addWidget(gridColorButton);
+        areaListBox.add(gridColorRow);
+        
+        let toolsFrame = new Gtk.Frame({ margin_top: 3*MARGIN, label_yalign: 1.0 });
+        toolsFrame.set_label_widget(new Gtk.Label({ margin_bottom: MARGIN/2, use_markup: true, label: "<b><big>" + _("Tools") + "</big></b>" }));
+        box.add(toolsFrame);
+        
+        let toolsListBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN/2, margin_bottom: MARGIN/2 });
+        toolsListBox.get_style_context().add_class('background');
+        toolsFrame.add(toolsListBox);
+        
+        let dashArrayRow = new PrefRow({ label: _("Dash array") });
+        let dashArrayAutoButton = new Gtk.CheckButton({ label: _("Auto"), tooltip_text: _(this.schema.get_key('dash-array-auto').get_description()) });
+        let dashArrayOnButton = new PixelSpinButton({ width_chars: 5, digits: 1,
+                                                      adjustment: Gtk.Adjustment.new(0, 0, 16384, 0.1, 1, 0),
+                                                      tooltip_text: _(this.schema.get_key('dash-array-on').get_description()) });
+        let dashArrayOffButton = new PixelSpinButton({ width_chars: 5, digits: 1,
+                                                       adjustment: Gtk.Adjustment.new(0, 0, 16384, 0.1, 1, 0),
+                                                       tooltip_text: _(this.schema.get_key('dash-array-off').get_description()) });
+        this.settings.bind('dash-array-auto', dashArrayAutoButton, 'active', 0);
+        this.settings.bind('dash-array-on', dashArrayOnButton, 'value', 0);
+        this.settings.bind('dash-array-off', dashArrayOffButton, 'value', 0);
+        dashArrayAutoButton.bind_property('active', dashArrayOnButton, 'sensitive', GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN);
+        dashArrayAutoButton.bind_property('active', dashArrayOffButton, 'sensitive', GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN);
+        dashArrayRow.addWidget(dashArrayAutoButton);
+        dashArrayRow.addWidget(dashArrayOnButton);
+        dashArrayRow.addWidget(dashArrayOffButton);
+        toolsListBox.add(dashArrayRow);
+        
+        let dashOffsetRow = new PrefRow({ label: _("Dash offset") });
+        let dashOffsetButton = new PixelSpinButton({ width_chars: 5, digits: 1,
+                                                     adjustment: Gtk.Adjustment.new(0, -16384, 16384, 0.1, 1, 0),
+                                                     tooltip_text: _(this.schema.get_key('dash-offset').get_description()) });
+        this.settings.bind('dash-offset', dashOffsetButton, 'value', 0);
+        dashOffsetRow.addWidget(dashOffsetButton);
+        toolsListBox.add(dashOffsetRow);
+    },
+    
+    _updatePalettes: function() {
+        this.palettes = this.settings.get_value('palettes').deep_unpack();
+        this.palettesListBox.get_children().filter(row=> row.get_child() != this.addBox)
+                                           .slice(this.palettes.length)
+                                           .forEach(row => this.palettesListBox.remove(row));
+        let paletteBoxes = this.palettesListBox.get_children().map(row => row.get_child()).filter(child => child != this.addBox);
+        
+        this.palettes.forEach((palette, paletteIndex) => {
+            let [name, colors] = palette;
+            let paletteBox;
+            
+            if (paletteBoxes[paletteIndex]) {
+                paletteBox = paletteBoxes[paletteIndex];
+                let nameEntry = paletteBox.get_children()[0];
+                if (nameEntry.get_text() !== _(name)) {
+                    GObject.signal_handler_block(nameEntry, nameEntry.paletteNameChangedHandler);
+                    nameEntry.set_text(_(name));
+                    GObject.signal_handler_unblock(nameEntry, nameEntry.paletteNameChangedHandler);
+                }
+            } else {
+                let nameEntry = new Gtk.Entry({ text: name, halign: Gtk.Align.START, tooltip_text: _("Rename the palette") });
+                nameEntry.paletteNameChangedHandler = nameEntry.connect('changed', this._onPaletteNameChanged.bind(this, paletteIndex));
+                let removeButton = Gtk.Button.new_from_icon_name('list-remove-symbolic', Gtk.IconSize.BUTTON);
+                removeButton.set_tooltip_text(_("Remove the palette")); 
+                removeButton.connect('clicked', this._removePalette.bind(this, paletteIndex));
+                paletteBox = new Gtk.Box({ margin_top: MARGIN/2, margin_bottom: MARGIN/2, margin_left: MARGIN, margin_right: MARGIN });
+                paletteBox.pack_start(nameEntry, true, true, 4);
+                paletteBox.pack_start(new Gtk.Box({ spacing: 4 }), false, false, 4);
+                paletteBox.pack_start(removeButton, false, false, 4);
+                this.palettesListBox.insert(paletteBox, paletteIndex);
+                paletteBox.get_parent().set_activatable(false);
+            }
+            
+            colors.splice(9);
+            while (colors.length < 9)
+                colors.push('transparent');
+            
+            let colorsBox = paletteBox.get_children()[1];
+            let colorButtons = colorsBox.get_children();
+            colors.forEach((color, colorIndex) => {
+                if (colorButtons[colorIndex]) {
+                    colorButtons[colorIndex].color_string = color;
+                } else {
+                    let colorButton = new ColorStringButton({ color_string: color, use_alpha: true, show_editor: true, halign: Gtk.Align.START, hexpand: false });
+                    colorButton.connect('notify::color-string', this._onPaletteColorChanged.bind(this, paletteIndex, colorIndex));
+                    colorsBox.add(colorButton);
+                }
+            });
+            
+            paletteBox.show_all();
+        });
+    },
+    
+    _savePalettes: function() {
+        this.settings.set_value('palettes', new GLib.Variant('a(sas)', this.palettes));
+    },
+    
+    _onPaletteNameChanged: function(index, entry) {
+        this.palettes[index][0] = entry.get_text();
+        this._savePalettes();
+    },
+    
+    _onPaletteColorChanged: function(paletteIndex, colorIndex, colorButton) {
+        this.palettes[paletteIndex][1][colorIndex] = colorButton.get_rgba().to_string();
+        this._savePalettes();
+    },
+    
+    _addNewPalette: function() {
+        let colors = Array(9).fill('Black');
+        this.palettes.push([_("New palette"), colors]);
+        this._savePalettes();
+    },
+    
+    _removePalette: function(paletteIndex) {
+        this.palettes.splice(paletteIndex, 1);
+        this._savePalettes();
+    }
+});
+
 const PrefsPage = new GObject.Class({
     Name: 'DrawOnYourScreenPrefsPage',
     GTypeName: 'DrawOnYourScreenPrefsPage',
     Extends: Gtk.ScrolledWindow,
 
     _init: function(params) {
-        this.parent();
+        this.parent({ hscrollbar_policy: Gtk.PolicyType.NEVER });
 
         let settings = Convenience.getSettings();
         let internalShortcutSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
@@ -311,19 +518,6 @@ const PrefsPage = new GObject.Class({
         internalKeybindingsWidget.margin = MARGIN;
         listBox.add(internalKeybindingsWidget);
         
-        let styleBox = new Gtk.Box({ margin: MARGIN });
-        let styleLabel = new Gtk.Label({
-            wrap: true,
-            xalign: 0,
-            use_markup: true,
-            label: _("<b>Default</b> drawing style attributes (color palette, font, line, dash) are defined in an editable <b>css</b> file.\n" +
-                     "See <i>“%s”</i>.").format(_("Edit style"))
-        });
-        styleLabel.set_halign(1);
-        styleLabel.get_style_context().add_class('dim-label');
-        styleBox.pack_start(styleLabel, true, true, 4);
-        listBox.add(styleBox);
-        
         let noteBox = new Gtk.Box({ margin: MARGIN });
         let noteLabel = new Gtk.Label({
             wrap: true,
@@ -343,6 +537,89 @@ const PrefsPage = new GObject.Class({
             if (children[i].activatable)
                 children[i].set_activatable(false);
         }
+    }
+});
+
+const PrefRow = new GObject.Class({
+    Name: 'DrawOnYourScreenPrefRow',
+    GTypeName: 'DrawOnYourScreenPrefRow',
+    Extends: Gtk.ListBoxRow,
+
+    _init: function(params) {
+        this.parent({ activatable: false });
+        
+        let hbox = new Gtk.Box({ margin_top: MARGIN/2, margin_bottom: MARGIN/2, margin_left: MARGIN, margin_right: MARGIN });
+        this.add(hbox);
+        
+        let labelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
+        hbox.pack_start(labelBox, true, true, 4);
+        
+        this.widgetBox = new Gtk.Box({ spacing: 4 });
+        hbox.pack_start(this.widgetBox, false, false, 4);
+        
+        labelBox.pack_start(new Gtk.Label({ use_markup: true, label: params.label, halign: Gtk.Align.START }), true, true, 0);
+        if (params.desc) {
+            let desc = new Gtk.Label({ use_markup: true, label: `<small>${params.desc}</small>`, halign: Gtk.Align.START, wrap: true, xalign: 0 });
+            desc.get_style_context().add_class('dim-label');
+            labelBox.pack_start(desc, true, true, 0);
+            this.widgetBox.set_valign(Gtk.Align.START);
+        }
+    },
+    
+    addWidget: function(widget) {
+        this.widgetBox.add(widget);
+    }
+});
+
+const PixelSpinButton = new GObject.Class({
+    Name: 'DrawOnYourScreenPixelSpinButton',
+    GTypeName: 'DrawOnYourScreenPixelSpinButton',
+    Extends: Gtk.SpinButton,
+    
+    // Add 'px' unit.
+    vfunc_output: function() {
+        this.text = `${Math.round(this.value * 100) / 100} px`;
+        return true;
+    },
+    
+    // Prevent accidental scrolling.
+    vfunc_scroll_event: function(event) {
+        return this.has_focus ? this.parent(event) : Gdk.EVENT_PROPAGATE;
+    }
+});
+
+// A color button that can be easily bound with a color string setting.
+const ColorStringButton = new GObject.Class({
+    Name: 'DrawOnYourScreenColorStringButton',
+    GTypeName: 'DrawOnYourScreenColorStringButton',
+    Extends: Gtk.ColorButton,
+    Properties: {
+        'color-string': GObject.ParamSpec.string('color-string', 'colorString', 'A string that describes the color',
+                                                 GObject.ParamFlags.READWRITE,
+                                                 'black')
+    },
+    
+    get color_string() {
+        return this._color_string || 'black';
+    },
+    
+    set color_string(colorString) {
+        this._color_string = colorString;
+        
+        let newRgba = new Gdk.RGBA();
+        newRgba.parse(colorString);
+        this.set_rgba(newRgba);
+    },
+    
+    // Do nothing if the new color is equivalent to the old color (e.g. "black" and "rgb(0,0,0)").
+    vfunc_color_set(args) {
+        let oldRgba = new Gdk.RGBA();
+        oldRgba.parse(this.color_string);
+        
+        if (!this.rgba.equal(oldRgba)) {
+            this._color_string = this.rgba.to_string();
+            this.notify('color-string');
+        }            
     }
 });
 

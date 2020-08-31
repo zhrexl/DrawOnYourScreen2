@@ -46,6 +46,7 @@ const GS_VERSION = Config.PACKAGE_VERSION;
 
 const ICON_DIR = Me.dir.get_child('data').get_child('icons');
 const SMOOTH_ICON_PATH = ICON_DIR.get_child('smooth-symbolic.svg').get_path();
+const PALETTE_ICON_PATH = ICON_DIR.get_child('palette-symbolic.svg').get_path();
 const COLOR_ICON_PATH = ICON_DIR.get_child('color-symbolic.svg').get_path();
 const FILL_ICON_PATH = ICON_DIR.get_child('fill-symbolic.svg').get_path();
 const STROKE_ICON_PATH = ICON_DIR.get_child('stroke-symbolic.svg').get_path();
@@ -95,6 +96,7 @@ var DrawingMenu = new Lang.Class({
             menuCloseFunc.bind(this.menu)(animate);
         };
         
+        this.paletteIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(PALETTE_ICON_PATH) });
         this.colorIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(COLOR_ICON_PATH) });
         this.smoothIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(SMOOTH_ICON_PATH) });
         this.strokeIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(STROKE_ICON_PATH) });
@@ -164,6 +166,7 @@ var DrawingMenu = new Lang.Class({
         this._addSeparator(this.menu, true);
         
         this._addSubMenuItem(this.menu, 'document-edit-symbolic', Area.ToolNames, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
+        this.paletteItem = this._addPaletteSubMenuItem(this.menu);
         this.colorItem = this._addColorSubMenuItem(this.menu);
         this.fillItem = this._addSwitchItem(this.menu, _("Fill"), this.strokeIcon, this.fillIcon, this.area, 'fill', this._updateSectionVisibility.bind(this));
         this.fillSection = new PopupMenu.PopupMenuSection();
@@ -216,7 +219,7 @@ var DrawingMenu = new Lang.Class({
         this._addSaveDrawingSubMenuItem(this.menu);
         
         this.menu.addAction(_("Save drawing as a SVG file"), this.area.saveAsSvg.bind(this.area), 'image-x-generic-symbolic');
-        this.menu.addAction(_("Edit style"), manager.openUserStyleFile.bind(manager), 'document-page-setup-symbolic');
+        this.menu.addAction(_("Open preferences"), manager.openPreferences.bind(manager), 'document-page-setup-symbolic');
         this.menu.addAction(_("Show help"), () => { this.close(); this.area.toggleHelp(); }, 'preferences-desktop-keyboard-shortcuts-symbolic');
         
         this._updateActionSensitivity();
@@ -254,6 +257,7 @@ var DrawingMenu = new Lang.Class({
         this.fontSection.actor.visible = isText;
         this.imageSection.actor.visible = isImage;
         this.colorItem.setSensitive(!isImage);
+        this.paletteItem.setSensitive(!isImage);
         this.fillItem.setSensitive(!isText && !isImage);
         this.fillSection.setSensitive(!isText && !isImage);
         
@@ -374,8 +378,37 @@ var DrawingMenu = new Lang.Class({
         menu.addMenuItem(item);
     },
     
+    _addPaletteSubMenuItem: function(menu) {
+        let text = _(this.area.currentPalette[0] || "Palette");
+        let item = new PopupMenu.PopupSubMenuMenuItem(text, true);
+        item.icon.set_gicon(this.paletteIcon);
+        
+        item.menu.itemActivated = () => {
+            item.menu.close();
+        };
+        
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            this.area.palettes.forEach(palette => {
+                let [name, colors] = palette;
+                if (!colors[0])
+                    return;
+                
+                let subItem = item.menu.addAction(_(name || "Palette"), () => {
+                    item.label.set_text(_(name || "Palette"));
+                    this.area.currentPalette = palette;
+                    this._populateColorSubMenu();
+                });
+                getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+            });
+            return GLib.SOURCE_REMOVE;
+        });
+        menu.addMenuItem(item);
+        return item;
+    },
+    
     _addColorSubMenuItem: function(menu) {
         let item = new PopupMenu.PopupSubMenuMenuItem(_("Color"), true);
+        this.colorSubMenu = item.menu;
         item.icon.set_gicon(this.colorIcon);
         item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
         
@@ -383,22 +416,26 @@ var DrawingMenu = new Lang.Class({
             item.menu.close();
         };
         
-        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-            for (let i = 1; i < this.area.colors.length; i++) {
-                let text = this.area.colors[i].to_string();
-                let iCaptured = i;
-                let colorItem = item.menu.addAction(text, () => {
-                    this.area.currentColor = this.area.colors[iCaptured];
-                    item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
-                });
-                // Foreground color markup is not displayed since 3.36, use style instead but the transparency is lost.
-                colorItem.label.set_style(`color:${this.area.colors[i].to_string().slice(0, 7)};`);
-                getActor(colorItem).connect('key-focus-in', updateSubMenuAdjustment);
-            }
-            return GLib.SOURCE_REMOVE;
-        });
+        this._populateColorSubMenu();
         menu.addMenuItem(item);
         return item;
+    },
+    
+    _populateColorSubMenu: function() {
+        this.colorSubMenu.removeAll();
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            this.area.colors.forEach(color => {
+                let text = color.string || color.to_string();
+                let subItem = this.colorSubMenu.addAction(text, () => {
+                    this.area.currentColor = color;
+                    this.colorItem.icon.set_style(`color:${color.to_string().slice(0, 7)};`);
+                });
+                // Foreground color markup is not displayed since 3.36, use style instead but the transparency is lost.
+                subItem.label.set_style(`color:${color.to_string().slice(0, 7)};`);
+                getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+            });
+            return GLib.SOURCE_REMOVE;
+        });
     },
     
     _addFontFamilySubMenuItem: function(menu, icon) {

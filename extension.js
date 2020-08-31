@@ -21,7 +21,6 @@
  */
 
 const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
@@ -57,6 +56,7 @@ function init() {
 function enable() {
     Me.settings = Convenience.getSettings();
     Me.internalShortcutSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
+    Me.drawingSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.drawing');
     manager = new AreaManager();
 }
 
@@ -105,26 +105,6 @@ var AreaManager = new Lang.Class({
         
         this.desktopSettingHandler = Me.settings.connect('changed::drawing-on-desktop', this.onDesktopSettingChanged.bind(this));
         this.persistentSettingHandler = Me.settings.connect('changed::persistent-drawing', this.onPersistentSettingChanged.bind(this));
-        
-        this.userStyleFile = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir'], 'user.css']));
-        
-        if (this.userStyleFile.query_exists(null)) {
-            let theme = St.ThemeContext.get_for_stage(global.stage).get_theme();
-            theme.load_stylesheet(this.userStyleFile);
-        }
-        
-        this.userStyleMonitor = this.userStyleFile.monitor_file(Gio.FileMonitorFlags.WATCH_MOVES, null);
-        this.userStyleHandler = this.userStyleMonitor.connect('changed', (monitor, file, otherFile, eventType) => {
-            // 'CHANGED' events are followed by a 'CHANGES_DONE_HINT' event
-            if (eventType == Gio.FileMonitorEvent.CHANGED || eventType == Gio.FileMonitorEvent.ATTRIBUTE_CHANGED)
-                return;
-            
-            let theme = St.ThemeContext.get_for_stage(global.stage).get_theme();
-            if (theme.get_custom_stylesheets().indexOf(this.userStyleFile) != -1)
-                theme.unload_stylesheet(this.userStyleFile);
-            if (this.userStyleFile.query_exists(null))
-                theme.load_stylesheet(this.userStyleFile);
-        });
     },
     
     onDesktopSettingChanged: function() {
@@ -218,14 +198,15 @@ var AreaManager = new Lang.Class({
             'toggle-background': this.activeArea.toggleBackground.bind(this.activeArea),
             'toggle-grid': this.activeArea.toggleGrid.bind(this.activeArea),
             'toggle-square-area': this.activeArea.toggleSquareArea.bind(this.activeArea),
-            'reverse-switch-font-family': this.activeArea.switchFontFamily.bind(this.activeArea, true),
+            'switch-color-palette': this.activeArea.switchColorPalette.bind(this.activeArea, false),
+            'switch-color-palette-reverse': this.activeArea.switchColorPalette.bind(this.activeArea, true),
             'switch-font-family': this.activeArea.switchFontFamily.bind(this.activeArea, false),
+            'switch-font-family-reverse': this.activeArea.switchFontFamily.bind(this.activeArea, true),
             'switch-font-weight': this.activeArea.switchFontWeight.bind(this.activeArea),
             'switch-font-style': this.activeArea.switchFontStyle.bind(this.activeArea),
             'switch-text-alignment': this.activeArea.switchTextAlignment.bind(this.activeArea),
             'toggle-panel-and-dock-visibility': this.togglePanelAndDockOpacity.bind(this),
             'toggle-help': this.activeArea.toggleHelp.bind(this.activeArea),
-            'open-user-stylesheet': this.openUserStyleFile.bind(this),
             'open-preferences': this.openPreferences.bind(this)
         };
         
@@ -251,7 +232,7 @@ var AreaManager = new Lang.Class({
                                   Me.internalShortcutSettings,
                                   Meta.KeyBindingFlags.NONE,
                                   DRAWING_ACTION_MODE | WRITING_ACTION_MODE,
-                                  () => this.activeArea.selectColor(iCaptured));
+                                  this.activeArea.selectColor.bind(this.activeArea, iCaptured - 1));
         }
     },
     
@@ -273,23 +254,6 @@ var AreaManager = new Lang.Class({
                 this.toggleDrawing();
             ExtensionUtils.openPrefs();
         }
-    },
-    
-    openUserStyleFile: function() {
-        if (!this.userStyleFile.query_exists(null)) {
-            if (!this.userStyleFile.get_parent().query_exists(null))
-                this.userStyleFile.get_parent().make_directory_with_parents(null);
-            let defaultStyleFile = Me.dir.get_child('data').get_child('default.css');
-            if (!defaultStyleFile.query_exists(null))
-                return;
-            let success = defaultStyleFile.copy(this.userStyleFile, Gio.FileCopyFlags.NONE, null, null);
-            if (!success)
-                return;
-        }
-        
-        Gio.AppInfo.launch_default_for_uri(this.userStyleFile.get_uri(), global.create_app_launch_context(0, -1));
-        if (this.activeArea)
-            this.toggleDrawing();
     },
     
     eraseDrawing: function() {
@@ -521,14 +485,6 @@ var AreaManager = new Lang.Class({
     },
     
     disable: function() {
-        if (this.userStyleHandler && this.userStyleMonitor) {
-            this.userStyleMonitor.disconnect(this.userStyleHandler);
-            this.userStyleHandler = null;
-        }
-        if (this.userStyleMonitor) {
-            this.userStyleMonitor.cancel();
-            this.userStyleMonitor = null;
-        }
         if (this.monitorChangedHandler) {
             Main.layoutManager.disconnect(this.monitorChangedHandler);
             this.monitorChangedHandler = null;

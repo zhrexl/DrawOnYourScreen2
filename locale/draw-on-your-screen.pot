@@ -47,6 +47,90 @@ msgstr ""
 msgid "translator-credits"
 msgstr ""
 
+msgid "Drawing"
+msgstr ""
+
+msgid "Palettes"
+msgstr ""
+
+msgid "The palettes of drawing colors"
+msgstr ""
+
+msgid "Palette"
+msgstr ""
+
+msgid "Add a new palette"
+msgstr ""
+
+msgid "New palette"
+msgstr ""
+
+msgid "Rename the palette"
+msgstr ""
+
+msgid "Remove the palette"
+msgstr ""
+
+msgid "Auto"
+msgstr ""
+
+msgid "Area"
+msgstr ""
+
+msgid "Square area size"
+msgstr ""
+
+msgid "Compute the size of the square area from the screen size"
+msgstr ""
+
+msgid "The size of the square area in pixels"
+msgstr ""
+
+msgid "Background color"
+msgstr ""
+
+msgid "The color of the drawing area background"
+msgstr ""
+
+msgid "Grid overlay line"
+msgstr ""
+
+msgid "Compute the lengths from the screen size"
+msgstr ""
+
+msgid "The line width in pixels"
+msgstr ""
+
+msgid "The gap between lines in pixels"
+msgstr ""
+
+msgid "Grid overlay color"
+msgstr ""
+
+msgid "The color of the lines"
+msgstr ""
+
+msgid "Tools"
+msgstr ""
+
+msgid "Dash array"
+msgstr ""
+
+msgid "Compute the lengths from the line width"
+msgstr ""
+
+msgid "The dash length in pixels"
+msgstr ""
+
+msgid "The gap between the dashes in pixels"
+msgstr ""
+
+msgid "Dash offset"
+msgstr ""
+
+msgid "The dash offset in pixels"
+msgstr ""
+
 msgid "Preferences"
 msgstr ""
 
@@ -197,6 +281,15 @@ msgstr ""
 msgid "Toggle fill/outline"
 msgstr ""
 
+msgid "Toggle fill rule"
+msgstr ""
+
+msgid "Change color palette"
+msgstr ""
+
+msgid "Change color palette (reverse)"
+msgstr ""
+
 msgid "Increment line width"
 msgstr ""
 
@@ -213,9 +306,6 @@ msgid "Change linejoin"
 msgstr ""
 
 msgid "Change linecap"
-msgstr ""
-
-msgid "Toggle fill rule"
 msgstr ""
 
 msgid "Change font family"
@@ -257,18 +347,10 @@ msgstr ""
 msgid "Save drawing as a SVG file"
 msgstr ""
 
-msgid "Edit style"
-msgstr ""
-
 msgid "Open preferences"
 msgstr ""
 
 msgid "Show help"
-msgstr ""
-
-msgid ""
-"<b>Default</b> drawing style attributes (color palette, font, line, dash) are defined in an editable <b>css</b> file.\n"
-"See <i>“%s”</i>."
 msgstr ""
 
 msgid ""
