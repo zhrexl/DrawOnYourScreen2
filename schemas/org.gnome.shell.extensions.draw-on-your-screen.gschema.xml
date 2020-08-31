@@ -276,12 +276,12 @@
       <description>Save drawing as a json file</description>
     </key>
     <key type="as" name="open-previous-json">
-      <default>["&lt;Primary&gt;Page_Down"]</default>
+      <default>["&lt;Primary&gt;&lt;Shift&gt;o"]</default>
       <summary>Open previous json file</summary>
       <description>Open previous json file</description>
     </key>
     <key type="as" name="open-next-json">
-      <default>["&lt;Primary&gt;Page_Up"]</default>
+      <default>["&lt;Primary&gt;o"]</default>
       <summary>Open next json file</summary>
       <description>Open next json file</description>
     </key>
