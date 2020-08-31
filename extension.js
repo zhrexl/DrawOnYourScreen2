@@ -55,6 +55,9 @@ function init() {
 }
 
 function enable() {
+    if (ExtensionUtils.isOutOfDate(Me))
+        log(`${Me.metadata.uuid}: GNOME Shell ${Number.parseFloat(GS_VERSION)} is not supported.`);
+    
     Me.settings = Convenience.getSettings();
     Me.internalShortcutSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
     Me.drawingSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.drawing');
