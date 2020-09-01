@@ -53,6 +53,9 @@ msgstr ""
 msgid "Palettes"
 msgstr ""
 
+msgid "Color palettes"
+msgstr ""
+
 msgid "The palettes of drawing colors"
 msgstr ""
 
@@ -80,6 +83,9 @@ msgstr ""
 msgid "Square area size"
 msgstr ""
 
+msgid "Automatic square area size"
+msgstr ""
+
 msgid "Compute the size of the square area from the screen size"
 msgstr ""
 
@@ -95,10 +101,19 @@ msgstr ""
 msgid "Grid overlay line"
 msgstr ""
 
+msgid "Automatic grid overlay line"
+msgstr ""
+
 msgid "Compute the lengths from the screen size"
 msgstr ""
 
+msgid "Grid overlay line spacing"
+msgstr ""
+
 msgid "The line width in pixels"
+msgstr ""
+
+msgid "Grid overlay line width"
 msgstr ""
 
 msgid "The gap between lines in pixels"
@@ -116,10 +131,19 @@ msgstr ""
 msgid "Dash array"
 msgstr ""
 
+msgid "Automatic dash array"
+msgstr ""
+
 msgid "Compute the lengths from the line width"
 msgstr ""
 
+msgid "Dash array on"
+msgstr ""
+
 msgid "The dash length in pixels"
+msgstr ""
+
+msgid "Dash array off"
 msgstr ""
 
 msgid "The gap between the dashes in pixels"
@@ -233,7 +257,7 @@ msgstr ""
 msgid "Internal"
 msgstr ""
 
-msgid "(in drawing mode)"
+msgid "In drawing mode"
 msgstr ""
 
 msgid "Undo last brushstroke"
@@ -248,34 +272,61 @@ msgstr ""
 msgid "Smooth last brushstroke"
 msgstr ""
 
-msgid "Select line"
+msgid "Select color 1"
 msgstr ""
 
-msgid "Select ellipse"
+msgid "Select color 2"
 msgstr ""
 
-msgid "Select rectangle"
+msgid "Select color 3"
 msgstr ""
 
-msgid "Select polygon"
+msgid "Select color 4"
 msgstr ""
 
-msgid "Select polyline"
+msgid "Select color 5"
 msgstr ""
 
-msgid "Select image"
+msgid "Select color 6"
 msgstr ""
 
-msgid "Select text"
+msgid "Select color 7"
 msgstr ""
 
-msgid "Select move"
+msgid "Select color 8"
 msgstr ""
 
-msgid "Select resize"
+msgid "Select color 9"
 msgstr ""
 
-msgid "Select mirror"
+msgid "Select ellipse tool"
+msgstr ""
+
+msgid "Select image tool"
+msgstr ""
+
+msgid "Select line tool"
+msgstr ""
+
+msgid "Select mirror tool"
+msgstr ""
+
+msgid "Select move tool"
+msgstr ""
+
+msgid "Select polygon tool"
+msgstr ""
+
+msgid "Select polyline tool"
+msgstr ""
+
+msgid "Select rectangle tool"
+msgstr ""
+
+msgid "Select resize tool"
+msgstr ""
+
+msgid "Select text tool"
 msgstr ""
 
 msgid "Toggle fill/outline"

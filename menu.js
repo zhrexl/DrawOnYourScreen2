@@ -66,6 +66,10 @@ const getActor = function(object) {
     return GS_VERSION < '3.33.0' ? object.actor : object;
 };
 
+const getSummary = function(settingKey) {
+    return Me.internalShortcutSettings.settings_schema.get_key(settingKey).get_summary();
+};
+
 var DrawingMenu = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingMenu',
     
@@ -159,7 +163,7 @@ var DrawingMenu = new Lang.Class({
         this.menu.removeAll();
         
         this.actionButtons = [];
-        let groupItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, style_class: "draw-on-your-screen-menu-group-item" });
+        let groupItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, style_class: 'draw-on-your-screen-menu-group-item' });
         getActor(groupItem).add_child(this._createActionButton(_("Undo"), this.area.undo.bind(this.area), 'edit-undo-symbolic'));
         getActor(groupItem).add_child(this._createActionButton(_("Redo"), this.area.redo.bind(this.area), 'edit-redo-symbolic'));
         getActor(groupItem).add_child(this._createActionButton(_("Erase"), this.area.deleteLastElement.bind(this.area), 'edit-clear-all-symbolic'));
@@ -210,19 +214,19 @@ var DrawingMenu = new Lang.Class({
         this.imageSection = imageSection;
         
         let areaManager = Me.stateObj.areaManager;
-        this._addSimpleSwitchItem(this.menu, _("Hide panel and dock"), areaManager.hiddenList ? true : false, areaManager.togglePanelAndDockOpacity.bind(areaManager));
-        this._addSimpleSwitchItem(this.menu, _("Add a drawing background"), this.area.hasBackground, this.area.toggleBackground.bind(this.area));
-        this._addSimpleSwitchItem(this.menu, _("Add a grid overlay"), this.area.hasGrid, this.area.toggleGrid.bind(this.area));
-        this._addSimpleSwitchItem(this.menu, _("Square drawing area"), this.area.isSquareArea, this.area.toggleSquareArea.bind(this.area));
+        this._addSimpleSwitchItem(this.menu, getSummary('toggle-panel-and-dock-visibility'), !!areaManager.hiddenList, areaManager.togglePanelAndDockOpacity.bind(areaManager));
+        this._addSimpleSwitchItem(this.menu, getSummary('toggle-background'), this.area.hasBackground, this.area.toggleBackground.bind(this.area));
+        this._addSimpleSwitchItem(this.menu, getSummary('toggle-grid'), this.area.hasGrid, this.area.toggleGrid.bind(this.area));
+        this._addSimpleSwitchItem(this.menu, getSummary('toggle-square-area'), this.area.isSquareArea, this.area.toggleSquareArea.bind(this.area));
         this._addSeparator(this.menu);
         
         this._addDrawingNameItem(this.menu);
         this._addOpenDrawingSubMenuItem(this.menu);
         this._addSaveDrawingSubMenuItem(this.menu);
         
-        this.menu.addAction(_("Save drawing as a SVG file"), this.area.saveAsSvg.bind(this.area), 'image-x-generic-symbolic');
-        this.menu.addAction(_("Open preferences"), areaManager.openPreferences.bind(areaManager), 'document-page-setup-symbolic');
-        this.menu.addAction(_("Show help"), () => { this.close(); this.area.toggleHelp(); }, 'preferences-desktop-keyboard-shortcuts-symbolic');
+        this.menu.addAction(getSummary('save-as-svg'), this.area.saveAsSvg.bind(this.area), 'image-x-generic-symbolic');
+        this.menu.addAction(getSummary('open-preferences'), areaManager.openPreferences.bind(areaManager), 'document-page-setup-symbolic');
+        this.menu.addAction(getSummary('toggle-help'), () => { this.close(); this.area.toggleHelp(); }, 'preferences-desktop-keyboard-shortcuts-symbolic');
         
         this._updateActionSensitivity();
         this._updateSectionVisibility();
@@ -308,7 +312,7 @@ var DrawingMenu = new Lang.Class({
         if (GS_VERSION < '3.33.0') {
             slider.connect('value-changed', (slider, value, property) => {
                 target[targetProperty] = Math.max(Math.round(value * 50), 0);
-                label.set_text(target[targetProperty] + " px");
+                label.set_text(_("%d px").format(target[targetProperty]));
                 if (target[targetProperty] === 0)
                     label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
                 else
@@ -317,7 +321,7 @@ var DrawingMenu = new Lang.Class({
         } else {
             slider.connect('notify::value', () => {
                 target[targetProperty] = Math.max(Math.round(slider.value * 50), 0);
-                label.set_text(target[targetProperty] + " px");
+                label.set_text(_("%d px").format(target[targetProperty]));
                 if (target[targetProperty] === 0)
                     label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
                 else
@@ -539,7 +543,7 @@ var DrawingMenu = new Lang.Class({
     },
     
     _addSaveDrawingSubMenuItem: function(menu) {
-        let item = new PopupMenu.PopupSubMenuMenuItem(_("Save drawing"), true);
+        let item = new PopupMenu.PopupSubMenuMenuItem(getSummary('save-as-json'), true);
         this.saveDrawingSubMenuItem = item;
         this._updateSaveDrawingSubMenuItemSensitivity();
         this.saveDrawingSubMenu = item.menu;

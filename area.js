@@ -223,7 +223,7 @@ var DrawingArea = new Lang.Class({
             this.squareAreaSize = Math.max(64, Me.drawingSettings.get_uint('square-area-size'));
         }
         
-        this.areaBackgroundColor = getClutterColorFromString(Me.drawingSettings.get_string('area-background-color'), 'BLACK');
+        this.areaBackgroundColor = getClutterColorFromString(Me.drawingSettings.get_string('background-color'), 'BLACK');
         
         this.gridColor = getClutterColorFromString(Me.drawingSettings.get_string('grid-color'), 'GRAY');
         if (Me.drawingSettings.get_boolean('grid-line-auto')) {

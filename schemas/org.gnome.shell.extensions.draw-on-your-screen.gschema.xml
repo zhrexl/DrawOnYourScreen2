@@ -1,305 +1,251 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schemalist gettext-domain="gnome-shell-extensions">
+<schemalist gettext-domain="draw-on-your-screen">
   <schema path="/org/gnome/shell/extensions/draw-on-your-screen/" id="org.gnome.shell.extensions.draw-on-your-screen">
+    <child name="drawing" schema="org.gnome.shell.extensions.draw-on-your-screen.drawing"/>
+    <child name="internal-shortcuts" schema="org.gnome.shell.extensions.draw-on-your-screen.internal-shortcuts"/>
     <key type="b" name="drawing-on-desktop">
       <default>false</default>
-      <summary>move drawing on desktop</summary>
-      <description>move drawing on desktop</description>
+      <summary>Drawing on the desktop</summary>
+      <description><![CDATA[<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>]]></description>
     </key>
-    <key type="b" name="persistent-drawing">
-      <default>false</default>
-      <summary>persistent drawing</summary>
-      <description>persistent drawing</description>
-    </key>
-    <key type="b" name="osd-disabled">
-      <default>false</default>
-      <summary>disable OSD notifications</summary>
-      <description>disable on-screen notifications</description>
+    <key type="as" name="erase-drawings">
+      <default>["&lt;Alt&gt;&lt;Super&gt;e"]</default>
+      <summary>Erase all drawings</summary>
     </key>
     <key type="b" name="indicator-disabled">
       <default>false</default>
-      <summary>disable panel indicator</summary>
-      <description>disable panel indicator</description>
+      <summary>Disable panel indicator</summary>
+    </key>
+    <key type="b" name="osd-disabled">
+      <default>false</default>
+      <summary>Disable on-screen notifications</summary>
+    </key>
+    <key type="b" name="persistent-drawing">
+      <default>false</default>
+      <summary>Persistent</summary>
+      <description>Persistent drawing through session restart</description>
     </key>
     <key type="as" name="toggle-drawing">
       <default>["&lt;Alt&gt;&lt;Super&gt;d"]</default>
-      <summary>toggle drawing</summary>
-      <description>enter or leave drawing mode</description>
+      <summary>Enter/leave drawing mode</summary>
     </key>
     <key type="as" name="toggle-modal">
       <default>["&lt;Primary&gt;&lt;Alt&gt;&lt;Super&gt;d"]</default>
-      <summary>toggle modeless/modal</summary>
-      <description>toggle modeless/modal</description>
+      <summary>Grab/ungrab keyboard and pointer</summary>
+      <description></description>
     </key>
-    <key type="as" name="erase-drawing">
-      <default>["&lt;Alt&gt;&lt;Super&gt;e"]</default>
-      <summary>erase drawing</summary>
-      <description>erase drawing</description>
-    </key>
-    <child name="internal-shortcuts" schema="org.gnome.shell.extensions.draw-on-your-screen.internal-shortcuts"/>
-    <child name="drawing" schema="org.gnome.shell.extensions.draw-on-your-screen.drawing"/>
   </schema>
   <schema path="/org/gnome/shell/extensions/draw-on-your-screen/internal-shortcuts/" id="org.gnome.shell.extensions.draw-on-your-screen.internal-shortcuts">
-    <key type="as" name="undo">
-      <default>["&lt;Primary&gt;z"]</default>
-      <summary>undo</summary>
-      <description>undo</description>
-    </key>
-    <key type="as" name="redo">
-      <default>["&lt;Primary&gt;&lt;Shift&gt;z"]</default>
-      <summary>redo</summary>
-      <description>redo</description>
-    </key>
-    <key type="as" name="delete-last-element">
-      <default>["Delete"]</default>
-      <summary>delete last element</summary>
-      <description>delete last element</description>
-    </key>
-    <key type="as" name="smooth-last-element">
-      <default>["&lt;Primary&gt;equal"]</default>
-      <summary>smooth last brushstroke</summary>
-      <description>smooth last brushstroke</description>
-    </key>
-    <key type="as" name="toggle-background">
-      <default>["&lt;Primary&gt;b"]</default>
-      <summary>toggle drawing background</summary>
-      <description>toggle drawing background</description>
-    </key>
-    <key type="as" name="toggle-grid">
-      <default>["&lt;Primary&gt;g"]</default>
-      <summary>toggle grid overlay</summary>
-      <description>toggle grid overlay</description>
-    </key>
-    <key type="as" name="toggle-panel-and-dock-visibility">
-      <default>["&lt;Primary&gt;h"]</default>
-      <summary>hide or show panel and dock</summary>
-      <description>hide or show panel and dock</description>
-    </key>
-    <key type="as" name="toggle-square-area">
-      <default>["&lt;Primary&gt;n"]</default>
-      <summary>toggle square area</summary>
-      <description>toggle square area</description>
-    </key>
-    <key type="as" name="select-ellipse-shape">
-      <default>["&lt;Primary&gt;e"]</default>
-      <summary>select cercle</summary>
-      <description>select a cercle</description>
-    </key>
-    <key type="as" name="select-rectangle-shape">
-      <default>["&lt;Primary&gt;r"]</default>
-      <summary>select rectangle</summary>
-      <description>select rectangle</description>
-    </key>
-    <key type="as" name="select-polygon-shape">
-      <default>["&lt;Primary&gt;y"]</default>
-      <summary>select polygon</summary>
-      <description>select polygon</description>
-    </key>
-    <key type="as" name="select-polyline-shape">
-      <default>["&lt;Primary&gt;u"]</default>
-      <summary>select polyline</summary>
-      <description>select polyline</description>
-    </key>
-    <key type="as" name="select-line-shape">
-      <default>["&lt;Primary&gt;l"]</default>
-      <summary>select line</summary>
-      <description>select a line</description>
-    </key>
-    <key type="as" name="select-text-shape">
-      <default>["&lt;Primary&gt;t"]</default>
-      <summary>select text</summary>
-      <description>select text</description>
-    </key>
-    <key type="as" name="select-image-shape">
-      <default>["&lt;Primary&gt;i"]</default>
-      <summary>select image</summary>
-      <description>select image</description>
-    </key>
-    <key type="as" name="select-none-shape">
-      <default>["&lt;Primary&gt;p"]</default>
-      <summary>unselect shape (free drawing)</summary>
-      <description>unselect shape (free drawing)</description>
-    </key>
-    <key type="as" name="select-move-tool">
-      <default>["&lt;Primary&gt;m"]</default>
-      <summary>select move tool</summary>
-      <description>select move tool</description>
-    </key>
-    <key type="as" name="select-resize-tool">
-      <default>["&lt;Primary&gt;x"]</default>
-      <summary>select resize tool</summary>
-      <description>select resize tool</description>
-    </key>
-    <key type="as" name="select-mirror-tool">
-      <default>["&lt;Primary&gt;c"]</default>
-      <summary>select mirror tool</summary>
-      <description>select mirror tool</description>
-    </key>
-    <key type="as" name="increment-line-width">
-      <default><![CDATA[['<Primary>KP_Add','<Primary><Shift>plus']]]></default>
-      <summary>increment the line width</summary>
-      <description>increment the line width</description>
-    </key>
     <key type="as" name="decrement-line-width">
       <default><![CDATA[['<Primary>KP_Subtract','<Primary>minus','<Primary><Shift>minus']]]></default>
-      <summary>decrement the line width</summary>
-      <description>decrement the line width</description>
-    </key>
-    <key type="as" name="increment-line-width-more">
-      <default>["&lt;Primary&gt;&lt;Shift&gt;KP_Add"]</default>
-      <summary>increment the line width even more</summary>
-      <description>increment the line width even more</description>
+      <summary>Decrement line width</summary>
     </key>
     <key type="as" name="decrement-line-width-more">
       <default>["&lt;Primary&gt;&lt;Shift&gt;KP_Subtract"]</default>
-      <summary>decrement the line width even more</summary>
-      <description>decrement the line width even more</description>
+      <summary>Decrement line width even more</summary>
     </key>
-    <key type="as" name="switch-linejoin">
-      <default>["&lt;Primary&gt;j"]</default>
-      <summary>switch linejoin</summary>
-      <description>switch linejoin</description>
+    <key type="as" name="delete-last-element">
+      <default>["Delete"]</default>
+      <summary>Erase last brushstroke</summary>
     </key>
-    <key type="as" name="switch-linecap">
-      <default>["&lt;Primary&gt;k"]</default>
-      <summary>switch linecap</summary>
-      <description>switch linecap</description>
+    <key type="as" name="increment-line-width">
+      <default><![CDATA[['<Primary>KP_Add','<Primary><Shift>plus']]]></default>
+      <summary>Increment line width</summary>
     </key>
-    <key type="as" name="switch-fill-rule">
-      <default><![CDATA[['<Primary>KP_Multiply','<Primary>asterisk','<Primary><Shift>asterisk']]]></default>
-      <summary>switch fill rule</summary>
-      <description>switch fill rule</description>
-    </key>
-    <key type="as" name="switch-dash">
-      <default>["&lt;Primary&gt;period"]</default>
-      <summary>switch dash</summary>
-      <description>switch dash</description>
-    </key>
-    <key type="as" name="switch-fill">
-      <default>["&lt;Primary&gt;a"]</default>
-      <summary>switch fill</summary>
-      <description>switch fill</description>
-    </key>
-    <key type="as" name="select-color1">
-      <default><![CDATA[['<Primary>KP_1','<Primary>1']]]></default>
-      <summary>select color1</summary>
-      <description>select color1</description>
-    </key>
-    <key type="as" name="select-color2">
-      <default><![CDATA[['<Primary>KP_2','<Primary>2']]]></default>
-      <summary>select color2</summary>
-      <description>select color2</description>
-    </key>
-    <key type="as" name="select-color3">
-      <default><![CDATA[['<Primary>KP_3','<Primary>3']]]></default>
-      <summary>select color3</summary>
-      <description>select color3</description>
-    </key>
-    <key type="as" name="select-color4">
-      <default><![CDATA[['<Primary>KP_4','<Primary>4']]]></default>
-      <summary>select color4</summary>
-      <description>select color4</description>
-    </key>
-    <key type="as" name="select-color5">
-      <default><![CDATA[['<Primary>KP_5','<Primary>5']]]></default>
-      <summary>select color5</summary>
-      <description>select color5</description>
-    </key>
-    <key type="as" name="select-color6">
-      <default><![CDATA[['<Primary>KP_6','<Primary>6']]]></default>
-      <summary>select color6</summary>
-      <description>select color6</description>
-    </key>
-    <key type="as" name="select-color7">
-      <default><![CDATA[['<Primary>KP_7','<Primary>7']]]></default>
-      <summary>select color7</summary>
-      <description>select color7</description>
-    </key>
-    <key type="as" name="select-color8">
-      <default><![CDATA[['<Primary>KP_8','<Primary>8']]]></default>
-      <summary>select color8</summary>
-      <description>select color8</description>
-    </key>
-    <key type="as" name="select-color9">
-      <default><![CDATA[['<Primary>KP_9','<Primary>9']]]></default>
-      <summary>select color9</summary>
-      <description>select color9</description>
-    </key>
-    <key type="as" name="switch-font-family">
-      <default>["&lt;Primary&gt;f"]</default>
-      <summary>switch font family</summary>
-      <description>switch font family</description>
-    </key>
-    <key type="as" name="switch-font-family-reverse">
-      <default>["&lt;Primary&gt;&lt;Shift&gt;f"]</default>
-      <summary>switch font family (reverse)</summary>
-      <description>switch font family (reverse)</description>
-    </key>
-    <key type="as" name="switch-font-weight">
-      <default>["&lt;Primary&gt;w"]</default>
-      <summary>switch font weight</summary>
-      <description>switch font weight</description>
-    </key>
-    <key type="as" name="switch-font-style">
-      <default>["&lt;Primary&gt;&lt;Shift&gt;w"]</default>
-      <summary>switch font style</summary>
-      <description>switch font style</description>
-    </key>
-    <key type="as" name="switch-color-palette">
-      <default>["&lt;Primary&gt;KP_Divide","&lt;Primary&gt;slash"]</default>
-      <summary>switch color palette</summary>
-      <description>switch color palette</description>
-    </key>
-    <key type="as" name="switch-color-palette-reverse">
-      <default>["&lt;Primary&gt;&lt;Shift&gt;KP_Divide","&lt;Primary&gt;&lt;Shift&gt;slash"]</default>
-      <summary>switch color palette (reverse)</summary>
-      <description>switch color palette (reverse)</description>
-    </key>
-    <key type="as" name="switch-text-alignment">
-      <default>["&lt;Primary&gt;&lt;Shift&gt;a"]</default>
-      <summary>switch text alignment</summary>
-      <description>switch text alignment</description>
-    </key>
-    <key type="as" name="switch-image-file">
-      <default>["&lt;Primary&gt;&lt;Shift&gt;i"]</default>
-      <summary>switch image file</summary>
-      <description>switch image file</description>
-    </key>
-    <key type="as" name="save-as-svg">
-      <default>["&lt;Primary&gt;&lt;Shift&gt;s"]</default>
-      <summary>Save drawing as a svg file</summary>
-      <description>Save drawing as a svg file</description>
-    </key>
-    <key type="as" name="save-as-json">
-      <default>["&lt;Primary&gt;s"]</default>
-      <summary>Save drawing as a json file</summary>
-      <description>Save drawing as a json file</description>
-    </key>
-    <key type="as" name="open-previous-json">
-      <default>["&lt;Primary&gt;&lt;Shift&gt;o"]</default>
-      <summary>Open previous json file</summary>
-      <description>Open previous json file</description>
+    <key type="as" name="increment-line-width-more">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;KP_Add"]</default>
+      <summary>Increment line width even more</summary>
     </key>
     <key type="as" name="open-next-json">
       <default>["&lt;Primary&gt;o"]</default>
-      <summary>Open next json file</summary>
-      <description>Open next json file</description>
+      <summary>Open next drawing</summary>
     </key>
     <key type="as" name="open-preferences">
       <default>["&lt;Primary&gt;comma"]</default>
       <summary>Open preferences</summary>
-      <description>Open preferences</description>
+    </key>
+    <key type="as" name="open-previous-json">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;o"]</default>
+      <summary>Open previous drawing</summary>
+    </key>
+    <key type="as" name="redo">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;z"]</default>
+      <summary>Redo last brushstroke</summary>
+    </key>
+    <key type="as" name="save-as-json">
+      <default>["&lt;Primary&gt;s"]</default>
+      <summary>Save drawing</summary>
+    </key>
+    <key type="as" name="save-as-svg">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;s"]</default>
+      <summary>Save drawing as a SVG file</summary>
+    </key>
+    <key type="as" name="select-color1">
+      <default><![CDATA[['<Primary>KP_1','<Primary>1']]]></default>
+      <summary>Select color 1</summary>
+      <description></description>
+    </key>
+    <key type="as" name="select-color2">
+      <default><![CDATA[['<Primary>KP_2','<Primary>2']]]></default>
+      <summary>Select color 2</summary>
+    </key>
+    <key type="as" name="select-color3">
+      <default><![CDATA[['<Primary>KP_3','<Primary>3']]]></default>
+      <summary>Select color 3</summary>
+    </key>
+    <key type="as" name="select-color4">
+      <default><![CDATA[['<Primary>KP_4','<Primary>4']]]></default>
+      <summary>Select color 4</summary>
+    </key>
+    <key type="as" name="select-color5">
+      <default><![CDATA[['<Primary>KP_5','<Primary>5']]]></default>
+      <summary>Select color 5</summary>
+    </key>
+    <key type="as" name="select-color6">
+      <default><![CDATA[['<Primary>KP_6','<Primary>6']]]></default>
+      <summary>Select color 6</summary>
+    </key>
+    <key type="as" name="select-color7">
+      <default><![CDATA[['<Primary>KP_7','<Primary>7']]]></default>
+      <summary>Select color 7</summary>
+    </key>
+    <key type="as" name="select-color8">
+      <default><![CDATA[['<Primary>KP_8','<Primary>8']]]></default>
+      <summary>Select color 8</summary>
+    </key>
+    <key type="as" name="select-color9">
+      <default><![CDATA[['<Primary>KP_9','<Primary>9']]]></default>
+      <summary>Select color 9</summary>
+    </key>
+    <key type="as" name="select-ellipse-shape">
+      <default>["&lt;Primary&gt;e"]</default>
+      <summary>Select ellipse tool</summary>
+    </key>
+    <key type="as" name="select-image-shape">
+      <default>["&lt;Primary&gt;i"]</default>
+      <summary>Select image tool</summary>
+    </key>
+    <key type="as" name="select-line-shape">
+      <default>["&lt;Primary&gt;l"]</default>
+      <summary>Select line tool</summary>
+    </key>
+    <key type="as" name="select-mirror-tool">
+      <default>["&lt;Primary&gt;c"]</default>
+      <summary>Select mirror tool</summary>
+    </key>
+    <key type="as" name="select-move-tool">
+      <default>["&lt;Primary&gt;m"]</default>
+      <summary>Select move tool</summary>
+    </key>
+    <key type="as" name="select-none-shape">
+      <default>["&lt;Primary&gt;p"]</default>
+      <summary>Free drawing</summary>
+    </key>
+    <key type="as" name="select-polygon-shape">
+      <default>["&lt;Primary&gt;y"]</default>
+      <summary>Select polygon tool</summary>
+    </key>
+    <key type="as" name="select-polyline-shape">
+      <default>["&lt;Primary&gt;u"]</default>
+      <summary>Select polyline tool</summary>
+    </key>
+    <key type="as" name="select-rectangle-shape">
+      <default>["&lt;Primary&gt;r"]</default>
+      <summary>Select rectangle tool</summary>
+    </key>
+    <key type="as" name="select-resize-tool">
+      <default>["&lt;Primary&gt;x"]</default>
+      <summary>Select resize tool</summary>
+    </key>
+    <key type="as" name="select-text-shape">
+      <default>["&lt;Primary&gt;t"]</default>
+      <summary>Select text tool</summary>
+    </key>
+    <key type="as" name="smooth-last-element">
+      <default>["&lt;Primary&gt;equal"]</default>
+      <summary>Smooth last brushstroke</summary>
+    </key>
+    <key type="as" name="switch-color-palette">
+      <default>["&lt;Primary&gt;KP_Divide","&lt;Primary&gt;slash"]</default>
+      <summary>Change color palette</summary>
+    </key>
+    <key type="as" name="switch-color-palette-reverse">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;KP_Divide","&lt;Primary&gt;&lt;Shift&gt;slash"]</default>
+      <summary>Change color palette (reverse)</summary>
+    </key>
+    <key type="as" name="switch-dash">
+      <default>["&lt;Primary&gt;period"]</default>
+      <summary>Dashed line</summary>
+    </key>
+    <key type="as" name="switch-fill">
+      <default>["&lt;Primary&gt;a"]</default>
+      <summary>Toggle fill/outline</summary>
+    </key>
+    <key type="as" name="switch-fill-rule">
+      <default><![CDATA[['<Primary>KP_Multiply','<Primary>asterisk','<Primary><Shift>asterisk']]]></default>
+      <summary>Toggle fill rule</summary>
+    </key>
+    <key type="as" name="switch-font-family">
+      <default>["&lt;Primary&gt;f"]</default>
+      <summary>Change font family</summary>
+    </key>
+    <key type="as" name="switch-font-family-reverse">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;f"]</default>
+      <summary>Change font family (reverse)</summary>
+    </key>
+    <key type="as" name="switch-font-style">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;w"]</default>
+      <summary>Change font style</summary>
+    </key>
+    <key type="as" name="switch-font-weight">
+      <default>["&lt;Primary&gt;w"]</default>
+      <summary>Change font weight</summary>
+    </key>
+    <key type="as" name="switch-image-file">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;i"]</default>
+      <summary>Change image file</summary>
+    </key>
+    <key type="as" name="switch-linecap">
+      <default>["&lt;Primary&gt;k"]</default>
+      <summary>Change linecap</summary>
+    </key>
+    <key type="as" name="switch-linejoin">
+      <default>["&lt;Primary&gt;j"]</default>
+      <summary>Change linejoin</summary>
+    </key>
+    <key type="as" name="switch-text-alignment">
+      <default>["&lt;Primary&gt;&lt;Shift&gt;a"]</default>
+      <summary>Toggle text alignment</summary>
+    </key>
+    <key type="as" name="toggle-background">
+      <default>["&lt;Primary&gt;b"]</default>
+      <summary>Add a drawing background</summary>
+    </key>
+    <key type="as" name="toggle-grid">
+      <default>["&lt;Primary&gt;g"]</default>
+      <summary>Add a grid overlay</summary>
     </key>
     <key type="as" name="toggle-help">
       <default>["&lt;Primary&gt;F1"]</default>
-      <summary>toggle help</summary>
-      <description>toggle help</description>
+      <summary>Show help</summary>
+    </key>
+    <key type="as" name="toggle-panel-and-dock-visibility">
+      <default>["&lt;Primary&gt;h"]</default>
+      <summary>Hide panel and dock</summary>
+    </key>
+    <key type="as" name="toggle-square-area">
+      <default>["&lt;Primary&gt;n"]</default>
+      <summary>Square drawing area</summary>
+    </key>
+    <key type="as" name="undo">
+      <default>["&lt;Primary&gt;z"]</default>
+      <summary>Undo last brushstroke</summary>
     </key>
   </schema>
   <schema path="/org/gnome/shell/extensions/draw-on-your-screen/drawing/" id="org.gnome.shell.extensions.draw-on-your-screen.drawing">
-    <key type="s" name="area-background-color">
+    <key type="s" name="background-color">
       <default>"#2e2e2e"</default>
-      <summary>Drawing area background color</summary>
+      <summary>Background color</summary>
       <description>The color of the drawing area background</description>
     </key>
     <key type="b" name="dash-array-auto">

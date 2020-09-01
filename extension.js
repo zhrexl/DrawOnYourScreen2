@@ -101,7 +101,7 @@ const AreaManager = new Lang.Class({
                               Shell.ActionMode.ALL,
                               this.toggleModal.bind(this));
         
-        Main.wm.addKeybinding('erase-drawing',
+        Main.wm.addKeybinding('erase-drawings',
                               Me.settings,
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
@@ -524,7 +524,7 @@ const AreaManager = new Lang.Class({
             this.toggleDrawing();
         Main.wm.removeKeybinding('toggle-drawing');
         Main.wm.removeKeybinding('toggle-modal');
-        Main.wm.removeKeybinding('erase-drawing');
+        Main.wm.removeKeybinding('erase-drawings');
         this.removeAreas();
         if (this.indicator)
             this.indicator.disable();
