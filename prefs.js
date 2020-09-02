@@ -437,7 +437,7 @@ const PrefsPage = new GObject.Class({
         let internalFrame = new Frame({ label: _("Internal"), desc: _("In drawing mode") });
         box.add(internalFrame);
         
-        listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN });
+        listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN, margin_bottom: MARGIN / 2 });
         listBox.get_style_context().add_class('background');
         internalFrame.add(listBox);
         
@@ -465,20 +465,6 @@ const PrefsPage = new GObject.Class({
             let internalKeybindingsWidget = new KeybindingsWidget(array, internalShortcutSettings);
             listBox.add(internalKeybindingsWidget);
         });
-        
-        let noteBox = new Gtk.Box({ margin: MARGIN });
-        let noteLabel = new Gtk.Label({
-            wrap: true,
-            xalign: 0,
-            use_markup: true,
-            label: _("When you save elements made with <b>eraser</b> in a <b>SVG</b> file, " +
-                     "they are colored with background color, transparent if it is disabled.\n" +
-                     "See <i>“%s”</i> or edit the SVG file afterwards.").format(_("Add a drawing background"))
-        });
-        noteLabel.set_halign(1);
-        noteLabel.get_style_context().add_class('dim-label');
-        noteBox.pack_start(noteLabel, true, true, 4);
-        listBox.add(noteBox);
         
         listBox.get_children().forEach(row => row.set_activatable(false));
     }

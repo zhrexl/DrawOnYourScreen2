@@ -26,7 +26,7 @@ Then save your beautiful work by taking a screenshot.
 6. `Super + Alt + D` to test
 7. [https://framagit.org/abakkk/DrawOnYourScreen/issues](https://framagit.org/abakkk/DrawOnYourScreen/issues) to say it doesn't work
 
-## Details
+## Tips and tricks
 
 * Draw arrows:
 
@@ -43,6 +43,10 @@ Then save your beautiful work by taking a screenshot.
 * Insertable images:
 
  Add your images (jpeg, png, svg) to `~/.local/share/drawOnYourScreen/images/`.
+
+* Eraser and SVG:
+
+ There is no eraser in SVG so when you export elements made with the eraser to a SVG file, they are colored with the background color, transparent if it is disabled. See `“Add a drawing background”` or edit the SVG file afterwards.
 
 * Screenshot Tool extension:
 

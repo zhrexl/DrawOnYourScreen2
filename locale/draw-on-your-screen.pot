@@ -404,12 +404,6 @@ msgstr ""
 msgid "Show help"
 msgstr ""
 
-msgid ""
-"When you save elements made with <b>eraser</b> in a <b>SVG</b> file, "
-"they are colored with background color, transparent if it is disabled.\n"
-"See <i>“%s”</i> or edit the SVG file afterwards."
-msgstr ""
-
 msgid "Screenshot"
 msgstr ""
 
