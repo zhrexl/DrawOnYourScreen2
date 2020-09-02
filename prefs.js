@@ -45,15 +45,15 @@ const ROWBOX_MARGIN_PARAMS = { margin_top: MARGIN / 2, margin_bottom: MARGIN / 2
 
 var GLOBAL_KEYBINDINGS = ['toggle-drawing', 'toggle-modal', 'erase-drawings'];
 var INTERNAL_KEYBINDINGS = [
-    ['undo', 'undo', 'delete-last-element', 'smooth-last-element'],
+    ['undo', 'redo', 'delete-last-element', 'smooth-last-element'],
     ['select-none-shape', 'select-line-shape', 'select-ellipse-shape', 'select-rectangle-shape', 'select-polygon-shape', 'select-polyline-shape',
      'select-text-shape', 'select-image-shape', 'select-move-tool', 'select-resize-tool', 'select-mirror-tool'],
     ['switch-fill', 'switch-fill-rule', 'switch-color-palette', 'switch-color-palette-reverse'],
-    ['increment-line-width', 'decrement-line-width', 'increment-line-width-more', 'decrement-line-width-more',
+    ['increment-line-width', 'increment-line-width-more', 'decrement-line-width', 'decrement-line-width-more',
      'switch-linejoin', 'switch-linecap', 'switch-dash'],
     ['switch-font-family', 'switch-font-family-reverse', 'switch-font-weight', 'switch-font-style', 'switch-text-alignment', 'switch-image-file'],
     ['toggle-panel-and-dock-visibility', 'toggle-background', 'toggle-grid', 'toggle-square-area'],
-    ['open-previous-json', 'open-next-json', 'save-as-json', 'save-as-svg', 'open-preferences', 'toggle-help']
+    ['open-next-json', 'open-previous-json', 'save-as-json', 'save-as-svg', 'open-preferences', 'toggle-help']
 ];
 
 if (GS_VERSION < '3.36')
@@ -194,6 +194,7 @@ const DrawingPage = new GObject.Class({
         this._updatePalettes();
         
         this.addBox = new Gtk.Box(ROWBOX_MARGIN_PARAMS);
+        this.addBox.margin_bottom = MARGIN; // add space for the scrollbar
         let addButton = Gtk.Button.new_from_icon_name('list-add-symbolic', Gtk.IconSize.BUTTON);
         addButton.set_tooltip_text(_("Add a new palette"));
         this.addBox.pack_start(addButton, true, true, 4);
@@ -298,6 +299,11 @@ const DrawingPage = new GObject.Class({
         this.settings.bind('dash-offset', dashOffsetButton, 'value', 0);
         dashOffsetRow.addWidget(dashOffsetButton);
         toolsListBox.add(dashOffsetRow);
+        
+        let resetButton = new Gtk.Button({ label: _("Reset settings"), halign: Gtk.Align.CENTER });
+        resetButton.get_style_context().add_class('destructive-action');
+        resetButton.connect('clicked', () => this.schema.list_keys().forEach(key => this.settings.reset(key)));
+        box.add(resetButton);
     },
     
     _updatePalettes: function() {
@@ -397,7 +403,7 @@ const PrefsPage = new GObject.Class({
         let globalFrame = new Frame({ label: _("Global") });
         box.add(globalFrame);
         
-        let listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN / 2, margin_bottom: MARGIN / 2 });
+        let listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN, margin_bottom: MARGIN / 2 });
         listBox.get_style_context().add_class('background');
         globalFrame.add(listBox);
         
@@ -437,7 +443,7 @@ const PrefsPage = new GObject.Class({
         let internalFrame = new Frame({ label: _("Internal"), desc: _("In drawing mode") });
         box.add(internalFrame);
         
-        listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN, margin_bottom: MARGIN / 2 });
+        listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN, margin_bottom: MARGIN });
         listBox.get_style_context().add_class('background');
         internalFrame.add(listBox);
         
@@ -467,6 +473,14 @@ const PrefsPage = new GObject.Class({
         });
         
         listBox.get_children().forEach(row => row.set_activatable(false));
+        
+        let resetButton = new Gtk.Button({ label: _("Reset settings"), halign: Gtk.Align.CENTER });
+        resetButton.get_style_context().add_class('destructive-action');
+        resetButton.connect('clicked', () => {
+            internalShortcutSettings.settings_schema.list_keys().forEach(key => internalShortcutSettings.reset(key));
+            settings.settings_schema.list_keys().forEach(key => settings.reset(key));
+        });
+        box.add(resetButton);
     }
 });
 
@@ -674,7 +688,19 @@ const KeybindingsWidget = new GObject.Class({
         this.keybinding_column = keybinding_column;
         this.action_column = action_column;
 
+        this._settings.connect('changed', this._onSettingsChanged.bind(this));
         this._refresh();
+    },
+    
+    // Support the case where all the settings has been reset.
+    _onSettingsChanged: function() {
+        if (this._refreshTimeout)
+            GLib.source_remove(this._refreshTimeout);
+        
+        this._refreshTimeout = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            this._refreshTimeout = 0;
+            this._refresh();
+        });
     },
 
     _refresh: function() {
