@@ -37,6 +37,7 @@ const Main = imports.ui.main;
 const Screenshot = imports.ui.screenshot;
 
 const Me = ExtensionUtils.getCurrentExtension();
+const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
 const Elements = Me.imports.elements;
 const Files = Me.imports.files;
 const Menu = Me.imports.menu;
@@ -84,16 +85,14 @@ var DrawingArea = new Lang.Class({
         
         this.elements = [];
         this.undoneElements = [];
-        this.defaultFontFamily = 'Cantarell';
         this.currentElement = null;
         this.currentTool = Shapes.NONE;
         this.currentImage = 0;
-        this.currentFontFamily = this.defaultFontFamily;
-        this.currentFontStyle = Pango.Style.NORMAL;
-        this.currentFontWeight = Pango.Weight.NORMAL;
-        this.currentFontStretch = Pango.Stretch.NORMAL;
-        this.currentFontVariant = Pango.Variant.NORMAL;
-        this.currentTextRightAligned = false;
+        this.currentTextRightAligned = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL;
+        let fontName = St.Settings && St.Settings.get().font_name || Convenience.getSettings('org.gnome.desktop.interface').get_string('font-name');
+        this.currentFont = Pango.FontDescription.from_string(fontName);
+        this.currentFont.unset_fields(Pango.FontMask.SIZE);
+        this.defaultFontFamily = this.currentFont.get_family();
         this.currentLineWidth = 5;
         this.currentLineJoin = Cairo.LineJoin.ROUND;
         this.currentLineCap = Cairo.LineCap.ROUND;
@@ -104,8 +103,6 @@ var DrawingArea = new Lang.Class({
         this.textHasCursor = false;
         this.dashedLine = false;
         this.fill = false;
-        this.newThemeAttributes = {};
-        this.oldThemeAttributes = {};
         
         this.connect('destroy', this._onDestroy.bind(this));
         this.connect('notify::reactive', this._onReactiveChanged.bind(this));
@@ -152,6 +149,30 @@ var DrawingArea = new Lang.Class({
         this.colors = palette[1].map(colorString => getClutterColorFromString(colorString, 'WHITE'));
         if (!this.colors[0])
             this.colors.push(Clutter.Color.get_static(Clutter.StaticColor.WHITE));
+    },
+    
+    get currentFontFamily() {
+        return this.currentFont.get_family();
+    },
+    
+    set currentFontFamily(family) {
+        this.currentFont.set_family(family);
+    },
+    
+    get currentFontStyle() {
+        return this.currentFont.get_style();
+    },
+    
+    set currentFontStyle(style) {
+        this.currentFont.set_style(style);
+    },
+    
+    get currentFontWeight() {
+        return this.currentFont.get_weight();
+    },
+    
+    set currentFontWeight(weight) {
+        this.currentFont.set_weight(weight);
     },
     
     get hasManipulationTool() {
@@ -573,12 +594,7 @@ var DrawingArea = new Lang.Class({
                 shape: this.currentTool,
                 color: this.currentColor.to_string(),
                 eraser: eraser,
-                font: {
-                    family: this.currentFontFamily,
-                    weight: this.currentFontWeight,
-                    style: this.currentFontStyle,
-                    stretch: this.currentFontStretch,
-                    variant: this.currentFontVariant },
+                font: this.currentFont.to_string(),
                 text: _("Text"),
                 textRightAligned: this.currentTextRightAligned,
                 points: []
@@ -930,7 +946,7 @@ var DrawingArea = new Lang.Class({
         let index = fontWeights.indexOf(this.currentFontWeight);
         this.currentFontWeight = index == fontWeights.length - 1 ? fontWeights[0] : fontWeights[index + 1];
         if (this.currentElement && this.currentElement.font) {
-            this.currentElement.font.weight = this.currentFontWeight;
+            this.currentElement.font.set_weight(this.currentFontWeight);
             this._redisplay();
         }
         this.emit('show-osd', null, `<span font_weight="${this.currentFontWeight}">` +
@@ -940,7 +956,7 @@ var DrawingArea = new Lang.Class({
     switchFontStyle: function() {
         this.currentFontStyle = this.currentFontStyle == 2 ? 0 : this.currentFontStyle + 1;
         if (this.currentElement && this.currentElement.font) {
-            this.currentElement.font.style = this.currentFontStyle;
+            this.currentElement.font.set_style(this.currentFontStyle);
             this._redisplay();
         }
         this.emit('show-osd', null, `<span font_style="${FontStyleNames[this.currentFontStyle].toLowerCase()}">` + 
@@ -954,7 +970,7 @@ var DrawingArea = new Lang.Class({
         else
             this.currentFontFamily = (index == this.fontFamilies.length - 1) ? this.fontFamilies[0] : this.fontFamilies[index + 1];
         if (this.currentElement && this.currentElement.font) {
-            this.currentElement.font.family = this.currentFontFamily;
+            this.currentElement.font.set_family(this.currentFontFamily);
             this._redisplay();
         }
         this.emit('show-osd', null, `<span font_family="${this.currentFontFamily}">${_(this.currentFontFamily)}</span>`, "", -1, false);

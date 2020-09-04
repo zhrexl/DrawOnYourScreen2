@@ -44,8 +44,6 @@ var FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
 var FontWeightNames = Object.assign(reverseEnumeration(Pango.Weight), { 200: "Ultra-light", 350: "Semi-light", 600: "Semi-bold", 800: "Ultra-bold" });
 delete FontWeightNames[Pango.Weight.ULTRAHEAVY];
 var FontStyleNames = reverseEnumeration(Pango.Style);
-const FontStretchNames = reverseEnumeration(Pango.Stretch);
-const FontVariantNames = reverseEnumeration(Pango.Variant);
 
 var getPangoFontFamilies = function() {
     return PangoCairo.font_map_get_default().list_families().map(fontFamily => fontFamily.get_name()).sort((a,b) => a.localeCompare(b));
@@ -85,6 +83,17 @@ const _DrawingElement = new Lang.Class({
             this.font.weight = 400;
         if (params.font && params.font.weight === 1)
             this.font.weight = 700;
+        if (params.font && typeof params.font != 'string') {
+            // compatibility with v6.2-
+            let font = new Pango.FontDescription();
+            ['family', 'weight', 'style', 'stretch', 'variant'].forEach(attribute => {
+                if (params.font[attribute] !== undefined)
+                    try {
+                        font[`set_${attribute}`](params.font[attribute]);
+                    } catch(e) {}
+            });
+            this.font = font.to_string();
+        }
         
         if (params.transform && params.transform.center) {
             let angle = (params.transform.angle || 0) + (params.transform.startAngle || 0);
@@ -594,7 +603,15 @@ const TextElement = new Lang.Class({
     Name: 'DrawOnYourScreenTextElement',
     Extends: _DrawingElement,
     
+    _init: function(params) {
+        this.parent(params);
+        this.font = Pango.FontDescription.from_string(this.font);
+    },
+    
     toJSON: function() {
+        // The font size is useless because it is always computed from the points during cairo/svg building.
+        this.font.unset_fields(Pango.FontMask.SIZE);
+        
         return {
             shape: this.shape,
             color: this.color,
@@ -603,7 +620,7 @@ const TextElement = new Lang.Class({
             text: this.text,
             lineIndex: this.lineIndex !== undefined ? this.lineIndex : undefined,
             textRightAligned: this.textRightAligned,
-            font: this.font,
+            font: this.font.to_string(),
             points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
         };
     },
@@ -630,15 +647,8 @@ const TextElement = new Lang.Class({
         if (this.points.length == 2) {
             let layout = PangoCairo.create_layout(cr);
             let fontSize = this.height * Pango.SCALE;
-            let fontDescription = new Pango.FontDescription();
-            fontDescription.set_absolute_size(fontSize);
-            ['family', 'weight', 'style', 'stretch', 'variant'].forEach(attribute => {
-                if (this.font[attribute] !== undefined)
-                    try {
-                        fontDescription[`set_${attribute}`](this.font[attribute]);
-                    } catch(e) {}
-            });
-            layout.set_font_description(fontDescription);
+            this.font.set_absolute_size(fontSize);
+            layout.set_font_description(this.font);
             layout.set_text(this.text, -1);
             this.textWidth = layout.get_pixel_size()[0];
             cr.moveTo(this.x, this.y - layout.get_baseline() / Pango.SCALE);
@@ -681,19 +691,21 @@ const TextElement = new Lang.Class({
             attributes = `fill="${color}" ` +
                          `stroke="transparent" ` +
                          `stroke-opacity="0" ` +
-                         `font-size="${height}"`;
+                         `font-size="${height}" ` +
+                         `font-family="${this.font.get_family()}"`;
             
-            if (this.font.family)
-                attributes += ` font-family="${this.font.family}"`;
-            if (this.font.weight && this.font.weight != Pango.Weight.NORMAL)
-                attributes += ` font-weight="${this.font.weight}"`;
-            if (this.font.style && FontStyleNames[this.font.style])
-                attributes += ` font-style="${FontStyleNames[this.font.style].toLowerCase()}"`;
-            if (FontStretchNames[this.font.stretch] && this.font.stretch != Pango.Stretch.NORMAL)
-                attributes += ` font-stretch="${FontStretchNames[this.font.stretch].toLowerCase()}"`;
-            if (this.font.variant && FontVariantNames[this.font.variant])
-                attributes += ` font-variant="${FontVariantNames[this.font.variant].toLowerCase()}"`;
-            
+            // this.font.to_string() is not valid to fill the svg 'font' shorthand property.
+            // Each property must be filled separately.
+            ['Stretch', 'Style', 'Variant'].forEach(attribute => {
+                let lower = attribute.toLowerCase();
+                if (this.font[`get_${lower}`]() != Pango[attribute].NORMAL) {
+                    let font = new Pango.FontDescription();
+                    font[`set_${lower}`](this.font[`get_${lower}`]());
+                    attributes += ` font-${lower}="${font.to_string()}"`;
+                }
+            });
+            if (this.font.get_weight() != Pango.Weight.NORMAL)
+                attributes += ` font-weight="${this.font.get_weight()}"`;
             row += `<text ${attributes} x="${x}" `;
             row += `y="${y}"${transAttribute}>${this.text}</text>`;
         }
