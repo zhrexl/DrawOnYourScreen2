@@ -19,7 +19,7 @@
  */
 
 /* jslint esversion: 6 */
-/* exported Shapes, ShapeNames, Transformations, LineCapNames, LineJoinNames, FillRuleNames, FontWeightNames, FontStyleNames, getPangoFontFamilies, DrawingElement */
+/* exported Shapes, Transformations, getPangoFontFamilies, DrawingElement */
 
 const Cairo = imports.cairo;
 const Clutter = imports.gi.Clutter;
@@ -27,26 +27,27 @@ const Lang = imports.lang;
 const Pango = imports.gi.Pango;
 const PangoCairo = imports.gi.PangoCairo;
 
-const reverseEnumeration = function(obj) {
-    let reversed = {};
-    Object.keys(obj).forEach(key => {
-        reversed[obj[key]] = key.slice(0,1) + key.slice(1).toLowerCase().replace('_', '-');
-    });
-    return reversed;
-};
-
 var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
-var ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 7: "Image" };
 var Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
-var LineCapNames = Object.assign(reverseEnumeration(Cairo.LineCap), { 2: 'Square' });
-var LineJoinNames = reverseEnumeration(Cairo.LineJoin);
-var FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
-var FontWeightNames = Object.assign(reverseEnumeration(Pango.Weight), { 200: "Ultra-light", 350: "Semi-light", 600: "Semi-bold", 800: "Ultra-bold" });
-delete FontWeightNames[Pango.Weight.ULTRAHEAVY];
-var FontStyleNames = reverseEnumeration(Pango.Style);
 
 var getPangoFontFamilies = function() {
     return PangoCairo.font_map_get_default().list_families().map(fontFamily => fontFamily.get_name()).sort((a,b) => a.localeCompare(b));
+};
+
+const getFillRuleSvgName = function(fillRule) {
+    return fillRule == Pango.FillRule.EVEN_ODD ? 'evenodd' : 'nonzero';
+};
+
+const getLineCapSvgName = function(lineCap) {
+    return lineCap == Pango.LineCap.BUTT ? 'butt' :
+           lineCap == Pango.LineCap.SQUASH ? 'square' :
+           'round';
+};
+
+const getLineJoinSvgName = function(lineJoin) {
+    return lineJoin == Pango.LineJoin.MITER ? 'miter' :
+           lineJoin == Pango.LineJoin.BEVEL ? 'bevel' :
+           'round';
 };
 
 const SVG_DEBUG_SUPERPOSES_CAIRO = false;
@@ -295,7 +296,7 @@ const _DrawingElement = new Lang.Class({
         if (fill) {
             attributes = `fill="${color}"`;
             if (this.fillRule)
-                attributes += ` fill-rule="${FillRuleNames[this.fillRule].toLowerCase()}"`;
+                attributes += ` fill-rule="${getFillRuleSvgName(this.fillRule)}"`;
         } else {
             attributes = `fill="none"`;
         }
@@ -304,9 +305,9 @@ const _DrawingElement = new Lang.Class({
             attributes += ` stroke="${color}"` +
                           ` stroke-width="${this.line.lineWidth}"`;
             if (this.line.lineCap)
-                attributes += ` stroke-linecap="${LineCapNames[this.line.lineCap].toLowerCase()}"`;
+                attributes += ` stroke-linecap="${getLineCapSvgName(this.line.lineCap)}"`;
             if (this.line.lineJoin && !this.isStraightLine)
-                attributes += ` stroke-linejoin="${LineJoinNames[this.line.lineJoin].toLowerCase()}"`;
+                attributes += ` stroke-linejoin="${getLineJoinSvgName(this.line.lineJoin)}"`;
             if (this.dash && this.dash.active && this.dash.array && this.dash.array[0] && this.dash.array[1])
                 attributes += ` stroke-dasharray="${this.dash.array[0]} ${this.dash.array[1]}" stroke-dashoffset="${this.dash.offset}"`;
         } else {

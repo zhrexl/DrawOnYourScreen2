@@ -500,9 +500,6 @@ msgstr ""
 msgid "Square"
 msgstr ""
 
-msgid "Dashed"
-msgstr ""
-
 # generic font-family SVG attribute
 msgid "Sans-Serif"
 msgstr ""

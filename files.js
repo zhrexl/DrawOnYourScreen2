@@ -1,5 +1,5 @@
 /* jslint esversion: 6 */
-/* exported Image, getImages, getJsons, getDateString */
+/* exported Image, getImages, Json, getJsons, getDateString */
 
 /*
  * Copyright 2019 Abakkk

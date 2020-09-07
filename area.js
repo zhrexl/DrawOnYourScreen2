@@ -1,5 +1,5 @@
 /* jslint esversion: 6 */
-/* exported Tools, ToolNames, FontGenericFamilies, DrawingArea */
+/* exported Tools, DrawingArea */
 
 /*
  * Copyright 2019 Abakkk
@@ -49,13 +49,12 @@ const TEXT_CURSOR_TIME = 600; // ms
 const ELEMENT_GRABBER_TIME = 80; // ms, default is about 16 ms
 const GRID_TILES_HORIZONTAL_NUMBER = 30;
 
-const { Shapes, ShapeNames, Transformations, LineCapNames, LineJoinNames, FillRuleNames, FontWeightNames, FontStyleNames } = Elements;
-const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
-const ManipulationNames = { 100: "Move", 101: "Resize", 102: "Mirror" };
-var Tools = Object.assign({}, Shapes, Manipulations);
-var ToolNames = Object.assign({}, ShapeNames, ManipulationNames);
+const { Shapes, Transformations } = Elements;
+const { DisplayStrings } = Menu;
 
-var FontGenericFamilies = ['Sans-Serif', 'Serif', 'Monospace', 'Cursive', 'Fantasy'];
+const FontGenericFamilies = ['Sans-Serif', 'Serif', 'Monospace', 'Cursive', 'Fantasy'];
+const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
+var Tools = Object.assign({}, Shapes, Manipulations);
 
 const getClutterColorFromString = function(string, fallback) {
     let [success, color] = Clutter.Color.from_string(string);
@@ -115,7 +114,7 @@ var DrawingArea = new Lang.Class({
     
     get menu() {
         if (!this._menu)
-            this._menu = new Menu.DrawingMenu(this, this.monitor);
+            this._menu = new Menu.DrawingMenu(this, this.monitor, Tools);
         return this._menu;
     },
     
@@ -898,18 +897,18 @@ var DrawingArea = new Lang.Class({
     
     selectTool: function(tool) {
         this.currentTool = tool;
-        this.emit('show-osd', null, _(ToolNames[tool]), "", -1, false);
+        this.emit('show-osd', null, DisplayStrings.Tool[tool], "", -1, false);
         this.updatePointerCursor();
     },
     
     switchFill: function() {
         this.fill = !this.fill;
-        this.emit('show-osd', null, this.fill ? _("Fill") : _("Outline"), "", -1, false);
+        this.emit('show-osd', null, DisplayStrings.getFill(this.fill), "", -1, false);
     },
     
     switchFillRule: function() {
         this.currentFillRule = this.currentFillRule == 1 ? 0 : this.currentFillRule + 1;
-        this.emit('show-osd', null, _(FillRuleNames[this.currentFillRule]), "", -1, false);
+        this.emit('show-osd', null, DisplayStrings.FillRule[this.currentFillRule], "", -1, false);
     },
     
     switchColorPalette: function(reverse) {
@@ -923,26 +922,26 @@ var DrawingArea = new Lang.Class({
     
     switchDash: function() {
         this.dashedLine = !this.dashedLine;
-        this.emit('show-osd', null, this.dashedLine ? _("Dashed line") : _("Full line"), "", -1, false);
+        this.emit('show-osd', null, DisplayStrings.getDashedLine(this.dashedLine), "", -1, false);
     },
     
     incrementLineWidth: function(increment) {
         this.currentLineWidth = Math.max(this.currentLineWidth + increment, 0);
-        this.emit('show-osd', null, _("%d px").format(this.currentLineWidth), "", 2 * this.currentLineWidth, false);
+        this.emit('show-osd', null, DisplayStrings.getPixels(this.currentLineWidth), "", 2 * this.currentLineWidth, false);
     },
     
     switchLineJoin: function() {
         this.currentLineJoin = this.currentLineJoin == 2 ? 0 : this.currentLineJoin + 1;
-        this.emit('show-osd', null, _(LineJoinNames[this.currentLineJoin]), "", -1, false);
+        this.emit('show-osd', null, DisplayStrings.LineJoin[this.currentLineJoin], "", -1, false);
     },
     
     switchLineCap: function() {
         this.currentLineCap = this.currentLineCap == 2 ? 0 : this.currentLineCap + 1;
-        this.emit('show-osd', null, _(LineCapNames[this.currentLineCap]), "", -1, false);
+        this.emit('show-osd', null, DisplayStrings.LineCap[this.currentLineCap], "", -1, false);
     },
     
     switchFontWeight: function() {
-        let fontWeights = Object.keys(FontWeightNames).map(key => Number(key));
+        let fontWeights = Object.keys(DisplayStrings.FontWeight).map(key => Number(key));
         let index = fontWeights.indexOf(this.currentFontWeight);
         this.currentFontWeight = index == fontWeights.length - 1 ? fontWeights[0] : fontWeights[index + 1];
         if (this.currentElement && this.currentElement.font) {
@@ -950,7 +949,7 @@ var DrawingArea = new Lang.Class({
             this._redisplay();
         }
         this.emit('show-osd', null, `<span font_weight="${this.currentFontWeight}">` +
-                                    `${_(FontWeightNames[this.currentFontWeight])}</span>`, "", -1, false);
+                                    `${DisplayStrings.FontWeight[this.currentFontWeight]}</span>`, "", -1, false);
     },
     
     switchFontStyle: function() {
@@ -959,8 +958,8 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.set_style(this.currentFontStyle);
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_style="${FontStyleNames[this.currentFontStyle].toLowerCase()}">` + 
-                                    `${_(FontStyleNames[this.currentFontStyle])}</span>`, "", -1, false);
+        this.emit('show-osd', null, `<span font_style="${DisplayStrings.FontStyleMarkup[this.currentFontStyle]}">` + 
+                                    `${DisplayStrings.FontStyle[this.currentFontStyle]}</span>`, "", -1, false);
     },
     
     switchFontFamily: function(reverse) {
@@ -973,7 +972,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.set_family(this.currentFontFamily);
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_family="${this.currentFontFamily}">${_(this.currentFontFamily)}</span>`, "", -1, false);
+        this.emit('show-osd', null, `<span font_family="${this.currentFontFamily}">${DisplayStrings.getFontFamily(this.currentFontFamily)}</span>`, "", -1, false);
     },
     
     switchTextAlignment: function() {
@@ -982,7 +981,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.textRightAligned = this.currentTextRightAligned;
             this._redisplay();
         }
-        this.emit('show-osd', null, this.currentTextRightAligned ? _("Right aligned") : _("Left aligned"), "", -1, false);
+        this.emit('show-osd', null, DisplayStrings.getTextAlignment(this.currentTextRightAligned), "", -1, false);
     },
     
     switchImageFile: function() {

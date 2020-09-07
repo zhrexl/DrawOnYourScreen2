@@ -1,5 +1,5 @@
 /* jslint esversion: 6 */
-/* exported DrawingMenu */
+/* exported DisplayStrings, DrawingMenu */
 
 /*
  * Copyright 2019 Abakkk
@@ -37,8 +37,6 @@ const Slider = imports.ui.slider;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Area = Me.imports.area;
-const Elements = Me.imports.elements;
 const Files = Me.imports.files;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
@@ -70,11 +68,81 @@ const getSummary = function(settingKey) {
     return Me.internalShortcutSettings.settings_schema.get_key(settingKey).get_summary();
 };
 
+// Used by both menu and osd notifications.
+var DisplayStrings = {
+    getDashedLine: function(dashed) {
+        return dashed ? _("Dashed line") : _("Full line");
+    },
+    
+    getFill: function(fill) {
+        return fill ? _("Fill") : _("Outline");
+    },
+    
+    get FillRule() {
+        if (!this._fillRules)
+            this._fillRules = { 0: _("Nonzero"), 1: _("Evenodd") };
+        return this._fillRules;
+    },
+    
+    getFontFamily: function(family) {
+        if (!this._fontGenericFamilies)
+            this._fontGenericFamilies = { 'Sans-Serif': _("Sans-Serif"), 'Serif': _("Serif"), 'Monospace': _("Monospace"),
+                                          'Cursive': _("Cursive"), 'Fantasy': _("Fantasy") };
+        return this._fontGenericFamilies[family] || family;
+    },
+    
+    get FontStyle() {
+        if (!this._fontStyles)
+            this._fontStyles = { 0: _("Normal"), 1: _("Oblique"), 2: _("Italic") };
+        return this._fontStyles;
+    },
+    
+    FontStyleMarkup: { 0: 'normal', 1: 'oblique', 2: 'italic' },
+    
+    get FontWeight() {
+        if (!this._fontWeights)
+            this._fontWeights = { 100: _("Thin"), 200: _("Ultra Light"), 300: _("Light"), 350: _("Semi Light"),
+                                 380: _("Book"), 400: _("Normal"), 500: _("Medium"), 600: _("Semi Bold"),
+                                 700: _("Bold"), 800: _("Ultra Bold"), 900: _("Heavy"), 1000:_("Ultra Heavy") };
+        return this._fontWeights;
+    },
+    
+    get LineCap() {
+        if (!this._lineCaps)
+            this._lineCaps = { 0: _("Butt"), 1: _("Round"), 2: _("Square") };
+        return this._lineCaps;
+    },
+    
+    get LineJoin() {
+        if (!this._lineJoins)
+            this._lineJoins = { 0: _("Miter"), 1: _("Round"), 2: _("Bevel") };
+        return this._lineJoins;
+    },
+    
+    getPixels(value) {
+        return _("%d px").format(value);
+    },
+    
+    getTextAlignment: function(rightAligned) {
+        return rightAligned ? _("Right aligned") : _("Left aligned");
+    },
+    
+    get Tool() {
+        if (!this._tools)
+            this._tools = { 0: _("Free drawing"), 1: _("Line"), 2: _("Ellipse"), 3: _("Rectangle"),
+                            4: _("Text"), 5: _("Polygon"), 6: _("Polyline"), 7: _("Image"),
+                            100: _("Move"), 101: _("Resize"), 102: _("Mirror") };
+        return this._tools;
+    }
+};
+
 var DrawingMenu = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingMenu',
     
-    _init: function(area, monitor) {
+    _init: function(area, monitor, drawingTools) {
         this.area = area;
+        this.drawingTools = drawingTools;
+        
         let side = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? St.Side.RIGHT : St.Side.LEFT;
         this.menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor, 0.25, side);
         this.menuManager = new PopupMenu.PopupMenuManager(GS_VERSION < '3.33.0' ? { actor: this.area } : this.area);
@@ -116,6 +184,8 @@ var DrawingMenu = new Lang.Class({
     },
     
     disable: function() {
+        delete this.area;
+        delete this.drawingTools;
         this.menuManager.removeMenu(this.menu);
         Main.layoutManager.uiGroup.remove_actor(this.menu.actor);
         this.menu.destroy();
@@ -171,21 +241,21 @@ var DrawingMenu = new Lang.Class({
         this.menu.addMenuItem(groupItem);
         this._addSeparator(this.menu, true);
         
-        this._addSubMenuItem(this.menu, 'document-edit-symbolic', Area.ToolNames, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
+        this._addSubMenuItem(this.menu, 'document-edit-symbolic', DisplayStrings.Tool, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
         this.paletteItem = this._addPaletteSubMenuItem(this.menu);
         this.colorItem = this._addColorSubMenuItem(this.menu);
-        this.fillItem = this._addSwitchItem(this.menu, _("Fill"), this.strokeIcon, this.fillIcon, this.area, 'fill', this._updateSectionVisibility.bind(this));
+        this.fillItem = this._addSwitchItem(this.menu, DisplayStrings.getFill(true), this.strokeIcon, this.fillIcon, this.area, 'fill', this._updateSectionVisibility.bind(this));
         this.fillSection = new PopupMenu.PopupMenuSection();
         this.fillSection.itemActivated = () => {};
-        this.fillRuleItem = this._addSwitchItem(this.fillSection, _("Evenodd"), this.fillRuleNonzeroIcon, this.fillRuleEvenoddIcon, this.area, 'currentEvenodd');
+        this.fillRuleItem = this._addSwitchItem(this.fillSection, DisplayStrings.FillRule[1], this.fillRuleNonzeroIcon, this.fillRuleEvenoddIcon, this.area, 'currentEvenodd');
         this.menu.addMenuItem(this.fillSection);
         this._addSeparator(this.menu);
         
         let lineSection = new PopupMenu.PopupMenuSection();
         this._addSliderItem(lineSection, this.area, 'currentLineWidth');
-        this._addSubMenuItem(lineSection, this.linejoinIcon, Elements.LineJoinNames, this.area, 'currentLineJoin');
-        this._addSubMenuItem(lineSection, this.linecapIcon, Elements.LineCapNames, this.area, 'currentLineCap');
-        this._addSwitchItem(lineSection, _("Dashed"), this.fullLineIcon, this.dashedLineIcon, this.area, 'dashedLine');
+        this._addSubMenuItem(lineSection, this.linejoinIcon, DisplayStrings.LineJoin, this.area, 'currentLineJoin');
+        this._addSubMenuItem(lineSection, this.linecapIcon, DisplayStrings.LineCap, this.area, 'currentLineCap');
+        this._addSwitchItem(lineSection, DisplayStrings.getDashedLine(true), this.fullLineIcon, this.dashedLineIcon, this.area, 'dashedLine');
         this._addSeparator(lineSection);
         this.menu.addMenuItem(lineSection);
         lineSection.itemActivated = () => {};
@@ -193,9 +263,9 @@ var DrawingMenu = new Lang.Class({
         
         let fontSection = new PopupMenu.PopupMenuSection();
         this._addFontFamilySubMenuItem(fontSection, 'font-x-generic-symbolic');
-        this._addSubMenuItem(fontSection, 'format-text-bold-symbolic', Elements.FontWeightNames, this.area, 'currentFontWeight');
-        this._addSubMenuItem(fontSection, 'format-text-italic-symbolic', Elements.FontStyleNames, this.area, 'currentFontStyle');
-        this._addSwitchItem(fontSection, _("Right aligned"), 'format-justify-left-symbolic', 'format-justify-right-symbolic', this.area, 'currentTextRightAligned');
+        this._addSubMenuItem(fontSection, 'format-text-bold-symbolic', DisplayStrings.FontWeight, this.area, 'currentFontWeight');
+        this._addSubMenuItem(fontSection, 'format-text-italic-symbolic', DisplayStrings.FontStyle, this.area, 'currentFontStyle');
+        this._addSwitchItem(fontSection, DisplayStrings.getTextAlignment(true), 'format-justify-left-symbolic', 'format-justify-right-symbolic', this.area, 'currentTextRightAligned');
         this._addSeparator(fontSection);
         this.menu.addMenuItem(fontSection);
         fontSection.itemActivated = () => {};
@@ -254,11 +324,11 @@ var DrawingMenu = new Lang.Class({
         undoButton.reactive = this.area.elements.length > 0;
         redoButton.reactive = this.area.undoneElements.length > 0;
         eraseButton.reactive = this.area.elements.length > 0;
-        smoothButton.reactive = this.area.elements.length > 0 && this.area.elements[this.area.elements.length - 1].shape == Area.Tools.NONE;
+        smoothButton.reactive = this.area.elements.length > 0 && this.area.elements[this.area.elements.length - 1].shape == this.drawingTools.NONE;
     },
     
     _updateSectionVisibility: function() {
-        let [isText, isImage] = [this.area.currentTool == Area.Tools.TEXT, this.area.currentTool == Area.Tools.IMAGE];
+        let [isText, isImage] = [this.area.currentTool == this.drawingTools.TEXT, this.area.currentTool == this.drawingTools.IMAGE];
         this.lineSection.actor.visible = !isText && !isImage;
         this.fontSection.actor.visible = isText;
         this.imageSection.actor.visible = isImage;
@@ -306,13 +376,13 @@ var DrawingMenu = new Lang.Class({
     
     _addSliderItem: function(menu, target, targetProperty) {
         let item = new PopupMenu.PopupBaseMenuItem({ activate: false });
-        let label = new St.Label({ text: _("%d px").format(target[targetProperty]), style_class: 'draw-on-your-screen-menu-slider-label' });
+        let label = new St.Label({ text: DisplayStrings.getPixels(target[targetProperty]), style_class: 'draw-on-your-screen-menu-slider-label' });
         let slider = new Slider.Slider(target[targetProperty] / 50);
         
         if (GS_VERSION < '3.33.0') {
             slider.connect('value-changed', (slider, value, property) => {
                 target[targetProperty] = Math.max(Math.round(value * 50), 0);
-                label.set_text(_("%d px").format(target[targetProperty]));
+                label.set_text(DisplayStrings.getPixels(target[targetProperty]));
                 if (target[targetProperty] === 0)
                     label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
                 else
@@ -321,7 +391,7 @@ var DrawingMenu = new Lang.Class({
         } else {
             slider.connect('notify::value', () => {
                 target[targetProperty] = Math.max(Math.round(slider.value * 50), 0);
-                label.set_text(_("%d px").format(target[targetProperty]));
+                label.set_text(DisplayStrings.getPixels(target[targetProperty]));
                 if (target[targetProperty] === 0)
                     label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
                 else
@@ -340,7 +410,7 @@ var DrawingMenu = new Lang.Class({
     _addSubMenuItem: function(menu, icon, obj, target, targetProperty, callback) {
         if (targetProperty == 'currentImage')
             icon = obj[target[targetProperty]].gicon;
-        let item = new PopupMenu.PopupSubMenuMenuItem(_(String(obj[target[targetProperty]])), icon ? true : false);
+        let item = new PopupMenu.PopupSubMenuMenuItem(String(obj[target[targetProperty]]), icon ? true : false);
         if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, Gio.Icon))
             item.icon.set_gicon(icon);
         else if (icon)
@@ -354,15 +424,15 @@ var DrawingMenu = new Lang.Class({
             for (let i in obj) {
                 let text;
                 if (targetProperty == 'currentFontWeight')
-                    text = `<span font_weight="${i}">${_(obj[i])}</span>`;
+                    text = `<span font_weight="${i}">${obj[i]}</span>`;
                 else if (targetProperty == 'currentFontStyle')
-                    text = `<span font_style="${obj[i].toLowerCase()}">${_(obj[i])}</span>`;
+                    text = `<span font_style="${DisplayStrings.FontStyleMarkup[i]}">${obj[i]}</span>`;
                 else
-                    text = _(String(obj[i]));
+                    text = String(obj[i]);
                 
                 let iCaptured = Number(i);
                 let subItem = item.menu.addAction(text, () => {
-                    item.label.set_text(_(String(obj[iCaptured])));
+                    item.label.set_text(String(obj[iCaptured]));
                     target[targetProperty] = iCaptured;
                     if (targetProperty == 'currentImage')
                         item.icon.set_gicon(obj[iCaptured].gicon);
@@ -374,9 +444,9 @@ var DrawingMenu = new Lang.Class({
                 getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
                 
                 // change the display order of tools
-                if (obj == Area.ToolNames && i == Area.Tools.POLYGON)
+                if (obj == DisplayStrings.Tool && i == this.drawingTools.POLYGON)
                     item.menu.moveMenuItem(subItem, 4);
-                else if (obj == Area.ToolNames && i == Area.Tools.POLYLINE)
+                else if (obj == DisplayStrings.Tool && i == this.drawingTools.POLYLINE)
                     item.menu.moveMenuItem(subItem, 5);
             }
             return GLib.SOURCE_REMOVE;
@@ -445,7 +515,7 @@ var DrawingMenu = new Lang.Class({
     },
     
     _addFontFamilySubMenuItem: function(menu, icon) {
-        let item = new PopupMenu.PopupSubMenuMenuItem(this.area.currentFontFamily, true);
+        let item = new PopupMenu.PopupSubMenuMenuItem(DisplayStrings.getFontFamily(this.area.currentFontFamily), true);
         item.icon.set_icon_name(icon);
         
         item.menu.itemActivated = () => {
@@ -456,8 +526,8 @@ var DrawingMenu = new Lang.Class({
         item.menu.open = (animate) => {
             if (!item.menu.isOpen && item.menu.isEmpty()) {
                 this.area.fontFamilies.forEach(family => {
-                    let subItem = item.menu.addAction(_(family), () => {
-                        item.label.set_text(_(family));
+                    let subItem = item.menu.addAction(DisplayStrings.getFontFamily(family), () => {
+                        item.label.set_text(DisplayStrings.getFontFamily(family));
                         this.area.currentFontFamily = family;
                     });
                     if (FONT_FAMILY_STYLE)
