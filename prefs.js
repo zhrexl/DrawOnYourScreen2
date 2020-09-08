@@ -1,5 +1,5 @@
 /* jslint esversion: 6 */
-/* exported GLOBAL_KEYBINDINGS, INTERNAL_KEYBINDINGS, OTHER_SHORTCUTS, init, buildPrefsWidget */
+/* exported init, buildPrefsWidget */
 
 /*
  * Copyright 2019 Abakkk
@@ -27,10 +27,10 @@ const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 
-const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
+const Shortcuts = Me.imports.shortcuts.Shortcuts;
 const gettext = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const _ = function(string) {
     if (!string)
@@ -39,50 +39,8 @@ const _ = function(string) {
 };
 const _GTK = imports.gettext.domain('gtk30').gettext;
 
-const GS_VERSION = Config.PACKAGE_VERSION;
 const MARGIN = 10;
 const ROWBOX_MARGIN_PARAMS = { margin_top: MARGIN / 2, margin_bottom: MARGIN / 2, margin_left: MARGIN, margin_right: MARGIN };
-
-var GLOBAL_KEYBINDINGS = ['toggle-drawing', 'toggle-modal', 'erase-drawings'];
-var INTERNAL_KEYBINDINGS = [
-    ['undo', 'redo', 'delete-last-element', 'smooth-last-element'],
-    ['select-none-shape', 'select-line-shape', 'select-ellipse-shape', 'select-rectangle-shape', 'select-polygon-shape', 'select-polyline-shape',
-     'select-text-shape', 'select-image-shape', 'select-move-tool', 'select-resize-tool', 'select-mirror-tool'],
-    ['switch-fill', 'switch-fill-rule', 'switch-color-palette', 'switch-color-palette-reverse'],
-    ['increment-line-width', 'increment-line-width-more', 'decrement-line-width', 'decrement-line-width-more',
-     'switch-linejoin', 'switch-linecap', 'switch-dash'],
-    ['switch-font-family', 'switch-font-family-reverse', 'switch-font-weight', 'switch-font-style', 'switch-text-alignment', 'switch-image-file'],
-    ['toggle-panel-and-dock-visibility', 'toggle-background', 'toggle-grid', 'toggle-square-area'],
-    ['open-next-json', 'open-previous-json', 'save-as-json', 'save-as-svg', 'open-preferences', 'toggle-help']
-];
-
-if (GS_VERSION < '3.36')
-    delete INTERNAL_KEYBINDINGS[INTERNAL_KEYBINDINGS.length - 1]['open-preferences'];
-
-const getKeyLabel = function(accel) {
-    let [keyval, mods] = Gtk.accelerator_parse(accel);
-    return Gtk.accelerator_get_label(keyval, mods);
-};
-
-var OTHER_SHORTCUTS = [{
-    get "Draw"() { return _("Left click"); },
-    get "Menu"() { return _("Right click"); },
-    get "Toggle fill/outline"() { return _("Center click"); },
-    get "Increment/decrement line width"() { return _("Scroll"); },
-    get "Select color"() { return _("%s … %s").format(getKeyLabel('<Primary>1'), getKeyLabel('<Primary>9')); },
-    get "Ignore pointer movement"() { return _("%s held").format(getKeyLabel('space')); },
-    "Leave": getKeyLabel('Escape'),
-    }, {
-    "Select eraser <span alpha=\"50%\">(while starting drawing)</span>": getKeyLabel('<Shift>'),
-    "Duplicate <span alpha=\"50%\">(while starting handling)</span>": getKeyLabel('<Shift>'),
-    "Rotate rectangle, polygon, polyline": getKeyLabel('<Primary>'),
-    "Extend circle to ellipse": getKeyLabel('<Primary>'),
-    "Curve line": getKeyLabel('<Primary>'),
-    "Smooth free drawing outline": getKeyLabel('<Primary>'),
-    "Rotate <span alpha=\"50%\">(while moving)</span>": getKeyLabel('<Primary>'),
-    "Stretch <span alpha=\"50%\">(while resizing)</span>": getKeyLabel('<Primary>'),
-    "Inverse <span alpha=\"50%\">(while mirroring)</span>": getKeyLabel('<Primary>'),
-}];
 
 function init() {
     Convenience.initTranslations();
@@ -110,10 +68,13 @@ const TopStack = new GObject.Class({
     _init: function(params) {
         this.parent({ transition_type: 1, transition_duration: 500, expand: true });
         this.prefsPage = new PrefsPage();
+        // Translators: "Preferences" page in preferences
         this.add_titled(this.prefsPage, 'prefs', _("Preferences"));
         this.drawingPage = new DrawingPage();
+        // Translators: "Drawing" page in preferences
         this.add_titled(this.drawingPage, 'drawing', _("Drawing"));
         this.aboutPage = new AboutPage();
+        // Translators: "About" page in preferences
         this.add_titled(this.aboutPage, 'about', _("About"));
     }
 });
@@ -129,9 +90,12 @@ const AboutPage = new GObject.Class({
         let vbox= new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN * 3 });
         this.add(vbox);
         
-        let name = "<b> " + _(Me.metadata.name) + "</b>";
+        // Translators: you are free to translate the extension name, that is displayed in About page, or not
+        let name = "<b> " + _("Draw On You Screen") + "</b>";
+        // Translators: version number in "About" page
         let version = _("Version %d").format(Me.metadata.version);
-        let description = _(Me.metadata.description);
+        // Translators: you are free to translate the extension description, that is displayed in About page, or not
+        let description = _("Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot");
         let link = "<span><a href=\"" + Me.metadata.url + "\">" + Me.metadata.url + "</a></span>";
         let licenceName = _GTK("GNU General Public License, version 2 or later");
         let licenceLink = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html";
@@ -153,6 +117,11 @@ const AboutPage = new GObject.Class({
         creditBox.pack_start(rightBox, true, true, 5);
         vbox.add(creditBox);
         
+        // Translators: add your name here or keep it empty, it will be displayed in about page, e.g.
+        // msgstr ""
+        // "translator1\n"
+        // "<a href=\"mailto:translator2@mail.org\">translator2</a>\n"
+        // "<a href=\"https://...\">translator3</a>"
         if (_("translator-credits") != "translator-credits" && _("translator-credits") != "") {
             leftBox.pack_start(new Gtk.Label(), false, false, 0);
             rightBox.pack_start(new Gtk.Label(), false, false, 0);
@@ -162,7 +131,6 @@ const AboutPage = new GObject.Class({
             rightBox.pack_start(rightLabel, false, false, 0);
         }
     }
-    
 });
 
 const DrawingPage = new GObject.Class({
@@ -375,6 +343,7 @@ const DrawingPage = new GObject.Class({
     
     _addNewPalette: function() {
         let colors = Array(9).fill('Black');
+        // Translators: default name of a new palette
         this.palettes.push([_("New palette"), colors]);
         this._savePalettes();
     },
@@ -407,10 +376,15 @@ const PrefsPage = new GObject.Class({
         listBox.get_style_context().add_class('background');
         globalFrame.add(listBox);
         
-        let globalKeybindingsRow = new Gtk.ListBoxRow({ activatable: false });
-        let globalKeybindingsWidget = new KeybindingsWidget(GLOBAL_KEYBINDINGS, settings);
-        globalKeybindingsRow.add(globalKeybindingsWidget);
-        listBox.add(globalKeybindingsRow);
+        Shortcuts.GLOBAL_KEYBINDINGS.forEach((settingKeys, index) => {
+            if (index)
+                listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
+            
+            let globalKeybindingsRow = new Gtk.ListBoxRow({ activatable: false });
+            let globalKeybindingsWidget = new KeybindingsWidget(settingKeys, settings);
+            globalKeybindingsRow.add(globalKeybindingsWidget);
+            listBox.add(globalKeybindingsRow);
+        });
         
         let persistentKey = schema.get_key('persistent-drawing');
         let persistentRow = new PrefRow({ label: persistentKey.get_summary(), desc: persistentKey.get_description() });
@@ -447,28 +421,28 @@ const PrefsPage = new GObject.Class({
         listBox.get_style_context().add_class('background');
         internalFrame.add(listBox);
         
-        OTHER_SHORTCUTS.forEach((object, index) => {
+        Shortcuts.OTHERS.forEach((pairs, index) => {
             if (index)
                 listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
             
-            for (let key in object) {
+            pairs.forEach(pair => {
                 let otherBox = new Gtk.Box({ margin_left: MARGIN, margin_right: MARGIN });
-                let otherLabel = new Gtk.Label({ label: _(key), use_markup: true });
+                let otherLabel = new Gtk.Label({ label: pair[0], use_markup: true });
                 otherLabel.set_halign(1);
-                let otherLabel2 = new Gtk.Label({ label: object[key] });
+                let otherLabel2 = new Gtk.Label({ label: pair[1] });
                 otherBox.pack_start(otherLabel, true, true, 4);
                 otherBox.pack_start(otherLabel2, false, false, 4);
                 listBox.add(otherBox);
-            }
+            });
         });
         
         listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
         
-        INTERNAL_KEYBINDINGS.forEach((array, index) => {
+        Shortcuts.INTERNAL_KEYBINDINGS.forEach((settingKeys, index) => {
             if (index)
                 listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
             
-            let internalKeybindingsWidget = new KeybindingsWidget(array, internalShortcutSettings);
+            let internalKeybindingsWidget = new KeybindingsWidget(settingKeys, internalShortcutSettings);
             listBox.add(internalKeybindingsWidget);
         });
         
@@ -552,7 +526,7 @@ const PixelSpinButton = new GObject.Class({
     
     // Add 'px' unit.
     vfunc_output: function() {
-        this.text = _("%d px").format(Math.round(this.value * 100) / 100);
+        this.text = _("%f px").format(Number(this.value).toFixed(2));
         return true;
     },
     
@@ -603,11 +577,11 @@ const KeybindingsWidget = new GObject.Class({
     GTypeName: 'DrawOnYourScreenKeybindingsWidget',
     Extends: Gtk.Box,
 
-    _init: function(keybindings, settings) {
+    _init: function(settingKeys, settings) {
         this.parent(ROWBOX_MARGIN_PARAMS);
         this.set_orientation(Gtk.Orientation.VERTICAL);
 
-        this._keybindings = keybindings;
+        this._settingKeys = settingKeys;
         this._settings = settings;
 
         this._columns = {
@@ -706,9 +680,9 @@ const KeybindingsWidget = new GObject.Class({
     _refresh: function() {
         this._store.clear();
 
-        for(let settings_key of this._keybindings) {
+        this._settingKeys.forEach(settingKey => {
             let [key, mods] = Gtk.accelerator_parse(
-                this._settings.get_strv(settings_key)[0]
+                this._settings.get_strv(settingKey)[0]
             );
 
             let iter = this._store.append();
@@ -720,12 +694,12 @@ const KeybindingsWidget = new GObject.Class({
                     this._columns.KEY
                 ],
                 [
-                    settings_key,
-                    this._settings.settings_schema.get_key(settings_key).get_summary(),
+                    settingKey,
+                    this._settings.settings_schema.get_key(settingKey).get_summary(),
                     mods,
                     key
                 ]
             );
-        }
+        });
     }
 });

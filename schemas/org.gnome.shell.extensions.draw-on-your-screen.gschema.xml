@@ -31,8 +31,80 @@
     </key>
     <key type="as" name="toggle-modal">
       <default>["&lt;Primary&gt;&lt;Alt&gt;&lt;Super&gt;d"]</default>
+      <!-- Translators: there is a similar text in GNOME Boxes (https://gitlab.gnome.org/GNOME/gnome-boxes/tree/master/po) -->
       <summary>Grab/ungrab keyboard and pointer</summary>
       <description></description>
+    </key>
+  </schema>
+  <schema path="/org/gnome/shell/extensions/draw-on-your-screen/drawing/" id="org.gnome.shell.extensions.draw-on-your-screen.drawing">
+    <key type="s" name="background-color">
+      <default>"#2e2e2e"</default>
+      <summary>Background color</summary>
+      <description>The color of the drawing area background</description>
+    </key>
+    <key type="b" name="dash-array-auto">
+      <default>true</default>
+      <summary>Automatic dash array</summary>
+      <description>Compute the lengths from the line width</description>
+    </key>
+    <key type="d" name="dash-array-on">
+      <default>5</default>
+      <summary>Dash array on</summary>
+      <description>The dash length in pixels</description>
+    </key>
+    <key type="d" name="dash-array-off">
+      <default>15</default>
+      <summary>Dash array off</summary>
+      <description>The gap between the dashes in pixels</description>
+    </key>
+    <key type="d" name="dash-offset">
+      <default>0</default>
+      <summary>Dash offset</summary>
+      <description>The dash offset in pixels</description>
+    </key>
+    <key type="s" name="grid-color">
+      <default>"Gray"</default>
+      <summary>Grid overlay color</summary>
+      <description>The color of the lines</description>
+    </key>
+    <key type="b" name="grid-line-auto">
+      <default>true</default>
+      <summary>Automatic grid overlay line</summary>
+      <description>Compute the lengths from the screen size</description>
+    </key>
+    <key type="u" name="grid-line-spacing">
+      <default>10</default>
+      <summary>Grid overlay line spacing</summary>
+      <description>The gap between lines in pixels</description>
+    </key>
+    <key type="d" name="grid-line-width">
+      <default>0.5</default>
+      <summary>Grid overlay line width</summary>
+      <description>The line width in pixels</description>
+    </key>
+    <key type="a(sas)" name="palettes">
+      <default>
+        [
+          ("Palette", ["HotPink","Cyan","yellow","Orangered","Chartreuse","DarkViolet","White","Gray","Black"]),
+          ("GNOME HIG lighter", ["rgb(153,193,241)","rgb(143,240,164)","rgb(249,240,107)","rgb(255,190,111)","rgb(246,97,81)","rgb(220,138,221)","rgb(205,171,143)","rgb(255,255,255)","rgb(119,118,123)"]),
+          ("GNOME HIG light", ["rgb(98,160,241)","rgb(87,227,137)","rgb(248,228,92)","rgb(255,163,72)","rgb(237,51,59)","rgb(192,97,203)","rgb(181,131,90)","rgb(246,245,244)","rgb(94,92,100)"]),
+          ("GNOME HIG normal", ["rgb(53,132,228)","rgb(51,209,122)","rgb(246,211,45)","rgb(255,120,0)","rgb(224,27,36)","rgb(145,65,172)","rgb(152,106,68)","rgb(222,221,218)","rgb(61,56,70)"]),
+          ("GNOME HIG dark", ["rgb(28,113,216)","rgb(46,194,126)","rgb(245,194,17)","rgb(230,97,0)","rgb(192,28,40)","rgb(129,61,156)","rgb(134,94,60)","rgb(192,191,188)","rgb(36,31,49)"]),
+          ("GNOME HIG darker", ["rgb(26,095,180)","rgb(38,162,105)","rgb(229,165,10)","rgb(198,70,0)","rgb(165,29,45)","rgb(97,53,131)","rgb(99,69,44)","rgb(154,153,150)","rgb(0,0,0)"])
+        ]
+      </default>
+      <summary>Color palettes</summary>
+      <description>The palettes of drawing colors</description>
+    </key>
+    <key type="b" name="square-area-auto">
+      <default>true</default>
+      <summary>Automatic square area size</summary>
+      <description>Compute the size of the square area from the screen size</description>
+    </key>
+    <key type="u" name="square-area-size">
+      <default>512</default>
+      <summary>Square area size</summary>
+      <description>The size of the square area in pixels</description>
     </key>
   </schema>
   <schema path="/org/gnome/shell/extensions/draw-on-your-screen/internal-shortcuts/" id="org.gnome.shell.extensions.draw-on-your-screen.internal-shortcuts">
@@ -139,7 +211,7 @@
     </key>
     <key type="as" name="select-none-shape">
       <default>["&lt;Primary&gt;p"]</default>
-      <summary>Free drawing</summary>
+      <summary>Select free drawing</summary>
     </key>
     <key type="as" name="select-polygon-shape">
       <default>["&lt;Primary&gt;y"]</default>
@@ -240,77 +312,6 @@
     <key type="as" name="undo">
       <default>["&lt;Primary&gt;z"]</default>
       <summary>Undo last brushstroke</summary>
-    </key>
-  </schema>
-  <schema path="/org/gnome/shell/extensions/draw-on-your-screen/drawing/" id="org.gnome.shell.extensions.draw-on-your-screen.drawing">
-    <key type="s" name="background-color">
-      <default>"#2e2e2e"</default>
-      <summary>Background color</summary>
-      <description>The color of the drawing area background</description>
-    </key>
-    <key type="b" name="dash-array-auto">
-      <default>true</default>
-      <summary>Automatic dash array</summary>
-      <description>Compute the lengths from the line width</description>
-    </key>
-    <key type="d" name="dash-array-on">
-      <default>5</default>
-      <summary>Dash array on</summary>
-      <description>The dash length in pixels</description>
-    </key>
-    <key type="d" name="dash-array-off">
-      <default>15</default>
-      <summary>Dash array off</summary>
-      <description>The gap between the dashes in pixels</description>
-    </key>
-    <key type="d" name="dash-offset">
-      <default>0</default>
-      <summary>Dash offset</summary>
-      <description>The dash offset in pixels</description>
-    </key>
-    <key type="s" name="grid-color">
-      <default>"Gray"</default>
-      <summary>Grid overlay color</summary>
-      <description>The color of the lines</description>
-    </key>
-    <key type="b" name="grid-line-auto">
-      <default>true</default>
-      <summary>Automatic grid overlay line</summary>
-      <description>Compute the lengths from the screen size</description>
-    </key>
-    <key type="u" name="grid-line-spacing">
-      <default>10</default>
-      <summary>Grid overlay line spacing</summary>
-      <description>The gap between lines in pixels</description>
-    </key>
-    <key type="d" name="grid-line-width">
-      <default>0.5</default>
-      <summary>Grid overlay line width</summary>
-      <description>The line width in pixels</description>
-    </key>
-    <key type="a(sas)" name="palettes">
-      <default>
-        [
-          ("Palette", ["HotPink","Cyan","yellow","Orangered","Chartreuse","DarkViolet","White","Gray","Black"]),
-          ("GNOME HIG lighter", ["rgb(153,193,241)","rgb(143,240,164)","rgb(249,240,107)","rgb(255,190,111)","rgb(246,97,81)","rgb(220,138,221)","rgb(205,171,143)","rgb(255,255,255)","rgb(119,118,123)"]),
-          ("GNOME HIG light", ["rgb(98,160,241)","rgb(87,227,137)","rgb(248,228,92)","rgb(255,163,72)","rgb(237,51,59)","rgb(192,97,203)","rgb(181,131,90)","rgb(246,245,244)","rgb(94,92,100)"]),
-          ("GNOME HIG normal", ["rgb(53,132,228)","rgb(51,209,122)","rgb(246,211,45)","rgb(255,120,0)","rgb(224,27,36)","rgb(145,65,172)","rgb(152,106,68)","rgb(222,221,218)","rgb(61,56,70)"]),
-          ("GNOME HIG dark", ["rgb(28,113,216)","rgb(46,194,126)","rgb(245,194,17)","rgb(230,97,0)","rgb(192,28,40)","rgb(129,61,156)","rgb(134,94,60)","rgb(192,191,188)","rgb(36,31,49)"]),
-          ("GNOME HIG darker", ["rgb(26,095,180)","rgb(38,162,105)","rgb(229,165,10)","rgb(198,70,0)","rgb(165,29,45)","rgb(97,53,131)","rgb(99,69,44)","rgb(154,153,150)","rgb(0,0,0)"])
-        ]
-      </default>
-      <summary>Color palettes</summary>
-      <description>The palettes of drawing colors</description>
-    </key>
-    <key type="b" name="square-area-auto">
-      <default>true</default>
-      <summary>Automatic square area size</summary>
-      <description>Compute the size of the square area from the screen size</description>
-    </key>
-    <key type="u" name="square-area-size">
-      <default>512</default>
-      <summary>Square area size</summary>
-      <description>The size of the square area in pixels</description>
     </key>
   </schema>
 </schemalist>

@@ -42,6 +42,7 @@ const Elements = Me.imports.elements;
 const Files = Me.imports.files;
 const Menu = Me.imports.menu;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+const pgettext = imports.gettext.domain(Me.metadata['gettext-domain']).pgettext;
 
 const CAIRO_DEBUG_EXTENDS = false;
 const SVG_DEBUG_EXTENDS = false;
@@ -392,6 +393,7 @@ var DrawingArea = new Lang.Class({
                 event.get_key_symbol() == Clutter.KEY_KP_Enter ||
                 event.get_key_symbol() == Clutter.KEY_Control_L) {
                 if (this.currentElement.points.length == 2)
+                    // Translators: %s is a key label
                     this.emit('show-osd', null, _("Press <i>%s</i> to get\na fourth control point")
                                                 .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
                 this.currentElement.addPoint();
@@ -594,7 +596,8 @@ var DrawingArea = new Lang.Class({
                 color: this.currentColor.to_string(),
                 eraser: eraser,
                 font: this.currentFont.to_string(),
-                text: _("Text"),
+                // Translators: initial content of the text area
+                text: pgettext("text-area-content", "Text"),
                 textRightAligned: this.currentTextRightAligned,
                 points: []
             });
@@ -626,6 +629,7 @@ var DrawingArea = new Lang.Class({
         this.currentElement.startDrawing(startX, startY);
         
         if (this.currentTool == Shapes.POLYGON || this.currentTool == Shapes.POLYLINE)
+            // Translators: %s is a key label
             this.emit('show-osd', null, _("Press <i>%s</i> to mark vertices")
                                         .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
         
@@ -687,6 +691,7 @@ var DrawingArea = new Lang.Class({
         let [x, y] = [this.currentElement.x, this.currentElement.y];
         this.currentElement.text = '';
         this.currentElement.cursorPosition = 0;
+        // Translators: %s is a key label
         this.emit('show-osd', null, _("Type your text and press <i>%s</i>")
                                     .format(Gtk.accelerator_get_label(Clutter.KEY_Escape, 0)), "", -1, true);
         this._updateTextCursorTimeout();

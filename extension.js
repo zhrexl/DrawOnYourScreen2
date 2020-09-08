@@ -342,6 +342,7 @@ const AreaManager = new Lang.Class({
         if (Main._findModal(this.activeArea) != -1) {
             Main.popModal(this.activeArea);
             if (source && source == global.display)
+                // Translators: "released" as the opposite of "grabbed"
                 this.showOsd(null, 'touchpad-disabled-symbolic', _("Keyboard and pointer released"), null, null, false);
             this.setCursor('DEFAULT');
             this.activeArea.reactive = false;
@@ -388,7 +389,8 @@ const AreaManager = new Lang.Class({
             
             this.activeArea.enterDrawingMode();
             this.osdDisabled = Me.settings.get_boolean('osd-disabled');
-            let label = _("<small>Press <i>%s</i> for help</small>").format(this.activeArea.helper.helpKeyLabel) + "\n\n" + _("Entering drawing mode");
+            // Translators: %s is a key label
+            let label = "<small>" + _("Press <i>%s</i> for help").format(this.activeArea.helper.helpKeyLabel) + "</small>\n\n" + _("Entering drawing mode");
             this.showOsd(null, this.enterGicon, label, null, null, true);
         }
         

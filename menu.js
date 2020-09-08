@@ -39,6 +39,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Files = Me.imports.files;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+const pgettext = imports.gettext.domain(Me.metadata['gettext-domain']).pgettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
 
@@ -71,29 +72,37 @@ const getSummary = function(settingKey) {
 // Used by both menu and osd notifications.
 var DisplayStrings = {
     getDashedLine: function(dashed) {
-        return dashed ? _("Dashed line") : _("Full line");
+        return dashed ? _("Dashed line") :
+                        // Translators: as the alternative to "Dashed line"
+                        _("Full line");
     },
     
     getFill: function(fill) {
-        return fill ? _("Fill") : _("Outline");
+        return fill ? _("Fill") :
+                      // Translators: as the alternative to "Fill"
+                      _("Outline");
     },
     
     get FillRule() {
         if (!this._fillRules)
+            // Translators: fill-rule SVG attribute
             this._fillRules = { 0: _("Nonzero"), 1: _("Evenodd") };
         return this._fillRules;
     },
     
     getFontFamily: function(family) {
         if (!this._fontGenericFamilies)
-            this._fontGenericFamilies = { 'Sans-Serif': _("Sans-Serif"), 'Serif': _("Serif"), 'Monospace': _("Monospace"),
-                                          'Cursive': _("Cursive"), 'Fantasy': _("Fantasy") };
+            // Translators: generic font-family SVG attribute
+            this._fontGenericFamilies = { 'Sans-Serif': pgettext("font-family", "Sans-Serif"), 'Serif': pgettext("font-family", "Serif"),
+                                          'Monospace': pgettext("font-family", "Monospace"), 'Cursive': pgettext("font-family", "Cursive"),
+                                          'Fantasy': pgettext("font-family", "Fantasy") };
         return this._fontGenericFamilies[family] || family;
     },
     
     get FontStyle() {
         if (!this._fontStyles)
-            this._fontStyles = { 0: _("Normal"), 1: _("Oblique"), 2: _("Italic") };
+            // Translators: font-style SVG attribute
+            this._fontStyles = { 0: pgettext("font-style", "Normal"), 1: pgettext("font-style", "Oblique"), 2: pgettext("font-style", "Italic") };
         return this._fontStyles;
     },
     
@@ -101,37 +110,44 @@ var DisplayStrings = {
     
     get FontWeight() {
         if (!this._fontWeights)
-            this._fontWeights = { 100: _("Thin"), 200: _("Ultra Light"), 300: _("Light"), 350: _("Semi Light"),
-                                 380: _("Book"), 400: _("Normal"), 500: _("Medium"), 600: _("Semi Bold"),
-                                 700: _("Bold"), 800: _("Ultra Bold"), 900: _("Heavy"), 1000:_("Ultra Heavy") };
+            // Translators: font-weight SVG attribute
+            this._fontWeights = { 100: pgettext("font-weight", "Thin"), 200: pgettext("font-weight", "Ultra Light"), 300: pgettext("font-weight", "Light"),
+                                  350: pgettext("font-weight", "Semi Light"), 380: pgettext("font-weight", "Book"), 400: pgettext("font-weight", "Normal"),
+                                  500: pgettext("font-weight", "Medium"), 600: pgettext("font-weight", "Semi Bold"), 700: pgettext("font-weight", "Bold"),
+                                  800: pgettext("font-weight", "Ultra Bold"), 900: pgettext("font-weight", "Heavy"), 1000: pgettext("font-weight", "Ultra Heavy") };
         return this._fontWeights;
     },
     
     get LineCap() {
         if (!this._lineCaps)
-            this._lineCaps = { 0: _("Butt"), 1: _("Round"), 2: _("Square") };
+            // Translators: stroke-linecap SVG attribute
+            this._lineCaps = { 0: pgettext("stroke-linecap", "Butt"), 1: pgettext("stroke-linecap", "Round"), 2: pgettext("stroke-linecap", "Square") };
         return this._lineCaps;
     },
     
     get LineJoin() {
         if (!this._lineJoins)
-            this._lineJoins = { 0: _("Miter"), 1: _("Round"), 2: _("Bevel") };
+            // Translators: stroke-linejoin SVG attribute
+            this._lineJoins = { 0: pgettext("stroke-linejoin", "Miter"), 1: pgettext("stroke-linejoin", "Round"), 2: pgettext("stroke-linejoin", "Bevel") };
         return this._lineJoins;
     },
     
     getPixels(value) {
-        return _("%d px").format(value);
+        // Translators: value in pixel unit (e.g. "5 px")
+        return _("%f px").format(value);
     },
     
     getTextAlignment: function(rightAligned) {
+        // Translators: text alignment
         return rightAligned ? _("Right aligned") : _("Left aligned");
     },
     
     get Tool() {
         if (!this._tools)
-            this._tools = { 0: _("Free drawing"), 1: _("Line"), 2: _("Ellipse"), 3: _("Rectangle"),
-                            4: _("Text"), 5: _("Polygon"), 6: _("Polyline"), 7: _("Image"),
-                            100: _("Move"), 101: _("Resize"), 102: _("Mirror") };
+            this._tools = { 0: pgettext("drawing-tool", "Free drawing"), 1: pgettext("drawing-tool", "Line"), 2: pgettext("drawing-tool", "Ellipse"),
+                            3: pgettext("drawing-tool", "Rectangle"), 4: pgettext("drawing-tool", "Text"), 5: pgettext("drawing-tool", "Polygon"),
+                            6: pgettext("drawing-tool", "Polyline"), 7: pgettext("drawing-tool", "Image"),
+                            100: pgettext("drawing-tool", "Move"), 101: pgettext("drawing-tool", "Resize"), 102: pgettext("drawing-tool", "Mirror") };
         return this._tools;
     }
 };
