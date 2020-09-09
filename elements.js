@@ -35,18 +35,18 @@ var getPangoFontFamilies = function() {
 };
 
 const getFillRuleSvgName = function(fillRule) {
-    return fillRule == Pango.FillRule.EVEN_ODD ? 'evenodd' : 'nonzero';
+    return fillRule == Cairo.FillRule.EVEN_ODD ? 'evenodd' : 'nonzero';
 };
 
 const getLineCapSvgName = function(lineCap) {
-    return lineCap == Pango.LineCap.BUTT ? 'butt' :
-           lineCap == Pango.LineCap.SQUASH ? 'square' :
+    return lineCap == Cairo.LineCap.BUTT ? 'butt' :
+           lineCap == Cairo.LineCap.SQUASH ? 'square' :
            'round';
 };
 
 const getLineJoinSvgName = function(lineJoin) {
-    return lineJoin == Pango.LineJoin.MITER ? 'miter' :
-           lineJoin == Pango.LineJoin.BEVEL ? 'bevel' :
+    return lineJoin == Cairo.LineJoin.MITER ? 'miter' :
+           lineJoin == Cairo.LineJoin.BEVEL ? 'bevel' :
            'round';
 };
 

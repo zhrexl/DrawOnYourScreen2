@@ -48,16 +48,19 @@
       <description>Compute the lengths from the line width</description>
     </key>
     <key type="d" name="dash-array-on">
+      <range min="0.1" max="16384"/>
       <default>5</default>
       <summary>Dash array on</summary>
       <description>The dash length in pixels</description>
     </key>
     <key type="d" name="dash-array-off">
+      <range min="0.1" max="16384"/>
       <default>15</default>
       <summary>Dash array off</summary>
       <description>The gap between the dashes in pixels</description>
     </key>
     <key type="d" name="dash-offset">
+      <range min="-16384" max="16384"/>
       <default>0</default>
       <summary>Dash offset</summary>
       <description>The dash offset in pixels</description>
@@ -73,11 +76,13 @@
       <description>Compute the lengths from the screen size</description>
     </key>
     <key type="u" name="grid-line-spacing">
+      <range min="1" max="16384"/>
       <default>10</default>
       <summary>Grid overlay line spacing</summary>
       <description>The gap between lines in pixels</description>
     </key>
     <key type="d" name="grid-line-width">
+      <range min="0.1" max="10"/>
       <default>0.5</default>
       <summary>Grid overlay line width</summary>
       <description>The line width in pixels</description>
@@ -102,6 +107,7 @@
       <description>Compute the size of the square area from the screen size</description>
     </key>
     <key type="u" name="square-area-size">
+      <range min="64" max="32768"/>
       <default>512</default>
       <summary>Square area size</summary>
       <description>The size of the square area in pixels</description>

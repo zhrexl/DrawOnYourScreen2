@@ -181,8 +181,8 @@ const DrawingPage = new GObject.Class({
         let squareAreaAutoButton = new Gtk.CheckButton({ label: _("Auto"),
                                                          name: this.schema.get_key('square-area-auto').get_summary(),
                                                          tooltip_text: this.schema.get_key('square-area-auto').get_description() });
-        let squareAreaSizeButton = new PixelSpinButton({ width_chars: 5, digits: 0,
-                                                         adjustment: Gtk.Adjustment.new(0, 64, 32768, 1, 10, 0),
+        let squareAreaSizeButton = new PixelSpinButton({ width_chars: 5, digits: 0, step: 1,
+                                                         range: this.schema.get_key('square-area-size').get_range(),
                                                          name: this.schema.get_key('square-area-size').get_summary(),
                                                          tooltip_text: this.schema.get_key('square-area-size').get_description() });
         this.settings.bind('square-area-auto', squareAreaAutoButton, 'active', 0);
@@ -204,12 +204,12 @@ const DrawingPage = new GObject.Class({
         let gridLineAutoButton = new Gtk.CheckButton({ label: _("Auto"),
                                                        name: this.schema.get_key('grid-line-auto').get_summary(),
                                                        tooltip_text: this.schema.get_key('grid-line-auto').get_description() });
-        let gridLineWidthButton = new PixelSpinButton({ width_chars: 5, digits: 1,
-                                                        adjustment: Gtk.Adjustment.new(0, 0.1, 10, 0.1, 1, 0),
+        let gridLineWidthButton = new PixelSpinButton({ width_chars: 5, digits: 1, step: 0.1,
+                                                        range: this.schema.get_key('grid-line-width').get_range(),
                                                         name: this.schema.get_key('grid-line-width').get_summary(),
                                                         tooltip_text: this.schema.get_key('grid-line-width').get_description() });
-        let gridLineSpacingButton = new PixelSpinButton({ width_chars: 5, digits: 1,
-                                                          adjustment: Gtk.Adjustment.new(0, 1, 16384, 1, 10, 0),
+        let gridLineSpacingButton = new PixelSpinButton({ width_chars: 5, digits: 1, step: 1,
+                                                          range: this.schema.get_key('grid-line-spacing').get_range(),
                                                           name: this.schema.get_key('grid-line-spacing').get_summary(),
                                                           tooltip_text: this.schema.get_key('grid-line-spacing').get_description() });
         this.settings.bind('grid-line-auto', gridLineAutoButton, 'active', 0);
@@ -241,12 +241,12 @@ const DrawingPage = new GObject.Class({
         let dashArrayAutoButton = new Gtk.CheckButton({ label: _("Auto"),
                                                         name: this.schema.get_key('dash-array-auto').get_summary(),
                                                         tooltip_text: this.schema.get_key('dash-array-auto').get_description() });
-        let dashArrayOnButton = new PixelSpinButton({ width_chars: 5, digits: 1,
-                                                      adjustment: Gtk.Adjustment.new(0, 0, 16384, 0.1, 1, 0),
+        let dashArrayOnButton = new PixelSpinButton({ width_chars: 5, digits: 1, step: 0.1,
+                                                      range: this.schema.get_key('dash-array-on').get_range(),
                                                       name: this.schema.get_key('dash-array-on').get_summary(),
                                                       tooltip_text: this.schema.get_key('dash-array-on').get_description() });
-        let dashArrayOffButton = new PixelSpinButton({ width_chars: 5, digits: 1,
-                                                       adjustment: Gtk.Adjustment.new(0, 0, 16384, 0.1, 1, 0),
+        let dashArrayOffButton = new PixelSpinButton({ width_chars: 5, digits: 1, step: 0.1,
+                                                       range: this.schema.get_key('dash-array-off').get_range(),
                                                        name: this.schema.get_key('dash-array-off').get_summary(),
                                                        tooltip_text: this.schema.get_key('dash-array-off').get_description() });
         this.settings.bind('dash-array-auto', dashArrayAutoButton, 'active', 0);
@@ -260,8 +260,8 @@ const DrawingPage = new GObject.Class({
         toolsListBox.add(dashArrayRow);
         
         let dashOffsetRow = new PrefRow({ label: this.schema.get_key('dash-offset').get_summary() });
-        let dashOffsetButton = new PixelSpinButton({ width_chars: 5, digits: 1,
-                                                     adjustment: Gtk.Adjustment.new(0, -16384, 16384, 0.1, 1, 0),
+        let dashOffsetButton = new PixelSpinButton({ width_chars: 5, digits: 1, step: 0.1,
+                                                     range: this.schema.get_key('dash-offset').get_range(),
                                                      name: this.schema.get_key('dash-offset').get_summary(),
                                                      tooltip_text: this.schema.get_key('dash-offset').get_description() });
         this.settings.bind('dash-offset', dashOffsetButton, 'value', 0);
@@ -523,6 +523,28 @@ const PixelSpinButton = new GObject.Class({
     Name: 'DrawOnYourScreenPixelSpinButton',
     GTypeName: 'DrawOnYourScreenPixelSpinButton',
     Extends: Gtk.SpinButton,
+    Properties: {
+        'range': GObject.param_spec_variant('range', 'range', 'GSettings range',
+                                            GLib.VariantType.new('(sv)'), null, GObject.ParamFlags.WRITABLE),
+        
+        'step': GObject.ParamSpec.double('step', 'step', 'step increment',
+                                         GObject.ParamFlags.WRITABLE,
+                                         0, 1000, 1)
+    },
+    
+    set range(range) {
+        let [type, variant] = range.deep_unpack();
+        if (type == 'range') {
+            let [min, max] = variant.deep_unpack();
+            this.adjustment.set_lower(min);
+            this.adjustment.set_upper(max);
+        }
+    },
+    
+    set step(step) {
+        this.adjustment.set_step_increment(step);
+        this.adjustment.set_page_increment(step * 10);
+    },
     
     // Add 'px' unit.
     vfunc_output: function() {

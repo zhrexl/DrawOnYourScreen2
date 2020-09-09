@@ -241,7 +241,7 @@ var DrawingArea = new Lang.Class({
             while (this.squareAreaSize * 2 < Math.min(this.monitor.width, this.monitor.height))
                 this.squareAreaSize *= 2;
         } else {
-            this.squareAreaSize = Math.max(64, Me.drawingSettings.get_uint('square-area-size'));
+            this.squareAreaSize = Me.drawingSettings.get_uint('square-area-size');
         }
         
         this.areaBackgroundColor = getClutterColorFromString(Me.drawingSettings.get_string('background-color'), 'BLACK');
@@ -251,16 +251,16 @@ var DrawingArea = new Lang.Class({
             this.gridLineSpacing = Math.round(this.monitor.width / (5 * GRID_TILES_HORIZONTAL_NUMBER));
             this.gridLineWidth = this.gridLineSpacing / 20;
         } else {
-            this.gridLineSpacing = Math.max(1, Me.drawingSettings.get_uint('grid-line-spacing'));
-            this.gridLineWidth = Math.round(Math.max(0.1, Me.drawingSettings.get_double('grid-line-width')) * 100) / 100;
+            this.gridLineSpacing = Me.drawingSettings.get_uint('grid-line-spacing');
+            this.gridLineWidth = Math.round(Me.drawingSettings.get_double('grid-line-width') * 100) / 100;
         }
         
         this.dashOffset = Math.round(Me.drawingSettings.get_double('dash-offset') * 100) / 100;
         if (Me.drawingSettings.get_boolean('dash-array-auto')) {
             this.dashArray = [0, 0];
         } else {
-            let on = Math.round(Math.max(0, Me.drawingSettings.get_double('dash-array-on')) * 100) / 100;
-            let off = Math.round(Math.max(0, Me.drawingSettings.get_double('dash-array-off')) * 100) / 100;
+            let on = Math.round(Me.drawingSettings.get_double('dash-array-on') * 100) / 100;
+            let off = Math.round(Me.drawingSettings.get_double('dash-array-off') * 100) / 100;
             this.dashArray = [on, off];
         }
     },
