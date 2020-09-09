@@ -1,5 +1,5 @@
 /* jslint esversion: 6 */
-/* exported Image, getImages, Json, getJsons, getDateString */
+/* exported Image, Images, Json, getJsons, getDateString */
 
 /*
  * Copyright 2019 Abakkk
@@ -27,11 +27,14 @@ const GdkPixbuf = imports.gi.GdkPixbuf;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
+const St = imports.gi.St;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const EXAMPLE_IMAGES = Me.dir.get_child('data').get_child('images');
 const USER_IMAGES = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir'], 'images']));
+const Clipboard = St.Clipboard.get_default();
+const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
 // wrapper around an image file
 var Image = new Lang.Class({
@@ -125,31 +128,64 @@ var Image = new Lang.Class({
     }
 });
 
-var getImages = function() {
-    let images = [];
+var Images = {
+    clipboardImages: [],
     
-    [EXAMPLE_IMAGES, USER_IMAGES].forEach(directory => {
-        let enumerator;
-        try {
-            enumerator = directory.enumerate_children('standard::display-name,standard::content-type', Gio.FileQueryInfoFlags.NONE, null);
-        } catch(e) {
-            return;
-        }
+    getImages: function() {
+        let images = [];
         
-        let fileInfo = enumerator.next_file(null);
-        while (fileInfo) {
-            if (fileInfo.get_content_type().indexOf('image') == 0)
-                images.push(new Image({ file: enumerator.get_child(fileInfo), contentType: fileInfo.get_content_type(), displayName: fileInfo.get_display_name() }));
-            fileInfo = enumerator.next_file(null);
-        }
-        enumerator.close(null);
-    });
+        [EXAMPLE_IMAGES, USER_IMAGES].forEach(directory => {
+            let enumerator;
+            try {
+                enumerator = directory.enumerate_children('standard::display-name,standard::content-type', Gio.FileQueryInfoFlags.NONE, null);
+            } catch(e) {
+                return;
+            }
+            
+            let fileInfo = enumerator.next_file(null);
+            while (fileInfo) {
+                if (fileInfo.get_content_type().indexOf('image') == 0)
+                    images.push(new Image({ file: enumerator.get_child(fileInfo), contentType: fileInfo.get_content_type(), displayName: fileInfo.get_display_name() }));
+                fileInfo = enumerator.next_file(null);
+            }
+            enumerator.close(null);
+        });
+        
+        images.sort((a, b) => {
+            return a.displayName.localeCompare(b.displayName);
+        });
+        
+        return images.concat(this.clipboardImages);
+    },
     
-    images.sort((a, b) => {
-        return a.displayName.localeCompare(b.displayName);
-    });
-    
-    return images;
+    addImagesFromClipboard: function(callback) {
+        Clipboard.get_text(CLIPBOARD_TYPE, (clipBoard, text) => {
+            if (!text)
+                return;
+
+            let lines = text.split('\n');
+            if (lines[0] == 'x-special/nautilus-clipboard')
+                lines = lines.slice(2);
+            
+            let images = lines.filter(line => !!line)
+                              .map(line => Gio.File.new_for_commandline_arg(line))
+                              .filter(file => file.query_exists(null))
+                              .map(file => [file, file.query_info('standard::display-name,standard::content-type', Gio.FileQueryInfoFlags.NONE, null)])
+                              .filter(pair => pair[1].get_content_type().indexOf('image') == 0)
+                              .map(pair => new Image({ file: pair[0], contentType: pair[1].get_content_type(), displayName: pair[1].get_display_name() }));
+            
+            // Prevent duplicated
+            images.filter(image => !this.clipboardImages.map(clipboardImage => clipboardImage.file).some(clipboardFile => clipboardFile.equal(image.file)))
+                  .forEach(image => this.clipboardImages.push(image));
+            
+            if (images.length) {
+                let lastFile = images[images.length - 1].file;
+                let allImages = this.getImages();
+                let index = allImages.findIndex(image => image.file.equal(lastFile));
+                callback(allImages, index);
+            } 
+        });
+    }
 };
 
 // wrapper around a json file

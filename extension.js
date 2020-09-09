@@ -180,6 +180,7 @@ const AreaManager = new Lang.Class({
             'decrement-line-width': () => this.activeArea.incrementLineWidth(-1),
             'increment-line-width-more': () => this.activeArea.incrementLineWidth(5),
             'decrement-line-width-more': () => this.activeArea.incrementLineWidth(-5),
+            'paste-image-files': this.activeArea.pasteImageFiles.bind(this.activeArea),
             'switch-linejoin': this.activeArea.switchLineJoin.bind(this.activeArea),
             'switch-linecap': this.activeArea.switchLineCap.bind(this.activeArea),
             'switch-fill-rule': this.activeArea.switchFillRule.bind(this.activeArea),

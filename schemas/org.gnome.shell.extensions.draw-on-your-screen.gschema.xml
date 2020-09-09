@@ -146,6 +146,10 @@
       <default>["&lt;Primary&gt;&lt;Shift&gt;o"]</default>
       <summary>Open previous drawing</summary>
     </key>
+    <key type="as" name="paste-image-files">
+      <default>["&lt;Primary&gt;v"]</default>
+      <summary>Paste image files from the clipboard</summary>
+    </key>
     <key type="as" name="redo">
       <default>["&lt;Primary&gt;&lt;Shift&gt;z"]</default>
       <summary>Redo last brushstroke</summary>

@@ -190,7 +190,7 @@ var DrawingArea = new Lang.Class({
     },
     
     getImages() {
-        let images = Files.getImages();
+        let images = Files.Images.getImages();
         if (!images[this.currentImage])
             this.currentImage = Math.max(images.length - 1, 0);
         return images;
@@ -996,6 +996,15 @@ var DrawingArea = new Lang.Class({
         if (images.length > 1)
             this.currentImage = this.currentImage == images.length - 1 ? 0 : this.currentImage + 1;
         this.emit('show-osd-gicon', images[this.currentImage].gicon, images[this.currentImage].toString(), "", -1, false);
+    },
+    
+    pasteImageFiles: function() {
+        Files.Images.addImagesFromClipboard((images, index) => {
+            this.currentImage = index;
+            this.currentTool = Shapes.IMAGE;
+            this.updatePointerCursor();
+            this.emit('show-osd-gicon', images[this.currentImage].gicon, images[this.currentImage].toString(), "", -1, false);
+        });
     },
     
     toggleHelp: function() {
