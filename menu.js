@@ -42,20 +42,6 @@ const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const pgettext = imports.gettext.domain(Me.metadata['gettext-domain']).pgettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
-
-const ICON_DIR = Me.dir.get_child('data').get_child('icons');
-const SMOOTH_ICON_PATH = ICON_DIR.get_child('smooth-symbolic.svg').get_path();
-const PALETTE_ICON_PATH = ICON_DIR.get_child('palette-symbolic.svg').get_path();
-const COLOR_ICON_PATH = ICON_DIR.get_child('color-symbolic.svg').get_path();
-const FILL_ICON_PATH = ICON_DIR.get_child('fill-symbolic.svg').get_path();
-const STROKE_ICON_PATH = ICON_DIR.get_child('stroke-symbolic.svg').get_path();
-const LINEJOIN_ICON_PATH = ICON_DIR.get_child('linejoin-symbolic.svg').get_path();
-const LINECAP_ICON_PATH = ICON_DIR.get_child('linecap-symbolic.svg').get_path();
-const FILLRULE_NONZERO_ICON_PATH = ICON_DIR.get_child('fillrule-nonzero-symbolic.svg').get_path();
-const FILLRULE_EVENODD_ICON_PATH = ICON_DIR.get_child('fillrule-evenodd-symbolic.svg').get_path();
-const DASHED_LINE_ICON_PATH = ICON_DIR.get_child('dashed-line-symbolic.svg').get_path();
-const FULL_LINE_ICON_PATH = ICON_DIR.get_child('full-line-symbolic.svg').get_path();
-
 // 150 labels with font-family style take ~15Mo
 const FONT_FAMILY_STYLE = true;
 // use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
@@ -185,18 +171,6 @@ var DrawingMenu = new Lang.Class({
                 this.saveDrawingSubMenu.close();
             menuCloseFunc.bind(this.menu)(animate);
         };
-        
-        this.paletteIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(PALETTE_ICON_PATH) });
-        this.colorIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(COLOR_ICON_PATH) });
-        this.smoothIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(SMOOTH_ICON_PATH) });
-        this.strokeIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(STROKE_ICON_PATH) });
-        this.fillIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FILL_ICON_PATH) });
-        this.fillRuleNonzeroIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FILLRULE_NONZERO_ICON_PATH) });
-        this.fillRuleEvenoddIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FILLRULE_EVENODD_ICON_PATH) });
-        this.linejoinIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(LINEJOIN_ICON_PATH) });
-        this.linecapIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(LINECAP_ICON_PATH) });
-        this.fullLineIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FULL_LINE_ICON_PATH) });
-        this.dashedLineIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(DASHED_LINE_ICON_PATH) });
     },
     
     disable: function() {
@@ -253,25 +227,25 @@ var DrawingMenu = new Lang.Class({
         getActor(groupItem).add_child(this._createActionButton(_("Undo"), this.area.undo.bind(this.area), 'edit-undo-symbolic'));
         getActor(groupItem).add_child(this._createActionButton(_("Redo"), this.area.redo.bind(this.area), 'edit-redo-symbolic'));
         getActor(groupItem).add_child(this._createActionButton(_("Erase"), this.area.deleteLastElement.bind(this.area), 'edit-clear-all-symbolic'));
-        getActor(groupItem).add_child(this._createActionButton(_("Smooth"), this.area.smoothLastElement.bind(this.area), this.smoothIcon));
+        getActor(groupItem).add_child(this._createActionButton(_("Smooth"), this.area.smoothLastElement.bind(this.area), Files.Icons.SMOOTH));
         this.menu.addMenuItem(groupItem);
         this._addSeparator(this.menu, true);
         
         this._addSubMenuItem(this.menu, 'document-edit-symbolic', DisplayStrings.Tool, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
         this.paletteItem = this._addPaletteSubMenuItem(this.menu);
         this.colorItem = this._addColorSubMenuItem(this.menu);
-        this.fillItem = this._addSwitchItem(this.menu, DisplayStrings.getFill(true), this.strokeIcon, this.fillIcon, this.area, 'fill', this._updateSectionVisibility.bind(this));
+        this.fillItem = this._addSwitchItem(this.menu, DisplayStrings.getFill(true), Files.Icons.STROKE, Files.Icons.FILL, this.area, 'fill', this._updateSectionVisibility.bind(this));
         this.fillSection = new PopupMenu.PopupMenuSection();
         this.fillSection.itemActivated = () => {};
-        this.fillRuleItem = this._addSwitchItem(this.fillSection, DisplayStrings.FillRule[1], this.fillRuleNonzeroIcon, this.fillRuleEvenoddIcon, this.area, 'currentEvenodd');
+        this.fillRuleItem = this._addSwitchItem(this.fillSection, DisplayStrings.FillRule[1], Files.Icons.FILLRULE_NONZERO, Files.Icons.FILLRULE_EVENODD, this.area, 'currentEvenodd');
         this.menu.addMenuItem(this.fillSection);
         this._addSeparator(this.menu);
         
         let lineSection = new PopupMenu.PopupMenuSection();
         this._addSliderItem(lineSection, this.area, 'currentLineWidth');
-        this._addSubMenuItem(lineSection, this.linejoinIcon, DisplayStrings.LineJoin, this.area, 'currentLineJoin');
-        this._addSubMenuItem(lineSection, this.linecapIcon, DisplayStrings.LineCap, this.area, 'currentLineCap');
-        this._addSwitchItem(lineSection, DisplayStrings.getDashedLine(true), this.fullLineIcon, this.dashedLineIcon, this.area, 'dashedLine');
+        this._addSubMenuItem(lineSection, Files.Icons.LINEJOIN, DisplayStrings.LineJoin, this.area, 'currentLineJoin');
+        this._addSubMenuItem(lineSection, Files.Icons.LINECAP, DisplayStrings.LineCap, this.area, 'currentLineCap');
+        this._addSwitchItem(lineSection, DisplayStrings.getDashedLine(true), Files.Icons.FULL_LINE, Files.Icons.DASHED_LINE, this.area, 'dashedLine');
         this._addSeparator(lineSection);
         this.menu.addMenuItem(lineSection);
         lineSection.itemActivated = () => {};
@@ -473,7 +447,7 @@ var DrawingMenu = new Lang.Class({
     _addPaletteSubMenuItem: function(menu) {
         let text = _(this.area.currentPalette[0] || "Palette");
         let item = new PopupMenu.PopupSubMenuMenuItem(text, true);
-        item.icon.set_gicon(this.paletteIcon);
+        item.icon.set_gicon(Files.Icons.PALETTE);
         
         item.menu.itemActivated = () => {
             item.menu.close();
@@ -501,7 +475,7 @@ var DrawingMenu = new Lang.Class({
     _addColorSubMenuItem: function(menu) {
         let item = new PopupMenu.PopupSubMenuMenuItem(_("Color"), true);
         this.colorSubMenu = item.menu;
-        item.icon.set_gicon(this.colorIcon);
+        item.icon.set_gicon(Files.Icons.COLOR);
         item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
         
         item.menu.itemActivated = () => {

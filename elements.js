@@ -1,3 +1,6 @@
+/* jslint esversion: 6 */
+/* exported Shapes, Transformations, getAllFontFamilies, DrawingElement */
+
 /*
  * Copyright 2019 Abakkk
  *
@@ -18,9 +21,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* jslint esversion: 6 */
-/* exported Shapes, Transformations, getPangoFontFamilies, DrawingElement */
-
 const Cairo = imports.cairo;
 const Clutter = imports.gi.Clutter;
 const Lang = imports.lang;
@@ -30,7 +30,7 @@ const PangoCairo = imports.gi.PangoCairo;
 var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
 var Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
 
-var getPangoFontFamilies = function() {
+var getAllFontFamilies = function() {
     return PangoCairo.font_map_get_default().list_families().map(fontFamily => fontFamily.get_name()).sort((a,b) => a.localeCompare(b));
 };
 
@@ -80,12 +80,13 @@ const _DrawingElement = new Lang.Class({
         
         if (params.transformations === undefined)
             this.transformations = [];
-        if (params.font && params.font.weight === 0)
-            this.font.weight = 400;
-        if (params.font && params.font.weight === 1)
-            this.font.weight = 700;
+        
         if (params.font && typeof params.font != 'string') {
             // compatibility with v6.2-
+            if (params.font.weight === 0)
+                this.font.weight = 400;
+            else if (params.font.weight === 1)
+                this.font.weight = 700;
             let font = new Pango.FontDescription();
             ['family', 'weight', 'style', 'stretch', 'variant'].forEach(attribute => {
                 if (params.font[attribute] !== undefined)

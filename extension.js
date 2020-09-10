@@ -21,7 +21,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
@@ -36,6 +35,7 @@ const PanelMenu = imports.ui.panelMenu;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
 const Area = Me.imports.area;
+const Files = Me.imports.files;
 const Helper = Me.imports.helper;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
@@ -86,8 +86,6 @@ const AreaManager = new Lang.Class({
     _init: function() {
         this.areas = [];
         this.activeArea = null;
-        this.enterGicon = new Gio.ThemedIcon({ name: 'applications-graphics-symbolic' });
-        this.leaveGicon = new Gio.ThemedIcon({ name: 'application-exit-symbolic' });
         
         Main.wm.addKeybinding('toggle-drawing',
                               Me.settings,
@@ -164,7 +162,6 @@ const AreaManager = new Lang.Class({
             area.leaveDrawingHandler = area.connect('leave-drawing-mode', this.toggleDrawing.bind(this));
             area.updateActionModeHandler = area.connect('update-action-mode', this.updateActionMode.bind(this));
             area.showOsdHandler = area.connect('show-osd', this.showOsd.bind(this));
-            area.showOsdGiconHandler = area.connect('show-osd-gicon', this.showOsd.bind(this));
             this.areas.push(area);
         }
     },
@@ -344,7 +341,7 @@ const AreaManager = new Lang.Class({
             Main.popModal(this.activeArea);
             if (source && source == global.display)
                 // Translators: "released" as the opposite of "grabbed"
-                this.showOsd(null, 'touchpad-disabled-symbolic', _("Keyboard and pointer released"), null, null, false);
+                this.showOsd(null, Files.Icons.UNGRAB, _("Keyboard and pointer released"), null, null, false);
             this.setCursor('DEFAULT');
             this.activeArea.reactive = false;
             this.removeInternalKeybindings();
@@ -357,7 +354,7 @@ const AreaManager = new Lang.Class({
             this.activeArea.reactive = true;
             this.activeArea.initPointerCursor();
             if (source && source == global.display)
-                this.showOsd(null, 'input-touchpad-symbolic', _("Keyboard and pointer grabbed"), null, null, false);
+                this.showOsd(null, Files.Icons.GRAB, _("Keyboard and pointer grabbed"), null, null, false);
         }
         
         return true;
@@ -368,7 +365,7 @@ const AreaManager = new Lang.Class({
             let activeIndex = this.areas.indexOf(this.activeArea);
             let save = activeIndex == Main.layoutManager.primaryIndex && Me.settings.get_boolean('persistent-drawing');
             
-            this.showOsd(null, this.leaveGicon, _("Leaving drawing mode"));
+            this.showOsd(null, Files.Icons.LEAVE, _("Leaving drawing mode"));
             this.activeArea.leaveDrawingMode(save);
             if (this.hiddenList)
                 this.togglePanelAndDockOpacity();
@@ -392,7 +389,7 @@ const AreaManager = new Lang.Class({
             this.osdDisabled = Me.settings.get_boolean('osd-disabled');
             // Translators: %s is a key label
             let label = "<small>" + _("Press <i>%s</i> for help").format(this.activeArea.helper.helpKeyLabel) + "</small>\n\n" + _("Entering drawing mode");
-            this.showOsd(null, this.enterGicon, label, null, null, true);
+            this.showOsd(null, Files.Icons.ENTER, label, null, null, true);
         }
         
         if (this.indicator)
@@ -426,10 +423,8 @@ const AreaManager = new Lang.Class({
         if (level && GS_VERSION > '3.33.0')
             level = level / 100;
         
-        if (icon && typeof icon == 'string')
-            icon = new Gio.ThemedIcon({ name: icon });
-        else if (!icon)
-            icon = this.enterGicon;
+        if (!icon)
+            icon = Files.Icons.ENTER;
         
         let osdWindow = Main.osdWindowManager._osdWindows[activeIndex];
         
@@ -497,7 +492,6 @@ const AreaManager = new Lang.Class({
             area.disconnect(area.leaveDrawingHandler);
             area.disconnect(area.updateActionModeHandler);
             area.disconnect(area.showOsdHandler);
-            area.disconnect(area.showOsdGiconHandler);
             let container = area.get_parent();
             container.get_parent().remove_actor(container);
             container.destroy();

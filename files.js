@@ -1,5 +1,5 @@
 /* jslint esversion: 6 */
-/* exported Image, Images, Json, getJsons, getDateString */
+/* exported Icons, Image, Images, Json, getJsons, getDateString */
 
 /*
  * Copyright 2019 Abakkk
@@ -35,6 +35,29 @@ const EXAMPLE_IMAGES = Me.dir.get_child('data').get_child('images');
 const USER_IMAGES = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir'], 'images']));
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
+const ICON_DIR = Me.dir.get_child('data').get_child('icons');
+const ICON_NAMES = ['color', 'dashed-line', 'fillrule-evenodd', 'fillrule-nonzero', 'fill', 'full-line', 'linecap', 'linejoin', 'palette', 'smooth', 'stroke'];
+
+var Icons = {
+    get ENTER() { return this._enter || void (this._enter = new Gio.ThemedIcon({ name: 'applications-graphics-symbolic' })) || this._enter; },
+    get GRAB() { return this._grab || void (this._grab = new Gio.ThemedIcon({ name: 'input-touchpad-symbolic' })) || this._grab; },
+    get LEAVE() { return this._leave || void (this._leave = new Gio.ThemedIcon({ name: 'application-exit-symbolic' })) || this._leave; },
+    get OPEN() { return this._open || void (this._open = new Gio.ThemedIcon({ name: 'document-open-symbolic' })) || this._open; },
+    get SAVE() { return this._save || void (this._save = new Gio.ThemedIcon({ name: 'document-save-symbolic' })) || this._save; },
+    get UNGRAB() { return this._ungrab || void (this._ungrab = new Gio.ThemedIcon({ name: 'touchpad-disabled-symbolic' })) || this._ungrab; }
+};
+
+ICON_NAMES.forEach(name => {
+    Object.defineProperty(Icons, name.toUpperCase().replace(/-/gi, '_'), {
+        get: function() {
+            if (!this[`_${name}`]) {
+                let file = Gio.File.new_for_path(ICON_DIR.get_child(`${name}-symbolic.svg`).get_path());
+                this[`_${name}`] = file.query_exists(null) ? new Gio.FileIcon({ file }) : new Gio.ThemedIcon({ name: 'error-symbolic' });
+            }
+            return this[`_${name}`];
+        }
+    });
+});
 
 // wrapper around an image file
 var Image = new Lang.Class({

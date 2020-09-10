@@ -73,8 +73,7 @@ const getClutterColorFromString = function(string, fallback) {
 var DrawingArea = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingArea',
     Extends: St.DrawingArea,
-    Signals: { 'show-osd': { param_types: [GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
-               'show-osd-gicon': { param_types: [Gio.Icon.$gtype, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
+    Signals: { 'show-osd': { param_types: [Gio.Icon.$gtype, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
                'update-action-mode': {},
                'leave-drawing-mode': {} },
 
@@ -198,10 +197,10 @@ var DrawingArea = new Lang.Class({
     
     get fontFamilies() {
         if (!this._fontFamilies) {
-            let pangoFontFamilies = Elements.getPangoFontFamilies().filter(family => {
+            let otherFontFamilies = Elements.getAllFontFamilies().filter(family => {
                 return family != this.defaultFontFamily && FontGenericFamilies.indexOf(family) == -1;
             });
-            this._fontFamilies = [this.defaultFontFamily].concat(FontGenericFamilies, pangoFontFamilies);
+            this._fontFamilies = [this.defaultFontFamily].concat(FontGenericFamilies, otherFontFamilies);
         }
         return this._fontFamilies;
     },
@@ -995,7 +994,7 @@ var DrawingArea = new Lang.Class({
             return;
         if (images.length > 1)
             this.currentImage = this.currentImage == images.length - 1 ? 0 : this.currentImage + 1;
-        this.emit('show-osd-gicon', images[this.currentImage].gicon, images[this.currentImage].toString(), "", -1, false);
+        this.emit('show-osd', images[this.currentImage].gicon, images[this.currentImage].toString(), "", -1, false);
     },
     
     pasteImageFiles: function() {
@@ -1003,7 +1002,7 @@ var DrawingArea = new Lang.Class({
             this.currentImage = index;
             this.currentTool = Shapes.IMAGE;
             this.updatePointerCursor();
-            this.emit('show-osd-gicon', images[this.currentImage].gicon, images[this.currentImage].toString(), "", -1, false);
+            this.emit('show-osd', images[this.currentImage].gicon, images[this.currentImage].toString(), "", -1, false);
         });
     },
     
@@ -1168,7 +1167,7 @@ var DrawingArea = new Lang.Class({
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             json.contents = contents;
             if (notify)
-                this.emit('show-osd', 'document-save-symbolic', name, "", -1, false);
+                this.emit('show-osd', Files.Icons.SAVE, name, "", -1, false);
             if (name != Me.metadata['persistent-file-name']) {
                 this.jsonName = name;
                 this.lastJsonContents = contents;
@@ -1220,7 +1219,7 @@ var DrawingArea = new Lang.Class({
         }));
         
         if (notify)
-            this.emit('show-osd', 'document-open-symbolic', name, "", -1, false);
+            this.emit('show-osd', Files.Icons.OPEN, name, "", -1, false);
         if (name != Me.metadata['persistent-file-name']) {
             this.jsonName = name;
             this.lastJsonContents = contents;
@@ -1236,24 +1235,24 @@ var DrawingArea = new Lang.Class({
         this._redisplay();
     },
     
-    loadNextJson: function() {
-        let names = Files.getJsons().map(json => json.name);
-        
-        if (!names.length)
-            return;
-        
-        let nextName = names[this.jsonName && names.indexOf(this.jsonName) != names.length - 1 ? names.indexOf(this.jsonName) + 1 : 0];
-        this.loadJson(nextName, true);
-    },
-    
     loadPreviousJson: function() {
         let names = Files.getJsons().map(json => json.name);
         
         if (!names.length)
             return;
         
-        let previousName = names[this.jsonName && names.indexOf(this.jsonName) > 0 ? names.indexOf(this.jsonName) - 1 : names.length - 1];
+        let previousName = names[this.jsonName && names.indexOf(this.jsonName) != names.length - 1 ? names.indexOf(this.jsonName) + 1 : 0];
         this.loadJson(previousName, true);
+    },
+    
+    loadNextJson: function() {
+        let names = Files.getJsons().map(json => json.name);
+        
+        if (!names.length)
+            return;
+        
+        let nextName = names[this.jsonName && names.indexOf(this.jsonName) > 0 ? names.indexOf(this.jsonName) - 1 : names.length - 1];
+        this.loadJson(nextName, true);
     },
     
     get drawingContentsHasChanged() {
