@@ -30,7 +30,7 @@ const Gtk = imports.gi.Gtk;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
-const Shortcuts = Me.imports.shortcuts.Shortcuts;
+const Shortcuts = Me.imports.shortcuts;
 const gettext = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const _ = function(string) {
     if (!string)
@@ -421,19 +421,19 @@ const PrefsPage = new GObject.Class({
         listBox.get_style_context().add_class('background');
         internalFrame.add(listBox);
         
-        Shortcuts.OTHERS.forEach((pairs, index) => {
+        Shortcuts.OTHERS.forEach((object, index) => {
             if (index)
                 listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
             
-            pairs.forEach(pair => {
+            for (let key in object) {
                 let otherBox = new Gtk.Box({ margin_left: MARGIN, margin_right: MARGIN });
-                let otherLabel = new Gtk.Label({ label: pair[0], use_markup: true });
+                let otherLabel = new Gtk.Label({ label: key, use_markup: true });
                 otherLabel.set_halign(1);
-                let otherLabel2 = new Gtk.Label({ label: pair[1] });
+                let otherLabel2 = new Gtk.Label({ label: object[key] });
                 otherBox.pack_start(otherLabel, true, true, 4);
                 otherBox.pack_start(otherLabel2, false, false, 4);
                 listBox.add(otherBox);
-            });
+            }
         });
         
         listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));

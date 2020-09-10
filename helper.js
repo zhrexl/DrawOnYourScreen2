@@ -31,7 +31,7 @@ const Tweener = imports.ui.tweener;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
-const Shortcuts = Me.imports.shortcuts.Shortcuts;
+const Shortcuts = Me.imports.shortcuts;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
@@ -106,17 +106,17 @@ var DrawingHelper = new Lang.Class({
         this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
         this.vbox.add_child(new St.Label({ text: _("Internal") }));
         
-        Shortcuts.OTHERS.forEach((pairs, index) => {
+        Shortcuts.OTHERS.forEach((object, index) => {
             if (index)
                 this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
             
-            pairs.forEach(pair => {
+            for (let key in object) {
                 let hbox = new St.BoxLayout({ vertical: false });
-                hbox.add_child(new St.Label({ text: pair[0] }));
-                hbox.add_child(new St.Label({ text: pair[1], x_expand: true }));
+                hbox.add_child(new St.Label({ text: key }));
+                hbox.add_child(new St.Label({ text: object[key], x_expand: true }));
                 hbox.get_children()[0].get_clutter_text().set_use_markup(true);
                 this.vbox.add_child(hbox);
-            });
+            }
         });
         
         this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
