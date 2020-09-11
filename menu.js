@@ -22,7 +22,6 @@
  */
 
 const Clutter = imports.gi.Clutter;
-const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
@@ -231,9 +230,9 @@ var DrawingMenu = new Lang.Class({
         this.menu.addMenuItem(groupItem);
         this._addSeparator(this.menu, true);
         
-        this._addSubMenuItem(this.menu, 'document-edit-symbolic', DisplayStrings.Tool, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
-        this.paletteItem = this._addPaletteSubMenuItem(this.menu);
-        this.colorItem = this._addColorSubMenuItem(this.menu);
+        this._addToolSubMenuItem(this.menu, this._updateSectionVisibility.bind(this));
+        this.paletteItem = this._addPaletteSubMenuItem(this.menu, Files.Icons.PALETTE);
+        this.colorItem = this._addColorSubMenuItem(this.menu, Files.Icons.COLOR);
         this.fillItem = this._addSwitchItem(this.menu, DisplayStrings.getFill(true), Files.Icons.STROKE, Files.Icons.FILL, this.area, 'fill', this._updateSectionVisibility.bind(this));
         this.fillSection = new PopupMenu.PopupMenuSection();
         this.fillSection.itemActivated = () => {};
@@ -252,10 +251,10 @@ var DrawingMenu = new Lang.Class({
         this.lineSection = lineSection;
         
         let fontSection = new PopupMenu.PopupMenuSection();
-        this._addFontFamilySubMenuItem(fontSection, 'font-x-generic-symbolic');
-        this._addSubMenuItem(fontSection, 'format-text-bold-symbolic', DisplayStrings.FontWeight, this.area, 'currentFontWeight');
-        this._addSubMenuItem(fontSection, 'format-text-italic-symbolic', DisplayStrings.FontStyle, this.area, 'currentFontStyle');
-        this._addSwitchItem(fontSection, DisplayStrings.getTextAlignment(true), 'format-justify-left-symbolic', 'format-justify-right-symbolic', this.area, 'currentTextRightAligned');
+        this._addFontFamilySubMenuItem(fontSection, Files.Icons.FONT_FAMILY);
+        this._addSubMenuItem(fontSection, Files.Icons.FONT_WEIGHT, DisplayStrings.FontWeight, this.area, 'currentFontWeight');
+        this._addSubMenuItem(fontSection, Files.Icons.FONT_STYLE, DisplayStrings.FontStyle, this.area, 'currentFontStyle');
+        this._addSwitchItem(fontSection, DisplayStrings.getTextAlignment(true), Files.Icons.LEFT_ALIGNED, Files.Icons.RIGHT_ALIGNED, this.area, 'currentTextRightAligned');
         this._addSeparator(fontSection);
         this.menu.addMenuItem(fontSection);
         fontSection.itemActivated = () => {};
@@ -276,8 +275,8 @@ var DrawingMenu = new Lang.Class({
         this._addSeparator(this.menu);
         
         this._addDrawingNameItem(this.menu);
-        this._addOpenDrawingSubMenuItem(this.menu);
-        this._addSaveDrawingSubMenuItem(this.menu);
+        this._addOpenDrawingSubMenuItem(this.menu, Files.Icons.OPEN);
+        this._addSaveDrawingSubMenuItem(this.menu, Files.Icons.SAVE);
         
         this.menu.addAction(getSummary('save-as-svg'), this.area.saveAsSvg.bind(this.area), 'image-x-generic-symbolic');
         this.menu.addAction(getSummary('open-preferences'), areaManager.openPreferences.bind(areaManager), 'document-page-setup-symbolic');
@@ -334,18 +333,14 @@ var DrawingMenu = new Lang.Class({
         item.icon = new St.Icon({ style_class: 'popup-menu-icon' });
         getActor(item).insert_child_at_index(item.icon, 1);
         let icon = target[targetProperty] ? iconTrue : iconFalse;
-        if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, Gio.Icon))
+        if (icon)
             item.icon.set_gicon(icon);
-        else if (icon)
-            item.icon.set_icon_name(icon);
         
         item.connect('toggled', (item, state) => {
             target[targetProperty] = state;
             let icon = target[targetProperty] ? iconTrue : iconFalse;
-            if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, Gio.Icon))
+            if (icon)
                 item.icon.set_gicon(icon);
-            else if (icon)
-                item.icon.set_icon_name(icon);
             if (onToggled)
                 onToggled();
         });
@@ -392,40 +387,25 @@ var DrawingMenu = new Lang.Class({
         menu.addMenuItem(item);
     },
     
-    _addSubMenuItem: function(menu, icon, obj, target, targetProperty, callback) {
+    _addSubMenuItem: function(menu, icon, obj, target, targetProperty) {
         let item = new PopupMenu.PopupSubMenuMenuItem(String(obj[target[targetProperty]]), icon ? true : false);
-        if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, Gio.Icon))
-            item.icon.set_gicon(icon);
-        else if (icon)
-            item.icon.set_icon_name(icon);
         
+        item.icon.set_gicon(icon);
         item.menu.itemActivated = item.menu.close;
         
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             Object.keys(obj).forEach(key => {
-                let text;
-                if (targetProperty == 'currentFontWeight')
-                    text = `<span font_weight="${key}">${obj[key]}</span>`;
-                else if (targetProperty == 'currentFontStyle')
-                    text = `<span font_style="${DisplayStrings.FontStyleMarkup[key]}">${obj[key]}</span>`;
-                else
-                    text = String(obj[key]);
+                let text = targetProperty == 'currentFontWeight' ? `<span font_weight="${key}">${obj[key]}</span>` :
+                           targetProperty == 'currentFontStyle' ? `<span font_style="${DisplayStrings.FontStyleMarkup[key]}">${obj[key]}</span>` :
+                           String(obj[key]);
                 
                 let subItem = item.menu.addAction(text, () => {
                     item.label.set_text(String(obj[key]));
                     target[targetProperty] = Number(key);
-                    if (callback)
-                        callback();
                 });
                 
                 subItem.label.get_clutter_text().set_use_markup(true);
                 getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
-                
-                // change the display order of tools
-                if (obj == DisplayStrings.Tool && Number(key) == this.drawingTools.POLYGON)
-                    item.menu.moveMenuItem(subItem, 4);
-                else if (obj == DisplayStrings.Tool && Number(key) == this.drawingTools.POLYLINE)
-                    item.menu.moveMenuItem(subItem, 5);
             });
             return GLib.SOURCE_REMOVE;
         });
@@ -433,10 +413,45 @@ var DrawingMenu = new Lang.Class({
         menu.addMenuItem(item);
     },
     
-    _addPaletteSubMenuItem: function(menu) {
+    _addToolSubMenuItem: function(menu, callback) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(DisplayStrings.Tool[this.area.currentTool], true);
+        
+        let toolName = this.drawingTools.getNameOf(this.area.currentTool);
+        item.icon.set_gicon(Files.Icons[`TOOL_${toolName}`]);
+        
+        item.menu.itemActivated = item.menu.close;
+        
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            Object.keys(DisplayStrings.Tool).forEach(key => {
+                let text = DisplayStrings.Tool[key];
+                let toolName = this.drawingTools.getNameOf(key);
+                let subItemIcon = Files.Icons[`TOOL_${toolName}`];
+                let subItem = item.menu.addAction(text, () => {
+                    item.label.set_text(text);
+                    item.icon.set_gicon(subItemIcon);
+                    this.area.currentTool = Number(key);
+                    callback();
+                }, subItemIcon);
+                
+                subItem.label.get_clutter_text().set_use_markup(true);
+                getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+                
+                // change the display order of tools
+                if (key == this.drawingTools.POLYGON)
+                    item.menu.moveMenuItem(subItem, Number(this.drawingTools.TEXT));
+                else if (key == this.drawingTools.POLYLINE)
+                    item.menu.moveMenuItem(subItem, Number(this.drawingTools.TEXT) + 1);
+            });
+            return GLib.SOURCE_REMOVE;
+        });
+        
+        menu.addMenuItem(item);
+    },
+    
+    _addPaletteSubMenuItem: function(menu, icon) {
         let text = _(this.area.currentPalette[0] || "Palette");
         let item = new PopupMenu.PopupSubMenuMenuItem(text, true);
-        item.icon.set_gicon(Files.Icons.PALETTE);
+        item.icon.set_gicon(icon);
         
         item.menu.itemActivated = item.menu.close;
         
@@ -460,10 +475,10 @@ var DrawingMenu = new Lang.Class({
         return item;
     },
     
-    _addColorSubMenuItem: function(menu) {
+    _addColorSubMenuItem: function(menu, icon) {
         let item = new PopupMenu.PopupSubMenuMenuItem(_("Color"), true);
         this.colorSubMenu = item.menu;
-        item.icon.set_gicon(Files.Icons.COLOR);
+        item.icon.set_gicon(icon);
         item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
         
         item.menu.itemActivated = item.menu.close;
@@ -492,7 +507,7 @@ var DrawingMenu = new Lang.Class({
     
     _addFontFamilySubMenuItem: function(menu, icon) {
         let item = new PopupMenu.PopupSubMenuMenuItem(DisplayStrings.getFontFamily(this.area.currentFontFamily), true);
-        item.icon.set_icon_name(icon);
+        item.icon.set_gicon(icon);
         
         item.menu.itemActivated = item.menu.close;
         
@@ -555,12 +570,12 @@ var DrawingMenu = new Lang.Class({
         }
     },
     
-    _addOpenDrawingSubMenuItem: function(menu) {
+    _addOpenDrawingSubMenuItem: function(menu, icon) {
         let item = new PopupMenu.PopupSubMenuMenuItem(_("Open drawing"), true);
         this.openDrawingSubMenuItem = item;
         this.openDrawingSubMenu = item.menu;
         item.setSensitive(Boolean(Files.getJsons().length));
-        item.icon.set_icon_name('document-open-symbolic');
+        item.icon.set_gicon(icon);
         
         item.menu.itemActivated = item.menu.close;
         
@@ -608,12 +623,12 @@ var DrawingMenu = new Lang.Class({
         this.openDrawingSubMenuItem.setSensitive(!this.openDrawingSubMenu.isEmpty());
     },
     
-    _addSaveDrawingSubMenuItem: function(menu) {
+    _addSaveDrawingSubMenuItem: function(menu, icon) {
         let item = new PopupMenu.PopupSubMenuMenuItem(getSummary('save-as-json'), true);
         this.saveDrawingSubMenuItem = item;
         this._updateSaveDrawingSubMenuItemSensitivity();
         this.saveDrawingSubMenu = item.menu;
-        item.icon.set_icon_name('document-save-symbolic');
+        item.icon.set_gicon(icon);
         
         item.menu.itemActivated = item.menu.close;
         

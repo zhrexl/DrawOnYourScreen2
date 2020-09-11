@@ -55,7 +55,12 @@ const { DisplayStrings } = Menu;
 
 const FontGenericFamilies = ['Sans-Serif', 'Serif', 'Monospace', 'Cursive', 'Fantasy'];
 const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
-var Tools = Object.assign({}, Shapes, Manipulations);
+var Tools = Object.assign({
+    getNameOf: function(value) {
+        return Object.keys(this).find(key => this[key] == value);
+    }
+}, Shapes, Manipulations);
+Object.defineProperty(Tools, 'getNameOf', { enumerable: false });
 
 const getClutterColorFromString = function(string, fallback) {
     let [success, color] = Clutter.Color.from_string(string);
@@ -397,8 +402,8 @@ var DrawingArea = new Lang.Class({
                 event.get_key_symbol() == Clutter.KEY_Control_L) {
                 if (this.currentElement.points.length == 2)
                     // Translators: %s is a key label
-                    this.emit('show-osd', null, _("Press <i>%s</i> to get\na fourth control point")
-                                                .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
+                    this.emit('show-osd', Files.Icons.ARC, _("Press <i>%s</i> to get\na fourth control point")
+                                                           .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
                 this.currentElement.addPoint();
                 this.updatePointerCursor(true);
                 this._redisplay();
@@ -495,7 +500,7 @@ var DrawingArea = new Lang.Class({
             if (this.grabbedElementLocked) {
                 this.updatePointerCursor();
                 let label = controlPressed ? _("Mark a point of symmetry") : _("Draw a line of symmetry");
-                this.emit('show-osd', null, label, "", -1, true);
+                this.emit('show-osd', Files.Icons.TOOL_MIRROR, label, "", -1, true);
                 return;
             }
         }
@@ -628,10 +633,12 @@ var DrawingArea = new Lang.Class({
         
         this.currentElement.startDrawing(startX, startY);
         
-        if (this.currentTool == Shapes.POLYGON || this.currentTool == Shapes.POLYLINE)
+        if (this.currentTool == Shapes.POLYGON || this.currentTool == Shapes.POLYLINE) {
+            let icon = Files.Icons[this.currentTool == Shapes.POLYGON ? 'TOOL_POLYGON' : 'TOOL_POLYLINE'];
             // Translators: %s is a key label
-            this.emit('show-osd', null, _("Press <i>%s</i> to mark vertices")
+            this.emit('show-osd', icon, _("Press <i>%s</i> to mark vertices")
                                         .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
+        }
         
         this.motionHandler = this.connect('motion-event', (actor, event) => {
             if (this.spaceKeyPressed)
@@ -692,8 +699,8 @@ var DrawingArea = new Lang.Class({
         this.currentElement.text = '';
         this.currentElement.cursorPosition = 0;
         // Translators: %s is a key label
-        this.emit('show-osd', null, _("Type your text and press <i>%s</i>")
-                                    .format(Gtk.accelerator_get_label(Clutter.KEY_Escape, 0)), "", -1, true);
+        this.emit('show-osd', Files.Icons.TOOL_TEXT, _("Type your text and press <i>%s</i>")
+                                                     .format(Gtk.accelerator_get_label(Clutter.KEY_Escape, 0)), "", -1, true);
         this._updateTextCursorTimeout();
         this.textHasCursor = true;
         this._redisplay();
@@ -897,23 +904,25 @@ var DrawingArea = new Lang.Class({
             this._redisplay();
         }
         // Foreground color markup is not displayed since 3.36, use style instead but the transparency is lost.
-        this.emit('show-osd', null, this.currentColor.string || this.currentColor.to_string(), this.currentColor.to_string().slice(0, 7), -1, false);
+        this.emit('show-osd', Files.Icons.COLOR, this.currentColor.string || this.currentColor.to_string(), this.currentColor.to_string().slice(0, 7), -1, false);
     },
     
     selectTool: function(tool) {
         this.currentTool = tool;
-        this.emit('show-osd', null, DisplayStrings.Tool[tool], "", -1, false);
+        this.emit('show-osd', Files.Icons[`TOOL_${Tools.getNameOf(tool)}`] || null, DisplayStrings.Tool[tool], "", -1, false);
         this.updatePointerCursor();
     },
     
     switchFill: function() {
         this.fill = !this.fill;
-        this.emit('show-osd', null, DisplayStrings.getFill(this.fill), "", -1, false);
+        let icon = Files.Icons[this.fill ? 'FILL' : 'STROKE'];
+        this.emit('show-osd', icon, DisplayStrings.getFill(this.fill), "", -1, false);
     },
     
     switchFillRule: function() {
         this.currentFillRule = this.currentFillRule == 1 ? 0 : this.currentFillRule + 1;
-        this.emit('show-osd', null, DisplayStrings.FillRule[this.currentFillRule], "", -1, false);
+        let icon = Files.Icons[this.currentEvenodd ? 'FILLRULE_EVENODD' : 'FILLRULE_NONZERO'];
+        this.emit('show-osd', icon, DisplayStrings.FillRule[this.currentFillRule], "", -1, false);
     },
     
     switchColorPalette: function(reverse) {
@@ -922,12 +931,13 @@ var DrawingArea = new Lang.Class({
             this.currentPalette = index <= 0 ? this.palettes[this.palettes.length - 1] : this.palettes[index - 1];
         else
             this.currentPalette = index == this.palettes.length - 1 ? this.palettes[0] : this.palettes[index + 1];
-        this.emit('show-osd', null, this.currentPalette[0], "", -1, false);
+        this.emit('show-osd', Files.Icons.PALETTE, this.currentPalette[0], "", -1, false);
     },
     
     switchDash: function() {
         this.dashedLine = !this.dashedLine;
-        this.emit('show-osd', null, DisplayStrings.getDashedLine(this.dashedLine), "", -1, false);
+        let icon = Files.Icons[this.dashedLine ? 'DASHED_LINE' : 'FULL_LINE'];
+        this.emit('show-osd', icon, DisplayStrings.getDashedLine(this.dashedLine), "", -1, false);
     },
     
     incrementLineWidth: function(increment) {
@@ -937,12 +947,12 @@ var DrawingArea = new Lang.Class({
     
     switchLineJoin: function() {
         this.currentLineJoin = this.currentLineJoin == 2 ? 0 : this.currentLineJoin + 1;
-        this.emit('show-osd', null, DisplayStrings.LineJoin[this.currentLineJoin], "", -1, false);
+        this.emit('show-osd', Files.Icons.LINEJOIN, DisplayStrings.LineJoin[this.currentLineJoin], "", -1, false);
     },
     
     switchLineCap: function() {
         this.currentLineCap = this.currentLineCap == 2 ? 0 : this.currentLineCap + 1;
-        this.emit('show-osd', null, DisplayStrings.LineCap[this.currentLineCap], "", -1, false);
+        this.emit('show-osd', Files.Icons.LINECAP, DisplayStrings.LineCap[this.currentLineCap], "", -1, false);
     },
     
     switchFontWeight: function() {
@@ -953,7 +963,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.set_weight(this.currentFontWeight);
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_weight="${this.currentFontWeight}">` +
+        this.emit('show-osd', Files.Icons.FONT_WEIGHT, `<span font_weight="${this.currentFontWeight}">` +
                                     `${DisplayStrings.FontWeight[this.currentFontWeight]}</span>`, "", -1, false);
     },
     
@@ -963,7 +973,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.set_style(this.currentFontStyle);
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_style="${DisplayStrings.FontStyleMarkup[this.currentFontStyle]}">` + 
+        this.emit('show-osd', Files.Icons.FONT_STYLE, `<span font_style="${DisplayStrings.FontStyleMarkup[this.currentFontStyle]}">` + 
                                     `${DisplayStrings.FontStyle[this.currentFontStyle]}</span>`, "", -1, false);
     },
     
@@ -977,7 +987,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement.font.set_family(this.currentFontFamily);
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_family="${this.currentFontFamily}">${DisplayStrings.getFontFamily(this.currentFontFamily)}</span>`, "", -1, false);
+        this.emit('show-osd', Files.Icons.FONT_FAMILY, `<span font_family="${this.currentFontFamily}">${DisplayStrings.getFontFamily(this.currentFontFamily)}</span>`, "", -1, false);
     },
     
     switchTextAlignment: function() {
@@ -986,7 +996,8 @@ var DrawingArea = new Lang.Class({
             this.currentElement.textRightAligned = this.currentTextRightAligned;
             this._redisplay();
         }
-        this.emit('show-osd', null, DisplayStrings.getTextAlignment(this.currentTextRightAligned), "", -1, false);
+        let icon = Files.Icons[this.currentTextRightAligned ? 'RIGHT_ALIGNED' : 'LEFT_ALIGNED'];
+        this.emit('show-osd', icon, DisplayStrings.getTextAlignment(this.currentTextRightAligned), "", -1, false);
     },
     
     switchImageFile: function(reverse) {
