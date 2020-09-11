@@ -87,6 +87,11 @@
       <summary>Grid overlay line width</summary>
       <description>The line width in pixels</description>
     </key>
+    <key type="s" name="image-location">
+      <default>""</default>
+      <summary>Image location</summary>
+      <description>The location of the directory in which the image tool picks</description>
+    </key>
     <key type="a(sas)" name="palettes">
       <default>
         [
@@ -148,7 +153,7 @@
     </key>
     <key type="as" name="paste-image-files">
       <default>["&lt;Primary&gt;v"]</default>
-      <summary>Paste image files from the clipboard</summary>
+      <summary>Paste images from the clipboard</summary>
     </key>
     <key type="as" name="redo">
       <default>["&lt;Primary&gt;&lt;Shift&gt;z"]</default>
@@ -284,8 +289,12 @@
       <summary>Change font weight</summary>
     </key>
     <key type="as" name="switch-image-file">
-      <default>["&lt;Primary&gt;&lt;Shift&gt;i"]</default>
-      <summary>Change image file</summary>
+      <default>["&lt;Primary&gt;&lt;Alt&gt;i"]</default>
+      <summary>Change image</summary>
+    </key>
+    <key type="as" name="switch-image-file-reverse">
+      <default>["&lt;Primary&gt;&lt;Alt&gt;&lt;Shift&gt;i"]</default>
+      <summary>Change image (reverse)</summary>
     </key>
     <key type="as" name="switch-linecap">
       <default>["&lt;Primary&gt;k"]</default>

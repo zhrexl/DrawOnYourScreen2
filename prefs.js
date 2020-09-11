@@ -23,6 +23,7 @@
 
 const Atk = imports.gi.Atk;
 const Gdk = imports.gi.Gdk;
+const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
@@ -267,6 +268,14 @@ const DrawingPage = new GObject.Class({
         this.settings.bind('dash-offset', dashOffsetButton, 'value', 0);
         dashOffsetRow.addWidget(dashOffsetButton);
         toolsListBox.add(dashOffsetRow);
+        
+        let imageLocationRow = new PrefRow({ label: this.schema.get_key('image-location').get_summary() });
+        let imageLocationButton = new FileChooserButton({ action: Gtk.FileChooserAction.SELECT_FOLDER,
+                                                          name: this.schema.get_key('image-location').get_summary(),
+                                                          tooltip_text: this.schema.get_key('image-location').get_description() });
+        this.settings.bind('image-location', imageLocationButton, 'location', 0);
+        imageLocationRow.addWidget(imageLocationButton);
+        toolsListBox.add(imageLocationRow);
         
         let resetButton = new Gtk.Button({ label: _("Reset settings"), halign: Gtk.Align.CENTER });
         resetButton.get_style_context().add_class('destructive-action');
@@ -565,8 +574,7 @@ const ColorStringButton = new GObject.Class({
     Extends: Gtk.ColorButton,
     Properties: {
         'color-string': GObject.ParamSpec.string('color-string', 'colorString', 'A string that describes the color',
-                                                 GObject.ParamFlags.READWRITE,
-                                                 'black')
+                                                 GObject.ParamFlags.READWRITE, 'black')
     },
     
     get color_string() {
@@ -590,6 +598,37 @@ const ColorStringButton = new GObject.Class({
             this._color_string = this.rgba.to_string();
             this.notify('color-string');
         }            
+    }
+});
+
+const FileChooserButton = new GObject.Class({
+    Name: 'DrawOnYourScreenFileChooserButton',
+    GTypeName: 'DrawOnYourScreenFileChooserButton',
+    Extends: Gtk.FileChooserButton,
+    Properties: {
+        'location': GObject.ParamSpec.string('location', 'location', 'location',
+                                             GObject.ParamFlags.READWRITE, '')
+    },
+    
+    get location() {
+        return this.get_file().get_path();
+    },
+    
+    set location(location) {
+        if (!location) {
+            this.unselect_all();
+            if (this.get_file())
+                this.set_file(Gio.File.new_for_path('aFileThatDoesNotExist'));
+            return;
+        }
+        
+        let file = Gio.File.new_for_commandline_arg(location);
+        if (file.query_exists(null))
+            this.set_file(file);
+    },
+    
+    vfunc_file_set: function(args) {
+        this.notify('location');
     }
 });
 

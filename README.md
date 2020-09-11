@@ -42,7 +42,7 @@ Then save your beautiful work by taking a screenshot.
 
 * Insertable images:
 
- Add your images (jpeg, png, svg) to `~/.local/share/drawOnYourScreen/images/`.
+ You can insert images (jpeg, png, svg) in your drawings. By default images are sought in `~/.local/share/drawOnYourScreen/images/` but the location is configurable in the preferences. Another way is to copy-past the images from Nautilus or any clipboard source by using the usual `Ctrl + V` shortcut inside the drawing mode.
 
 * Eraser and SVG:
 

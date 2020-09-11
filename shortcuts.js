@@ -49,7 +49,8 @@ var INTERNAL_KEYBINDINGS = [
     ['switch-fill', 'switch-fill-rule', 'switch-color-palette', 'switch-color-palette-reverse'],
     ['increment-line-width', 'increment-line-width-more', 'decrement-line-width', 'decrement-line-width-more',
      'switch-linejoin', 'switch-linecap', 'switch-dash'],
-    ['switch-font-family', 'switch-font-family-reverse', 'switch-font-weight', 'switch-font-style', 'switch-text-alignment', 'switch-image-file'],
+    ['switch-font-family', 'switch-font-family-reverse', 'switch-font-weight', 'switch-font-style', 'switch-text-alignment'],
+    ['switch-image-file', 'switch-image-file-reverse', 'paste-image-files'],
     ['toggle-panel-and-dock-visibility', 'toggle-background', 'toggle-grid', 'toggle-square-area'],
     ['open-next-json', 'open-previous-json', 'save-as-json', 'save-as-svg', 'open-preferences', 'toggle-help'],
 ];

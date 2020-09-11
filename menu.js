@@ -262,12 +262,7 @@ var DrawingMenu = new Lang.Class({
         this.fontSection = fontSection;
         
         let imageSection = new PopupMenu.PopupMenuSection();
-        let images = this.area.getImages();
-        if (images.length) {
-            if (this.area.currentImage > images.length - 1)
-                this.area.currentImage = images.length - 1;
-            this._addSubMenuItem(imageSection, null, images, this.area, 'currentImage');
-        }
+        this._addImageSubMenuItem(imageSection);
         this._addSeparator(imageSection);
         this.menu.addMenuItem(imageSection);
         imageSection.itemActivated = () => {};
@@ -398,34 +393,27 @@ var DrawingMenu = new Lang.Class({
     },
     
     _addSubMenuItem: function(menu, icon, obj, target, targetProperty, callback) {
-        if (targetProperty == 'currentImage')
-            icon = obj[target[targetProperty]].gicon;
         let item = new PopupMenu.PopupSubMenuMenuItem(String(obj[target[targetProperty]]), icon ? true : false);
         if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, Gio.Icon))
             item.icon.set_gicon(icon);
         else if (icon)
             item.icon.set_icon_name(icon);
         
-        item.menu.itemActivated = () => {
-            item.menu.close();
-        };
+        item.menu.itemActivated = item.menu.close;
         
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-            for (let i in obj) {
+            Object.keys(obj).forEach(key => {
                 let text;
                 if (targetProperty == 'currentFontWeight')
-                    text = `<span font_weight="${i}">${obj[i]}</span>`;
+                    text = `<span font_weight="${key}">${obj[key]}</span>`;
                 else if (targetProperty == 'currentFontStyle')
-                    text = `<span font_style="${DisplayStrings.FontStyleMarkup[i]}">${obj[i]}</span>`;
+                    text = `<span font_style="${DisplayStrings.FontStyleMarkup[key]}">${obj[key]}</span>`;
                 else
-                    text = String(obj[i]);
+                    text = String(obj[key]);
                 
-                let iCaptured = Number(i);
                 let subItem = item.menu.addAction(text, () => {
-                    item.label.set_text(String(obj[iCaptured]));
-                    target[targetProperty] = iCaptured;
-                    if (targetProperty == 'currentImage')
-                        item.icon.set_gicon(obj[iCaptured].gicon);
+                    item.label.set_text(String(obj[key]));
+                    target[targetProperty] = Number(key);
                     if (callback)
                         callback();
                 });
@@ -434,13 +422,14 @@ var DrawingMenu = new Lang.Class({
                 getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
                 
                 // change the display order of tools
-                if (obj == DisplayStrings.Tool && i == this.drawingTools.POLYGON)
+                if (obj == DisplayStrings.Tool && Number(key) == this.drawingTools.POLYGON)
                     item.menu.moveMenuItem(subItem, 4);
-                else if (obj == DisplayStrings.Tool && i == this.drawingTools.POLYLINE)
+                else if (obj == DisplayStrings.Tool && Number(key) == this.drawingTools.POLYLINE)
                     item.menu.moveMenuItem(subItem, 5);
-            }
+            });
             return GLib.SOURCE_REMOVE;
         });
+        
         menu.addMenuItem(item);
     },
     
@@ -449,9 +438,7 @@ var DrawingMenu = new Lang.Class({
         let item = new PopupMenu.PopupSubMenuMenuItem(text, true);
         item.icon.set_gicon(Files.Icons.PALETTE);
         
-        item.menu.itemActivated = () => {
-            item.menu.close();
-        };
+        item.menu.itemActivated = item.menu.close;
         
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             this.area.palettes.forEach(palette => {
@@ -468,6 +455,7 @@ var DrawingMenu = new Lang.Class({
             });
             return GLib.SOURCE_REMOVE;
         });
+        
         menu.addMenuItem(item);
         return item;
     },
@@ -478,9 +466,7 @@ var DrawingMenu = new Lang.Class({
         item.icon.set_gicon(Files.Icons.COLOR);
         item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
         
-        item.menu.itemActivated = () => {
-            item.menu.close();
-        };
+        item.menu.itemActivated = item.menu.close;
         
         this._populateColorSubMenu();
         menu.addMenuItem(item);
@@ -508,9 +494,7 @@ var DrawingMenu = new Lang.Class({
         let item = new PopupMenu.PopupSubMenuMenuItem(DisplayStrings.getFontFamily(this.area.currentFontFamily), true);
         item.icon.set_icon_name(icon);
         
-        item.menu.itemActivated = () => {
-            item.menu.close();
-        };
+        item.menu.itemActivated = item.menu.close;
         
         item.menu.openOld = item.menu.open;
         item.menu.open = (animate) => {
@@ -522,6 +506,30 @@ var DrawingMenu = new Lang.Class({
                     });
                     if (FONT_FAMILY_STYLE)
                         subItem.label.set_style(`font-family:${family}`);
+                    getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+                });
+            }
+            item.menu.openOld();
+        };
+        
+        menu.addMenuItem(item);
+    },
+    
+    _addImageSubMenuItem: function(menu, images) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(this.area.currentImage.toString(), true);
+        item.icon.set_gicon(this.area.currentImage.gicon);
+        
+        item.menu.itemActivated = item.menu.close;
+        
+        item.menu.openOld = item.menu.open;
+        item.menu.open = (animate) => {
+            if (!item.menu.isOpen && item.menu.isEmpty()) {
+                [...Files.Images].forEach(image => {
+                    let subItem = item.menu.addAction(image.toString(), () => {
+                        item.label.set_text(image.toString());
+                        this.area.currentImage = image;
+                        item.icon.set_gicon(image.gicon);
+                    }, image.thumbnailGicon || undefined);
                     getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
                 });
             }
@@ -554,9 +562,7 @@ var DrawingMenu = new Lang.Class({
         item.setSensitive(Boolean(Files.getJsons().length));
         item.icon.set_icon_name('document-open-symbolic');
         
-        item.menu.itemActivated = () => {
-            item.menu.close();
-        };
+        item.menu.itemActivated = item.menu.close;
         
         item.menu.openOld = item.menu.open;
         item.menu.open = (animate) => {
@@ -609,9 +615,7 @@ var DrawingMenu = new Lang.Class({
         this.saveDrawingSubMenu = item.menu;
         item.icon.set_icon_name('document-save-symbolic');
         
-        item.menu.itemActivated = () => {
-            item.menu.close();
-        };
+        item.menu.itemActivated = item.menu.close;
         
         item.menu.openOld = item.menu.open;
         item.menu.open = (animate) => {

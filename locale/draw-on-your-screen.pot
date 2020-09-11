@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2020-09-09 08:40+0200\n"
+"POT-Creation-Date: 2020-09-11 03:43+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -502,6 +502,12 @@ msgstr ""
 msgid "The line width in pixels"
 msgstr ""
 
+msgid "Image location"
+msgstr ""
+
+msgid "The location of the directory in which the image tool picks"
+msgstr ""
+
 msgid "Color palettes"
 msgstr ""
 
@@ -542,6 +548,9 @@ msgid "Open preferences"
 msgstr ""
 
 msgid "Open previous drawing"
+msgstr ""
+
+msgid "Paste images from the clipboard"
 msgstr ""
 
 msgid "Redo last brushstroke"
@@ -640,7 +649,10 @@ msgstr ""
 msgid "Change font weight"
 msgstr ""
 
-msgid "Change image file"
+msgid "Change image"
+msgstr ""
+
+msgid "Change image (reverse)"
 msgstr ""
 
 msgid "Change linecap"

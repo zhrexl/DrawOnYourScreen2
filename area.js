@@ -86,7 +86,7 @@ var DrawingArea = new Lang.Class({
         this.undoneElements = [];
         this.currentElement = null;
         this.currentTool = Shapes.NONE;
-        this.currentImage = 0;
+        this.currentImage = null;
         this.currentTextRightAligned = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL;
         let fontName = St.Settings && St.Settings.get().font_name || Convenience.getSettings('org.gnome.desktop.interface').get_string('font-name');
         this.currentFont = Pango.FontDescription.from_string(fontName);
@@ -150,6 +150,17 @@ var DrawingArea = new Lang.Class({
             this.colors.push(Clutter.Color.get_static(Clutter.StaticColor.WHITE));
     },
     
+    get currentImage() {
+        if (!this._currentImage)
+            this._currentImage = Files.Images.getNext(this._currentImage);
+        
+        return this._currentImage;
+    },
+    
+    set currentImage(image) {
+        this._currentImage = image;
+    },
+    
     get currentFontFamily() {
         return this.currentFont.get_family();
     },
@@ -186,13 +197,6 @@ var DrawingArea = new Lang.Class({
     
     set currentEvenodd(evenodd) {
         this.currentFillRule = evenodd ? Cairo.FillRule.EVEN_ODD : Cairo.FillRule.WINDING;
-    },
-    
-    getImages() {
-        let images = Files.Images.getImages();
-        if (!images[this.currentImage])
-            this.currentImage = Math.max(images.length - 1, 0);
-        return images;
     },
     
     get fontFamilies() {
@@ -601,14 +605,11 @@ var DrawingArea = new Lang.Class({
                 points: []
             });
         } else if (this.currentTool == Shapes.IMAGE) {
-            let images = this.getImages();
-            if (!images.length)
-                return;
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
                 color: this.currentColor.to_string(),
                 eraser: eraser,
-                image: images[this.currentImage],
+                image: this.currentImage,
                 operator: this.currentOperator,
                 points: []
             });
@@ -988,21 +989,18 @@ var DrawingArea = new Lang.Class({
         this.emit('show-osd', null, DisplayStrings.getTextAlignment(this.currentTextRightAligned), "", -1, false);
     },
     
-    switchImageFile: function() {
-        let images = this.getImages();
-        if (!images.length)
-            return;
-        if (images.length > 1)
-            this.currentImage = this.currentImage == images.length - 1 ? 0 : this.currentImage + 1;
-        this.emit('show-osd', images[this.currentImage].gicon, images[this.currentImage].toString(), "", -1, false);
+    switchImageFile: function(reverse) {
+        this.currentImage = Files.Images[reverse ? 'getPrevious' : 'getNext'](this.currentImage);
+        if (this.currentImage)
+            this.emit('show-osd', this.currentImage.gicon, this.currentImage.toString(), "", -1, false);
     },
     
     pasteImageFiles: function() {
-        Files.Images.addImagesFromClipboard((images, index) => {
-            this.currentImage = index;
+        Files.Images.addImagesFromClipboard(lastImage => {
+            this.currentImage = lastImage;
             this.currentTool = Shapes.IMAGE;
             this.updatePointerCursor();
-            this.emit('show-osd', images[this.currentImage].gicon, images[this.currentImage].toString(), "", -1, false);
+            this.emit('show-osd', this.currentImage.gicon, this.currentImage.toString(), "", -1, false);
         });
     },
     
@@ -1088,6 +1086,7 @@ var DrawingArea = new Lang.Class({
         this._redisplay();
         this.closeMenu();
         this.get_parent().set_background_color(null);
+        Files.Images.reset();
         if (save)
             this.savePersistent();
     },

@@ -31,8 +31,8 @@ const St = imports.gi.St;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const EXAMPLE_IMAGES = Me.dir.get_child('data').get_child('images');
-const USER_IMAGES = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir'], 'images']));
+const EXAMPLE_IMAGE_DIRECTORY = Me.dir.get_child('data').get_child('images');
+const DEFAULT_USER_IMAGE_LOCATION = GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir'], 'images']);
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 const ICON_DIR = Me.dir.get_child('data').get_child('icons');
@@ -66,6 +66,11 @@ var Image = new Lang.Class({
     _init: function(params) {
         for (let key in params)
             this[key] = params[key];
+        
+        if (this.info) {
+            this.displayName = this.info.get_display_name();
+            this.contentType = this.info.get_content_type();
+        }
     },
     
     toString: function() {
@@ -81,11 +86,29 @@ var Image = new Lang.Class({
         };
     },
     
-    // only called from menu so file exists
+    get thumbnailFile() {
+        if (!this._thumbnailFile) {
+            if (this.info.has_attribute('thumbnail::path') && this.info.get_attribute_boolean('thumbnail::is-valid')) {
+                let thumbnailPath = this.info.get_attribute_as_string('thumbnail::path');
+                this._thumbnailFile = Gio.File.new_for_path(thumbnailPath);
+            }
+        }
+        return this._thumbnailFile || null;
+    },
+    
+    // only called from menu or area so this.file exists
     get gicon() {
         if (!this._gicon)
-            this._gicon = new Gio.FileIcon({ file: this.file });
+            this._gicon = new Gio.FileIcon({ file: this.thumbnailFile || this.file });
         return this._gicon;
+    },
+    
+    // use only thumbnails in menu (memory)
+    get thumbnailGicon() {
+        if (this.contentType != 'image/svg+xml' && !this.thumbnailFile)
+            return null;
+        
+        return this.gicon;
     },
     
     get bytes() {
@@ -95,7 +118,7 @@ var Image = new Lang.Class({
                     // load_bytes available in GLib 2.56+
                     this._bytes = this.file.load_bytes(null)[0];
                 } catch(e) {
-                    let [success_, contents] = this.file.load_contents(null);
+                    let [, contents] = this.file.load_contents(null);
                     if (contents instanceof Uint8Array)
                         this._bytes = ByteArray.toGBytes(contents);
                     else
@@ -151,34 +174,73 @@ var Image = new Lang.Class({
     }
 });
 
+// Get images with getPrevious, getNext, or by iterating over it.
 var Images = {
-    clipboardImages: [],
+    _images: [],
+    _clipboardImages: [],
+    _upToDate: false,
     
-    getImages: function() {
-        let images = [];
+    _clipboardImagesContains: function(file) {
+        return this._clipboardImages.some(image => image.file.equal(file));
+    },
+    
+    _getImages: function() {
+        if (this._upToDate)
+            return this._images;
         
-        [EXAMPLE_IMAGES, USER_IMAGES].forEach(directory => {
+        let images = [];
+        let userLocation = Me.drawingSettings.get_string('image-location') || DEFAULT_USER_IMAGE_LOCATION;
+        let userDirectory = Gio.File.new_for_commandline_arg(userLocation);
+        
+        [EXAMPLE_IMAGE_DIRECTORY, userDirectory].forEach(directory => {
             let enumerator;
             try {
-                enumerator = directory.enumerate_children('standard::display-name,standard::content-type', Gio.FileQueryInfoFlags.NONE, null);
+                enumerator = directory.enumerate_children('standard::,thumbnail::', Gio.FileQueryInfoFlags.NONE, null);
             } catch(e) {
                 return;
             }
             
-            let fileInfo = enumerator.next_file(null);
-            while (fileInfo) {
-                if (fileInfo.get_content_type().indexOf('image') == 0)
-                    images.push(new Image({ file: enumerator.get_child(fileInfo), contentType: fileInfo.get_content_type(), displayName: fileInfo.get_display_name() }));
-                fileInfo = enumerator.next_file(null);
+            let info = enumerator.next_file(null);
+            while (info) {
+                let file = enumerator.get_child(info);
+                
+                if (info.get_content_type().indexOf('image') == 0 && !this._clipboardImagesContains(file)) {
+                    let index = this._images.findIndex(image => image.file.equal(file));
+                    if (index != -1)
+                        images.push(this._images[index]);
+                    else
+                        images.push(new Image({ file, info }));
+                }
+                
+                info = enumerator.next_file(null);
             }
             enumerator.close(null);
         });
         
-        images.sort((a, b) => {
-            return a.displayName.localeCompare(b.displayName);
-        });
-        
-        return images.concat(this.clipboardImages);
+        this._images = images.concat(this._clipboardImages)
+                             .sort((a, b) => a.toString().localeCompare(b.toString()));
+        this._upToDate = true;
+        return this._images;
+    },
+    
+    [Symbol.iterator]: function() {
+        return this._getImages()[Symbol.iterator]();
+    },
+    
+    getNext: function(currentImage) {
+        let images = this._getImages();
+        let index = currentImage ? images.findIndex(image => image.file.equal(currentImage.file)) : 0;
+        return images[index == images.length - 1 ? 0 : index + 1] || null;
+    },
+    
+    getPrevious: function(currentImage) {
+        let images = this._getImages();
+        let index = currentImage ? images.findIndex(image => image.file.equal(currentImage.file)) : 0;
+        return images[index <= 0 ? images.length - 1 : index - 1] || null;
+    },
+    
+    reset: function() {
+        this._upToDate = false;
     },
     
     addImagesFromClipboard: function(callback) {
@@ -193,20 +255,21 @@ var Images = {
             let images = lines.filter(line => !!line)
                               .map(line => Gio.File.new_for_commandline_arg(line))
                               .filter(file => file.query_exists(null))
-                              .map(file => [file, file.query_info('standard::display-name,standard::content-type', Gio.FileQueryInfoFlags.NONE, null)])
+                              .map(file => [file, file.query_info('standard::,thumbnail::', Gio.FileQueryInfoFlags.NONE, null)])
                               .filter(pair => pair[1].get_content_type().indexOf('image') == 0)
-                              .map(pair => new Image({ file: pair[0], contentType: pair[1].get_content_type(), displayName: pair[1].get_display_name() }));
+                              .map(pair => new Image({ file: pair[0], info: pair[1] }));
             
             // Prevent duplicated
-            images.filter(image => !this.clipboardImages.map(clipboardImage => clipboardImage.file).some(clipboardFile => clipboardFile.equal(image.file)))
-                  .forEach(image => this.clipboardImages.push(image));
+            images.filter(image => !this._clipboardImagesContains(image.file))
+                  .forEach(image => this._clipboardImages.push(image));
             
             if (images.length) {
+                this.reset();
+                let allImages = this._getImages();
                 let lastFile = images[images.length - 1].file;
-                let allImages = this.getImages();
                 let index = allImages.findIndex(image => image.file.equal(lastFile));
-                callback(allImages, index);
-            } 
+                callback(allImages[index]);
+            }
         });
     }
 };
