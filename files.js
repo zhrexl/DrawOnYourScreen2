@@ -73,18 +73,13 @@ Object.keys(ThemedIconNames).forEach(key => {
     });
 });
 
-// wrapper around an image file
+// wrapper around an image file. If not subclassed, it is used with drawing files (.json) and it takes { displayName, contentType, base64, hash } as params.
 var Image = new Lang.Class({
     Name: 'DrawOnYourScreenImage',
     
     _init: function(params) {
         for (let key in params)
             this[key] = params[key];
-        
-        if (this.info) {
-            this.displayName = this.info.get_display_name();
-            this.contentType = this.info.get_content_type();
-        }
     },
     
     toString: function() {
@@ -100,47 +95,9 @@ var Image = new Lang.Class({
         };
     },
     
-    get thumbnailFile() {
-        if (!this._thumbnailFile) {
-            if (this.info.has_attribute('thumbnail::path') && this.info.get_attribute_boolean('thumbnail::is-valid')) {
-                let thumbnailPath = this.info.get_attribute_as_string('thumbnail::path');
-                this._thumbnailFile = Gio.File.new_for_path(thumbnailPath);
-            }
-        }
-        return this._thumbnailFile || null;
-    },
-    
-    // only called from menu or area so this.file exists
-    get gicon() {
-        if (!this._gicon)
-            this._gicon = new Gio.FileIcon({ file: this.thumbnailFile || this.file });
-        return this._gicon;
-    },
-    
-    // use only thumbnails in menu (memory)
-    get thumbnailGicon() {
-        if (this.contentType != 'image/svg+xml' && !this.thumbnailFile)
-            return null;
-        
-        return this.gicon;
-    },
-    
     get bytes() {
-        if (!this._bytes) {
-            if (this.file)
-                try {
-                    // load_bytes available in GLib 2.56+
-                    this._bytes = this.file.load_bytes(null)[0];
-                } catch(e) {
-                    let [, contents] = this.file.load_contents(null);
-                    if (contents instanceof Uint8Array)
-                        this._bytes = ByteArray.toGBytes(contents);
-                    else
-                        this._bytes = contents.toGBytes();
-                }
-            else
-                this._bytes = new GLib.Bytes(GLib.base64_decode(this.base64));
-        }
+        if (!this._bytes)
+            this._bytes = new GLib.Bytes(GLib.base64_decode(this.base64));
         return this._bytes;
     },
     
@@ -188,7 +145,61 @@ var Image = new Lang.Class({
     }
 });
 
-// Get images with getPrevious, getNext, or by iterating over it.
+// Add a gicon generator to Image. It is used with image files and it takes { file, info } as params.
+const ImageWithGicon = new Lang.Class({
+    Name: 'DrawOnYourScreenImageWithGicon',
+    Extends: Image,
+    
+    get displayName() {
+        return this.info.get_display_name();
+    },
+    
+    get contentType() {
+        return this.info.get_content_type();
+    },
+    
+    get thumbnailFile() {
+        if (!this._thumbnailFile) {
+            if (this.info.has_attribute('thumbnail::path') && this.info.get_attribute_boolean('thumbnail::is-valid')) {
+                let thumbnailPath = this.info.get_attribute_as_string('thumbnail::path');
+                this._thumbnailFile = Gio.File.new_for_path(thumbnailPath);
+            }
+        }
+        return this._thumbnailFile || null;
+    },
+    
+    get gicon() {
+        if (!this._gicon)
+            this._gicon = new Gio.FileIcon({ file: this.thumbnailFile || this.file });
+        return this._gicon;
+    },
+    
+    // use only thumbnails in menu (memory)
+    get thumbnailGicon() {
+        if (this.contentType != 'image/svg+xml' && !this.thumbnailFile)
+            return null;
+        
+        return this.gicon;
+    },
+    
+    get bytes() {
+        if (!this._bytes) {
+            try {
+                // load_bytes available in GLib 2.56+
+                this._bytes = this.file.load_bytes(null)[0];
+            } catch(e) {
+                let [, contents] = this.file.load_contents(null);
+                if (contents instanceof Uint8Array)
+                    this._bytes = ByteArray.toGBytes(contents);
+                else
+                    this._bytes = contents.toGBytes();
+            }
+        }
+        return this._bytes;
+    }
+});
+
+// Access images with getPrevious, getNext, getSorted or by iterating over it.
 var Images = {
     _images: [],
     _clipboardImages: [],
@@ -198,57 +209,84 @@ var Images = {
         return this._clipboardImages.some(image => image.file.equal(file));
     },
     
-    _getImages: function() {
+    // Firstly iterate over the extension directory that contains Example.svg,
+    // secondly iterate over the directory that was configured by the user in prefs,
+    // finally iterate over the images pasted from the clipboard.
+    [Symbol.iterator]: function() {
         if (this._upToDate)
-            return this._images;
+            return this._images.concat(this._clipboardImages)[Symbol.iterator]();
         
-        let images = [];
-        let userLocation = Me.drawingSettings.get_string('image-location') || DEFAULT_USER_IMAGE_LOCATION;
-        let userDirectory = Gio.File.new_for_commandline_arg(userLocation);
+        this._upToDate = true;
+        let oldImages = this._images;
+        let newImages = this._images = [];
+        let clipboardImagesContains = this._clipboardImagesContains.bind(this);
+        let clipboardIterator = this._clipboardImages[Symbol.iterator]();
         
-        [EXAMPLE_IMAGE_DIRECTORY, userDirectory].forEach(directory => {
-            let enumerator;
-            try {
-                enumerator = directory.enumerate_children('standard::,thumbnail::', Gio.FileQueryInfoFlags.NONE, null);
-            } catch(e) {
-                return;
-            }
+        return {
+            getExampleEnumerator: function() {
+                try {
+                    return EXAMPLE_IMAGE_DIRECTORY.enumerate_children('standard::,thumbnail::', Gio.FileQueryInfoFlags.NONE, null);
+                } catch(e) {
+                    return this.getUserEnumerator();
+                }
+            },
             
-            let info = enumerator.next_file(null);
-            while (info) {
-                let file = enumerator.get_child(info);
+            getUserEnumerator: function() {
+                try {
+                    let userLocation = Me.drawingSettings.get_string('image-location') || DEFAULT_USER_IMAGE_LOCATION;
+                    let userDirectory = Gio.File.new_for_commandline_arg(userLocation);
+                    return userDirectory.enumerate_children('standard::,thumbnail::', Gio.FileQueryInfoFlags.NONE, null);
+                } catch(e) {
+                    return null;
+                }
+            },
+            
+            get enumerator() {
+                if (this._enumerator === undefined)
+                    this._enumerator = this.getExampleEnumerator();
+                else if (this._enumerator && this._enumerator.get_container().equal(EXAMPLE_IMAGE_DIRECTORY) && this._enumerator.is_closed())
+                    this._enumerator = this.getUserEnumerator();
+                else if (this._enumerator && this._enumerator.is_closed())
+                    this._enumerator = null;
                 
-                if (info.get_content_type().indexOf('image') == 0 && !this._clipboardImagesContains(file)) {
-                    let index = this._images.findIndex(image => image.file.equal(file));
-                    if (index != -1)
-                        images.push(this._images[index]);
-                    else
-                        images.push(new Image({ file, info }));
+                return this._enumerator;
+            },
+            
+            next: function() {
+                if (!this.enumerator)
+                    return clipboardIterator.next();
+                
+                let info = this.enumerator.next_file(null);
+                if (!info) {
+                    this.enumerator.close(null);
+                    return this.next();
                 }
                 
-                info = enumerator.next_file(null);
+                let file = this.enumerator.get_child(info);
+                
+                if (info.get_content_type().indexOf('image') == 0 && !clipboardImagesContains(file)) {
+                    let image = oldImages.find(image => image.file.equal(file)) || new ImageWithGicon({ file, info });
+                    newImages.push(image);
+                    return { value: image, done: false };
+                } else {
+                    return this.next();
+                }
             }
-            enumerator.close(null);
-        });
-        
-        this._images = images.concat(this._clipboardImages)
-                             .sort((a, b) => a.toString().localeCompare(b.toString()));
-        this._upToDate = true;
-        return this._images;
+        };
     },
     
-    [Symbol.iterator]: function() {
-        return this._getImages()[Symbol.iterator]();
+    getSorted: function() {
+        return [...this].sort((a, b) => a.toString().localeCompare(b.toString()));
     },
     
     getNext: function(currentImage) {
-        let images = this._getImages();
-        let index = currentImage ? images.findIndex(image => image.file.equal(currentImage.file)) : 0;
+        let images = this.getSorted();
+        let index = currentImage ? images.findIndex(image => image.file.equal(currentImage.file)) : -1;
         return images[index == images.length - 1 ? 0 : index + 1] || null;
     },
     
     getPrevious: function(currentImage) {
-        let images = this._getImages();
+        let images = this.getSorted();
         let index = currentImage ? images.findIndex(image => image.file.equal(currentImage.file)) : 0;
         return images[index <= 0 ? images.length - 1 : index - 1] || null;
     },
@@ -271,7 +309,7 @@ var Images = {
                               .filter(file => file.query_exists(null))
                               .map(file => [file, file.query_info('standard::,thumbnail::', Gio.FileQueryInfoFlags.NONE, null)])
                               .filter(pair => pair[1].get_content_type().indexOf('image') == 0)
-                              .map(pair => new Image({ file: pair[0], info: pair[1] }));
+                              .map(pair => new ImageWithGicon({ file: pair[0], info: pair[1] }));
             
             // Prevent duplicated
             images.filter(image => !this._clipboardImagesContains(image.file))
@@ -279,10 +317,8 @@ var Images = {
             
             if (images.length) {
                 this.reset();
-                let allImages = this._getImages();
                 let lastFile = images[images.length - 1].file;
-                let index = allImages.findIndex(image => image.file.equal(lastFile));
-                callback(allImages[index]);
+                callback(this._clipboardImages.find(image => image.file.equal(lastFile)));
             }
         });
     }

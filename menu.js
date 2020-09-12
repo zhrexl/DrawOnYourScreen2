@@ -539,7 +539,7 @@ var DrawingMenu = new Lang.Class({
         item.menu.openOld = item.menu.open;
         item.menu.open = (animate) => {
             if (!item.menu.isOpen && item.menu.isEmpty()) {
-                [...Files.Images].forEach(image => {
+                Files.Images.getSorted().forEach(image => {
                     let subItem = item.menu.addAction(image.toString(), () => {
                         item.label.set_text(image.toString());
                         this.area.currentImage = image;
