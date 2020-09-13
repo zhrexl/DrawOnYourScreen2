@@ -524,6 +524,8 @@ const AreaManager = new Lang.Class({
         Main.wm.removeKeybinding('toggle-modal');
         Main.wm.removeKeybinding('erase-drawings');
         this.removeAreas();
+        Files.Images.disable();
+        Files.Jsons.disable();
         if (this.indicator)
             this.indicator.disable();
     }

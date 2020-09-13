@@ -1129,14 +1129,7 @@ var DrawingArea = new Lang.Class({
         }
         content += "\n</svg>";
         
-        let filename = `${Me.metadata['svg-file-name']} ${Files.getDateString()}.svg`;
-        let dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES);
-        let path = GLib.build_filenamev([dir, filename]);
-        if (GLib.file_test(path, GLib.FileTest.EXISTS))
-            return false;
-        let success = GLib.file_set_contents(path, content);
-        
-        if (success) {
+        if (Files.saveSvg(content)) {
             // pass the parent (bgContainer) to Flashspot because coords of this are relative
             let flashspot = new Screenshot.Flashspot(this.get_parent());
             flashspot.fire();
@@ -1149,7 +1142,7 @@ var DrawingArea = new Lang.Class({
         }
     },
     
-    _saveAsJson: function(name, notify, callback) {
+    _saveAsJson: function(json, notify, callback) {
         // stop drawing or writing
         if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting) {
             this._stopWriting();
@@ -1157,46 +1150,31 @@ var DrawingArea = new Lang.Class({
             this._stopDrawing();
         }
         
-        let json = new Files.Json({ name });
-        let oldContents;
-        
-        if (name == Me.metadata['persistent-file-name']) {
-            let oldContents = json.contents;
-            // do not create a file to write just an empty array
-            if (!oldContents && this.elements.length == 0)
-                return;
-        }
-        
         // do not use "content = JSON.stringify(this.elements, null, 2);", neither "content = JSON.stringify(this.elements);"
         // do compromise between disk usage and human readability
-        let contents = `[\n  ` + new Array(...this.elements.map(element => JSON.stringify(element))).join(`,\n\n  `) + `\n]`;
-        
-        if (name == Me.metadata['persistent-file-name'] && contents == oldContents)
-            return;
+        let contents = this.elements.length ? `[\n  ` + new Array(...this.elements.map(element => JSON.stringify(element))).join(`,\n\n  `) + `\n]` : '[]';
         
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             json.contents = contents;
             if (notify)
-                this.emit('show-osd', Files.Icons.SAVE, name, "", -1, false);
-            if (name != Me.metadata['persistent-file-name']) {
-                this.jsonName = name;
-                this.lastJsonContents = contents;
-            }
+                this.emit('show-osd', Files.Icons.SAVE, json.name, "", -1, false);
+            if (!json.isPersistent)
+                this.currentJson = json;
             if (callback)
                 callback();
         });
     },
     
     saveAsJsonWithName: function(name, callback) {
-        this._saveAsJson(name, false, callback);
+        this._saveAsJson(Files.Jsons.getNamed(name), false, callback);
     },
     
     saveAsJson: function() {
-        this._saveAsJson(Files.getDateString(), true);
+        this._saveAsJson(Files.Jsons.getDated(), true);
     },
     
     savePersistent: function() {
-        this._saveAsJson(Me.metadata['persistent-file-name']);
+        this._saveAsJson(Files.Jsons.getPersistent());
     },
     
     syncPersistent: function() {
@@ -1208,7 +1186,7 @@ var DrawingArea = new Lang.Class({
             
     },
     
-    _loadJson: function(name, notify) {
+    _loadJson: function(json, notify) {
         // stop drawing or writing
         if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting) {
             this._stopWriting();
@@ -1218,56 +1196,45 @@ var DrawingArea = new Lang.Class({
         this.elements = [];
         this.currentElement = null;
         
-        let contents = (new Files.Json({ name })).contents;
-        if (!contents)
+        if (!json.contents)
             return;
         
-        this.elements.push(...JSON.parse(contents).map(object => {
+        this.elements.push(...JSON.parse(json.contents).map(object => {
             if (object.image)
                 object.image = new Files.Image(object.image);
             return new Elements.DrawingElement(object);
         }));
         
         if (notify)
-            this.emit('show-osd', Files.Icons.OPEN, name, "", -1, false);
-        if (name != Me.metadata['persistent-file-name']) {
-            this.jsonName = name;
-            this.lastJsonContents = contents;
-        }
+            this.emit('show-osd', Files.Icons.OPEN, json.name, "", -1, false);
+        if (!json.isPersistent)
+            this.currentJson = json;
     },
     
     _loadPersistent: function() {
-        this._loadJson(Me.metadata['persistent-file-name']);
+        this._loadJson(Files.Jsons.getPersistent());
     },
     
-    loadJson: function(name, notify) {
-        this._loadJson(name, notify);
+    loadJson: function(json, notify) {
+        this._loadJson(json, notify);
         this._redisplay();
     },
     
     loadPreviousJson: function() {
-        let names = Files.getJsons().map(json => json.name);
-        
-        if (!names.length)
-            return;
-        
-        let previousName = names[this.jsonName && names.indexOf(this.jsonName) != names.length - 1 ? names.indexOf(this.jsonName) + 1 : 0];
-        this.loadJson(previousName, true);
+        let json = Files.Jsons.getPrevious(this.currentJson || null);
+        if (json)
+            this.loadJson(json, true);
     },
     
     loadNextJson: function() {
-        let names = Files.getJsons().map(json => json.name);
-        
-        if (!names.length)
-            return;
-        
-        let nextName = names[this.jsonName && names.indexOf(this.jsonName) > 0 ? names.indexOf(this.jsonName) - 1 : names.length - 1];
-        this.loadJson(nextName, true);
+        let json = Files.Jsons.getNext(this.currentJson || null);
+        if (json)
+            this.loadJson(json, true);
     },
     
     get drawingContentsHasChanged() {
         let contents = `[\n  ` + new Array(...this.elements.map(element => JSON.stringify(element))).join(`,\n\n  `) + `\n]`;
-        return contents != this.lastJsonContents;
+        return contents != (this.currentJson && this.currentJson.contents);
     }
 });
 

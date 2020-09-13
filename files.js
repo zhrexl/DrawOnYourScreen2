@@ -1,5 +1,5 @@
 /* jslint esversion: 6 */
-/* exported Icons, Image, Images, Json, getJsons, getDateString */
+/* exported Icons, Image, Images, Json, Jsons, getDateString, saveSvg */
 
 /*
  * Copyright 2019 Abakkk
@@ -205,6 +205,12 @@ var Images = {
     _clipboardImages: [],
     _upToDate: false,
     
+    disable: function() {
+        this._images = [];
+        this._clipboardImages = [];
+        this._upToDate = false;
+    },
+    
     _clipboardImagesContains: function(file) {
         return this._clipboardImages.some(image => image.file.equal(file));
     },
@@ -265,7 +271,7 @@ var Images = {
                 let file = this.enumerator.get_child(info);
                 
                 if (info.get_content_type().indexOf('image') == 0 && !clipboardImagesContains(file)) {
-                    let image = oldImages.find(image => image.file.equal(file)) || new ImageWithGicon({ file, info });
+                    let image = oldImages.find(oldImage => oldImage.file.equal(file)) || new ImageWithGicon({ file, info });
                     newImages.push(image);
                     return { value: image, done: false };
                 } else {
@@ -287,7 +293,7 @@ var Images = {
     
     getPrevious: function(currentImage) {
         let images = this.getSorted();
-        let index = currentImage ? images.findIndex(image => image.file.equal(currentImage.file)) : 0;
+        let index = currentImage ? images.findIndex(image => image.file.equal(currentImage.file)) : -1;
         return images[index <= 0 ? images.length - 1 : index - 1] || null;
     },
     
@@ -333,6 +339,10 @@ var Json = new Lang.Class({
             this[key] = params[key];
     },
     
+    get isPersistent() {
+        return this.name == Me.metadata['persistent-file-name'];
+    },
+    
     toString: function() {
         return this.displayName || this.name;
     },
@@ -342,10 +352,10 @@ var Json = new Lang.Class({
     },
     
     get file() {
-        if (!this._file && this.name) 
+        if (!this._file) 
             this._file = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir'], `${this.name}.json`]));
         
-        return this._file || null;
+        return this._file;
     },
     
     set file(file) {
@@ -353,62 +363,167 @@ var Json = new Lang.Class({
     },
     
     get contents() {
-        let success_, contents;
-        try {
-            [success_, contents] = this.file.load_contents(null);
-            if (contents instanceof Uint8Array)
-                contents = ByteArray.toString(contents);
-        } catch(e) {
-            return null;
+        if (this._contents === undefined) {
+            try {
+                [, this._contents] = this.file.load_contents(null);
+                if (this._contents instanceof Uint8Array)
+                    this._contents = ByteArray.toString(this._contents);
+            } catch(e) {
+                this._contents = null;
+            }
         }
-        return contents;
+        
+        return this._contents;
     },
     
     set contents(contents) {
+        if (this.isPersistent && (this.contents == contents || !this.contents && contents == '[]'))
+            return;
+        
         try {
             this.file.replace_contents(contents, null, false, Gio.FileCreateFlags.NONE, null);
         } catch(e) {
             this.file.get_parent().make_directory_with_parents(null);
             this.file.replace_contents(contents, null, false, Gio.FileCreateFlags.NONE, null);
         }
+        
+        this._contents = contents;
     }
 });
 
-var getJsons = function() {
-    let directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir']]));
+var Jsons = {
+    _jsons: [],
+    _upToDate: false,
     
-    let enumerator;
-    try {
-        enumerator = directory.enumerate_children('standard::name,standard::display-name,standard::content-type,time::modified', Gio.FileQueryInfoFlags.NONE, null);
-    } catch(e) {
-        return [];
-    }
-    
-    let jsons = [];
-    let fileInfo = enumerator.next_file(null);
-    while (fileInfo) {
-        if (fileInfo.get_content_type().indexOf('json') != -1 && fileInfo.get_name() != `${Me.metadata['persistent-file-name']}.json`) {
-            let file = enumerator.get_child(fileInfo);
-            jsons.push(new Json({
-                file,
-                name: fileInfo.get_name().slice(0, -5),
-                displayName: fileInfo.get_display_name().slice(0, -5),
-                // fileInfo.get_modification_date_time: Gio 2.62+
-                modificationUnixTime: fileInfo.get_attribute_uint64('time::modified')
-            }));
+    disable: function() {
+        if (this._monitor) {
+            this._monitor.disconnect(this._monitorHandler);
+            this._monitor.cancel();
         }
-        fileInfo = enumerator.next_file(null);
+        
+        delete this._monitor;
+        delete this._persistent;
+        
+        this._jsons = [];
+        this._upToDate = false;
+    },
+    
+    _updateMonitor: function() {
+        if (this._monitor)
+            return;
+        
+        let directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir']]));
+        this._monitor = directory.monitor(Gio.FileMonitorFlags.NONE, null);
+        this._monitorHandler = this._monitor.connect('changed', (monitor, file) => {
+            if (file.get_basename() != `${Me.metadata['persistent-file-name']}.json` && file.get_basename().indexOf('.goutputstream'))
+                this.reset();
+        });
+    },
+    
+    [Symbol.iterator]: function() {
+        if (this._upToDate)
+            return this._jsons[Symbol.iterator]();
+        
+        this._updateMonitor();
+        this._upToDate = true;
+        let newJsons = this._jsons = [];
+        
+        return {
+            get enumerator() {
+                if (this._enumerator === undefined) {
+                    try {
+                        let directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir']]));
+                        this._enumerator = directory.enumerate_children('standard::name,standard::display-name,standard::content-type,time::modified', Gio.FileQueryInfoFlags.NONE, null);
+                    } catch(e) {
+                        this._enumerator = null;
+                    }
+                }
+                
+                return this._enumerator;
+            },
+            
+            next: function() {
+                if (!this.enumerator || this.enumerator.is_closed())
+                    return { done: true };
+                
+                let info = this.enumerator.next_file(null);
+                if (!info) {
+                    this.enumerator.close(null);
+                    return this.next();
+                }
+                
+                let file = this.enumerator.get_child(info);
+                
+                if (info.get_content_type().indexOf('json') != -1 && info.get_name() != `${Me.metadata['persistent-file-name']}.json`) {
+                    let json = new Json({
+                        file, name: info.get_name().slice(0, -5),
+                        displayName: info.get_display_name().slice(0, -5),
+                        // info.get_modification_date_time: Gio 2.62+
+                        modificationUnixTime: info.get_attribute_uint64('time::modified')
+                    });
+                    
+                    newJsons.push(json);
+                    return { value: json, done: false };
+                } else {
+                    return this.next();
+                }
+            }
+        };
+    },
+    
+    getSorted: function() {
+        return [...this].sort((a, b) => b.modificationUnixTime - a.modificationUnixTime);
+    },
+    
+    getNext: function(currentJson) {
+        let jsons = this.getSorted();
+        let index = currentJson ? jsons.findIndex(json => json.name == currentJson.name) : -1;
+        return jsons[index == jsons.length - 1 ? 0 : index + 1] || null;
+    },
+    
+    getPrevious: function(currentJson) {
+        let jsons = this.getSorted();
+        let index = currentJson ? jsons.findIndex(json => json.name == currentJson.name) : -1;
+        return jsons[index <= 0 ? jsons.length - 1 : index - 1] || null;
+    },
+    
+    getPersistent: function() {
+        if (!this._persistent)
+            this._persistent = new Json({ name: Me.metadata['persistent-file-name'] });
+        
+        return this._persistent;
+    },
+    
+    getDated: function() {
+        return new Json({ name: getDateString() });
+    },
+    
+    getNamed: function(name) {
+        return [...this].find(json => json.name == name) || new Json({ name });
+    },
+    
+    reset: function() {
+        this._upToDate = false;
     }
-    enumerator.close(null);
-    
-    jsons.sort((a, b) => {
-        return b.modificationUnixTime - a.modificationUnixTime;
-    });
-    
-    return jsons;
 };
 
 var getDateString = function() {
     let date = GLib.DateTime.new_now_local();
     return `${date.format("%F")} ${date.format("%X")}`;
 };
+
+var saveSvg = function(content) {
+    let filename = `${Me.metadata['svg-file-name']} ${getDateString()}.svg`;
+    let dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES);
+    let path = GLib.build_filenamev([dir, filename]);
+    let file = Gio.File.new_for_path(path);
+    if (file.query_exists(null))
+        return false;
+    
+    try {
+        return file.replace_contents(content, null, false, Gio.FileCreateFlags.NONE, null);
+    } catch(e) {
+        return false;
+    }
+};
+

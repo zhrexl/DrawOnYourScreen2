@@ -562,10 +562,10 @@ var DrawingMenu = new Lang.Class({
     },
     
     _updateDrawingNameMenuItem: function() {
-        getActor(this.drawingNameMenuItem).visible = this.area.jsonName ? true : false;
-        if (this.area.jsonName) {
+        getActor(this.drawingNameMenuItem).visible = this.area.currentJson ? true : false;
+        if (this.area.currentJson) {
             let prefix = this.area.drawingContentsHasChanged ? "* " : "";
-            this.drawingNameMenuItem.label.set_text(`<i>${prefix}${this.area.jsonName}</i>`);
+            this.drawingNameMenuItem.label.set_text(`<i>${prefix}${this.area.currentJson.name}</i>`);
             this.drawingNameMenuItem.label.get_clutter_text().set_use_markup(true);
         }
     },
@@ -574,7 +574,7 @@ var DrawingMenu = new Lang.Class({
         let item = new PopupMenu.PopupSubMenuMenuItem(_("Open drawing"), true);
         this.openDrawingSubMenuItem = item;
         this.openDrawingSubMenu = item.menu;
-        item.setSensitive(Boolean(Files.getJsons().length));
+        item.setSensitive(Boolean(Files.Jsons.getSorted().length));
         item.icon.set_gicon(icon);
         
         item.menu.itemActivated = item.menu.close;
@@ -591,10 +591,10 @@ var DrawingMenu = new Lang.Class({
     
     _populateOpenDrawingSubMenu: function() {
         this.openDrawingSubMenu.removeAll();
-        let jsons = Files.getJsons();
+        let jsons = Files.Jsons.getSorted();
         jsons.forEach(json => {
             let subItem = this.openDrawingSubMenu.addAction(`<i>${String(json)}</i>`, () => {
-                this.area.loadJson(json.name);
+                this.area.loadJson(json);
                 this._updateDrawingNameMenuItem();
                 this._updateSaveDrawingSubMenuItemSensitivity();
             });
