@@ -71,7 +71,7 @@ var DrawingHelper = new Lang.Class({
     },
     
     _updateHelpKeyLabel: function() {
-        let [keyval, mods] = Gtk.accelerator_parse(Me.internalShortcutSettings.get_strv('toggle-help')[0]);
+        let [keyval, mods] = Gtk.accelerator_parse(Me.internalShortcutSettings.get_strv('toggle-help')[0] || '');
         this._helpKeyLabel = Gtk.accelerator_get_label(keyval, mods);
     },
     
@@ -96,7 +96,7 @@ var DrawingHelper = new Lang.Class({
                     return;
                 
                 let hbox = new St.BoxLayout({ vertical: false });
-                let [keyval, mods] = Gtk.accelerator_parse(Me.settings.get_strv(settingKey)[0]);
+                let [keyval, mods] = Gtk.accelerator_parse(Me.settings.get_strv(settingKey)[0] || '');
                 hbox.add_child(new St.Label({ text: Me.settings.settings_schema.get_key(settingKey).get_summary() }));
                 hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));
                 this.vbox.add_child(hbox);
@@ -106,17 +106,18 @@ var DrawingHelper = new Lang.Class({
         this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
         this.vbox.add_child(new St.Label({ text: _("Internal") }));
         
-        Shortcuts.OTHERS.forEach((object, index) => {
+        Shortcuts.OTHERS.forEach((pairs, index) => {
             if (index)
                 this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
             
-            for (let key in object) {
+            pairs.forEach(pair => {
+                let [action, shortcut] = pair;
                 let hbox = new St.BoxLayout({ vertical: false });
-                hbox.add_child(new St.Label({ text: key }));
-                hbox.add_child(new St.Label({ text: object[key], x_expand: true }));
+                hbox.add_child(new St.Label({ text: action }));
+                hbox.add_child(new St.Label({ text: shortcut, x_expand: true }));
                 hbox.get_children()[0].get_clutter_text().set_use_markup(true);
                 this.vbox.add_child(hbox);
-            }
+            });
         });
         
         this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
@@ -130,7 +131,7 @@ var DrawingHelper = new Lang.Class({
                     return;
                 
                 let hbox = new St.BoxLayout({ vertical: false });
-                let [keyval, mods] = Gtk.accelerator_parse(Me.internalShortcutSettings.get_strv(settingKey)[0]);
+                let [keyval, mods] = Gtk.accelerator_parse(Me.internalShortcutSettings.get_strv(settingKey)[0] || '');
                 hbox.add_child(new St.Label({ text: Me.internalShortcutSettings.settings_schema.get_key(settingKey).get_summary() }));
                 hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));
                 this.vbox.add_child(hbox);
@@ -149,7 +150,7 @@ var DrawingHelper = new Lang.Class({
             let shortcut = GS_VERSION < '3.33.0' ? mediaKeysSettings.get_string(settingKey) : mediaKeysSettings.get_strv(settingKey)[0];
             if (!shortcut)
                 continue;
-            let [keyval, mods] = Gtk.accelerator_parse(shortcut);
+            let [keyval, mods] = Gtk.accelerator_parse(shortcut || '');
             let hbox = new St.BoxLayout({ vertical: false });
             hbox.add_child(new St.Label({ text: mediaKeysSettings.settings_schema.get_key(settingKey).get_summary() }));
             hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));

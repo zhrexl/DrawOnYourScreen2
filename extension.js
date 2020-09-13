@@ -103,7 +103,7 @@ const AreaManager = new Lang.Class({
                               Me.settings,
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
-                              this.eraseDrawing.bind(this));
+                              this.eraseDrawings.bind(this));
         
         this.updateAreas();
         this.monitorChangedHandler = Main.layoutManager.connect('monitors-changed', this.updateAreas.bind(this));
@@ -265,7 +265,7 @@ const AreaManager = new Lang.Class({
         }
     },
     
-    eraseDrawing: function() {
+    eraseDrawings: function() {
         for (let i = 0; i < this.areas.length; i++)
             this.areas[i].erase();
         if (Me.settings.get_boolean('persistent-drawing'))

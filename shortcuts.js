@@ -66,27 +66,27 @@ if (GS_VERSION < '3.36') {
 
 const getOthers = function() {
     return [
-        {
-            [_("Draw")]: _("Left click"),
-            [_("Menu")]: _("Right click"),
-            [internalShortcutsSchema.get_key('switch-fill').get_summary()]: _("Center click"),
-            [_("Increment/decrement line width")]: _("Scroll"),
+        [
+            [_("Draw"), _("Left click")],
+            [_("Menu"), _("Right click")],
+            [internalShortcutsSchema.get_key('switch-fill').get_summary(), _("Center click")],
+            [_("Increment/decrement line width"), _("Scroll")],
             // Translators: %s are key labels (Ctrl+F1 and Ctrl+F9)
-            [_("Select color")]: _("%s … %s").format(getKeyLabel('<Primary>1'), getKeyLabel('<Primary>9')),
+            [_("Select color"), _("%s … %s").format(getKeyLabel('<Primary>1'), getKeyLabel('<Primary>9'))],
             // Translators: %s is a key label
-            [_("Ignore pointer movement")]: _("%s held").format(getKeyLabel('space')),
-            [_("Leave")]: getKeyLabel('Escape'),
-        }, {
-            [_("Select eraser <span alpha=\"50%\">(while starting drawing)</span>")]: getKeyLabel('<Shift>'),
-            [_("Duplicate <span alpha=\"50%\">(while starting handling)</span>")]: getKeyLabel('<Shift>'),
-            [_("Rotate rectangle, polygon, polyline")]: getKeyLabel('<Primary>'),
-            [_("Extend circle to ellipse")]: getKeyLabel('<Primary>'),
-            [_("Curve line")]: getKeyLabel('<Primary>'),
-            [_("Smooth free drawing outline")]: getKeyLabel('<Primary>'),
-            [_("Rotate <span alpha=\"50%\">(while moving)</span>")]: getKeyLabel('<Primary>'),
-            [_("Stretch <span alpha=\"50%\">(while resizing)</span>")]: getKeyLabel('<Primary>'),
-            [_("Inverse <span alpha=\"50%\">(while mirroring)</span>")]: getKeyLabel('<Primary>'),
-        },
+            [_("Ignore pointer movement"), _("%s held").format(getKeyLabel('space'))],
+            [_("Leave"), getKeyLabel('Escape')],
+        ], [
+            [_("Select eraser <span alpha=\"50%\">(while starting drawing)</span>"), getKeyLabel('<Shift>')],
+            [_("Duplicate <span alpha=\"50%\">(while starting handling)</span>"), getKeyLabel('<Shift>')],
+            [_("Rotate rectangle, polygon, polyline"), getKeyLabel('<Primary>')],
+            [_("Extend circle to ellipse"), getKeyLabel('<Primary>')],
+            [_("Curve line"), getKeyLabel('<Primary>')],
+            [_("Smooth free drawing outline"), getKeyLabel('<Primary>')],
+            [_("Rotate <span alpha=\"50%\">(while moving)</span>"), getKeyLabel('<Primary>')],
+            [_("Stretch <span alpha=\"50%\">(while resizing)</span>"), getKeyLabel('<Primary>')],
+            [_("Inverse <span alpha=\"50%\">(while mirroring)</span>"), getKeyLabel('<Primary>')],
+        ],
     ];
 };
 

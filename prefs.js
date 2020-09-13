@@ -430,19 +430,20 @@ const PrefsPage = new GObject.Class({
         listBox.get_style_context().add_class('background');
         internalFrame.add(listBox);
         
-        Shortcuts.OTHERS.forEach((object, index) => {
+        Shortcuts.OTHERS.forEach((pairs, index) => {
             if (index)
                 listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
             
-            for (let key in object) {
+            pairs.forEach(pair => {
+                let [action, shortcut] = pair;
                 let otherBox = new Gtk.Box({ margin_left: MARGIN, margin_right: MARGIN });
-                let otherLabel = new Gtk.Label({ label: key, use_markup: true });
+                let otherLabel = new Gtk.Label({ label: action, use_markup: true });
                 otherLabel.set_halign(1);
-                let otherLabel2 = new Gtk.Label({ label: object[key] });
+                let otherLabel2 = new Gtk.Label({ label: shortcut });
                 otherBox.pack_start(otherLabel, true, true, 4);
                 otherBox.pack_start(otherLabel2, false, false, 4);
                 listBox.add(otherBox);
-            }
+            });
         });
         
         listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
@@ -743,7 +744,7 @@ const KeybindingsWidget = new GObject.Class({
 
         this._settingKeys.forEach(settingKey => {
             let [key, mods] = Gtk.accelerator_parse(
-                this._settings.get_strv(settingKey)[0]
+                this._settings.get_strv(settingKey)[0] || ''
             );
 
             let iter = this._store.append();
