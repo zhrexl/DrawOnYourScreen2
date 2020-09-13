@@ -388,6 +388,11 @@ var Json = new Lang.Class({
         }
         
         this._contents = contents;
+    },
+    
+    createGicon: function(content) {
+        let bytes = new GLib.Bytes(content);
+        this.gicon = Gio.BytesIcon.new(bytes);
     }
 });
 
@@ -521,7 +526,7 @@ var saveSvg = function(content) {
         return false;
     
     try {
-        return file.replace_contents(content, null, false, Gio.FileCreateFlags.NONE, null);
+        return file.replace_contents(content, null, false, Gio.FileCreateFlags.NONE, null)[0];
     } catch(e) {
         return false;
     }

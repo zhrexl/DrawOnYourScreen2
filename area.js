@@ -1102,6 +1102,27 @@ var DrawingArea = new Lang.Class({
             this.savePersistent();
     },
     
+    // Used by the menu.
+    getSvgContentForJson(json) {
+        let elements = [];
+        
+        elements.push(...JSON.parse(json.contents).map(object => {
+            if (object.image)
+                object.image = new Files.Image(object.image);
+            return new Elements.DrawingElement(object);
+        }));
+        
+        let size = Math.min(this.monitor.width, this.monitor.height);
+        let [x, y] = [(this.monitor.width - size) / 2, (this.monitor.height - size) / 2];
+        
+        let prefixes = 'xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"';
+        let content = `<svg viewBox="${x} ${y} ${size} ${size}" ${prefixes}>`;
+        elements.forEach(element => content += element.buildSVG('transparent'));
+        content += "\n</svg>";
+        
+        return content;
+    },
+    
     saveAsSvg: function() {
         // stop drawing or writing
         if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting) {
@@ -1124,9 +1145,7 @@ var DrawingArea = new Lang.Class({
             content += `\n  <line stroke="black" x1="0" y1="${-this.height}" x2="0" y2="${this.height}"/>`;
             content += `\n  <line stroke="black" x1="${-this.width}" y1="0" x2="${this.width}" y2="0"/>`;
         }
-        for (let i = 0; i < this.elements.length; i++) {
-            content += this.elements[i].buildSVG(backgroundColorString);
-        }
+        this.elements.forEach(element => content += element.buildSVG(backgroundColorString));
         content += "\n</svg>";
         
         if (Files.saveSvg(content)) {

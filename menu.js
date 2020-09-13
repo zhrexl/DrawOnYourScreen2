@@ -591,13 +591,18 @@ var DrawingMenu = new Lang.Class({
     
     _populateOpenDrawingSubMenu: function() {
         this.openDrawingSubMenu.removeAll();
-        let jsons = Files.Jsons.getSorted();
-        jsons.forEach(json => {
+        Files.Jsons.getSorted().forEach(json => {
+            if (!json.gicon) {
+                let svgContent = this.area.getSvgContentForJson(json);
+                json.createGicon(svgContent);
+            }
+            
             let subItem = this.openDrawingSubMenu.addAction(`<i>${String(json)}</i>`, () => {
                 this.area.loadJson(json);
                 this._updateDrawingNameMenuItem();
                 this._updateSaveDrawingSubMenuItemSensitivity();
-            });
+            }, json.gicon);
+            
             subItem.label.get_clutter_text().set_use_markup(true);
             getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
             
