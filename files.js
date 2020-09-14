@@ -38,7 +38,7 @@ const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 const ICON_DIR = Me.dir.get_child('data').get_child('icons');
 const ICON_NAMES = [
     'arc', 'color', 'dashed-line', 'fillrule-evenodd', 'fillrule-nonzero', 'fill', 'full-line', 'linecap', 'linejoin', 'palette', 'smooth', 'stroke',
-    'tool-ellipse', 'tool-line', 'tool-move', 'tool-none', 'tool-polygon', 'tool-polyline', 'tool-rectangle', 'tool-resize',
+    'tool-ellipse', 'tool-line', 'tool-mirror', 'tool-move', 'tool-none', 'tool-polygon', 'tool-polyline', 'tool-rectangle', 'tool-resize',
 ];
 const ThemedIconNames = {
     ENTER: 'applications-graphics', LEAVE: 'application-exit',
@@ -46,7 +46,7 @@ const ThemedIconNames = {
     OPEN: 'document-open', SAVE: 'document-save',
     FONT_FAMILY: 'font-x-generic', FONT_STYLE: 'format-text-italic', FONT_WEIGHT:'format-text-bold',
     LEFT_ALIGNED: 'format-justify-left', RIGHT_ALIGNED: 'format-justify-right',
-    TOOL_IMAGE: 'insert-image', TOOL_MIRROR: 'view-mirror', TOOL_TEXT: 'insert-text',
+    TOOL_IMAGE: 'insert-image', TOOL_TEXT: 'insert-text',
 };
 
 var Icons = {};
