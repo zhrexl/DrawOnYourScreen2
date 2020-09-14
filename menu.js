@@ -230,7 +230,7 @@ var DrawingMenu = new Lang.Class({
         this.menu.addMenuItem(groupItem);
         this._addSeparator(this.menu, true);
         
-        this._addToolSubMenuItem(this.menu, this._updateSectionVisibility.bind(this));
+        this.toolItem = this._addToolSubMenuItem(this.menu, this._updateSectionVisibility.bind(this));
         this.paletteItem = this._addPaletteSubMenuItem(this.menu, Files.Icons.PALETTE);
         this.colorItem = this._addColorSubMenuItem(this.menu, Files.Icons.COLOR);
         this.fillItem = this._addSwitchItem(this.menu, DisplayStrings.getFill(true), Files.Icons.STROKE, Files.Icons.FILL, this.area, 'fill', this._updateSectionVisibility.bind(this));
@@ -261,7 +261,7 @@ var DrawingMenu = new Lang.Class({
         this.fontSection = fontSection;
         
         let imageSection = new PopupMenu.PopupMenuSection();
-        this._addImageSubMenuItem(imageSection);
+        this.imageItem = this._addImageSubMenuItem(imageSection);
         this._addSeparator(imageSection);
         this.menu.addMenuItem(imageSection);
         imageSection.itemActivated = () => {};
@@ -414,10 +414,13 @@ var DrawingMenu = new Lang.Class({
     },
     
     _addToolSubMenuItem: function(menu, callback) {
-        let item = new PopupMenu.PopupSubMenuMenuItem(DisplayStrings.Tool[this.area.currentTool], true);
-        
-        let toolName = this.drawingTools.getNameOf(this.area.currentTool);
-        item.icon.set_gicon(Files.Icons[`TOOL_${toolName}`]);
+        let item = new PopupMenu.PopupSubMenuMenuItem('', true);
+        item.update = () => {
+            item.label.set_text(DisplayStrings.Tool[this.area.currentTool]);
+            let toolName = this.drawingTools.getNameOf(this.area.currentTool);
+            item.icon.set_gicon(Files.Icons[`TOOL_${toolName}`]);
+        };
+        item.update();
         
         item.menu.itemActivated = item.menu.close;
         
@@ -427,9 +430,8 @@ var DrawingMenu = new Lang.Class({
                 let toolName = this.drawingTools.getNameOf(key);
                 let subItemIcon = Files.Icons[`TOOL_${toolName}`];
                 let subItem = item.menu.addAction(text, () => {
-                    item.label.set_text(text);
-                    item.icon.set_gicon(subItemIcon);
                     this.area.currentTool = Number(key);
+                    item.update();
                     callback();
                 }, subItemIcon);
                 
@@ -446,6 +448,7 @@ var DrawingMenu = new Lang.Class({
         });
         
         menu.addMenuItem(item);
+        return item;
     },
     
     _addPaletteSubMenuItem: function(menu, icon) {
@@ -531,8 +534,12 @@ var DrawingMenu = new Lang.Class({
     },
     
     _addImageSubMenuItem: function(menu, images) {
-        let item = new PopupMenu.PopupSubMenuMenuItem(this.area.currentImage.toString(), true);
-        item.icon.set_gicon(this.area.currentImage.gicon);
+        let item = new PopupMenu.PopupSubMenuMenuItem('', true);
+        item.update = () => {
+            item.label.set_text(this.area.currentImage.toString());
+            item.icon.set_gicon(this.area.currentImage.gicon);
+        };
+        item.update();
         
         item.menu.itemActivated = item.menu.close;
         
@@ -541,9 +548,8 @@ var DrawingMenu = new Lang.Class({
             if (!item.menu.isOpen && item.menu.isEmpty()) {
                 Files.Images.getSorted().forEach(image => {
                     let subItem = item.menu.addAction(image.toString(), () => {
-                        item.label.set_text(image.toString());
                         this.area.currentImage = image;
-                        item.icon.set_gicon(image.gicon);
+                        item.update();
                     }, image.thumbnailGicon || undefined);
                     getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
                 });
@@ -552,6 +558,7 @@ var DrawingMenu = new Lang.Class({
         };
         
         menu.addMenuItem(item);
+        return item;
     },
     
     _addDrawingNameItem: function(menu) {
@@ -612,10 +619,22 @@ var DrawingMenu = new Lang.Class({
             });
             getActor(subItem).add_child(expander);
             
-            let deleteButton = new St.Button({ style_class: 'draw-on-your-screen-menu-delete-button',
+            let insertButton = new St.Button({ style_class: 'button draw-on-your-screen-menu-insert-button',
+                                               child: new St.Icon({ icon_name: 'insert-image-symbolic',
+                                                                    style_class: 'popup-menu-icon' }) });
+            getActor(subItem).add_child(insertButton);
+            
+            insertButton.connect('clicked', () => {
+                this.area.currentImage = json.image;
+                this.imageItem.update();
+                this.area.currentTool = this.drawingTools.IMAGE;
+                this.toolItem.update();
+                this._updateSectionVisibility();
+            });
+            
+            let deleteButton = new St.Button({ style_class: 'button draw-on-your-screen-menu-delete-button',
                                                child: new St.Icon({ icon_name: 'edit-delete-symbolic',
-                                                                    style_class: 'popup-menu-icon',
-                                                                    x_align: Clutter.ActorAlign.END }) });
+                                                                    style_class: 'popup-menu-icon' }) });
             getActor(subItem).add_child(deleteButton);
             
             deleteButton.connect('clicked', () => {

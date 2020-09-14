@@ -73,7 +73,8 @@ Object.keys(ThemedIconNames).forEach(key => {
     });
 });
 
-// wrapper around an image file. If not subclassed, it is used with drawing files (.json) and it takes { displayName, contentType, base64, hash } as params.
+// Wrapper around image data. If not subclassed, it is used when loading in the area an image element for a drawing file (.json)
+// and it takes { displayName, contentType, base64, hash } as params.
 var Image = new Lang.Class({
     Name: 'DrawOnYourScreenImage',
     
@@ -199,6 +200,21 @@ const ImageWithGicon = new Lang.Class({
     }
 });
 
+// It is directly generated from a Json object, without an image file. It takes { bytes, displayName, gicon } as params.
+const ImageFromJson = new Lang.Class({
+    Name: 'DrawOnYourScreenImageFromJson',
+    Extends: Image,
+    contentType: 'image/svg+xml',
+    
+    get bytes() {
+        return this._bytes;
+    },
+    
+    set bytes(bytes) {
+        this._bytes = bytes;
+    }
+});
+
 // Access images with getPrevious, getNext, getSorted or by iterating over it.
 var Images = {
     _images: [],
@@ -287,13 +303,13 @@ var Images = {
     
     getNext: function(currentImage) {
         let images = this.getSorted();
-        let index = currentImage ? images.findIndex(image => image.file.equal(currentImage.file)) : -1;
+        let index = currentImage && currentImage.file ? images.findIndex(image => image.file.equal(currentImage.file)) : -1;
         return images[index == images.length - 1 ? 0 : index + 1] || null;
     },
     
     getPrevious: function(currentImage) {
         let images = this.getSorted();
-        let index = currentImage ? images.findIndex(image => image.file.equal(currentImage.file)) : -1;
+        let index = currentImage && currentImage.file ? images.findIndex(image => image.file.equal(currentImage.file)) : -1;
         return images[index <= 0 ? images.length - 1 : index - 1] || null;
     },
     
@@ -330,7 +346,7 @@ var Images = {
     }
 };
 
-// wrapper around a json file
+// Wrapper around a json file (drawing saves).
 var Json = new Lang.Class({
     Name: 'DrawOnYourScreenJson',
     
@@ -390,12 +406,20 @@ var Json = new Lang.Class({
         this._contents = contents;
     },
     
-    createGicon: function(content) {
-        let bytes = new GLib.Bytes(content);
-        this.gicon = Gio.BytesIcon.new(bytes);
+    createGicon: function(svgContent) {
+        this.svgBytes = new GLib.Bytes(svgContent);
+        this.gicon = Gio.BytesIcon.new(this.svgBytes);
+    },
+    
+    get image() {
+        if (!this._image)
+            this._image = new ImageFromJson({ bytes: this.svgBytes, gicon: this.gicon, displayName: this.displayName });
+        
+        return this._image;
     }
 });
 
+// Access jsons with getPersistent, getDated, getNamed, getPrevious, getNext, getSorted or by iterating over it.
 var Jsons = {
     _jsons: [],
     _upToDate: false,

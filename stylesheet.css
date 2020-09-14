@@ -44,7 +44,7 @@
     padding-bottom: .3em;
 }
 
-.draw-on-your-screen-menu .popup-menu-icon {
+.draw-on-your-screen-menu .popup-menu-item > .popup-menu-icon {
     icon-size: 1em; /* default: 1.09 */
     padding-top: 0.03em;
 }
@@ -120,8 +120,16 @@
     padding: 0.35em 0.57em;
 }
 
-.draw-on-your-screen-menu-delete-button:hover {
-    color: #f57900;
+.draw-on-your-screen-menu-delete-button, .draw-on-your-screen-menu-insert-button {
+    min-height: 1px;
+    padding: 2px 4px; /* default 3px 24px */
 }
- 
- 
+
+.draw-on-your-screen-menu-delete-button:hover {
+    color: #e01b24; /* upstream destructive color, light: #e01b24, dark: #b2161d */
+}
+
+.draw-on-your-screen-menu-delete-button .popup-menu-icon, .draw-on-your-screen-menu-insert-button .popup-menu-icon {
+    icon-size: 0.85em; /* default 1.09 */
+}
+
