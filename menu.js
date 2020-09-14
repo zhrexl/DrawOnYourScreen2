@@ -495,7 +495,7 @@ var DrawingMenu = new Lang.Class({
         this.colorSubMenu.removeAll();
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             this.area.colors.forEach(color => {
-                let text = color.string || color.to_string();
+                let text = String(color);
                 let subItem = this.colorSubMenu.addAction(text, () => {
                     this.area.currentColor = color;
                     this.colorItem.icon.set_style(`color:${color.to_string().slice(0, 7)};`);

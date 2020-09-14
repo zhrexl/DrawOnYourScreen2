@@ -64,12 +64,14 @@ Object.defineProperty(Tools, 'getNameOf', { enumerable: false });
 
 const getClutterColorFromString = function(string, fallback) {
     let [success, color] = Clutter.Color.from_string(string);
-    color.string = string;
+    color.toString = () => string;
     if (success)
         return color;
     
     log(`${Me.metadata.uuid}: "${string}" color cannot be parsed.`);
-    return Clutter.Color.get_static(Clutter.StaticColor[fallback]);
+    color = Clutter.Color.get_static(Clutter.StaticColor[fallback.toUpperCase()]);
+    color.toString = () => fallback.slice(0, 1).toUpperCase() + fallback.slice(1);
+    return color;
 };
 
 // DrawingArea is the widget in which we draw, thanks to Cairo.
@@ -150,7 +152,7 @@ var DrawingArea = new Lang.Class({
     
     set currentPalette(palette) {
         this._currentPalette = palette;
-        this.colors = palette[1].map(colorString => getClutterColorFromString(colorString, 'WHITE'));
+        this.colors = palette[1].map(colorString => getClutterColorFromString(colorString, 'white'));
         if (!this.colors[0])
             this.colors.push(Clutter.Color.get_static(Clutter.StaticColor.WHITE));
     },
@@ -252,9 +254,9 @@ var DrawingArea = new Lang.Class({
             this.squareAreaSize = Me.drawingSettings.get_uint('square-area-size');
         }
         
-        this.areaBackgroundColor = getClutterColorFromString(Me.drawingSettings.get_string('background-color'), 'BLACK');
+        this.areaBackgroundColor = getClutterColorFromString(Me.drawingSettings.get_string('background-color'), 'black');
         
-        this.gridColor = getClutterColorFromString(Me.drawingSettings.get_string('grid-color'), 'GRAY');
+        this.gridColor = getClutterColorFromString(Me.drawingSettings.get_string('grid-color'), 'gray');
         if (Me.drawingSettings.get_boolean('grid-line-auto')) {
             this.gridLineSpacing = Math.round(this.monitor.width / (5 * GRID_TILES_HORIZONTAL_NUMBER));
             this.gridLineWidth = this.gridLineSpacing / 20;
@@ -601,9 +603,9 @@ var DrawingArea = new Lang.Class({
         if (this.currentTool == Shapes.TEXT) {
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
-                color: this.currentColor.to_string(),
+                color: this.currentColor,
                 eraser: eraser,
-                font: this.currentFont.to_string(),
+                font: this.currentFont.copy(),
                 // Translators: initial content of the text area
                 text: pgettext("text-area-content", "Text"),
                 textRightAligned: this.currentTextRightAligned,
@@ -612,7 +614,7 @@ var DrawingArea = new Lang.Class({
         } else if (this.currentTool == Shapes.IMAGE) {
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
-                color: this.currentColor.to_string(),
+                color: this.currentColor,
                 eraser: eraser,
                 image: this.currentImage,
                 operator: this.currentOperator,
@@ -621,7 +623,7 @@ var DrawingArea = new Lang.Class({
         } else {
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
-                color: this.currentColor.to_string(),
+                color: this.currentColor,
                 eraser: eraser,
                 fill: this.fill,
                 fillRule: this.currentFillRule,
@@ -900,11 +902,11 @@ var DrawingArea = new Lang.Class({
         
         this.currentColor = this.colors[index];
         if (this.currentElement) {
-            this.currentElement.color = this.currentColor.to_string();
+            this.currentElement.color = this.currentColor;
             this._redisplay();
         }
         // Foreground color markup is not displayed since 3.36, use style instead but the transparency is lost.
-        this.emit('show-osd', Files.Icons.COLOR, this.currentColor.string || this.currentColor.to_string(), this.currentColor.to_string().slice(0, 7), -1, false);
+        this.emit('show-osd', Files.Icons.COLOR, String(this.currentColor), this.currentColor.to_string().slice(0, 7), -1, false);
     },
     
     selectTool: function(tool) {
@@ -1107,6 +1109,10 @@ var DrawingArea = new Lang.Class({
         let elements = [];
         
         elements.push(...JSON.parse(json.contents).map(object => {
+            if (object.color)
+                object.color = getClutterColorFromString(object.color, 'white');
+            if (object.font && typeof object.font == 'string')
+                object.font = Pango.FontDescription.from_string(object.font);
             if (object.image)
                 object.image = new Files.Image(object.image);
             return new Elements.DrawingElement(object);
@@ -1137,7 +1143,7 @@ var DrawingArea = new Lang.Class({
         let content = `<svg viewBox="0 0 ${this.width} ${this.height}" ${prefixes}>`;
         if (SVG_DEBUG_EXTENDS)
             content = `<svg viewBox="${-this.width} ${-this.height} ${2 * this.width} ${2 * this.height}" xmlns="http://www.w3.org/2000/svg">`;
-        let backgroundColorString = this.hasBackground ? this.areaBackgroundColor.to_string() : 'transparent';
+        let backgroundColorString = this.hasBackground ? String(this.areaBackgroundColor) : 'transparent';
         if (backgroundColorString != 'transparent') {
             content += `\n  <rect id="background" width="100%" height="100%" fill="${backgroundColorString}"/>`;
         }
@@ -1219,6 +1225,10 @@ var DrawingArea = new Lang.Class({
             return;
         
         this.elements.push(...JSON.parse(json.contents).map(object => {
+            if (object.color)
+                object.color = getClutterColorFromString(object.color, 'white');
+            if (object.font && typeof object.font == 'string')
+                object.font = Pango.FontDescription.from_string(object.font);
             if (object.image)
                 object.image = new Files.Image(object.image);
             return new Elements.DrawingElement(object);

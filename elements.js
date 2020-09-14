@@ -81,20 +81,19 @@ const _DrawingElement = new Lang.Class({
         if (params.transformations === undefined)
             this.transformations = [];
         
-        if (params.font && typeof params.font != 'string') {
+        if (params.font && !(params.font instanceof Pango.FontDescription)) {
             // compatibility with v6.2-
             if (params.font.weight === 0)
                 this.font.weight = 400;
             else if (params.font.weight === 1)
                 this.font.weight = 700;
-            let font = new Pango.FontDescription();
+            this.font = new Pango.FontDescription();
             ['family', 'weight', 'style', 'stretch', 'variant'].forEach(attribute => {
                 if (params.font[attribute] !== undefined)
                     try {
-                        font[`set_${attribute}`](params.font[attribute]);
+                        this.font[`set_${attribute}`](params.font[attribute]);
                     } catch(e) {}
             });
-            this.font = font.to_string();
         }
         
         if (params.transform && params.transform.center) {
@@ -114,7 +113,7 @@ const _DrawingElement = new Lang.Class({
     toJSON: function() {
         return {
             shape: this.shape,
-            color: this.color,
+            color: this.color.toString(),
             line: this.line,
             dash: this.dash,
             fill: this.fill,
@@ -126,11 +125,8 @@ const _DrawingElement = new Lang.Class({
     },
     
     buildCairo: function(cr, params) {
-        if (this.color) {
-            let [success, color] = Clutter.Color.from_string(this.color);
-            if (success)
-                Clutter.cairo_set_source_color(cr, color);
-        }
+        if (this.color)
+            Clutter.cairo_set_source_color(cr, this.color);
         
         if (this.showSymmetryElement) {
             let transformation = this.lastTransformation;
@@ -256,7 +252,7 @@ const _DrawingElement = new Lang.Class({
         return inElement;
     },
     
-    buildSVG: function(bgColor) {
+    buildSVG: function(bgcolorString) {
         let transAttribute = '';
         this.transformations.slice(0).reverse().forEach(transformation => {
             transAttribute += transAttribute ? ' ' : ' transform="';
@@ -284,13 +280,13 @@ const _DrawingElement = new Lang.Class({
         });
         transAttribute += transAttribute ? '"' : '';
         
-        return this._drawSvg(transAttribute);
+        return this._drawSvg(transAttribute, bgcolorString);
     },
     
-    _drawSvg: function(transAttribute) {
+    _drawSvg: function(transAttribute, bgcolorString) {
         let row = "\n  ";
         let points = this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100]);
-        let color = this.eraser ? bgColor : this.color;
+        let color = this.eraser ? bgcolorString : this.color.toString();
         let fill = this.fill && !this.isStraightLine;
         let attributes = '';
         
@@ -605,18 +601,13 @@ const TextElement = new Lang.Class({
     Name: 'DrawOnYourScreenTextElement',
     Extends: _DrawingElement,
     
-    _init: function(params) {
-        this.parent(params);
-        this.font = Pango.FontDescription.from_string(this.font);
-    },
-    
     toJSON: function() {
         // The font size is useless because it is always computed from the points during cairo/svg building.
         this.font.unset_fields(Pango.FontMask.SIZE);
         
         return {
             shape: this.shape,
-            color: this.color,
+            color: this.color.toString(),
             eraser: this.eraser,
             transformations: this.transformations,
             text: this.text,
@@ -683,10 +674,10 @@ const TextElement = new Lang.Class({
         return cr.inFill(x, y);
     },
     
-    _drawSvg: function(transAttribute) {
+    _drawSvg: function(transAttribute, bgcolorString) {
         let row = "\n  ";
         let [x, y, height] = [Math.round(this.x*100)/100, Math.round(this.y*100)/100, Math.round(this.height*100)/100];
-        let color = this.eraser ? bgColor : this.color;
+        let color = this.eraser ? bgcolorString : this.color.toString();
         let attributes = '';
         
         if (this.points.length == 2) {
@@ -760,7 +751,7 @@ const ImageElement = new Lang.Class({
     toJSON: function() {
         return {
             shape: this.shape,
-            color: this.color,
+            color: this.color.toString(),
             fill: this.fill,
             eraser: this.eraser,
             transformations: this.transformations,
