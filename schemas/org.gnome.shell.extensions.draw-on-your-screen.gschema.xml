@@ -164,7 +164,7 @@
       <summary>Save drawing</summary>
     </key>
     <key type="as" name="save-as-svg">
-      <default>["&lt;Primary&gt;&lt;Shift&gt;s"]</default>
+      <default>["&lt;Primary&gt;&lt;Alt&gt;s"]</default>
       <summary>Save drawing as a SVG file</summary>
     </key>
     <key type="as" name="select-color1">
@@ -281,7 +281,7 @@
       <summary>Change font family (reverse)</summary>
     </key>
     <key type="as" name="switch-font-style">
-      <default>["&lt;Primary&gt;&lt;Shift&gt;w"]</default>
+      <default>["&lt;Primary&gt;&lt;Alt&gt;w"]</default>
       <summary>Change font style</summary>
     </key>
     <key type="as" name="switch-font-weight">
@@ -305,7 +305,7 @@
       <summary>Change linejoin</summary>
     </key>
     <key type="as" name="switch-text-alignment">
-      <default>["&lt;Primary&gt;&lt;Shift&gt;a"]</default>
+      <default>["&lt;Primary&gt;&lt;Alt&gt;a"]</default>
       <summary>Toggle text alignment</summary>
     </key>
     <key type="as" name="toggle-background">
