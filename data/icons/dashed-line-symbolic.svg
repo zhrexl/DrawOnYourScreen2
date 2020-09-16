@@ -1,5 +1,5 @@
 <svg viewBox="0 0 576 576" xmlns="http://www.w3.org/2000/svg">
-  <rect fill="#474747" stroke="transparent" x="228" y="228" width="120" height="120"/>
-  <rect fill="#474747" stroke="transparent" x="50" y="228" width="120" height="120"/>
-  <rect fill="#474747" stroke="transparent" x="406" y="228" width="120" height="120"/>
+  <rect fill="#474747" x="228" y="228" width="120" height="120"/>
+  <rect fill="#474747" x="50" y="228" width="120" height="120"/>
+  <rect fill="#474747" x="406" y="228" width="120" height="120"/>
 </svg>

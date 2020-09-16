@@ -275,10 +275,10 @@ var DrawingMenu = new Lang.Class({
         this._addSeparator(this.menu);
         
         this._addDrawingNameItem(this.menu);
-        this._addOpenDrawingSubMenuItem(this.menu, Files.Icons.OPEN);
-        this._addSaveDrawingSubMenuItem(this.menu, Files.Icons.SAVE);
+        this._addOpenDrawingSubMenuItem(this.menu, 'document-open-symbolic');
+        this._addSaveDrawingSubMenuItem(this.menu, 'document-save-as-symbolic');
         
-        this.menu.addAction(getSummary('save-as-svg'), this.area.saveAsSvg.bind(this.area), 'image-x-generic-symbolic');
+        this.menu.addAction(getSummary('save-as-svg'), this.area.saveAsSvg.bind(this.area), Files.Icons.DOCUMENT_EXPORT);
         this.menu.addAction(getSummary('open-preferences'), areaManager.openPreferences.bind(areaManager), 'document-page-setup-symbolic');
         this.menu.addAction(getSummary('toggle-help'), () => { this.close(); this.area.toggleHelp(); }, 'preferences-desktop-keyboard-shortcuts-symbolic');
         
@@ -582,7 +582,7 @@ var DrawingMenu = new Lang.Class({
         this.openDrawingSubMenuItem = item;
         this.openDrawingSubMenu = item.menu;
         item.setSensitive(Boolean(Files.Jsons.getSorted().length));
-        item.icon.set_gicon(icon);
+        item.icon.set_icon_name(icon);
         
         item.menu.itemActivated = item.menu.close;
         
@@ -650,7 +650,7 @@ var DrawingMenu = new Lang.Class({
         this.saveDrawingSubMenuItem = item;
         this._updateSaveDrawingSubMenuItemSensitivity();
         this.saveDrawingSubMenu = item.menu;
-        item.icon.set_gicon(icon);
+        item.icon.set_icon_name(icon);
         
         item.menu.itemActivated = item.menu.close;
         

@@ -37,7 +37,7 @@ const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 const ICON_DIR = Me.dir.get_child('data').get_child('icons');
 const ICON_NAMES = [
-    'arc', 'color', 'dashed-line', 'fillrule-evenodd', 'fillrule-nonzero', 'fill', 'full-line', 'linecap', 'linejoin', 'palette', 'smooth', 'stroke',
+    'arc', 'color', 'dashed-line', 'document-export', 'fillrule-evenodd', 'fillrule-nonzero', 'fill', 'full-line', 'linecap', 'linejoin', 'palette', 'smooth', 'stroke',
     'tool-ellipse', 'tool-line', 'tool-mirror', 'tool-move', 'tool-none', 'tool-polygon', 'tool-polyline', 'tool-rectangle', 'tool-resize',
 ];
 const ThemedIconNames = {
@@ -56,7 +56,7 @@ ICON_NAMES.forEach(name => {
         get: function() {
             if (!this[`_${name}`]) {
                 let file = Gio.File.new_for_path(ICON_DIR.get_child(`${name}-symbolic.svg`).get_path());
-                this[`_${name}`] = file.query_exists(null) ? new Gio.FileIcon({ file }) : new Gio.ThemedIcon({ name: 'error-symbolic' });
+                this[`_${name}`] = file.query_exists(null) ? new Gio.FileIcon({ file }) : new Gio.ThemedIcon({ name: 'action-unavailable-symbolic' });
             }
             return this[`_${name}`];
         }
