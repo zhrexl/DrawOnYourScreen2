@@ -516,6 +516,10 @@ var DrawingArea = new Lang.Class({
         if (duplicate) {
             // deep cloning
             let copy = new this.grabbedElement.constructor(JSON.parse(JSON.stringify(this.grabbedElement)));
+            if (this.grabbedElement.color)
+                copy.color = this.grabbedElement.color;
+            if (this.grabbedElement.font)
+                copy.font = this.grabbedElement.font;
             if (this.grabbedElement.image)
                 copy.image = this.grabbedElement.image;
             this.elements.push(copy);
