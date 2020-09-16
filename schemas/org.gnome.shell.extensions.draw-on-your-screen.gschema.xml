@@ -131,6 +131,10 @@
       <default>["Delete"]</default>
       <summary>Erase last brushstroke</summary>
     </key>
+    <key type="as" name="export-to-svg">
+      <default>["&lt;Primary&gt;&lt;Alt&gt;s"]</default>
+      <summary>Export drawing to a SVG file</summary>
+    </key>
     <key type="as" name="increment-line-width">
       <default><![CDATA[['<Primary>KP_Add','<Primary><Shift>plus']]]></default>
       <summary>Increment line width</summary>
@@ -162,10 +166,6 @@
     <key type="as" name="save-as-json">
       <default>["&lt;Primary&gt;s"]</default>
       <summary>Save drawing</summary>
-    </key>
-    <key type="as" name="save-as-svg">
-      <default>["&lt;Primary&gt;&lt;Alt&gt;s"]</default>
-      <summary>Save drawing as a SVG file</summary>
     </key>
     <key type="as" name="select-color1">
       <default><![CDATA[['<Primary>KP_1','<Primary>1']]]></default>

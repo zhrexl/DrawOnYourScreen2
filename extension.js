@@ -200,8 +200,8 @@ const AreaManager = new Lang.Class({
         
         // available when writing
         this.internalKeybindings2 = {
-            'save-as-svg': this.activeArea.saveAsSvg.bind(this.activeArea),
-            'save-as-json': this.activeArea.saveAsJson.bind(this.activeArea),
+            'export-to-svg': this.activeArea.exportToSvg.bind(this.activeArea),
+            'save-as-json': this.activeArea.saveAsJson.bind(this.activeArea, true, null),
             'open-previous-json': this.activeArea.loadPreviousJson.bind(this.activeArea),
             'open-next-json': this.activeArea.loadNextJson.bind(this.activeArea),
             'toggle-background': this.activeArea.toggleBackground.bind(this.activeArea),

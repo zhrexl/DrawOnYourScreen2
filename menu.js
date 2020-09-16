@@ -30,6 +30,7 @@ const St = imports.gi.St;
 
 const BoxPointer = imports.ui.boxpointer;
 const Config = imports.misc.config;
+const Dash = imports.ui.dash;
 const Main = imports.ui.main;
 const PopupMenu = imports.ui.popupMenu;
 const Slider = imports.ui.slider;
@@ -221,12 +222,17 @@ var DrawingMenu = new Lang.Class({
     _redisplay: function() {
         this.menu.removeAll();
         
-        this.actionButtons = [];
         let groupItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, style_class: 'draw-on-your-screen-menu-group-item' });
-        getActor(groupItem).add_child(this._createActionButton(_("Undo"), this.area.undo.bind(this.area), 'edit-undo-symbolic'));
-        getActor(groupItem).add_child(this._createActionButton(_("Redo"), this.area.redo.bind(this.area), 'edit-redo-symbolic'));
-        getActor(groupItem).add_child(this._createActionButton(_("Erase"), this.area.deleteLastElement.bind(this.area), 'edit-clear-all-symbolic'));
-        getActor(groupItem).add_child(this._createActionButton(_("Smooth"), this.area.smoothLastElement.bind(this.area), Files.Icons.SMOOTH));
+        this.undoButton = new ActionButton(_("Undo"), 'edit-undo-symbolic', this.area.undo.bind(this.area), this._updateActionSensitivity.bind(this));
+        this.redoButton = new ActionButton(_("Redo"), 'edit-redo-symbolic', this.area.redo.bind(this.area), this._updateActionSensitivity.bind(this));
+        this.eraseButton = new ActionButton(_("Erase"), 'edit-clear-all-symbolic', this.area.deleteLastElement.bind(this.area), this._updateActionSensitivity.bind(this));
+        this.smoothButton = new ActionButton(_("Smooth"), Files.Icons.SMOOTH, this.area.smoothLastElement.bind(this.area), this._updateActionSensitivity.bind(this));
+        this.eraseButton.child.add_style_class_name('draw-on-your-screen-menu-destructive-button');
+        this.smoothButton.child.add_style_class_name('draw-on-your-screen-menu-destructive-button');
+        getActor(groupItem).add_child(this.undoButton);
+        getActor(groupItem).add_child(this.redoButton);
+        getActor(groupItem).add_child(this.eraseButton);
+        getActor(groupItem).add_child(this.smoothButton);
         this.menu.addMenuItem(groupItem);
         this._addSeparator(this.menu, true);
         
@@ -275,40 +281,33 @@ var DrawingMenu = new Lang.Class({
         this._addSeparator(this.menu);
         
         this._addDrawingNameItem(this.menu);
-        this._addOpenDrawingSubMenuItem(this.menu, 'document-open-symbolic');
-        this._addSaveDrawingSubMenuItem(this.menu, 'document-save-as-symbolic');
+        this._addOpenDrawingSubMenuItem(this.menu, _("Open drawing"), 'document-open-symbolic');
+        this._addSaveDrawingSubMenuItem(this.menu, _("Save drawing as…"), 'document-save-as-symbolic');
+        this._addSeparator(this.menu);
         
-        this.menu.addAction(getSummary('save-as-svg'), this.area.saveAsSvg.bind(this.area), Files.Icons.DOCUMENT_EXPORT);
-        this.menu.addAction(getSummary('open-preferences'), areaManager.openPreferences.bind(areaManager), 'document-page-setup-symbolic');
-        this.menu.addAction(getSummary('toggle-help'), () => { this.close(); this.area.toggleHelp(); }, 'preferences-desktop-keyboard-shortcuts-symbolic');
+        groupItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, style_class: 'draw-on-your-screen-menu-group-item' });
+        this.saveButton = new ActionButton(getSummary('save-as-json'), 'document-save-symbolic', this.area.saveAsJson.bind(this.area, false, this._onDrawingSaved.bind(this)), null);
+        this.svgButton = new ActionButton(getSummary('export-to-svg'), Files.Icons.DOCUMENT_EXPORT, this.area.exportToSvg.bind(this.area), null);
+        this.prefsButton = new ActionButton(getSummary('open-preferences'), 'document-page-setup-symbolic', areaManager.openPreferences.bind(areaManager), null);
+        this.helpButton = new ActionButton(getSummary('toggle-help'), 'preferences-desktop-keyboard-shortcuts-symbolic', () => { this.close(); this.area.toggleHelp(); }, null);
+        getActor(groupItem).add_child(this.saveButton);
+        getActor(groupItem).add_child(this.svgButton);
+        getActor(groupItem).add_child(this.prefsButton);
+        getActor(groupItem).add_child(this.helpButton);
+        this.menu.addMenuItem(groupItem);
         
         this._updateActionSensitivity();
         this._updateSectionVisibility();
     },
     
-    // from system.js (GS 3.34-)
-    _createActionButton: function(accessibleName, callback, icon) {
-        let button = new St.Button({ track_hover: true,
-                                     x_align: Clutter.ActorAlign.CENTER,
-                                     accessible_name: accessibleName,
-                                     // use 'popup-menu' and 'popup-menu-item' style classes to provide theme colors
-                                     style_class: 'system-menu-action popup-menu-item popup-menu' });
-        button.child = new St.Icon(typeof icon == 'string' ? { icon_name: icon } : { gicon: icon });
-        button.connect('clicked', () => {
-            callback();
-            this._updateActionSensitivity();
-        });
-        button.bind_property('reactive', button, 'can_focus', GObject.BindingFlags.DEFAULT);
-        this.actionButtons.push(button);
-        return new St.Bin({ child: button, x_expand: true });
-    },
-    
     _updateActionSensitivity: function() {
-        let [undoButton, redoButton, eraseButton, smoothButton] = this.actionButtons;
-        undoButton.reactive = this.area.elements.length > 0;
-        redoButton.reactive = this.area.undoneElements.length > 0;
-        eraseButton.reactive = this.area.elements.length > 0;
-        smoothButton.reactive = this.area.elements.length > 0 && this.area.elements[this.area.elements.length - 1].shape == this.drawingTools.NONE;
+        this.undoButton.child.reactive = this.area.elements.length > 0;
+        this.redoButton.child.reactive = this.area.undoneElements.length > 0;
+        this.eraseButton.child.reactive = this.area.elements.length > 0;
+        this.smoothButton.child.reactive = this.area.elements.length > 0 && this.area.elements[this.area.elements.length - 1].shape == this.drawingTools.NONE;
+        this.saveButton.child.reactive = this.area.elements.length > 0;
+        this.svgButton.child.reactive = this.area.elements.length > 0;
+        this.saveDrawingSubMenuItem.setSensitive(this.area.elements.length > 0);
     },
     
     _updateSectionVisibility: function() {
@@ -577,8 +576,8 @@ var DrawingMenu = new Lang.Class({
         }
     },
     
-    _addOpenDrawingSubMenuItem: function(menu, icon) {
-        let item = new PopupMenu.PopupSubMenuMenuItem(_("Open drawing"), true);
+    _addOpenDrawingSubMenuItem: function(menu, label, icon) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(label, true);
         this.openDrawingSubMenuItem = item;
         this.openDrawingSubMenu = item.menu;
         item.setSensitive(Boolean(Files.Jsons.getSorted().length));
@@ -605,7 +604,7 @@ var DrawingMenu = new Lang.Class({
             let subItem = this.openDrawingSubMenu.addAction(`<i>${String(json)}</i>`, () => {
                 this.area.loadJson(json);
                 this._updateDrawingNameMenuItem();
-                this._updateSaveDrawingSubMenuItemSensitivity();
+                this._updateActionSensitivity();
             }, json.gicon);
             
             subItem.label.get_clutter_text().set_use_markup(true);
@@ -617,7 +616,7 @@ var DrawingMenu = new Lang.Class({
             });
             getActor(subItem).add_child(expander);
             
-            let insertButton = new St.Button({ style_class: 'button draw-on-your-screen-menu-insert-button',
+            let insertButton = new St.Button({ style_class: 'button draw-on-your-screen-menu-inline-button',
                                                child: new St.Icon({ icon_name: 'insert-image-symbolic',
                                                                     style_class: 'popup-menu-icon' }) });
             getActor(subItem).add_child(insertButton);
@@ -630,7 +629,7 @@ var DrawingMenu = new Lang.Class({
                 this._updateSectionVisibility();
             });
             
-            let deleteButton = new St.Button({ style_class: 'button draw-on-your-screen-menu-delete-button',
+            let deleteButton = new St.Button({ style_class: 'button draw-on-your-screen-menu-inline-button draw-on-your-screen-menu-destructive-button',
                                                child: new St.Icon({ icon_name: 'edit-delete-symbolic',
                                                                     style_class: 'popup-menu-icon' }) });
             getActor(subItem).add_child(deleteButton);
@@ -645,10 +644,9 @@ var DrawingMenu = new Lang.Class({
         this.openDrawingSubMenuItem.setSensitive(!this.openDrawingSubMenu.isEmpty());
     },
     
-    _addSaveDrawingSubMenuItem: function(menu, icon) {
-        let item = new PopupMenu.PopupSubMenuMenuItem(getSummary('save-as-json'), true);
+    _addSaveDrawingSubMenuItem: function(menu, label, icon) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(label, true);
         this.saveDrawingSubMenuItem = item;
-        this._updateSaveDrawingSubMenuItemSensitivity();
         this.saveDrawingSubMenu = item.menu;
         item.icon.set_icon_name(icon);
         
@@ -674,13 +672,14 @@ var DrawingMenu = new Lang.Class({
     
     _populateSaveDrawingSubMenu: function() {
         this.saveDrawingSubMenu.removeAll();
-        let saveEntry = new DrawingMenuEntry({ initialTextGetter: Files.getDateString,
-                                                entryActivateCallback: (text) => {
-                                                    this.area.saveAsJsonWithName(text, this._onDrawingSaved.bind(this));
-                                                    this.saveDrawingSubMenu.toggle();
-                                                },
-                                                invalidStrings: [Me.metadata['persistent-file-name'], '/'],
-                                                primaryIconName: 'insert-text' });
+        let saveEntry = new Entry({ initialTextGetter: () => this.area.currentJson ? this.area.currentJson.name : "",
+                                    hint_text: _("Type a name"),
+                                    entryActivateCallback: (text) => {
+                                        this.area.saveAsJsonWithName(text, this._onDrawingSaved.bind(this));
+                                        this.saveDrawingSubMenu.toggle();
+                                    },
+                                    invalidStrings: [Me.metadata['persistent-file-name'], '/'],
+                                    primaryIconName: 'insert-text' });
         this.saveDrawingSubMenu.addMenuItem(saveEntry.item);
     },
     
@@ -712,8 +711,51 @@ const updateSubMenuAdjustment = function(itemActor) {
         adjustment.set_value(newScrollValue);
 };
 
+// An action button that uses upstream dash item tooltips.
+const ActionButton = new Lang.Class({
+    Name: 'DrawOnYourScreenDrawingMenuActionButton',
+    Extends: St.Bin,
+    _labelShowing: false,
+    _resetHoverTimeoutId: 0,
+    _showLabelTimeoutId: 0,
+    showLabel: Dash.DashItemContainer.prototype.showLabel,
+    hideLabel: Dash.DashItemContainer.prototype.hideLabel,
+    _syncLabel: Dash.Dash.prototype._syncLabel,
+    
+    _init: function(name, icon, callback, callbackAfter) {
+        this._labelText = name;
+        
+        let button = new St.Button({ track_hover: true,
+                                     x_align: Clutter.ActorAlign.CENTER,
+                                     accessible_name: name,
+                                     // use 'popup-menu' and 'popup-menu-item' style classes to provide theme colors
+                                     //style_class: 'system-menu-action popup-menu-item popup-menu' });
+                                     style_class: 'button draw-on-your-screen-menu-action-button' });
+        button.child = new St.Icon(typeof icon == 'string' ? { icon_name: icon } : { gicon: icon });
+        button.connect('clicked', () => {
+            callback();
+            if (callbackAfter)
+                callbackAfter();
+        });
+        button.bind_property('reactive', button, 'can_focus', GObject.BindingFlags.DEFAULT);
+        button.connect('notify::hover', () => this._syncLabel(this));
+        
+        this.parent({ child: button, x_expand: true });
+    },
+    
+    get label() {
+        if (!this._label) {
+            this._label = new St.Label({ style_class: 'dash-label' });
+            Main.layoutManager.uiGroup.add_actor(this._label);
+            this.connect('destroy', () => this._label.destroy());
+        }
+        
+        return this._label;
+    }
+});
+
 // based on searchItem.js, https://github.com/leonardo-bartoli/gnome-shell-extension-Recents
-const DrawingMenuEntry = new Lang.Class({
+const Entry = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingMenuEntry',
     
     _init: function(params) {
@@ -726,6 +768,7 @@ const DrawingMenuEntry = new Lang.Class({
         this.itemActor = GS_VERSION < '3.33.0' ? this.item.actor : this.item;
         
         this.entry = new St.Entry({
+            hint_text: params.hint_text || "",
             style_class: 'search-entry draw-on-your-screen-menu-entry',
             track_hover: true,
             reactive: true,

@@ -1139,7 +1139,7 @@ var DrawingArea = new Lang.Class({
         return [getGiconSvgContent, getImageSvgContent];
     },
     
-    saveAsSvg: function() {
+    exportToSvg: function() {
         // stop drawing or writing
         if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting) {
             this._stopWriting();
@@ -1204,8 +1204,8 @@ var DrawingArea = new Lang.Class({
         this._saveAsJson(Files.Jsons.getNamed(name), false, callback);
     },
     
-    saveAsJson: function() {
-        this._saveAsJson(Files.Jsons.getDated(), true);
+    saveAsJson: function(notify, callback) {
+        this._saveAsJson(Files.Jsons.getDated(), notify, callback);
     },
     
     savePersistent: function() {

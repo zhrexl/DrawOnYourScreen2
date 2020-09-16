@@ -52,7 +52,7 @@ var INTERNAL_KEYBINDINGS = [
     ['switch-font-family', 'switch-font-family-reverse', 'switch-font-weight', 'switch-font-style', 'switch-text-alignment'],
     ['switch-image-file', 'switch-image-file-reverse', 'paste-image-files'],
     ['toggle-panel-and-dock-visibility', 'toggle-background', 'toggle-grid', 'toggle-square-area'],
-    ['open-next-json', 'open-previous-json', 'save-as-json', 'save-as-svg', 'open-preferences', 'toggle-help'],
+    ['open-next-json', 'open-previous-json', 'save-as-json', 'export-to-svg', 'open-preferences', 'toggle-help'],
 ];
 
 if (GS_VERSION < '3.36') {

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2020-09-11 03:43+0200\n"
+"POT-Creation-Date: 2020-09-16 21:11+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -272,13 +272,19 @@ msgstr ""
 msgid "Smooth"
 msgstr ""
 
+msgid "Open drawing"
+msgstr ""
+
+msgid "Save drawing as…"
+msgstr ""
+
 msgid "Palette"
 msgstr ""
 
 msgid "Color"
 msgstr ""
 
-msgid "Open drawing"
+msgid "Type a name"
 msgstr ""
 
 #. Translators: "Preferences" page in preferences
@@ -535,6 +541,9 @@ msgstr ""
 msgid "Erase last brushstroke"
 msgstr ""
 
+msgid "Export drawing to a SVG file"
+msgstr ""
+
 msgid "Increment line width"
 msgstr ""
 
@@ -557,9 +566,6 @@ msgid "Redo last brushstroke"
 msgstr ""
 
 msgid "Save drawing"
-msgstr ""
-
-msgid "Save drawing as a SVG file"
 msgstr ""
 
 msgid "Select color 1"
