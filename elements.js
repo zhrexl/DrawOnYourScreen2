@@ -253,32 +253,60 @@ const _DrawingElement = new Lang.Class({
     },
     
     buildSVG: function(bgcolorString) {
-        let transAttribute = '';
+        let transforms = [];
         this.transformations.slice(0).reverse().forEach(transformation => {
-            transAttribute += transAttribute ? ' ' : ' transform="';
             let center = this._getTransformedCenter(transformation);
             
             if (transformation.type == Transformations.TRANSLATION) {
-                transAttribute += `translate(${transformation.slideX},${transformation.slideY})`;
+                transforms.push(['translate', transformation.slideX, transformation.slideY]);
             } else if (transformation.type == Transformations.ROTATION) {
-                transAttribute += `translate(${center[0]},${center[1]}) `;
-                transAttribute += `rotate(${transformation.angle * RADIAN}) `;
-                transAttribute += `translate(${-center[0]},${-center[1]})`;
+                transforms.push(['translate', center[0], center[1]]);
+                transforms.push(['rotate', transformation.angle * RADIAN]);
+                transforms.push(['translate', -center[0], -center[1]]);
             } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.STRETCH) {
-                transAttribute += `translate(${center[0]},${center[1]}) `;
-                transAttribute += `rotate(${transformation.angle * RADIAN}) `;
-                transAttribute += `scale(${transformation.scaleX},${transformation.scaleY}) `;
-                transAttribute += `rotate(${-transformation.angle * RADIAN}) `;
-                transAttribute += `translate(${-center[0]},${-center[1]})`;
+                transforms.push(['translate', center[0], center[1]]);
+                transforms.push(['rotate', transformation.angle * RADIAN]);
+                transforms.push(['scale', transformation.scaleX, transformation.scaleY]);
+                transforms.push(['rotate', -transformation.angle * RADIAN]);
+                transforms.push(['translate', -center[0], -center[1]]);
             } else if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION) {
-                transAttribute += `translate(${transformation.slideX}, ${transformation.slideY}) `;
-                transAttribute += `rotate(${transformation.angle * RADIAN}) `;
-                transAttribute += `scale(${transformation.scaleX}, ${transformation.scaleY}) `;
-                transAttribute += `rotate(${-transformation.angle * RADIAN}) `;
-                transAttribute += `translate(${-transformation.slideX}, ${-transformation.slideY})`;
+                transforms.push(['translate', transformation.slideX, transformation.slideY]);
+                transforms.push(['rotate', transformation.angle * RADIAN]);
+                transforms.push(['scale', transformation.scaleX, transformation.scaleY]);
+                transforms.push(['rotate', -transformation.angle * RADIAN]);
+                transforms.push(['translate', -transformation.slideX, -transformation.slideY]);
             }
         });
-        transAttribute += transAttribute ? '"' : '';
+            
+        let grouped = [];
+        transforms.forEach((transform, index) => {
+            let [type, ...values] = transform;
+            
+            if (grouped.length && grouped[grouped.length - 1][0] == type)
+                values.forEach((value, valueIndex) => grouped[grouped.length - 1][valueIndex + 1] += value);
+            else
+                grouped.push(transform);
+        });
+        
+        let filtered = grouped.filter(transform => {
+            let [type, ...values] = transform;
+            
+            if (type == 'scale')
+                return values.some(value => value != 1);
+            else
+                return values.some(value => value != 0);
+        });
+        
+        let transAttribute = '';
+        if (filtered.length) {
+            transAttribute = ' transform="';
+            filtered.forEach((transform, index) => {
+                let [type, ...values] = transform;
+                transAttribute += `${index == 0 ? '' : ' '}${type}(${values.map(value => Number(value).toFixed(2))})`;
+            });
+            
+            transAttribute += '"';
+        }
         
         return this._drawSvg(transAttribute, bgcolorString);
     },
@@ -288,14 +316,14 @@ const _DrawingElement = new Lang.Class({
         let points = this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100]);
         let color = this.eraser ? bgcolorString : this.color.toString();
         let fill = this.fill && !this.isStraightLine;
-        let attributes = '';
+        let attributes = this.eraser ? `class="eraser" ` : '';
         
         if (fill) {
-            attributes = `fill="${color}"`;
+            attributes += `fill="${color}"`;
             if (this.fillRule)
                 attributes += ` fill-rule="${getFillRuleSvgName(this.fillRule)}"`;
         } else {
-            attributes = `fill="none"`;
+            attributes += `fill="none"`;
         }
         
         if (this.line && this.line.lineWidth) {
@@ -307,8 +335,6 @@ const _DrawingElement = new Lang.Class({
                 attributes += ` stroke-linejoin="${getLineJoinSvgName(this.line.lineJoin)}"`;
             if (this.dash && this.dash.active && this.dash.array && this.dash.array[0] && this.dash.array[1])
                 attributes += ` stroke-dasharray="${this.dash.array[0]} ${this.dash.array[1]}" stroke-dashoffset="${this.dash.offset}"`;
-        } else {
-            attributes += ` stroke="none"`;
         }
         
         if (this.shape == Shapes.LINE && points.length == 4) {
@@ -678,14 +704,12 @@ const TextElement = new Lang.Class({
         let row = "\n  ";
         let [x, y, height] = [Math.round(this.x*100)/100, Math.round(this.y*100)/100, Math.round(this.height*100)/100];
         let color = this.eraser ? bgcolorString : this.color.toString();
-        let attributes = '';
+        let attributes = this.eraser ? `class="eraser" ` : '';
         
         if (this.points.length == 2) {
-            attributes = `fill="${color}" ` +
-                         `stroke="transparent" ` +
-                         `stroke-opacity="0" ` +
-                         `font-size="${height}" ` +
-                         `font-family="${this.font.get_family()}"`;
+            attributes += `fill="${color}" ` +
+                          `font-size="${height}" ` +
+                          `font-family="${this.font.get_family()}"`;
             
             // this.font.to_string() is not valid to fill the svg 'font' shorthand property.
             // Each property must be filled separately.
@@ -795,10 +819,10 @@ const ImageElement = new Lang.Class({
     _drawSvg: function(transAttribute) {
         let points = this.points;
         let row = "\n  ";
-        let attributes = '';
+        let attributes = this.eraser ? `class="eraser" ` : '';
         
         if (points.length == 2) {
-            attributes = `fill="none"`;
+            attributes += `fill="none"`;
             row += `<image ${attributes} x="${Math.min(points[0][0], points[1][0])}" y="${Math.min(points[0][1], points[1][1])}" ` +
                    `width="${Math.abs(points[1][0] - points[0][0])}" height="${Math.abs(points[1][1] - points[0][1])}"${transAttribute} ` +
                    `preserveAspectRatio="${this.preserveAspectRatio ? 'xMinYMin' : 'none'}" ` +
