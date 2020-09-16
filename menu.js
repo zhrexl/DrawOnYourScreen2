@@ -599,10 +599,8 @@ var DrawingMenu = new Lang.Class({
     _populateOpenDrawingSubMenu: function() {
         this.openDrawingSubMenu.removeAll();
         Files.Jsons.getSorted().forEach(json => {
-            if (!json.gicon) {
-                let svgContent = this.area.getSvgContentForJson(json);
-                json.createGicon(svgContent);
-            }
+            if (!json.gicon)
+                json.addSvgContents(...this.area.getSvgContentsForJson(json));
             
             let subItem = this.openDrawingSubMenu.addAction(`<i>${String(json)}</i>`, () => {
                 this.area.loadJson(json);

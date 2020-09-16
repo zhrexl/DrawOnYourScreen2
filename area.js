@@ -1105,8 +1105,9 @@ var DrawingArea = new Lang.Class({
     },
     
     // Used by the menu.
-    getSvgContentForJson(json) {
+    getSvgContentsForJson(json) {
         let elements = [];
+        let elementsContent = '';
         
         elements.push(...JSON.parse(json.contents).map(object => {
             if (object.color)
@@ -1117,16 +1118,21 @@ var DrawingArea = new Lang.Class({
                 object.image = new Files.Image(object.image);
             return new Elements.DrawingElement(object);
         }));
-        
-        let size = Math.min(this.monitor.width, this.monitor.height);
-        let [x, y] = [(this.monitor.width - size) / 2, (this.monitor.height - size) / 2];
+        elements.forEach(element => elementsContent += element.buildSVG('transparent'));
         
         let prefixes = 'xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"';
-        let content = `<svg viewBox="${x} ${y} ${size} ${size}" ${prefixes}>`;
-        elements.forEach(element => content += element.buildSVG('transparent'));
-        content += "\n</svg>";
         
-        return content;
+        let getGiconSvgContent = () => {
+            let size = Math.min(this.monitor.width, this.monitor.height);
+            let [x, y] = [(this.monitor.width - size) / 2, (this.monitor.height - size) / 2];
+            return `<svg viewBox="${x} ${y} ${size} ${size}" ${prefixes}>${elementsContent}\n</svg>`;
+        };
+        
+        let getImageSvgContent = () => {
+            return `<svg viewBox="0 0 ${this.width} ${this.height}" ${prefixes}>${elementsContent}\n</svg>`;
+        };
+        
+        return [getGiconSvgContent, getImageSvgContent];
     },
     
     saveAsSvg: function() {

@@ -406,14 +406,15 @@ var Json = new Lang.Class({
         this._contents = contents;
     },
     
-    createGicon: function(svgContent) {
-        this.svgBytes = new GLib.Bytes(svgContent);
-        this.gicon = Gio.BytesIcon.new(this.svgBytes);
+    addSvgContents: function(getGiconSvgContent, getImageSvgContent) {
+        let giconSvgBytes = new GLib.Bytes(getGiconSvgContent());
+        this.gicon = Gio.BytesIcon.new(giconSvgBytes);
+        this.getImageSvgBytes = () => new GLib.Bytes(getImageSvgContent());
     },
     
     get image() {
         if (!this._image)
-            this._image = new ImageFromJson({ bytes: this.svgBytes, gicon: this.gicon, displayName: this.displayName });
+            this._image = new ImageFromJson({ bytes: this.getImageSvgBytes(), gicon: this.gicon, displayName: this.displayName });
         
         return this._image;
     }
