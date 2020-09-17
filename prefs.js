@@ -395,18 +395,27 @@ const PrefsPage = new GObject.Class({
             listBox.add(globalKeybindingsRow);
         });
         
-        let persistentKey = schema.get_key('persistent-drawing');
-        let persistentRow = new PrefRow({ label: persistentKey.get_summary(), desc: persistentKey.get_description() });
-        let persistentSwitch = new Gtk.Switch();
-        settings.bind('persistent-drawing', persistentSwitch, 'active', 0);
-        persistentRow.addWidget(persistentSwitch, true);
-        listBox.add(persistentRow);
+        let persistentOverTogglesKey = schema.get_key('persistent-over-toggles');
+        let persistentOverTogglesRow = new PrefRow({ label: persistentOverTogglesKey.get_summary(), desc: persistentOverTogglesKey.get_description() });
+        let persistentOverTogglesSwitch = new Gtk.Switch();
+        settings.bind('persistent-over-toggles', persistentOverTogglesSwitch, 'active', 0);
+        persistentOverTogglesRow.addWidget(persistentOverTogglesSwitch, true);
+        listBox.add(persistentOverTogglesRow);
+        
+        let persistentOverRestartsKey = schema.get_key('persistent-over-restarts');
+        let persistentOverRestartsRow = new PrefRow({ label: persistentOverRestartsKey.get_summary(), desc: persistentOverRestartsKey.get_description() });
+        let persistentOverRestartsSwitch = new Gtk.Switch();
+        settings.bind('persistent-over-restarts', persistentOverRestartsSwitch, 'active', 0);
+        persistentOverRestartsRow.addWidget(persistentOverRestartsSwitch, true);
+        persistentOverTogglesSwitch.bind_property('active', persistentOverRestartsSwitch, 'sensitive', GObject.BindingFlags.SYNC_CREATE);
+        listBox.add(persistentOverRestartsRow);
         
         let desktopKey = schema.get_key('drawing-on-desktop');
         let desktopRow = new PrefRow({ label: desktopKey.get_summary(), desc: desktopKey.get_description() });
         let desktopSwitch = new Gtk.Switch();
         settings.bind('drawing-on-desktop', desktopSwitch, 'active', 0);
         desktopRow.addWidget(desktopSwitch, true);
+        persistentOverTogglesSwitch.bind_property('active', desktopSwitch, 'sensitive', GObject.BindingFlags.SYNC_CREATE);
         listBox.add(desktopRow);
         
         let osdKey = schema.get_key('osd-disabled');

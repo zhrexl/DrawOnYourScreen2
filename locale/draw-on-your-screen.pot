@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2020-09-16 21:11+0200\n"
+"POT-Creation-Date: 2020-09-17 13:38+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -441,10 +441,16 @@ msgstr ""
 msgid "Disable on-screen notifications"
 msgstr ""
 
-msgid "Persistent"
+msgid "Persistent over toggles"
 msgstr ""
 
-msgid "Persistent drawing through session restart"
+msgid "Drawing remains when toggling drawing mode"
+msgstr ""
+
+msgid "Persistent over restarts"
+msgstr ""
+
+msgid "Drawing is automatically saved to a file"
 msgstr ""
 
 msgid "Enter/leave drawing mode"

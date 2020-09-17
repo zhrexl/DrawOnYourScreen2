@@ -112,19 +112,40 @@ const AreaManager = new Lang.Class({
         this.indicatorSettingHandler = Me.settings.connect('changed::indicator-disabled', this.updateIndicator.bind(this));
         
         this.desktopSettingHandler = Me.settings.connect('changed::drawing-on-desktop', this.onDesktopSettingChanged.bind(this));
-        this.persistentSettingHandler = Me.settings.connect('changed::persistent-drawing', this.onPersistentSettingChanged.bind(this));
+        this.persistentOverRestartsSettingHandler = Me.settings.connect('changed::persistent-over-restarts', this.onPersistentOverRestartsSettingChanged.bind(this));
+        this.persistentOverTogglesSettingHandler = Me.settings.connect('changed::persistent-over-toggles', this.onPersistentOverTogglesSettingChanged.bind(this));
+    },
+    
+    get persistentOverToggles() {
+        return Me.settings.get_boolean('persistent-over-toggles');
+    },
+    
+    get persistentOverRestarts() {
+        return Me.settings.get_boolean('persistent-over-toggles') && Me.settings.get_boolean('persistent-over-restarts');
+    },
+    
+    get onDesktop() {
+        return Me.settings.get_boolean('persistent-over-toggles') && Me.settings.get_boolean('drawing-on-desktop');
     },
     
     onDesktopSettingChanged: function() {
-        if (Me.settings.get_boolean("drawing-on-desktop"))
+        if (this.onDesktop)
             this.areas.forEach(area => area.get_parent().show());
         else
             this.areas.forEach(area => area.get_parent().hide());
     },
     
-    onPersistentSettingChanged: function() {
-        if (Me.settings.get_boolean('persistent-drawing'))
+    onPersistentOverRestartsSettingChanged: function() {
+        if (this.persistentOverRestarts)
             this.areas[Main.layoutManager.primaryIndex].syncPersistent();
+    },
+    
+    onPersistentOverTogglesSettingChanged: function() {
+        if (!this.persistentOverToggles && !this.activeArea)
+            this.eraseDrawings();
+            
+        this.onPersistentOverRestartsSettingChanged();
+        this.onDesktopSettingChanged();
     },
     
     updateIndicator: function() {
@@ -147,13 +168,13 @@ const AreaManager = new Lang.Class({
             let monitor = this.monitors[i];
             let container = new St.Widget({ name: 'drawOnYourSreenContainer' + i });
             let helper = new Helper.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
-            let loadPersistent = i == Main.layoutManager.primaryIndex && Me.settings.get_boolean('persistent-drawing');
+            let loadPersistent = i == Main.layoutManager.primaryIndex && this.persistentOverRestarts;
             let area = new Area.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, loadPersistent);
             container.add_child(area);
             container.add_child(helper);
             
             Main.layoutManager._backgroundGroup.insert_child_above(container, Main.layoutManager._bgManagers[i].backgroundActor);
-            if (!Me.settings.get_boolean("drawing-on-desktop"))
+            if (!this.onDesktop)
                 container.hide();
             
             container.set_position(monitor.x, monitor.y);
@@ -268,7 +289,7 @@ const AreaManager = new Lang.Class({
     eraseDrawings: function() {
         for (let i = 0; i < this.areas.length; i++)
             this.areas[i].erase();
-        if (Me.settings.get_boolean('persistent-drawing'))
+        if (this.persistentOverRestarts)
             this.areas[Main.layoutManager.primaryIndex].savePersistent();
     },
     
@@ -321,7 +342,7 @@ const AreaManager = new Lang.Class({
             Main.uiGroup.set_child_at_index(Main.layoutManager.keyboardBox, this.oldKeyboardIndex);
             Main.uiGroup.remove_actor(activeContainer);
             Main.layoutManager._backgroundGroup.insert_child_above(activeContainer, Main.layoutManager._bgManagers[activeIndex].backgroundActor);
-            if (!Me.settings.get_boolean("drawing-on-desktop"))
+            if (!this.onDesktop)
                 activeContainer.hide();
         } else {
             Main.layoutManager._backgroundGroup.remove_actor(activeContainer);
@@ -364,10 +385,11 @@ const AreaManager = new Lang.Class({
     toggleDrawing: function() {
         if (this.activeArea) {
             let activeIndex = this.areas.indexOf(this.activeArea);
-            let save = activeIndex == Main.layoutManager.primaryIndex && Me.settings.get_boolean('persistent-drawing');
+            let save = activeIndex == Main.layoutManager.primaryIndex && this.persistentOverRestarts;
+            let erase = !this.persistentOverToggles;
             
             this.showOsd(null, Files.Icons.LEAVE, _("Leaving drawing mode"));
-            this.activeArea.leaveDrawingMode(save);
+            this.activeArea.leaveDrawingMode(save, erase);
             if (this.hiddenList)
                 this.togglePanelAndDockOpacity();
             
@@ -513,9 +535,13 @@ const AreaManager = new Lang.Class({
             Me.settings.disconnect(this.desktopSettingHandler);
             this.desktopSettingHandler = null;
         }
-        if (this.persistentSettingHandler) {
-            Me.settings.disconnect(this.persistentSettingHandler);
-            this.persistentSettingHandler = null;
+        if (this.persistentOverTogglesSettingHandler) {
+            Me.settings.disconnect(this.persistentOverTogglesSettingHandler);
+            this.persistentOverTogglesSettingHandler = null;
+        }
+        if (this.persistentOverRestartsSettingHandler) {
+            Me.settings.disconnect(this.persistentOverRestartsSettingHandler);
+            this.persistentOverRestartsSettingHandler = null;
         }
         
         if (this.activeArea)

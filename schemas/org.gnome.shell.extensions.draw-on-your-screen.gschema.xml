@@ -20,10 +20,15 @@
       <default>false</default>
       <summary>Disable on-screen notifications</summary>
     </key>
-    <key type="b" name="persistent-drawing">
+    <key type="b" name="persistent-over-toggles">
+      <default>true</default>
+      <summary>Persistent over toggles</summary>
+      <description>Drawing remains when toggling drawing mode</description>
+    </key>
+    <key type="b" name="persistent-over-restarts">
       <default>false</default>
-      <summary>Persistent</summary>
-      <description>Persistent drawing through session restart</description>
+      <summary>Persistent over restarts</summary>
+      <description>Drawing is automatically saved to a file</description>
     </key>
     <key type="as" name="toggle-drawing">
       <default>["&lt;Alt&gt;&lt;Super&gt;d"]</default>

@@ -1064,7 +1064,7 @@ var DrawingArea = new Lang.Class({
         this.get_parent().set_background_color(this.reactive && this.hasBackground ? this.areaBackgroundColor : null);
     },
     
-    leaveDrawingMode: function(save) {
+    leaveDrawingMode: function(save, erase) {
         if (this.stageKeyPressedHandler) {
             global.stage.disconnect(this.stageKeyPressedHandler);
             this.stageKeyPressedHandler = null;
@@ -1100,7 +1100,10 @@ var DrawingArea = new Lang.Class({
         
         this.currentElement = null;
         this._stopTextCursorTimeout();
-        this._redisplay();
+        if (erase)
+            this.erase();
+        else
+            this._redisplay();
         this.closeMenu();
         this.get_parent().set_background_color(null);
         Files.Images.reset();
