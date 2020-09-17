@@ -94,7 +94,7 @@ const AboutPage = new GObject.Class({
         // Translators: you are free to translate the extension name, that is displayed in About page, or not
         let name = "<b> " + _("Draw On You Screen") + "</b>";
         // Translators: version number in "About" page
-        let version = _("Version %d").format(Me.metadata.version);
+        let version = _("Version %f").format(Me.metadata.version);
         // Translators: you are free to translate the extension description, that is displayed in About page, or not
         let description = _("Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot");
         let link = "<span><a href=\"" + Me.metadata.url + "\">" + Me.metadata.url + "</a></span>";

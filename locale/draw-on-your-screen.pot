@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2020-09-17 13:38+0200\n"
+"POT-Creation-Date: 2020-09-17 22:27+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -305,7 +305,7 @@ msgstr ""
 
 #. Translators: version number in "About" page
 #, javascript-format
-msgid "Version %d"
+msgid "Version %f"
 msgstr ""
 
 #. Translators: you are free to translate the extension description, that is displayed in About page, or not
@@ -415,6 +415,9 @@ msgid "Curve line"
 msgstr ""
 
 msgid "Smooth free drawing outline"
+msgstr ""
+
+msgid "Unlock image ratio"
 msgstr ""
 
 msgid "Rotate <span alpha=\"50%\">(while moving)</span>"
@@ -529,13 +532,13 @@ msgstr ""
 msgid "Automatic square area size"
 msgstr ""
 
-msgid "Compute the size of the square area from the screen size"
+msgid "Compute the area size from the screen size"
 msgstr ""
 
 msgid "Square area size"
 msgstr ""
 
-msgid "The size of the square area in pixels"
+msgid "The size of the area in pixels"
 msgstr ""
 
 msgid "Decrement line width"
@@ -565,7 +568,7 @@ msgstr ""
 msgid "Open previous drawing"
 msgstr ""
 
-msgid "Paste images from the clipboard"
+msgid "Add images from the clipboard"
 msgstr ""
 
 msgid "Redo last brushstroke"
@@ -688,6 +691,7 @@ msgstr ""
 msgid "Hide panel and dock"
 msgstr ""
 
+#. Translators: It is an action: "Make the drawing area a square"
 msgid "Square drawing area"
 msgstr ""
 

@@ -114,13 +114,13 @@
     <key type="b" name="square-area-auto">
       <default>true</default>
       <summary>Automatic square area size</summary>
-      <description>Compute the size of the square area from the screen size</description>
+      <description>Compute the area size from the screen size</description>
     </key>
     <key type="u" name="square-area-size">
       <range min="64" max="32768"/>
       <default>512</default>
       <summary>Square area size</summary>
-      <description>The size of the square area in pixels</description>
+      <description>The size of the area in pixels</description>
     </key>
   </schema>
   <schema path="/org/gnome/shell/extensions/draw-on-your-screen/internal-shortcuts/" id="org.gnome.shell.extensions.draw-on-your-screen.internal-shortcuts">
@@ -162,7 +162,7 @@
     </key>
     <key type="as" name="paste-image-files">
       <default>["&lt;Primary&gt;v"]</default>
-      <summary>Paste images from the clipboard</summary>
+      <summary>Add images from the clipboard</summary>
     </key>
     <key type="as" name="redo">
       <default>["&lt;Primary&gt;&lt;Shift&gt;z"]</default>
@@ -331,6 +331,7 @@
     </key>
     <key type="as" name="toggle-square-area">
       <default>["&lt;Primary&gt;n"]</default>
+      <!-- Translators: It is an action: "Make the drawing area a square" -->
       <summary>Square drawing area</summary>
     </key>
     <key type="as" name="undo">
