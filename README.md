@@ -7,7 +7,7 @@ Then save your beautiful work by taking a screenshot.
 
 ## Features
 
-* Basic shapes (rectangle, circle, ellipse, line, curve, text, image, free)
+* Basic shapes (rectangle, circle, ellipse, line, curve, polygon, polyline, text, image, free)
 * Basic transformations (move, rotate, resize, stretch, mirror, inverse)
 * Smooth stroke
 * Draw over applications

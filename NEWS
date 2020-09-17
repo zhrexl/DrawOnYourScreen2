@@ -1,3 +1,17 @@
+v6.3 - September 2020
+=====================
+
+* Replace user stylesheet with proper drawing settings
+* Multi-palettes
+* Possibility to add insertable images from the clipboard
+* Image directory is configurable
+* Thumbnails in "Open drawing" sub-menu
+* Drawings can be directly inserted as an image.
+* Add a lot of icons in the menu and the OSD notifications
+* Group menu items at the bottom
+* Add tooltips to menu buttons
+* New "Persistent over toggles' setting #42
+
 v6.2 - August 2020
 ==================
 
