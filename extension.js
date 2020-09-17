@@ -1,4 +1,5 @@
 /* jslint esversion: 6 */
+/* exported init */
 
 /*
  * Copyright 2019 Abakkk
@@ -20,22 +21,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 
 const Config = imports.misc.config;
+const ExtensionUtils = imports.misc.extensionUtils;
 const Main = imports.ui.main;
 const OsdWindow = imports.ui.osdWindow;
 const PanelMenu = imports.ui.panelMenu;
 
-const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
 const Area = Me.imports.area;
+const Files = Me.imports.files;
 const Helper = Me.imports.helper;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
@@ -46,94 +46,106 @@ const HIDE_TIMEOUT_LONG = 2500; // ms, default is 1500 ms
 const DRAWING_ACTION_MODE = Math.pow(2,14);
 const WRITING_ACTION_MODE = Math.pow(2,15);
 // use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
-var WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
-
-var manager;
+const WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
 
 function init() {
-    Convenience.initTranslations();
+    return new Extension();
 }
 
-function enable() {
-    manager = new AreaManager();
-}
+const Extension = new Lang.Class({
+    Name: 'DrawOnYourScreenExtension',
+    
+    _init: function() {
+        Convenience.initTranslations();
+    },
 
-function disable() {
-    manager.disable();
-    manager = null;
-}
+    enable() {
+        if (ExtensionUtils.isOutOfDate(Me))
+            log(`${Me.metadata.uuid}: GNOME Shell ${Number.parseFloat(GS_VERSION)} is not supported.`);
+        
+        Me.settings = Convenience.getSettings();
+        Me.internalShortcutSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
+        Me.drawingSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.drawing');
+        this.areaManager = new AreaManager();
+    },
+
+    disable() {
+        this.areaManager.disable();
+        delete this.areaManager;
+        delete Me.settings;
+        delete Me.internalShortcutSettings;
+    }
+});
 
 // AreaManager assigns one DrawingArea per monitor (updateAreas()),
 // distributes keybinding callbacks to the active area
 // and handles stylesheet and monitor changes.
-var AreaManager = new Lang.Class({
+const AreaManager = new Lang.Class({
     Name: 'DrawOnYourScreenAreaManager',
 
     _init: function() {
-        this.settings = Convenience.getSettings();
         this.areas = [];
         this.activeArea = null;
-        this.enterGicon = new Gio.ThemedIcon({ name: 'applications-graphics-symbolic' });
-        this.leaveGicon = new Gio.ThemedIcon({ name: 'application-exit-symbolic' });
         
         Main.wm.addKeybinding('toggle-drawing',
-                              this.settings,
+                              Me.settings,
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
                               this.toggleDrawing.bind(this));
         
         Main.wm.addKeybinding('toggle-modal',
-                              this.settings,
+                              Me.settings,
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
                               this.toggleModal.bind(this));
         
-        Main.wm.addKeybinding('erase-drawing',
-                              this.settings,
+        Main.wm.addKeybinding('erase-drawings',
+                              Me.settings,
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
-                              this.eraseDrawing.bind(this));
+                              this.eraseDrawings.bind(this));
         
         this.updateAreas();
         this.monitorChangedHandler = Main.layoutManager.connect('monitors-changed', this.updateAreas.bind(this));
         
         this.updateIndicator();
-        this.indicatorSettingHandler = this.settings.connect('changed::indicator-disabled', this.updateIndicator.bind(this));
+        this.indicatorSettingHandler = Me.settings.connect('changed::indicator-disabled', this.updateIndicator.bind(this));
         
-        this.desktopSettingHandler = this.settings.connect('changed::drawing-on-desktop', this.onDesktopSettingChanged.bind(this));
-        this.persistentSettingHandler = this.settings.connect('changed::persistent-drawing', this.onPersistentSettingChanged.bind(this));
-        
-        this.userStyleFile = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir'], 'user.css']));
-        
-        if (this.userStyleFile.query_exists(null)) {
-            let theme = St.ThemeContext.get_for_stage(global.stage).get_theme();
-            theme.load_stylesheet(this.userStyleFile);
-        }
-        
-        this.userStyleMonitor = this.userStyleFile.monitor_file(Gio.FileMonitorFlags.WATCH_MOVES, null);
-        this.userStyleHandler = this.userStyleMonitor.connect('changed', (monitor, file, otherFile, eventType) => {
-            // 'CHANGED' events are followed by a 'CHANGES_DONE_HINT' event
-            if (eventType == Gio.FileMonitorEvent.CHANGED || eventType == Gio.FileMonitorEvent.ATTRIBUTE_CHANGED)
-                return;
-            
-            let theme = St.ThemeContext.get_for_stage(global.stage).get_theme();
-            if (theme.get_custom_stylesheets().indexOf(this.userStyleFile) != -1)
-                theme.unload_stylesheet(this.userStyleFile);
-            if (this.userStyleFile.query_exists(null))
-                theme.load_stylesheet(this.userStyleFile);
-        });
+        this.desktopSettingHandler = Me.settings.connect('changed::drawing-on-desktop', this.onDesktopSettingChanged.bind(this));
+        this.persistentOverRestartsSettingHandler = Me.settings.connect('changed::persistent-over-restarts', this.onPersistentOverRestartsSettingChanged.bind(this));
+        this.persistentOverTogglesSettingHandler = Me.settings.connect('changed::persistent-over-toggles', this.onPersistentOverTogglesSettingChanged.bind(this));
+    },
+    
+    get persistentOverToggles() {
+        return Me.settings.get_boolean('persistent-over-toggles');
+    },
+    
+    get persistentOverRestarts() {
+        return Me.settings.get_boolean('persistent-over-toggles') && Me.settings.get_boolean('persistent-over-restarts');
+    },
+    
+    get onDesktop() {
+        return Me.settings.get_boolean('persistent-over-toggles') && Me.settings.get_boolean('drawing-on-desktop');
     },
     
     onDesktopSettingChanged: function() {
-        if (this.settings.get_boolean("drawing-on-desktop"))
+        if (this.onDesktop)
             this.areas.forEach(area => area.get_parent().show());
         else
             this.areas.forEach(area => area.get_parent().hide());
     },
     
-    onPersistentSettingChanged: function() {
-        if (this.settings.get_boolean('persistent-drawing'))
+    onPersistentOverRestartsSettingChanged: function() {
+        if (this.persistentOverRestarts)
             this.areas[Main.layoutManager.primaryIndex].syncPersistent();
+    },
+    
+    onPersistentOverTogglesSettingChanged: function() {
+        if (!this.persistentOverToggles && !this.activeArea)
+            this.eraseDrawings();
+            
+        this.onPersistentOverRestartsSettingChanged();
+        this.onDesktopSettingChanged();
     },
     
     updateIndicator: function() {
@@ -141,7 +153,7 @@ var AreaManager = new Lang.Class({
             this.indicator.disable();
             this.indicator = null;
         }
-        if (!this.settings.get_boolean('indicator-disabled'))
+        if (!Me.settings.get_boolean('indicator-disabled'))
             this.indicator = new DrawingIndicator();
     },
     
@@ -156,13 +168,13 @@ var AreaManager = new Lang.Class({
             let monitor = this.monitors[i];
             let container = new St.Widget({ name: 'drawOnYourSreenContainer' + i });
             let helper = new Helper.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
-            let loadPersistent = i == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
+            let loadPersistent = i == Main.layoutManager.primaryIndex && this.persistentOverRestarts;
             let area = new Area.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, loadPersistent);
             container.add_child(area);
             container.add_child(helper);
             
             Main.layoutManager._backgroundGroup.insert_child_above(container, Main.layoutManager._bgManagers[i].backgroundActor);
-            if (!this.settings.get_boolean("drawing-on-desktop")) 
+            if (!this.onDesktop)
                 container.hide();
             
             container.set_position(monitor.x, monitor.y);
@@ -171,7 +183,6 @@ var AreaManager = new Lang.Class({
             area.leaveDrawingHandler = area.connect('leave-drawing-mode', this.toggleDrawing.bind(this));
             area.updateActionModeHandler = area.connect('update-action-mode', this.updateActionMode.bind(this));
             area.showOsdHandler = area.connect('show-osd', this.showOsd.bind(this));
-            area.showOsdGiconHandler = area.connect('show-osd-gicon', this.showOsd.bind(this));
             this.areas.push(area);
         }
     },
@@ -187,12 +198,14 @@ var AreaManager = new Lang.Class({
             'decrement-line-width': () => this.activeArea.incrementLineWidth(-1),
             'increment-line-width-more': () => this.activeArea.incrementLineWidth(5),
             'decrement-line-width-more': () => this.activeArea.incrementLineWidth(-5),
+            'paste-image-files': this.activeArea.pasteImageFiles.bind(this.activeArea),
             'switch-linejoin': this.activeArea.switchLineJoin.bind(this.activeArea),
             'switch-linecap': this.activeArea.switchLineCap.bind(this.activeArea),
             'switch-fill-rule': this.activeArea.switchFillRule.bind(this.activeArea),
             'switch-dash' : this.activeArea.switchDash.bind(this.activeArea),
             'switch-fill' : this.activeArea.switchFill.bind(this.activeArea),
-            'switch-image-file' : this.activeArea.switchImageFile.bind(this.activeArea),
+            'switch-image-file' : this.activeArea.switchImageFile.bind(this.activeArea, false),
+            'switch-image-file-reverse' : this.activeArea.switchImageFile.bind(this.activeArea, true),
             'select-none-shape': () => this.activeArea.selectTool(Area.Tools.NONE),
             'select-line-shape': () => this.activeArea.selectTool(Area.Tools.LINE),
             'select-ellipse-shape': () => this.activeArea.selectTool(Area.Tools.ELLIPSE),
@@ -208,27 +221,28 @@ var AreaManager = new Lang.Class({
         
         // available when writing
         this.internalKeybindings2 = {
-            'save-as-svg': this.activeArea.saveAsSvg.bind(this.activeArea),
-            'save-as-json': this.activeArea.saveAsJson.bind(this.activeArea),
+            'export-to-svg': this.activeArea.exportToSvg.bind(this.activeArea),
+            'save-as-json': this.activeArea.saveAsJson.bind(this.activeArea, true, null),
             'open-previous-json': this.activeArea.loadPreviousJson.bind(this.activeArea),
             'open-next-json': this.activeArea.loadNextJson.bind(this.activeArea),
             'toggle-background': this.activeArea.toggleBackground.bind(this.activeArea),
             'toggle-grid': this.activeArea.toggleGrid.bind(this.activeArea),
             'toggle-square-area': this.activeArea.toggleSquareArea.bind(this.activeArea),
-            'reverse-switch-font-family': this.activeArea.switchFontFamily.bind(this.activeArea, true),
+            'switch-color-palette': this.activeArea.switchColorPalette.bind(this.activeArea, false),
+            'switch-color-palette-reverse': this.activeArea.switchColorPalette.bind(this.activeArea, true),
             'switch-font-family': this.activeArea.switchFontFamily.bind(this.activeArea, false),
+            'switch-font-family-reverse': this.activeArea.switchFontFamily.bind(this.activeArea, true),
             'switch-font-weight': this.activeArea.switchFontWeight.bind(this.activeArea),
             'switch-font-style': this.activeArea.switchFontStyle.bind(this.activeArea),
             'switch-text-alignment': this.activeArea.switchTextAlignment.bind(this.activeArea),
             'toggle-panel-and-dock-visibility': this.togglePanelAndDockOpacity.bind(this),
             'toggle-help': this.activeArea.toggleHelp.bind(this.activeArea),
-            'open-user-stylesheet': this.openUserStyleFile.bind(this),
             'open-preferences': this.openPreferences.bind(this)
         };
         
         for (let key in this.internalKeybindings1) {
             Main.wm.addKeybinding(key,
-                                  this.settings,
+                                  Me.internalShortcutSettings,
                                   Meta.KeyBindingFlags.NONE,
                                   DRAWING_ACTION_MODE,
                                   this.internalKeybindings1[key]);
@@ -236,7 +250,7 @@ var AreaManager = new Lang.Class({
         
         for (let key in this.internalKeybindings2) {
             Main.wm.addKeybinding(key,
-                                  this.settings,
+                                  Me.internalShortcutSettings,
                                   Meta.KeyBindingFlags.NONE,
                                   DRAWING_ACTION_MODE | WRITING_ACTION_MODE,
                                   this.internalKeybindings2[key]);
@@ -245,10 +259,10 @@ var AreaManager = new Lang.Class({
         for (let i = 1; i < 10; i++) {
             let iCaptured = i;
             Main.wm.addKeybinding('select-color' + i,
-                                  this.settings,
+                                  Me.internalShortcutSettings,
                                   Meta.KeyBindingFlags.NONE,
                                   DRAWING_ACTION_MODE | WRITING_ACTION_MODE,
-                                  () => this.activeArea.selectColor(iCaptured));
+                                  this.activeArea.selectColor.bind(this.activeArea, iCaptured - 1));
         }
     },
     
@@ -272,27 +286,10 @@ var AreaManager = new Lang.Class({
         }
     },
     
-    openUserStyleFile: function() {
-        if (!this.userStyleFile.query_exists(null)) {
-            if (!this.userStyleFile.get_parent().query_exists(null))
-                this.userStyleFile.get_parent().make_directory_with_parents(null);
-            let defaultStyleFile = Me.dir.get_child('data').get_child('default.css');
-            if (!defaultStyleFile.query_exists(null))
-                return;
-            let success = defaultStyleFile.copy(this.userStyleFile, Gio.FileCopyFlags.NONE, null, null);
-            if (!success)
-                return;
-        }
-        
-        Gio.AppInfo.launch_default_for_uri(this.userStyleFile.get_uri(), global.create_app_launch_context(0, -1));
-        if (this.activeArea)
-            this.toggleDrawing();
-    },
-    
-    eraseDrawing: function() {
+    eraseDrawings: function() {
         for (let i = 0; i < this.areas.length; i++)
             this.areas[i].erase();
-        if (this.settings.get_boolean('persistent-drawing'))
+        if (this.persistentOverRestarts)
             this.areas[Main.layoutManager.primaryIndex].savePersistent();
     },
     
@@ -345,7 +342,7 @@ var AreaManager = new Lang.Class({
             Main.uiGroup.set_child_at_index(Main.layoutManager.keyboardBox, this.oldKeyboardIndex);
             Main.uiGroup.remove_actor(activeContainer);
             Main.layoutManager._backgroundGroup.insert_child_above(activeContainer, Main.layoutManager._bgManagers[activeIndex].backgroundActor);
-            if (!this.settings.get_boolean("drawing-on-desktop")) 
+            if (!this.onDesktop)
                 activeContainer.hide();
         } else {
             Main.layoutManager._backgroundGroup.remove_actor(activeContainer);
@@ -365,8 +362,9 @@ var AreaManager = new Lang.Class({
         if (Main._findModal(this.activeArea) != -1) {
             Main.popModal(this.activeArea);
             if (source && source == global.display)
-                this.showOsd(null, 'touchpad-disabled-symbolic', _("Keyboard and pointer released"), null, null, false);
-            setCursor('DEFAULT');
+                // Translators: "released" as the opposite of "grabbed"
+                this.showOsd(null, Files.Icons.UNGRAB, _("Keyboard and pointer released"), null, null, false);
+            this.setCursor('DEFAULT');
             this.activeArea.reactive = false;
             this.removeInternalKeybindings();
         } else {
@@ -378,7 +376,7 @@ var AreaManager = new Lang.Class({
             this.activeArea.reactive = true;
             this.activeArea.initPointerCursor();
             if (source && source == global.display)
-                this.showOsd(null, 'input-touchpad-symbolic', _("Keyboard and pointer grabbed"), null, null, false);
+                this.showOsd(null, Files.Icons.GRAB, _("Keyboard and pointer grabbed"), null, null, false);
         }
         
         return true;
@@ -387,10 +385,11 @@ var AreaManager = new Lang.Class({
     toggleDrawing: function() {
         if (this.activeArea) {
             let activeIndex = this.areas.indexOf(this.activeArea);
-            let save = activeIndex == Main.layoutManager.primaryIndex && this.settings.get_boolean('persistent-drawing');
+            let save = activeIndex == Main.layoutManager.primaryIndex && this.persistentOverRestarts;
+            let erase = !this.persistentOverToggles;
             
-            this.showOsd(null, this.leaveGicon, _("Leaving drawing mode"));
-            this.activeArea.leaveDrawingMode(save);
+            this.showOsd(null, Files.Icons.LEAVE, _("Leaving drawing mode"));
+            this.activeArea.leaveDrawingMode(save, erase);
             if (this.hiddenList)
                 this.togglePanelAndDockOpacity();
             
@@ -410,9 +409,10 @@ var AreaManager = new Lang.Class({
             }
             
             this.activeArea.enterDrawingMode();
-            this.osdDisabled = this.settings.get_boolean('osd-disabled');
-            let label = _("<small>Press <i>%s</i> for help</small>").format(this.activeArea.helper.helpKeyLabel) + "\n\n" + _("Entering drawing mode");
-            this.showOsd(null, this.enterGicon, label, null, null, true);
+            this.osdDisabled = Me.settings.get_boolean('osd-disabled');
+            // Translators: %s is a key label
+            let label = "<small>" + _("Press <i>%s</i> for help").format(this.activeArea.helper.helpKeyLabel) + "</small>\n\n" + _("Entering drawing mode");
+            this.showOsd(null, Files.Icons.ENTER, label, null, null, true);
         }
         
         if (this.indicator)
@@ -446,10 +446,8 @@ var AreaManager = new Lang.Class({
         if (level && GS_VERSION > '3.33.0')
             level = level / 100;
         
-        if (icon && typeof icon == 'string')
-            icon = new Gio.ThemedIcon({ name: icon });
-        else if (!icon)
-            icon = this.enterGicon;
+        if (!icon)
+            icon = Files.Icons.ENTER;
         
         let osdWindow = Main.osdWindowManager._osdWindows[activeIndex];
         
@@ -503,13 +501,20 @@ var AreaManager = new Lang.Class({
             OsdWindow.HIDE_TIMEOUT = hideTimeoutSave;
     },
     
+    setCursor: function(cursorName) {
+        // check display or screen (API changes)
+        if (global.display.set_cursor)
+            global.display.set_cursor(Meta.Cursor[cursorName]);
+        else if (global.screen && global.screen.set_cursor)
+            global.screen.set_cursor(Meta.Cursor[cursorName]);
+    },
+    
     removeAreas: function() {
         for (let i = 0; i < this.areas.length; i++) {
             let area = this.areas[i];
             area.disconnect(area.leaveDrawingHandler);
             area.disconnect(area.updateActionModeHandler);
             area.disconnect(area.showOsdHandler);
-            area.disconnect(area.showOsdGiconHandler);
             let container = area.get_parent();
             container.get_parent().remove_actor(container);
             container.destroy();
@@ -518,37 +523,35 @@ var AreaManager = new Lang.Class({
     },
     
     disable: function() {
-        if (this.userStyleHandler && this.userStyleMonitor) {
-            this.userStyleMonitor.disconnect(this.userStyleHandler);
-            this.userStyleHandler = null;
-        }
-        if (this.userStyleMonitor) {
-            this.userStyleMonitor.cancel();
-            this.userStyleMonitor = null;
-        }
         if (this.monitorChangedHandler) {
             Main.layoutManager.disconnect(this.monitorChangedHandler);
             this.monitorChangedHandler = null;
         }
         if (this.indicatorSettingHandler) {
-            this.settings.disconnect(this.indicatorSettingHandler);
+            Me.settings.disconnect(this.indicatorSettingHandler);
             this.indicatorSettingHandler = null;
         }
         if (this.desktopSettingHandler) {
-            this.settings.disconnect(this.desktopSettingHandler);
+            Me.settings.disconnect(this.desktopSettingHandler);
             this.desktopSettingHandler = null;
         }
-        if (this.persistentSettingHandler) {
-            this.settings.disconnect(this.persistentSettingHandler);
-            this.persistentSettingHandler = null;
+        if (this.persistentOverTogglesSettingHandler) {
+            Me.settings.disconnect(this.persistentOverTogglesSettingHandler);
+            this.persistentOverTogglesSettingHandler = null;
+        }
+        if (this.persistentOverRestartsSettingHandler) {
+            Me.settings.disconnect(this.persistentOverRestartsSettingHandler);
+            this.persistentOverRestartsSettingHandler = null;
         }
         
         if (this.activeArea)
             this.toggleDrawing();
         Main.wm.removeKeybinding('toggle-drawing');
         Main.wm.removeKeybinding('toggle-modal');
-        Main.wm.removeKeybinding('erase-drawing');
+        Main.wm.removeKeybinding('erase-drawings');
         this.removeAreas();
+        Files.Images.disable();
+        Files.Jsons.disable();
         if (this.indicator)
             this.indicator.disable();
     }
@@ -600,13 +603,4 @@ const DrawingIndicator = new Lang.Class({
         this.button.destroy();
     }
 });
-
-function setCursor(cursorName) {
-    // check display or screen (API changes)
-    if (global.display.set_cursor)
-        global.display.set_cursor(Meta.Cursor[cursorName]);
-    else if (global.screen && global.screen.set_cursor)
-        global.screen.set_cursor(Meta.Cursor[cursorName]);
-}
-
 

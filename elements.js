@@ -1,4 +1,5 @@
 /* jslint esversion: 6 */
+/* exported Shapes, Transformations, getAllFontFamilies, DrawingElement */
 
 /*
  * Copyright 2019 Abakkk
@@ -26,28 +27,27 @@ const Lang = imports.lang;
 const Pango = imports.gi.Pango;
 const PangoCairo = imports.gi.PangoCairo;
 
-const reverseEnumeration = function(obj) {
-    let reversed = {};
-    Object.keys(obj).forEach(key => {
-        reversed[obj[key]] = key.slice(0,1) + key.slice(1).toLowerCase().replace('_', '-');
-    });
-    return reversed;
+var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
+var Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
+
+var getAllFontFamilies = function() {
+    return PangoCairo.font_map_get_default().list_families().map(fontFamily => fontFamily.get_name()).sort((a,b) => a.localeCompare(b));
 };
 
-var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
-var ShapeNames = { 0: "Free drawing", 1: "Line", 2: "Ellipse", 3: "Rectangle", 4: "Text", 5: "Polygon", 6: "Polyline", 7: "Image" };
-var Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
-var LineCapNames = Object.assign(reverseEnumeration(Cairo.LineCap), { 2: 'Square' });
-var LineJoinNames = reverseEnumeration(Cairo.LineJoin);
-var FillRuleNames = { 0: 'Nonzero', 1: 'Evenodd' };
-var FontWeightNames = Object.assign(reverseEnumeration(Pango.Weight), { 200: "Ultra-light", 350: "Semi-light", 600: "Semi-bold", 800: "Ultra-bold" });
-delete FontWeightNames[Pango.Weight.ULTRAHEAVY];
-var FontStyleNames = reverseEnumeration(Pango.Style);
-var FontStretchNames = reverseEnumeration(Pango.Stretch);
-var FontVariantNames = reverseEnumeration(Pango.Variant);
+const getFillRuleSvgName = function(fillRule) {
+    return fillRule == Cairo.FillRule.EVEN_ODD ? 'evenodd' : 'nonzero';
+};
 
-var getPangoFontFamilies = function() {
-    return PangoCairo.font_map_get_default().list_families().map(fontFamily => fontFamily.get_name()).sort((a,b) => a.localeCompare(b));
+const getLineCapSvgName = function(lineCap) {
+    return lineCap == Cairo.LineCap.BUTT ? 'butt' :
+           lineCap == Cairo.LineCap.SQUASH ? 'square' :
+           'round';
+};
+
+const getLineJoinSvgName = function(lineJoin) {
+    return lineJoin == Cairo.LineJoin.MITER ? 'miter' :
+           lineJoin == Cairo.LineJoin.BEVEL ? 'bevel' :
+           'round';
 };
 
 const SVG_DEBUG_SUPERPOSES_CAIRO = false;
@@ -80,10 +80,21 @@ const _DrawingElement = new Lang.Class({
         
         if (params.transformations === undefined)
             this.transformations = [];
-        if (params.font && params.font.weight === 0)
-            this.font.weight = 400;
-        if (params.font && params.font.weight === 1)
-            this.font.weight = 700;
+        
+        if (params.font && !(params.font instanceof Pango.FontDescription)) {
+            // compatibility with v6.2-
+            if (params.font.weight === 0)
+                this.font.weight = 400;
+            else if (params.font.weight === 1)
+                this.font.weight = 700;
+            this.font = new Pango.FontDescription();
+            ['family', 'weight', 'style', 'stretch', 'variant'].forEach(attribute => {
+                if (params.font[attribute] !== undefined)
+                    try {
+                        this.font[`set_${attribute}`](params.font[attribute]);
+                    } catch(e) {}
+            });
+        }
         
         if (params.transform && params.transform.center) {
             let angle = (params.transform.angle || 0) + (params.transform.startAngle || 0);
@@ -102,7 +113,7 @@ const _DrawingElement = new Lang.Class({
     toJSON: function() {
         return {
             shape: this.shape,
-            color: this.color,
+            color: this.color.toString(),
             line: this.line,
             dash: this.dash,
             fill: this.fill,
@@ -114,11 +125,8 @@ const _DrawingElement = new Lang.Class({
     },
     
     buildCairo: function(cr, params) {
-        if (this.color) {
-            let [success, color] = Clutter.Color.from_string(this.color);
-            if (success)
-                Clutter.cairo_set_source_color(cr, color);
-        }
+        if (this.color)
+            Clutter.cairo_set_source_color(cr, this.color);
         
         if (this.showSymmetryElement) {
             let transformation = this.lastTransformation;
@@ -244,63 +252,89 @@ const _DrawingElement = new Lang.Class({
         return inElement;
     },
     
-    buildSVG: function(bgColor) {
-        let transAttribute = '';
+    buildSVG: function(bgcolorString) {
+        let transforms = [];
         this.transformations.slice(0).reverse().forEach(transformation => {
-            transAttribute += transAttribute ? ' ' : ' transform="';
             let center = this._getTransformedCenter(transformation);
             
             if (transformation.type == Transformations.TRANSLATION) {
-                transAttribute += `translate(${transformation.slideX},${transformation.slideY})`;
+                transforms.push(['translate', transformation.slideX, transformation.slideY]);
             } else if (transformation.type == Transformations.ROTATION) {
-                transAttribute += `translate(${center[0]},${center[1]}) `;
-                transAttribute += `rotate(${transformation.angle * RADIAN}) `;
-                transAttribute += `translate(${-center[0]},${-center[1]})`;
+                transforms.push(['translate', center[0], center[1]]);
+                transforms.push(['rotate', transformation.angle * RADIAN]);
+                transforms.push(['translate', -center[0], -center[1]]);
             } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.STRETCH) {
-                transAttribute += `translate(${center[0]},${center[1]}) `;
-                transAttribute += `rotate(${transformation.angle * RADIAN}) `;
-                transAttribute += `scale(${transformation.scaleX},${transformation.scaleY}) `;
-                transAttribute += `rotate(${-transformation.angle * RADIAN}) `;
-                transAttribute += `translate(${-center[0]},${-center[1]})`;
+                transforms.push(['translate', center[0], center[1]]);
+                transforms.push(['rotate', transformation.angle * RADIAN]);
+                transforms.push(['scale', transformation.scaleX, transformation.scaleY]);
+                transforms.push(['rotate', -transformation.angle * RADIAN]);
+                transforms.push(['translate', -center[0], -center[1]]);
             } else if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION) {
-                transAttribute += `translate(${transformation.slideX}, ${transformation.slideY}) `;
-                transAttribute += `rotate(${transformation.angle * RADIAN}) `;
-                transAttribute += `scale(${transformation.scaleX}, ${transformation.scaleY}) `;
-                transAttribute += `rotate(${-transformation.angle * RADIAN}) `;
-                transAttribute += `translate(${-transformation.slideX}, ${-transformation.slideY})`;
+                transforms.push(['translate', transformation.slideX, transformation.slideY]);
+                transforms.push(['rotate', transformation.angle * RADIAN]);
+                transforms.push(['scale', transformation.scaleX, transformation.scaleY]);
+                transforms.push(['rotate', -transformation.angle * RADIAN]);
+                transforms.push(['translate', -transformation.slideX, -transformation.slideY]);
             }
         });
-        transAttribute += transAttribute ? '"' : '';
+            
+        let grouped = [];
+        transforms.forEach((transform, index) => {
+            let [type, ...values] = transform;
+            
+            if (grouped.length && grouped[grouped.length - 1][0] == type)
+                values.forEach((value, valueIndex) => grouped[grouped.length - 1][valueIndex + 1] += value);
+            else
+                grouped.push(transform);
+        });
         
-        return this._drawSvg(transAttribute);
+        let filtered = grouped.filter(transform => {
+            let [type, ...values] = transform;
+            
+            if (type == 'scale')
+                return values.some(value => value != 1);
+            else
+                return values.some(value => value != 0);
+        });
+        
+        let transAttribute = '';
+        if (filtered.length) {
+            transAttribute = ' transform="';
+            filtered.forEach((transform, index) => {
+                let [type, ...values] = transform;
+                transAttribute += `${index == 0 ? '' : ' '}${type}(${values.map(value => Number(value).toFixed(2))})`;
+            });
+            
+            transAttribute += '"';
+        }
+        
+        return this._drawSvg(transAttribute, bgcolorString);
     },
     
-    _drawSvg: function(transAttribute) {
+    _drawSvg: function(transAttribute, bgcolorString) {
         let row = "\n  ";
         let points = this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100]);
-        let color = this.eraser ? bgColor : this.color;
+        let color = this.eraser ? bgcolorString : this.color.toString();
         let fill = this.fill && !this.isStraightLine;
-        let attributes = '';
+        let attributes = this.eraser ? `class="eraser" ` : '';
         
         if (fill) {
-            attributes = `fill="${color}"`;
+            attributes += `fill="${color}"`;
             if (this.fillRule)
-                attributes += ` fill-rule="${FillRuleNames[this.fillRule].toLowerCase()}"`;
+                attributes += ` fill-rule="${getFillRuleSvgName(this.fillRule)}"`;
         } else {
-            attributes = `fill="none"`;
+            attributes += `fill="none"`;
         }
         
         if (this.line && this.line.lineWidth) {
             attributes += ` stroke="${color}"` +
                           ` stroke-width="${this.line.lineWidth}"`;
             if (this.line.lineCap)
-                attributes += ` stroke-linecap="${LineCapNames[this.line.lineCap].toLowerCase()}"`;
+                attributes += ` stroke-linecap="${getLineCapSvgName(this.line.lineCap)}"`;
             if (this.line.lineJoin && !this.isStraightLine)
-                attributes += ` stroke-linejoin="${LineJoinNames[this.line.lineJoin].toLowerCase()}"`;
+                attributes += ` stroke-linejoin="${getLineJoinSvgName(this.line.lineJoin)}"`;
             if (this.dash && this.dash.active && this.dash.array && this.dash.array[0] && this.dash.array[1])
                 attributes += ` stroke-dasharray="${this.dash.array[0]} ${this.dash.array[1]}" stroke-dashoffset="${this.dash.offset}"`;
-        } else {
-            attributes += ` stroke="none"`;
         }
         
         if (this.shape == Shapes.LINE && points.length == 4) {
@@ -594,15 +628,18 @@ const TextElement = new Lang.Class({
     Extends: _DrawingElement,
     
     toJSON: function() {
+        // The font size is useless because it is always computed from the points during cairo/svg building.
+        this.font.unset_fields(Pango.FontMask.SIZE);
+        
         return {
             shape: this.shape,
-            color: this.color,
+            color: this.color.toString(),
             eraser: this.eraser,
             transformations: this.transformations,
             text: this.text,
             lineIndex: this.lineIndex !== undefined ? this.lineIndex : undefined,
             textRightAligned: this.textRightAligned,
-            font: this.font,
+            font: this.font.to_string(),
             points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
         };
     },
@@ -629,15 +666,8 @@ const TextElement = new Lang.Class({
         if (this.points.length == 2) {
             let layout = PangoCairo.create_layout(cr);
             let fontSize = this.height * Pango.SCALE;
-            let fontDescription = new Pango.FontDescription();
-            fontDescription.set_absolute_size(fontSize);
-            ['family', 'weight', 'style', 'stretch', 'variant'].forEach(attribute => {
-                if (this.font[attribute] !== undefined)
-                    try {
-                        fontDescription[`set_${attribute}`](this.font[attribute]);
-                    } catch(e) {}
-            });
-            layout.set_font_description(fontDescription);
+            this.font.set_absolute_size(fontSize);
+            layout.set_font_description(this.font);
             layout.set_text(this.text, -1);
             this.textWidth = layout.get_pixel_size()[0];
             cr.moveTo(this.x, this.y - layout.get_baseline() / Pango.SCALE);
@@ -670,29 +700,29 @@ const TextElement = new Lang.Class({
         return cr.inFill(x, y);
     },
     
-    _drawSvg: function(transAttribute) {
+    _drawSvg: function(transAttribute, bgcolorString) {
         let row = "\n  ";
         let [x, y, height] = [Math.round(this.x*100)/100, Math.round(this.y*100)/100, Math.round(this.height*100)/100];
-        let color = this.eraser ? bgColor : this.color;
-        let attributes = '';
+        let color = this.eraser ? bgcolorString : this.color.toString();
+        let attributes = this.eraser ? `class="eraser" ` : '';
         
         if (this.points.length == 2) {
-            attributes = `fill="${color}" ` +
-                         `stroke="transparent" ` +
-                         `stroke-opacity="0" ` +
-                         `font-size="${height}"`;
+            attributes += `fill="${color}" ` +
+                          `font-size="${height}" ` +
+                          `font-family="${this.font.get_family()}"`;
             
-            if (this.font.family)
-                attributes += ` font-family="${this.font.family}"`;
-            if (this.font.weight && this.font.weight != Pango.Weight.NORMAL)
-                attributes += ` font-weight="${this.font.weight}"`;
-            if (this.font.style && FontStyleNames[this.font.style])
-                attributes += ` font-style="${FontStyleNames[this.font.style].toLowerCase()}"`;
-            if (FontStretchNames[this.font.stretch] && this.font.stretch != Pango.Stretch.NORMAL)
-                attributes += ` font-stretch="${FontStretchNames[this.font.stretch].toLowerCase()}"`;
-            if (this.font.variant && FontVariantNames[this.font.variant])
-                attributes += ` font-variant="${FontVariantNames[this.font.variant].toLowerCase()}"`;
-            
+            // this.font.to_string() is not valid to fill the svg 'font' shorthand property.
+            // Each property must be filled separately.
+            ['Stretch', 'Style', 'Variant'].forEach(attribute => {
+                let lower = attribute.toLowerCase();
+                if (this.font[`get_${lower}`]() != Pango[attribute].NORMAL) {
+                    let font = new Pango.FontDescription();
+                    font[`set_${lower}`](this.font[`get_${lower}`]());
+                    attributes += ` font-${lower}="${font.to_string()}"`;
+                }
+            });
+            if (this.font.get_weight() != Pango.Weight.NORMAL)
+                attributes += ` font-weight="${this.font.get_weight()}"`;
             row += `<text ${attributes} x="${x}" `;
             row += `y="${y}"${transAttribute}>${this.text}</text>`;
         }
@@ -745,7 +775,7 @@ const ImageElement = new Lang.Class({
     toJSON: function() {
         return {
             shape: this.shape,
-            color: this.color,
+            color: this.color.toString(),
             fill: this.fill,
             eraser: this.eraser,
             transformations: this.transformations,
@@ -789,10 +819,10 @@ const ImageElement = new Lang.Class({
     _drawSvg: function(transAttribute) {
         let points = this.points;
         let row = "\n  ";
-        let attributes = '';
+        let attributes = this.eraser ? `class="eraser" ` : '';
         
         if (points.length == 2) {
-            attributes = `fill="none"`;
+            attributes += `fill="none"`;
             row += `<image ${attributes} x="${Math.min(points[0][0], points[1][0])}" y="${Math.min(points[0][1], points[1][1])}" ` +
                    `width="${Math.abs(points[1][0] - points[0][0])}" height="${Math.abs(points[1][1] - points[0][1])}"${transAttribute} ` +
                    `preserveAspectRatio="${this.preserveAspectRatio ? 'xMinYMin' : 'none'}" ` +

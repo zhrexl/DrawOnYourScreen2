@@ -1,4 +1,5 @@
 /* jslint esversion: 6 */
+/* exported Tools, DrawingArea */
 
 /*
  * Copyright 2019 Abakkk
@@ -37,24 +38,41 @@ const Screenshot = imports.ui.screenshot;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
-const Extension = Me.imports.extension;
 const Elements = Me.imports.elements;
 const Files = Me.imports.files;
 const Menu = Me.imports.menu;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+const pgettext = imports.gettext.domain(Me.metadata['gettext-domain']).pgettext;
 
 const CAIRO_DEBUG_EXTENDS = false;
 const SVG_DEBUG_EXTENDS = false;
 const TEXT_CURSOR_TIME = 600; // ms
+const ELEMENT_GRABBER_TIME = 80; // ms, default is about 16 ms
+const GRID_TILES_HORIZONTAL_NUMBER = 30;
 
-const { Shapes, ShapeNames, Transformations, LineCapNames, LineJoinNames, FillRuleNames,
-        FontWeightNames, FontStyleNames, FontStretchNames, FontVariantNames } = Elements;
+const { Shapes, Transformations } = Elements;
+const { DisplayStrings } = Menu;
+
+const FontGenericFamilies = ['Sans-Serif', 'Serif', 'Monospace', 'Cursive', 'Fantasy'];
 const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
-const ManipulationNames = { 100: "Move", 101: "Resize", 102: "Mirror" };
-var Tools = Object.assign({}, Shapes, Manipulations);
-var ToolNames = Object.assign({}, ShapeNames, ManipulationNames);
+var Tools = Object.assign({
+    getNameOf: function(value) {
+        return Object.keys(this).find(key => this[key] == value);
+    }
+}, Shapes, Manipulations);
+Object.defineProperty(Tools, 'getNameOf', { enumerable: false });
 
-var FontGenericFamilies = ['Sans-Serif', 'Serif', 'Monospace', 'Cursive', 'Fantasy'];
+const getClutterColorFromString = function(string, fallback) {
+    let [success, color] = Clutter.Color.from_string(string);
+    color.toString = () => string;
+    if (success)
+        return color;
+    
+    log(`${Me.metadata.uuid}: "${string}" color cannot be parsed.`);
+    color = Clutter.Color.get_static(Clutter.StaticColor[fallback.toUpperCase()]);
+    color.toString = () => fallback.slice(0, 1).toUpperCase() + fallback.slice(1);
+    return color;
+};
 
 // DrawingArea is the widget in which we draw, thanks to Cairo.
 // It creates and manages a DrawingElement for each "brushstroke".
@@ -62,18 +80,12 @@ var FontGenericFamilies = ['Sans-Serif', 'Serif', 'Monospace', 'Cursive', 'Fanta
 var DrawingArea = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingArea',
     Extends: St.DrawingArea,
-    Signals: { 'show-osd': { param_types: [GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
-               'show-osd-gicon': { param_types: [Gio.Icon.$gtype, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
+    Signals: { 'show-osd': { param_types: [Gio.Icon.$gtype, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
                'update-action-mode': {},
                'leave-drawing-mode': {} },
 
     _init: function(params, monitor, helper, loadPersistent) {
         this.parent({ style_class: 'draw-on-your-screen', name: params.name});
-        
-        this.connect('destroy', this._onDestroy.bind(this));
-        this.reactiveHandler = this.connect('notify::reactive', this._onReactiveChanged.bind(this));
-        
-        this.settings = Convenience.getSettings();
         this.monitor = monitor;
         this.helper = helper;
         
@@ -81,16 +93,27 @@ var DrawingArea = new Lang.Class({
         this.undoneElements = [];
         this.currentElement = null;
         this.currentTool = Shapes.NONE;
-        this.currentImage = 0;
+        this.currentImage = null;
+        this.currentTextRightAligned = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL;
+        let fontName = St.Settings && St.Settings.get().font_name || Convenience.getSettings('org.gnome.desktop.interface').get_string('font-name');
+        this.currentFont = Pango.FontDescription.from_string(fontName);
+        this.currentFont.unset_fields(Pango.FontMask.SIZE);
+        this.defaultFontFamily = this.currentFont.get_family();
+        this.currentLineWidth = 5;
+        this.currentLineJoin = Cairo.LineJoin.ROUND;
+        this.currentLineCap = Cairo.LineCap.ROUND;
+        this.currentFillRule = Cairo.FillRule.WINDING;
         this.isSquareArea = false;
         this.hasGrid = false;
         this.hasBackground = false;
         this.textHasCursor = false;
         this.dashedLine = false;
         this.fill = false;
-        this.colors = [Clutter.Color.new(0, 0, 0, 255)];
-        this.newThemeAttributes = {};
-        this.oldThemeAttributes = {};
+        
+        this.connect('destroy', this._onDestroy.bind(this));
+        this.connect('notify::reactive', this._onReactiveChanged.bind(this));
+        this.drawingSettingsChangedHandler = Me.drawingSettings.connect('changed', this._onDrawingSettingsChanged.bind(this));
+        this._onDrawingSettingsChanged();
         
         if (loadPersistent)
             this._loadPersistent();
@@ -98,7 +121,7 @@ var DrawingArea = new Lang.Class({
     
     get menu() {
         if (!this._menu)
-            this._menu = new Menu.DrawingMenu(this, this.monitor);
+            this._menu = new Menu.DrawingMenu(this, this.monitor, Tools);
         return this._menu;
     },
     
@@ -123,6 +146,52 @@ var DrawingArea = new Lang.Class({
             this._stopElementGrabber();
     },
     
+    get currentPalette() {
+        return this._currentPalette;
+    },
+    
+    set currentPalette(palette) {
+        this._currentPalette = palette;
+        this.colors = palette[1].map(colorString => getClutterColorFromString(colorString, 'white'));
+        if (!this.colors[0])
+            this.colors.push(Clutter.Color.get_static(Clutter.StaticColor.WHITE));
+    },
+    
+    get currentImage() {
+        if (!this._currentImage)
+            this._currentImage = Files.Images.getNext(this._currentImage);
+        
+        return this._currentImage;
+    },
+    
+    set currentImage(image) {
+        this._currentImage = image;
+    },
+    
+    get currentFontFamily() {
+        return this.currentFont.get_family();
+    },
+    
+    set currentFontFamily(family) {
+        this.currentFont.set_family(family);
+    },
+    
+    get currentFontStyle() {
+        return this.currentFont.get_style();
+    },
+    
+    set currentFontStyle(style) {
+        this.currentFont.set_style(style);
+    },
+    
+    get currentFontWeight() {
+        return this.currentFont.get_weight();
+    },
+    
+    set currentFontWeight(weight) {
+        this.currentFont.set_weight(weight);
+    },
+    
     get hasManipulationTool() {
         // No Object.values method in GS 3.24.
         return Object.keys(Manipulations).map(key => Manipulations[key]).indexOf(this.currentTool) != -1;
@@ -137,27 +206,12 @@ var DrawingArea = new Lang.Class({
         this.currentFillRule = evenodd ? Cairo.FillRule.EVEN_ODD : Cairo.FillRule.WINDING;
     },
     
-    getImages() {
-        let images = Files.getImages();
-        if (!images[this.currentImage])
-            this.currentImage = Math.max(images.length - 1, 0);
-        return images;
-    },
-    
-    get currentFontFamily() {
-        return this._currentFontFamily || this.currentThemeFontFamily;
-    },
-    
-    set currentFontFamily(fontFamily) {
-        this._currentFontFamily = fontFamily;
-    },
-    
     get fontFamilies() {
         if (!this._fontFamilies) {
-            let pangoFontFamilies = Elements.getPangoFontFamilies().filter(family => {
-                return family != this.currentThemeFontFamily && FontGenericFamilies.indexOf(family) == -1;
+            let otherFontFamilies = Elements.getAllFontFamilies().filter(family => {
+                return family != this.defaultFontFamily && FontGenericFamilies.indexOf(family) == -1;
             });
-            this._fontFamilies = [this.currentThemeFontFamily].concat(FontGenericFamilies, pangoFontFamilies);
+            this._fontFamilies = [this.defaultFontFamily].concat(FontGenericFamilies, otherFontFamilies);
         }
         return this._fontFamilies;
     },
@@ -181,57 +235,44 @@ var DrawingArea = new Lang.Class({
         this.queue_repaint();
     },
     
-    _updateStyle: function() {
-        try {
-            let themeNode = this.get_theme_node();
-            for (let i = 1; i < 10; i++) {
-                this.colors[i] = themeNode.get_color('-drawing-color' + i);
-            }
-            let font = themeNode.get_font();
-            this.newThemeAttributes.ThemeFontFamily = font.get_family();
-            try { this.newThemeAttributes.FontWeight = font.get_weight(); } catch(e) { this.newThemeAttributes.FontWeight = Pango.Weight.NORMAL; }
-            this.newThemeAttributes.FontStyle = font.get_style();
-            this.newThemeAttributes.FontStretch = font.get_stretch();
-            this.newThemeAttributes.FontVariant = font.get_variant();
-            this.newThemeAttributes.TextRightAligned = themeNode.get_text_align() == St.TextAlign.RIGHT;
-            this.newThemeAttributes.LineWidth = themeNode.get_length('-drawing-line-width');
-            this.newThemeAttributes.LineJoin = themeNode.get_double('-drawing-line-join');
-            this.newThemeAttributes.LineCap = themeNode.get_double('-drawing-line-cap');
-            this.newThemeAttributes.FillRule = themeNode.get_double('-drawing-fill-rule');
-            this.dashArray = [Math.abs(themeNode.get_length('-drawing-dash-array-on')), Math.abs(themeNode.get_length('-drawing-dash-array-off'))];
-            this.dashOffset = themeNode.get_length('-drawing-dash-offset');
-            this.gridGap = themeNode.get_length('-grid-overlay-gap');
-            this.gridLineWidth = themeNode.get_length('-grid-overlay-line-width');
-            this.gridInterlineWidth = themeNode.get_length('-grid-overlay-interline-width');
-            this.gridColor = themeNode.get_color('-grid-overlay-color');
-            this.squareAreaWidth = themeNode.get_length('-drawing-square-area-width');
-            this.squareAreaHeight = themeNode.get_length('-drawing-square-area-height');
-            this.activeBackgroundColor = themeNode.get_color('-drawing-background-color');
-        } catch(e) {
-            logError(e);
+    _onDrawingSettingsChanged: function() {
+        this.palettes = Me.drawingSettings.get_value('palettes').deep_unpack();
+        if (!this.colors) {
+            if (this.palettes[0])
+                this.currentPalette = this.palettes[0];
+            else
+                this.currentPalette = ['Palette', ['White']];
+        }
+        if (!this.currentColor)
+            this.currentColor = this.colors[0];
+        
+        if (Me.drawingSettings.get_boolean('square-area-auto')) {
+            this.squareAreaSize = Math.pow(2, 6);
+            while (this.squareAreaSize * 2 < Math.min(this.monitor.width, this.monitor.height))
+                this.squareAreaSize *= 2;
+        } else {
+            this.squareAreaSize = Me.drawingSettings.get_uint('square-area-size');
         }
         
-        for (let i = 1; i < 10; i++) {
-            this.colors[i] = this.colors[i].alpha ? this.colors[i] : this.colors[0];
+        this.areaBackgroundColor = getClutterColorFromString(Me.drawingSettings.get_string('background-color'), 'black');
+        
+        this.gridColor = getClutterColorFromString(Me.drawingSettings.get_string('grid-color'), 'gray');
+        if (Me.drawingSettings.get_boolean('grid-line-auto')) {
+            this.gridLineSpacing = Math.round(this.monitor.width / (5 * GRID_TILES_HORIZONTAL_NUMBER));
+            this.gridLineWidth = this.gridLineSpacing / 20;
+        } else {
+            this.gridLineSpacing = Me.drawingSettings.get_uint('grid-line-spacing');
+            this.gridLineWidth = Math.round(Me.drawingSettings.get_double('grid-line-width') * 100) / 100;
         }
-        this.currentColor = this.currentColor || this.colors[1];
-        this._fontFamilies = null;
-        // SVG does not support 'Ultra-heavy' weight (1000)
-        this.newThemeAttributes.FontWeight = Math.min(this.newThemeAttributes.FontWeight, 900);
-        this.newThemeAttributes.LineWidth = (this.newThemeAttributes.LineWidth > 0) ? this.newThemeAttributes.LineWidth : 3;
-        this.newThemeAttributes.LineJoin = ([0, 1, 2].indexOf(this.newThemeAttributes.LineJoin) != -1) ? this.newThemeAttributes.LineJoin : Cairo.LineJoin.ROUND;
-        this.newThemeAttributes.LineCap = ([0, 1, 2].indexOf(this.newThemeAttributes.LineCap) != -1) ? this.newThemeAttributes.LineCap : Cairo.LineCap.ROUND;
-        this.newThemeAttributes.FillRule = ([0, 1].indexOf(this.newThemeAttributes.FillRule) != -1) ? this.newThemeAttributes.FillRule : Cairo.FillRule.WINDING;
-        for (let attributeName in this.newThemeAttributes) {
-            if (this.newThemeAttributes[attributeName] != this.oldThemeAttributes[attributeName]) {
-                this.oldThemeAttributes[attributeName] = this.newThemeAttributes[attributeName];
-                this[`current${attributeName}`] = this.newThemeAttributes[attributeName];
-            }
+        
+        this.dashOffset = Math.round(Me.drawingSettings.get_double('dash-offset') * 100) / 100;
+        if (Me.drawingSettings.get_boolean('dash-array-auto')) {
+            this.dashArray = [0, 0];
+        } else {
+            let on = Math.round(Me.drawingSettings.get_double('dash-array-on') * 100) / 100;
+            let off = Math.round(Me.drawingSettings.get_double('dash-array-off') * 100) / 100;
+            this.dashArray = [on, off];
         }
-        this.gridGap = this.gridGap && this.gridGap >= 1 ? this.gridGap : 10;
-        this.gridLineWidth = this.gridLineWidth || 0.4;
-        this.gridInterlineWidth = this.gridInterlineWidth || 0.2;
-        this.gridColor = this.gridColor && this.gridColor.alpha ? this.gridColor : Clutter.Color.new(127, 127, 127, 255);
     },
     
     _repaint: function(cr) {
@@ -269,27 +310,27 @@ var DrawingArea = new Lang.Class({
             cr.restore();
         }
         
-        if (this.reactive && this.hasGrid && this.gridGap && this.gridGap >= 1) {
+        if (this.reactive && this.hasGrid) {
             cr.save();
             Clutter.cairo_set_source_color(cr, this.gridColor);
             
             let [gridX, gridY] = [0, 0];
             while (gridX < this.monitor.width / 2) {
-                cr.setLineWidth((gridX / this.gridGap) % 5 ? this.gridInterlineWidth : this.gridLineWidth);
+                cr.setLineWidth((gridX / this.gridLineSpacing) % 5 ? this.gridLineWidth / 2 : this.gridLineWidth);
                 cr.moveTo(this.monitor.width / 2 + gridX, 0);
                 cr.lineTo(this.monitor.width / 2 + gridX, this.monitor.height);
                 cr.moveTo(this.monitor.width / 2 - gridX, 0);
                 cr.lineTo(this.monitor.width / 2 - gridX, this.monitor.height);
-                gridX += this.gridGap;
+                gridX += this.gridLineSpacing;
                 cr.stroke();
             }
             while (gridY < this.monitor.height / 2) {
-                cr.setLineWidth((gridY / this.gridGap) % 5 ? this.gridInterlineWidth : this.gridLineWidth);
+                cr.setLineWidth((gridY / this.gridLineSpacing) % 5 ? this.gridLineWidth / 2 : this.gridLineWidth);
                 cr.moveTo(0, this.monitor.height / 2 + gridY);
                 cr.lineTo(this.monitor.width, this.monitor.height / 2 + gridY);
                 cr.moveTo(0, this.monitor.height / 2 - gridY);
                 cr.lineTo(this.monitor.width, this.monitor.height / 2 - gridY);
-                gridY += this.gridGap;
+                gridY += this.gridLineSpacing;
                 cr.stroke();
             }
             cr.restore();
@@ -362,8 +403,9 @@ var DrawingArea = new Lang.Class({
                 event.get_key_symbol() == Clutter.KEY_KP_Enter ||
                 event.get_key_symbol() == Clutter.KEY_Control_L) {
                 if (this.currentElement.points.length == 2)
-                    this.emit('show-osd', null, _("Press <i>%s</i> to get\na fourth control point")
-                                                .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
+                    // Translators: %s is a key label
+                    this.emit('show-osd', Files.Icons.ARC, _("Press <i>%s</i> to get\na fourth control point")
+                                                           .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
                 this.currentElement.addPoint();
                 this.updatePointerCursor(true);
                 this._redisplay();
@@ -425,8 +467,9 @@ var DrawingArea = new Lang.Class({
             }
             
             // Reduce computing without notable effect.
-            if (Math.random() <= 0.75)
+            if (event.get_time() - (this.elementGrabberTimestamp || 0) < ELEMENT_GRABBER_TIME)
                 return;
+            this.elementGrabberTimestamp = event.get_time();
             
             let coords = event.get_coords();
             let [s, x, y] = this.transform_stage_point(coords[0], coords[1]);
@@ -459,7 +502,7 @@ var DrawingArea = new Lang.Class({
             if (this.grabbedElementLocked) {
                 this.updatePointerCursor();
                 let label = controlPressed ? _("Mark a point of symmetry") : _("Draw a line of symmetry");
-                this.emit('show-osd', null, label, "", -1, true);
+                this.emit('show-osd', Files.Icons.TOOL_MIRROR, label, "", -1, true);
                 return;
             }
         }
@@ -473,6 +516,10 @@ var DrawingArea = new Lang.Class({
         if (duplicate) {
             // deep cloning
             let copy = new this.grabbedElement.constructor(JSON.parse(JSON.stringify(this.grabbedElement)));
+            if (this.grabbedElement.color)
+                copy.color = this.grabbedElement.color;
+            if (this.grabbedElement.font)
+                copy.font = this.grabbedElement.font;
             if (this.grabbedElement.image)
                 copy.image = this.grabbedElement.image;
             this.elements.push(copy);
@@ -560,34 +607,27 @@ var DrawingArea = new Lang.Class({
         if (this.currentTool == Shapes.TEXT) {
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
-                color: this.currentColor.to_string(),
+                color: this.currentColor,
                 eraser: eraser,
-                font: {
-                    family: this.currentFontFamily,
-                    weight: this.currentFontWeight,
-                    style: this.currentFontStyle,
-                    stretch: this.currentFontStretch,
-                    variant: this.currentFontVariant },
-                text: _("Text"),
+                font: this.currentFont.copy(),
+                // Translators: initial content of the text area
+                text: pgettext("text-area-content", "Text"),
                 textRightAligned: this.currentTextRightAligned,
                 points: []
             });
         } else if (this.currentTool == Shapes.IMAGE) {
-            let images = this.getImages();
-            if (!images.length)
-                return;
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
-                color: this.currentColor.to_string(),
+                color: this.currentColor,
                 eraser: eraser,
-                image: images[this.currentImage],
+                image: this.currentImage,
                 operator: this.currentOperator,
                 points: []
             });
         } else {
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
-                color: this.currentColor.to_string(),
+                color: this.currentColor,
                 eraser: eraser,
                 fill: this.fill,
                 fillRule: this.currentFillRule,
@@ -599,9 +639,12 @@ var DrawingArea = new Lang.Class({
         
         this.currentElement.startDrawing(startX, startY);
         
-        if (this.currentTool == Shapes.POLYGON || this.currentTool == Shapes.POLYLINE)
-            this.emit('show-osd', null, _("Press <i>%s</i> to mark vertices")
+        if (this.currentTool == Shapes.POLYGON || this.currentTool == Shapes.POLYLINE) {
+            let icon = Files.Icons[this.currentTool == Shapes.POLYGON ? 'TOOL_POLYGON' : 'TOOL_POLYLINE'];
+            // Translators: %s is a key label
+            this.emit('show-osd', icon, _("Press <i>%s</i> to mark vertices")
                                         .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
+        }
         
         this.motionHandler = this.connect('motion-event', (actor, event) => {
             if (this.spaceKeyPressed)
@@ -661,8 +704,9 @@ var DrawingArea = new Lang.Class({
         let [x, y] = [this.currentElement.x, this.currentElement.y];
         this.currentElement.text = '';
         this.currentElement.cursorPosition = 0;
-        this.emit('show-osd', null, _("Type your text and press <i>%s</i>")
-                                    .format(Gtk.accelerator_get_label(Clutter.KEY_Escape, 0)), "", -1, true);
+        // Translators: %s is a key label
+        this.emit('show-osd', Files.Icons.TOOL_TEXT, _("Type your text and press <i>%s</i>")
+                                                     .format(Gtk.accelerator_get_label(Clutter.KEY_Escape, 0)), "", -1, true);
         this._updateTextCursorTimeout();
         this.textHasCursor = true;
         this._redisplay();
@@ -749,7 +793,7 @@ var DrawingArea = new Lang.Class({
     setPointerCursor: function(pointerCursorName) {
         if (!this.currentPointerCursorName || this.currentPointerCursorName != pointerCursorName) {
             this.currentPointerCursorName = pointerCursorName;
-            Extension.setCursor(pointerCursorName);
+            Me.stateObj.areaManager.setCursor(pointerCursorName);
         }
     },
     
@@ -835,7 +879,7 @@ var DrawingArea = new Lang.Class({
     
     toggleBackground: function() {
         this.hasBackground = !this.hasBackground;
-        this.get_parent().set_background_color(this.hasBackground ? this.activeBackgroundColor : null);
+        this.get_parent().set_background_color(this.hasBackground ? this.areaBackgroundColor : null);
     },
     
     toggleGrid: function() {
@@ -846,10 +890,8 @@ var DrawingArea = new Lang.Class({
     toggleSquareArea: function() {
         this.isSquareArea = !this.isSquareArea;
         if (this.isSquareArea) {
-            let width = this.squareAreaWidth || this.squareAreaHeight || Math.min(this.monitor.width, this.monitor.height) * 3 / 4;
-            let height = this.squareAreaHeight || this.squareAreaWidth || Math.min(this.monitor.width, this.monitor.height) * 3 / 4;
-            this.set_position(Math.floor(this.monitor.width / 2 - width / 2), Math.floor(this.monitor.height / 2 - height / 2));
-            this.set_size(width, height);
+            this.set_position((this.monitor.width - this.squareAreaSize) / 2, (this.monitor.height - this.squareAreaSize) / 2);
+            this.set_size(this.squareAreaSize, this.squareAreaSize);
             this.add_style_class_name('draw-on-your-screen-square-area');
         } else {
             this.set_position(0, 0);
@@ -858,76 +900,87 @@ var DrawingArea = new Lang.Class({
         }
     },
     
-    switchColor: function() {
-        this.selectColor((this.currentColor == this.colors[1]) ? 2 : 1);
-    },
-    
     selectColor: function(index) {
+        if (!this.colors[index])
+            return;
+        
         this.currentColor = this.colors[index];
         if (this.currentElement) {
-            this.currentElement.color = this.currentColor.to_string();
+            this.currentElement.color = this.currentColor;
             this._redisplay();
         }
         // Foreground color markup is not displayed since 3.36, use style instead but the transparency is lost.
-        this.emit('show-osd', null, this.currentColor.to_string(), this.currentColor.to_string().slice(0, 7), -1, false);
+        this.emit('show-osd', Files.Icons.COLOR, String(this.currentColor), this.currentColor.to_string().slice(0, 7), -1, false);
     },
     
     selectTool: function(tool) {
         this.currentTool = tool;
-        this.emit('show-osd', null, _(ToolNames[tool]), "", -1, false);
+        this.emit('show-osd', Files.Icons[`TOOL_${Tools.getNameOf(tool)}`] || null, DisplayStrings.Tool[tool], "", -1, false);
         this.updatePointerCursor();
     },
     
     switchFill: function() {
         this.fill = !this.fill;
-        this.emit('show-osd', null, this.fill ? _("Fill") : _("Outline"), "", -1, false);
-    },
-    
-    switchDash: function() {
-        this.dashedLine = !this.dashedLine;
-        this.emit('show-osd', null, this.dashedLine ? _("Dashed line") : _("Full line"), "", -1, false);
-    },
-    
-    incrementLineWidth: function(increment) {
-        this.currentLineWidth = Math.max(this.currentLineWidth + increment, 0);
-        this.emit('show-osd', null, _("%d px").format(this.currentLineWidth), "", 2 * this.currentLineWidth, false);
-    },
-    
-    switchLineJoin: function() {
-        this.currentLineJoin = this.currentLineJoin == 2 ? 0 : this.currentLineJoin + 1;
-        this.emit('show-osd', null, _(LineJoinNames[this.currentLineJoin]), "", -1, false);
-    },
-    
-    switchLineCap: function() {
-        this.currentLineCap = this.currentLineCap == 2 ? 0 : this.currentLineCap + 1;
-        this.emit('show-osd', null, _(LineCapNames[this.currentLineCap]), "", -1, false);
+        let icon = Files.Icons[this.fill ? 'FILL' : 'STROKE'];
+        this.emit('show-osd', icon, DisplayStrings.getFill(this.fill), "", -1, false);
     },
     
     switchFillRule: function() {
         this.currentFillRule = this.currentFillRule == 1 ? 0 : this.currentFillRule + 1;
-        this.emit('show-osd', null, _(FillRuleNames[this.currentFillRule]), "", -1, false);
+        let icon = Files.Icons[this.currentEvenodd ? 'FILLRULE_EVENODD' : 'FILLRULE_NONZERO'];
+        this.emit('show-osd', icon, DisplayStrings.FillRule[this.currentFillRule], "", -1, false);
+    },
+    
+    switchColorPalette: function(reverse) {
+        let index = this.palettes.indexOf(this.currentPalette);
+        if (reverse)
+            this.currentPalette = index <= 0 ? this.palettes[this.palettes.length - 1] : this.palettes[index - 1];
+        else
+            this.currentPalette = index == this.palettes.length - 1 ? this.palettes[0] : this.palettes[index + 1];
+        this.emit('show-osd', Files.Icons.PALETTE, this.currentPalette[0], "", -1, false);
+    },
+    
+    switchDash: function() {
+        this.dashedLine = !this.dashedLine;
+        let icon = Files.Icons[this.dashedLine ? 'DASHED_LINE' : 'FULL_LINE'];
+        this.emit('show-osd', icon, DisplayStrings.getDashedLine(this.dashedLine), "", -1, false);
+    },
+    
+    incrementLineWidth: function(increment) {
+        this.currentLineWidth = Math.max(this.currentLineWidth + increment, 0);
+        this.emit('show-osd', null, DisplayStrings.getPixels(this.currentLineWidth), "", 2 * this.currentLineWidth, false);
+    },
+    
+    switchLineJoin: function() {
+        this.currentLineJoin = this.currentLineJoin == 2 ? 0 : this.currentLineJoin + 1;
+        this.emit('show-osd', Files.Icons.LINEJOIN, DisplayStrings.LineJoin[this.currentLineJoin], "", -1, false);
+    },
+    
+    switchLineCap: function() {
+        this.currentLineCap = this.currentLineCap == 2 ? 0 : this.currentLineCap + 1;
+        this.emit('show-osd', Files.Icons.LINECAP, DisplayStrings.LineCap[this.currentLineCap], "", -1, false);
     },
     
     switchFontWeight: function() {
-        let fontWeights = Object.keys(FontWeightNames).map(key => Number(key));
+        let fontWeights = Object.keys(DisplayStrings.FontWeight).map(key => Number(key));
         let index = fontWeights.indexOf(this.currentFontWeight);
         this.currentFontWeight = index == fontWeights.length - 1 ? fontWeights[0] : fontWeights[index + 1];
         if (this.currentElement && this.currentElement.font) {
-            this.currentElement.font.weight = this.currentFontWeight;
+            this.currentElement.font.set_weight(this.currentFontWeight);
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_weight="${this.currentFontWeight}">` +
-                                    `${_(FontWeightNames[this.currentFontWeight])}</span>`, "", -1, false);
+        this.emit('show-osd', Files.Icons.FONT_WEIGHT, `<span font_weight="${this.currentFontWeight}">` +
+                                    `${DisplayStrings.FontWeight[this.currentFontWeight]}</span>`, "", -1, false);
     },
     
     switchFontStyle: function() {
         this.currentFontStyle = this.currentFontStyle == 2 ? 0 : this.currentFontStyle + 1;
         if (this.currentElement && this.currentElement.font) {
-            this.currentElement.font.style = this.currentFontStyle;
+            this.currentElement.font.set_style(this.currentFontStyle);
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_style="${FontStyleNames[this.currentFontStyle].toLowerCase()}">` + 
-                                    `${_(FontStyleNames[this.currentFontStyle])}</span>`, "", -1, false);
+        this.emit('show-osd', Files.Icons.FONT_STYLE, `<span font_style="${DisplayStrings.FontStyleMarkup[this.currentFontStyle]}">` + 
+                                    `${DisplayStrings.FontStyle[this.currentFontStyle]}</span>`, "", -1, false);
     },
     
     switchFontFamily: function(reverse) {
@@ -937,10 +990,10 @@ var DrawingArea = new Lang.Class({
         else
             this.currentFontFamily = (index == this.fontFamilies.length - 1) ? this.fontFamilies[0] : this.fontFamilies[index + 1];
         if (this.currentElement && this.currentElement.font) {
-            this.currentElement.font.family = this.currentFontFamily;
+            this.currentElement.font.set_family(this.currentFontFamily);
             this._redisplay();
         }
-        this.emit('show-osd', null, `<span font_family="${this.currentFontFamily}">${_(this.currentFontFamily)}</span>`, "", -1, false);
+        this.emit('show-osd', Files.Icons.FONT_FAMILY, `<span font_family="${this.currentFontFamily}">${DisplayStrings.getFontFamily(this.currentFontFamily)}</span>`, "", -1, false);
     },
     
     switchTextAlignment: function() {
@@ -949,16 +1002,23 @@ var DrawingArea = new Lang.Class({
             this.currentElement.textRightAligned = this.currentTextRightAligned;
             this._redisplay();
         }
-        this.emit('show-osd', null, this.currentTextRightAligned ? _("Right aligned") : _("Left aligned"), "", -1, false);
+        let icon = Files.Icons[this.currentTextRightAligned ? 'RIGHT_ALIGNED' : 'LEFT_ALIGNED'];
+        this.emit('show-osd', icon, DisplayStrings.getTextAlignment(this.currentTextRightAligned), "", -1, false);
     },
     
-    switchImageFile: function() {
-        let images = this.getImages();
-        if (!images.length)
-            return;
-        if (images.length > 1)
-            this.currentImage = this.currentImage == images.length - 1 ? 0 : this.currentImage + 1;
-        this.emit('show-osd-gicon', images[this.currentImage].gicon, images[this.currentImage].toString(), "", -1, false);
+    switchImageFile: function(reverse) {
+        this.currentImage = Files.Images[reverse ? 'getPrevious' : 'getNext'](this.currentImage);
+        if (this.currentImage)
+            this.emit('show-osd', this.currentImage.gicon, this.currentImage.toString(), "", -1, false);
+    },
+    
+    pasteImageFiles: function() {
+        Files.Images.addImagesFromClipboard(lastImage => {
+            this.currentImage = lastImage;
+            this.currentTool = Shapes.IMAGE;
+            this.updatePointerCursor();
+            this.emit('show-osd', this.currentImage.gicon, this.currentImage.toString(), "", -1, false);
+        });
     },
     
     toggleHelp: function() {
@@ -984,7 +1044,7 @@ var DrawingArea = new Lang.Class({
     },
     
     _onDestroy: function() {
-        this.disconnect(this.reactiveHandler);
+        Me.drawingSettings.disconnect(this.drawingSettingsChangedHandler);
         this.erase();
         if (this._menu)
             this._menu.disable();
@@ -1001,11 +1061,10 @@ var DrawingArea = new Lang.Class({
         this.buttonPressedHandler = this.connect('button-press-event', this._onButtonPressed.bind(this));
         this.keyboardPopupMenuHandler = this.connect('popup-menu', this._onKeyboardPopupMenu.bind(this));
         this.scrollHandler = this.connect('scroll-event', this._onScroll.bind(this));
-        this.get_parent().set_background_color(this.reactive && this.hasBackground ? this.activeBackgroundColor : null);
-        this._updateStyle();
+        this.get_parent().set_background_color(this.reactive && this.hasBackground ? this.areaBackgroundColor : null);
     },
     
-    leaveDrawingMode: function(save) {
+    leaveDrawingMode: function(save, erase) {
         if (this.stageKeyPressedHandler) {
             global.stage.disconnect(this.stageKeyPressedHandler);
             this.stageKeyPressedHandler = null;
@@ -1041,14 +1100,49 @@ var DrawingArea = new Lang.Class({
         
         this.currentElement = null;
         this._stopTextCursorTimeout();
-        this._redisplay();
+        if (erase)
+            this.erase();
+        else
+            this._redisplay();
         this.closeMenu();
         this.get_parent().set_background_color(null);
+        Files.Images.reset();
         if (save)
             this.savePersistent();
     },
     
-    saveAsSvg: function() {
+    // Used by the menu.
+    getSvgContentsForJson(json) {
+        let elements = [];
+        let elementsContent = '';
+        
+        elements.push(...JSON.parse(json.contents).map(object => {
+            if (object.color)
+                object.color = getClutterColorFromString(object.color, 'white');
+            if (object.font && typeof object.font == 'string')
+                object.font = Pango.FontDescription.from_string(object.font);
+            if (object.image)
+                object.image = new Files.Image(object.image);
+            return new Elements.DrawingElement(object);
+        }));
+        elements.forEach(element => elementsContent += element.buildSVG('transparent'));
+        
+        let prefixes = 'xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"';
+        
+        let getGiconSvgContent = () => {
+            let size = Math.min(this.monitor.width, this.monitor.height);
+            let [x, y] = [(this.monitor.width - size) / 2, (this.monitor.height - size) / 2];
+            return `<svg viewBox="${x} ${y} ${size} ${size}" ${prefixes}>${elementsContent}\n</svg>`;
+        };
+        
+        let getImageSvgContent = () => {
+            return `<svg viewBox="0 0 ${this.width} ${this.height}" ${prefixes}>${elementsContent}\n</svg>`;
+        };
+        
+        return [getGiconSvgContent, getImageSvgContent];
+    },
+    
+    exportToSvg: function() {
         // stop drawing or writing
         if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting) {
             this._stopWriting();
@@ -1062,7 +1156,7 @@ var DrawingArea = new Lang.Class({
         let content = `<svg viewBox="0 0 ${this.width} ${this.height}" ${prefixes}>`;
         if (SVG_DEBUG_EXTENDS)
             content = `<svg viewBox="${-this.width} ${-this.height} ${2 * this.width} ${2 * this.height}" xmlns="http://www.w3.org/2000/svg">`;
-        let backgroundColorString = this.hasBackground ? this.activeBackgroundColor.to_string() : 'transparent';
+        let backgroundColorString = this.hasBackground ? String(this.areaBackgroundColor) : 'transparent';
         if (backgroundColorString != 'transparent') {
             content += `\n  <rect id="background" width="100%" height="100%" fill="${backgroundColorString}"/>`;
         }
@@ -1070,19 +1164,10 @@ var DrawingArea = new Lang.Class({
             content += `\n  <line stroke="black" x1="0" y1="${-this.height}" x2="0" y2="${this.height}"/>`;
             content += `\n  <line stroke="black" x1="${-this.width}" y1="0" x2="${this.width}" y2="0"/>`;
         }
-        for (let i = 0; i < this.elements.length; i++) {
-            content += this.elements[i].buildSVG(backgroundColorString);
-        }
+        this.elements.forEach(element => content += element.buildSVG(backgroundColorString));
         content += "\n</svg>";
         
-        let filename = `${Me.metadata['svg-file-name']} ${Files.getDateString()}.svg`;
-        let dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES);
-        let path = GLib.build_filenamev([dir, filename]);
-        if (GLib.file_test(path, GLib.FileTest.EXISTS))
-            return false;
-        let success = GLib.file_set_contents(path, content);
-        
-        if (success) {
+        if (Files.saveSvg(content)) {
             // pass the parent (bgContainer) to Flashspot because coords of this are relative
             let flashspot = new Screenshot.Flashspot(this.get_parent());
             flashspot.fire();
@@ -1095,7 +1180,7 @@ var DrawingArea = new Lang.Class({
         }
     },
     
-    _saveAsJson: function(name, notify, callback) {
+    _saveAsJson: function(json, notify, callback) {
         // stop drawing or writing
         if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting) {
             this._stopWriting();
@@ -1103,46 +1188,31 @@ var DrawingArea = new Lang.Class({
             this._stopDrawing();
         }
         
-        let json = new Files.Json({ name });
-        let oldContents;
-        
-        if (name == Me.metadata['persistent-file-name']) {
-            let oldContents = json.contents;
-            // do not create a file to write just an empty array
-            if (!oldContents && this.elements.length == 0)
-                return;
-        }
-        
         // do not use "content = JSON.stringify(this.elements, null, 2);", neither "content = JSON.stringify(this.elements);"
         // do compromise between disk usage and human readability
-        let contents = `[\n  ` + new Array(...this.elements.map(element => JSON.stringify(element))).join(`,\n\n  `) + `\n]`;
-        
-        if (name == Me.metadata['persistent-file-name'] && contents == oldContents)
-            return;
+        let contents = this.elements.length ? `[\n  ` + new Array(...this.elements.map(element => JSON.stringify(element))).join(`,\n\n  `) + `\n]` : '[]';
         
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             json.contents = contents;
             if (notify)
-                this.emit('show-osd', 'document-save-symbolic', name, "", -1, false);
-            if (name != Me.metadata['persistent-file-name']) {
-                this.jsonName = name;
-                this.lastJsonContents = contents;
-            }
+                this.emit('show-osd', Files.Icons.SAVE, json.name, "", -1, false);
+            if (!json.isPersistent)
+                this.currentJson = json;
             if (callback)
                 callback();
         });
     },
     
     saveAsJsonWithName: function(name, callback) {
-        this._saveAsJson(name, false, callback);
+        this._saveAsJson(Files.Jsons.getNamed(name), false, callback);
     },
     
-    saveAsJson: function() {
-        this._saveAsJson(Files.getDateString(), true);
+    saveAsJson: function(notify, callback) {
+        this._saveAsJson(Files.Jsons.getDated(), notify, callback);
     },
     
     savePersistent: function() {
-        this._saveAsJson(Me.metadata['persistent-file-name']);
+        this._saveAsJson(Files.Jsons.getPersistent());
     },
     
     syncPersistent: function() {
@@ -1154,7 +1224,7 @@ var DrawingArea = new Lang.Class({
             
     },
     
-    _loadJson: function(name, notify) {
+    _loadJson: function(json, notify) {
         // stop drawing or writing
         if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting) {
             this._stopWriting();
@@ -1164,56 +1234,49 @@ var DrawingArea = new Lang.Class({
         this.elements = [];
         this.currentElement = null;
         
-        let contents = (new Files.Json({ name })).contents;
-        if (!contents)
+        if (!json.contents)
             return;
         
-        this.elements.push(...JSON.parse(contents).map(object => {
+        this.elements.push(...JSON.parse(json.contents).map(object => {
+            if (object.color)
+                object.color = getClutterColorFromString(object.color, 'white');
+            if (object.font && typeof object.font == 'string')
+                object.font = Pango.FontDescription.from_string(object.font);
             if (object.image)
                 object.image = new Files.Image(object.image);
             return new Elements.DrawingElement(object);
         }));
         
         if (notify)
-            this.emit('show-osd', 'document-open-symbolic', name, "", -1, false);
-        if (name != Me.metadata['persistent-file-name']) {
-            this.jsonName = name;
-            this.lastJsonContents = contents;
-        }
+            this.emit('show-osd', Files.Icons.OPEN, json.name, "", -1, false);
+        if (!json.isPersistent)
+            this.currentJson = json;
     },
     
     _loadPersistent: function() {
-        this._loadJson(Me.metadata['persistent-file-name']);
+        this._loadJson(Files.Jsons.getPersistent());
     },
     
-    loadJson: function(name, notify) {
-        this._loadJson(name, notify);
+    loadJson: function(json, notify) {
+        this._loadJson(json, notify);
         this._redisplay();
     },
     
-    loadNextJson: function() {
-        let names = Files.getJsons().map(json => json.name);
-        
-        if (!names.length)
-            return;
-        
-        let nextName = names[this.jsonName && names.indexOf(this.jsonName) != names.length - 1 ? names.indexOf(this.jsonName) + 1 : 0];
-        this.loadJson(nextName, true);
+    loadPreviousJson: function() {
+        let json = Files.Jsons.getPrevious(this.currentJson || null);
+        if (json)
+            this.loadJson(json, true);
     },
     
-    loadPreviousJson: function() {
-        let names = Files.getJsons().map(json => json.name);
-        
-        if (!names.length)
-            return;
-        
-        let previousName = names[this.jsonName && names.indexOf(this.jsonName) > 0 ? names.indexOf(this.jsonName) - 1 : names.length - 1];
-        this.loadJson(previousName, true);
+    loadNextJson: function() {
+        let json = Files.Jsons.getNext(this.currentJson || null);
+        if (json)
+            this.loadJson(json, true);
     },
     
     get drawingContentsHasChanged() {
         let contents = `[\n  ` + new Array(...this.elements.map(element => JSON.stringify(element))).join(`,\n\n  `) + `\n]`;
-        return contents != this.lastJsonContents;
+        return contents != (this.currentJson && this.currentJson.contents);
     }
 });
 

@@ -1,4 +1,5 @@
 /* jslint esversion: 6 */
+/* exported DisplayStrings, DrawingMenu */
 
 /*
  * Copyright 2019 Abakkk
@@ -21,7 +22,6 @@
  */
 
 const Clutter = imports.gi.Clutter;
-const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
@@ -30,44 +30,121 @@ const St = imports.gi.St;
 
 const BoxPointer = imports.ui.boxpointer;
 const Config = imports.misc.config;
+const Dash = imports.ui.dash;
 const Main = imports.ui.main;
 const PopupMenu = imports.ui.popupMenu;
 const Slider = imports.ui.slider;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Area = Me.imports.area;
-const Elements = Me.imports.elements;
-const Extension = Me.imports.extension;
 const Files = Me.imports.files;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+const pgettext = imports.gettext.domain(Me.metadata['gettext-domain']).pgettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
-
-const ICON_DIR = Me.dir.get_child('data').get_child('icons');
-const SMOOTH_ICON_PATH = ICON_DIR.get_child('smooth-symbolic.svg').get_path();
-const COLOR_ICON_PATH = ICON_DIR.get_child('color-symbolic.svg').get_path();
-const FILL_ICON_PATH = ICON_DIR.get_child('fill-symbolic.svg').get_path();
-const STROKE_ICON_PATH = ICON_DIR.get_child('stroke-symbolic.svg').get_path();
-const LINEJOIN_ICON_PATH = ICON_DIR.get_child('linejoin-symbolic.svg').get_path();
-const LINECAP_ICON_PATH = ICON_DIR.get_child('linecap-symbolic.svg').get_path();
-const FILLRULE_NONZERO_ICON_PATH = ICON_DIR.get_child('fillrule-nonzero-symbolic.svg').get_path();
-const FILLRULE_EVENODD_ICON_PATH = ICON_DIR.get_child('fillrule-evenodd-symbolic.svg').get_path();
-const DASHED_LINE_ICON_PATH = ICON_DIR.get_child('dashed-line-symbolic.svg').get_path();
-const FULL_LINE_ICON_PATH = ICON_DIR.get_child('full-line-symbolic.svg').get_path();
-
 // 150 labels with font-family style take ~15Mo
 const FONT_FAMILY_STYLE = true;
+// use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
+const WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
 
 const getActor = function(object) {
     return GS_VERSION < '3.33.0' ? object.actor : object;
 };
 
+const getSummary = function(settingKey) {
+    return Me.internalShortcutSettings.settings_schema.get_key(settingKey).get_summary();
+};
+
+// Used by both menu and osd notifications.
+var DisplayStrings = {
+    getDashedLine: function(dashed) {
+        return dashed ? _("Dashed line") :
+                        // Translators: as the alternative to "Dashed line"
+                        _("Full line");
+    },
+    
+    getFill: function(fill) {
+        return fill ? _("Fill") :
+                      // Translators: as the alternative to "Fill"
+                      _("Outline");
+    },
+    
+    get FillRule() {
+        if (!this._fillRules)
+            // Translators: fill-rule SVG attribute
+            this._fillRules = { 0: _("Nonzero"), 1: _("Evenodd") };
+        return this._fillRules;
+    },
+    
+    getFontFamily: function(family) {
+        if (!this._fontGenericFamilies)
+            // Translators: generic font-family SVG attribute
+            this._fontGenericFamilies = { 'Sans-Serif': pgettext("font-family", "Sans-Serif"), 'Serif': pgettext("font-family", "Serif"),
+                                          'Monospace': pgettext("font-family", "Monospace"), 'Cursive': pgettext("font-family", "Cursive"),
+                                          'Fantasy': pgettext("font-family", "Fantasy") };
+        return this._fontGenericFamilies[family] || family;
+    },
+    
+    get FontStyle() {
+        if (!this._fontStyles)
+            // Translators: font-style SVG attribute
+            this._fontStyles = { 0: pgettext("font-style", "Normal"), 1: pgettext("font-style", "Oblique"), 2: pgettext("font-style", "Italic") };
+        return this._fontStyles;
+    },
+    
+    FontStyleMarkup: { 0: 'normal', 1: 'oblique', 2: 'italic' },
+    
+    get FontWeight() {
+        if (!this._fontWeights)
+            // Translators: font-weight SVG attribute
+            this._fontWeights = { 100: pgettext("font-weight", "Thin"), 200: pgettext("font-weight", "Ultra Light"), 300: pgettext("font-weight", "Light"),
+                                  350: pgettext("font-weight", "Semi Light"), 380: pgettext("font-weight", "Book"), 400: pgettext("font-weight", "Normal"),
+                                  500: pgettext("font-weight", "Medium"), 600: pgettext("font-weight", "Semi Bold"), 700: pgettext("font-weight", "Bold"),
+                                  800: pgettext("font-weight", "Ultra Bold"), 900: pgettext("font-weight", "Heavy"), 1000: pgettext("font-weight", "Ultra Heavy") };
+        return this._fontWeights;
+    },
+    
+    get LineCap() {
+        if (!this._lineCaps)
+            // Translators: stroke-linecap SVG attribute
+            this._lineCaps = { 0: pgettext("stroke-linecap", "Butt"), 1: pgettext("stroke-linecap", "Round"), 2: pgettext("stroke-linecap", "Square") };
+        return this._lineCaps;
+    },
+    
+    get LineJoin() {
+        if (!this._lineJoins)
+            // Translators: stroke-linejoin SVG attribute
+            this._lineJoins = { 0: pgettext("stroke-linejoin", "Miter"), 1: pgettext("stroke-linejoin", "Round"), 2: pgettext("stroke-linejoin", "Bevel") };
+        return this._lineJoins;
+    },
+    
+    getPixels(value) {
+        // Translators: value in pixel unit (e.g. "5 px")
+        return _("%f px").format(value);
+    },
+    
+    getTextAlignment: function(rightAligned) {
+        // Translators: text alignment
+        return rightAligned ? _("Right aligned") : _("Left aligned");
+    },
+    
+    get Tool() {
+        if (!this._tools)
+            this._tools = { 0: pgettext("drawing-tool", "Free drawing"), 1: pgettext("drawing-tool", "Line"), 2: pgettext("drawing-tool", "Ellipse"),
+                            3: pgettext("drawing-tool", "Rectangle"), 4: pgettext("drawing-tool", "Text"), 5: pgettext("drawing-tool", "Polygon"),
+                            6: pgettext("drawing-tool", "Polyline"), 7: pgettext("drawing-tool", "Image"),
+                            100: pgettext("drawing-tool", "Move"), 101: pgettext("drawing-tool", "Resize"), 102: pgettext("drawing-tool", "Mirror") };
+        return this._tools;
+    }
+};
+
 var DrawingMenu = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingMenu',
     
-    _init: function(area, monitor) {
+    _init: function(area, monitor, drawingTools) {
         this.area = area;
+        this.drawingTools = drawingTools;
+        
         let side = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? St.Side.RIGHT : St.Side.LEFT;
         this.menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor, 0.25, side);
         this.menuManager = new PopupMenu.PopupMenuManager(GS_VERSION < '3.33.0' ? { actor: this.area } : this.area);
@@ -94,20 +171,11 @@ var DrawingMenu = new Lang.Class({
                 this.saveDrawingSubMenu.close();
             menuCloseFunc.bind(this.menu)(animate);
         };
-        
-        this.colorIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(COLOR_ICON_PATH) });
-        this.smoothIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(SMOOTH_ICON_PATH) });
-        this.strokeIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(STROKE_ICON_PATH) });
-        this.fillIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FILL_ICON_PATH) });
-        this.fillRuleNonzeroIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FILLRULE_NONZERO_ICON_PATH) });
-        this.fillRuleEvenoddIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FILLRULE_EVENODD_ICON_PATH) });
-        this.linejoinIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(LINEJOIN_ICON_PATH) });
-        this.linecapIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(LINECAP_ICON_PATH) });
-        this.fullLineIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(FULL_LINE_ICON_PATH) });
-        this.dashedLineIcon = new Gio.FileIcon({ file: Gio.File.new_for_path(DASHED_LINE_ICON_PATH) });
     },
     
     disable: function() {
+        delete this.area;
+        delete this.drawingTools;
         this.menuManager.removeMenu(this.menu);
         Main.layoutManager.uiGroup.remove_actor(this.menu.actor);
         this.menu.destroy();
@@ -154,106 +222,101 @@ var DrawingMenu = new Lang.Class({
     _redisplay: function() {
         this.menu.removeAll();
         
-        this.actionButtons = [];
-        let groupItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, style_class: "draw-on-your-screen-menu-group-item" });
-        getActor(groupItem).add_child(this._createActionButton(_("Undo"), this.area.undo.bind(this.area), 'edit-undo-symbolic'));
-        getActor(groupItem).add_child(this._createActionButton(_("Redo"), this.area.redo.bind(this.area), 'edit-redo-symbolic'));
-        getActor(groupItem).add_child(this._createActionButton(_("Erase"), this.area.deleteLastElement.bind(this.area), 'edit-clear-all-symbolic'));
-        getActor(groupItem).add_child(this._createActionButton(_("Smooth"), this.area.smoothLastElement.bind(this.area), this.smoothIcon));
+        let groupItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, style_class: 'draw-on-your-screen-menu-group-item' });
+        this.undoButton = new ActionButton(_("Undo"), 'edit-undo-symbolic', this.area.undo.bind(this.area), this._updateActionSensitivity.bind(this));
+        this.redoButton = new ActionButton(_("Redo"), 'edit-redo-symbolic', this.area.redo.bind(this.area), this._updateActionSensitivity.bind(this));
+        this.eraseButton = new ActionButton(_("Erase"), 'edit-clear-all-symbolic', this.area.deleteLastElement.bind(this.area), this._updateActionSensitivity.bind(this));
+        this.smoothButton = new ActionButton(_("Smooth"), Files.Icons.SMOOTH, this.area.smoothLastElement.bind(this.area), this._updateActionSensitivity.bind(this));
+        this.eraseButton.child.add_style_class_name('draw-on-your-screen-menu-destructive-button');
+        this.smoothButton.child.add_style_class_name('draw-on-your-screen-menu-destructive-button');
+        getActor(groupItem).add_child(this.undoButton);
+        getActor(groupItem).add_child(this.redoButton);
+        getActor(groupItem).add_child(this.eraseButton);
+        getActor(groupItem).add_child(this.smoothButton);
         this.menu.addMenuItem(groupItem);
         this._addSeparator(this.menu, true);
         
-        this._addSubMenuItem(this.menu, 'document-edit-symbolic', Area.ToolNames, this.area, 'currentTool', this._updateSectionVisibility.bind(this));
-        this.colorItem = this._addColorSubMenuItem(this.menu);
-        this.fillItem = this._addSwitchItem(this.menu, _("Fill"), this.strokeIcon, this.fillIcon, this.area, 'fill', this._updateSectionVisibility.bind(this));
+        this.toolItem = this._addToolSubMenuItem(this.menu, this._updateSectionVisibility.bind(this));
+        this.paletteItem = this._addPaletteSubMenuItem(this.menu, Files.Icons.PALETTE);
+        this.colorItem = this._addColorSubMenuItem(this.menu, Files.Icons.COLOR);
+        this.fillItem = this._addSwitchItem(this.menu, DisplayStrings.getFill(true), Files.Icons.STROKE, Files.Icons.FILL, this.area, 'fill', this._updateSectionVisibility.bind(this));
         this.fillSection = new PopupMenu.PopupMenuSection();
         this.fillSection.itemActivated = () => {};
-        this.fillRuleItem = this._addSwitchItem(this.fillSection, _("Evenodd"), this.fillRuleNonzeroIcon, this.fillRuleEvenoddIcon, this.area, 'currentEvenodd');
+        this.fillRuleItem = this._addSwitchItem(this.fillSection, DisplayStrings.FillRule[1], Files.Icons.FILLRULE_NONZERO, Files.Icons.FILLRULE_EVENODD, this.area, 'currentEvenodd');
         this.menu.addMenuItem(this.fillSection);
         this._addSeparator(this.menu);
         
         let lineSection = new PopupMenu.PopupMenuSection();
         this._addSliderItem(lineSection, this.area, 'currentLineWidth');
-        this._addSubMenuItem(lineSection, this.linejoinIcon, Elements.LineJoinNames, this.area, 'currentLineJoin');
-        this._addSubMenuItem(lineSection, this.linecapIcon, Elements.LineCapNames, this.area, 'currentLineCap');
-        this._addSwitchItem(lineSection, _("Dashed"), this.fullLineIcon, this.dashedLineIcon, this.area, 'dashedLine');
+        this._addSubMenuItem(lineSection, Files.Icons.LINEJOIN, DisplayStrings.LineJoin, this.area, 'currentLineJoin');
+        this._addSubMenuItem(lineSection, Files.Icons.LINECAP, DisplayStrings.LineCap, this.area, 'currentLineCap');
+        this._addSwitchItem(lineSection, DisplayStrings.getDashedLine(true), Files.Icons.FULL_LINE, Files.Icons.DASHED_LINE, this.area, 'dashedLine');
         this._addSeparator(lineSection);
         this.menu.addMenuItem(lineSection);
         lineSection.itemActivated = () => {};
         this.lineSection = lineSection;
         
         let fontSection = new PopupMenu.PopupMenuSection();
-        this._addFontFamilySubMenuItem(fontSection, 'font-x-generic-symbolic');
-        this._addSubMenuItem(fontSection, 'format-text-bold-symbolic', Elements.FontWeightNames, this.area, 'currentFontWeight');
-        this._addSubMenuItem(fontSection, 'format-text-italic-symbolic', Elements.FontStyleNames, this.area, 'currentFontStyle');
-        this._addSwitchItem(fontSection, _("Right aligned"), 'format-justify-left-symbolic', 'format-justify-right-symbolic', this.area, 'currentTextRightAligned');
+        this._addFontFamilySubMenuItem(fontSection, Files.Icons.FONT_FAMILY);
+        this._addSubMenuItem(fontSection, Files.Icons.FONT_WEIGHT, DisplayStrings.FontWeight, this.area, 'currentFontWeight');
+        this._addSubMenuItem(fontSection, Files.Icons.FONT_STYLE, DisplayStrings.FontStyle, this.area, 'currentFontStyle');
+        this._addSwitchItem(fontSection, DisplayStrings.getTextAlignment(true), Files.Icons.LEFT_ALIGNED, Files.Icons.RIGHT_ALIGNED, this.area, 'currentTextRightAligned');
         this._addSeparator(fontSection);
         this.menu.addMenuItem(fontSection);
         fontSection.itemActivated = () => {};
         this.fontSection = fontSection;
         
         let imageSection = new PopupMenu.PopupMenuSection();
-        let images = this.area.getImages();
-        if (images.length) {
-            if (this.area.currentImage > images.length - 1)
-                this.area.currentImage = images.length - 1;
-            this._addSubMenuItem(imageSection, null, images, this.area, 'currentImage');
-        }
+        this.imageItem = this._addImageSubMenuItem(imageSection);
         this._addSeparator(imageSection);
         this.menu.addMenuItem(imageSection);
         imageSection.itemActivated = () => {};
         this.imageSection = imageSection;
         
-        let manager = Extension.manager;
-        this._addSimpleSwitchItem(this.menu, _("Hide panel and dock"), manager.hiddenList ? true : false, manager.togglePanelAndDockOpacity.bind(manager));
-        this._addSimpleSwitchItem(this.menu, _("Add a drawing background"), this.area.hasBackground, this.area.toggleBackground.bind(this.area));
-        this._addSimpleSwitchItem(this.menu, _("Add a grid overlay"), this.area.hasGrid, this.area.toggleGrid.bind(this.area));
-        this._addSimpleSwitchItem(this.menu, _("Square drawing area"), this.area.isSquareArea, this.area.toggleSquareArea.bind(this.area));
+        let areaManager = Me.stateObj.areaManager;
+        this._addSimpleSwitchItem(this.menu, getSummary('toggle-panel-and-dock-visibility'), !!areaManager.hiddenList, areaManager.togglePanelAndDockOpacity.bind(areaManager));
+        this._addSimpleSwitchItem(this.menu, getSummary('toggle-background'), this.area.hasBackground, this.area.toggleBackground.bind(this.area));
+        this._addSimpleSwitchItem(this.menu, getSummary('toggle-grid'), this.area.hasGrid, this.area.toggleGrid.bind(this.area));
+        this._addSimpleSwitchItem(this.menu, getSummary('toggle-square-area'), this.area.isSquareArea, this.area.toggleSquareArea.bind(this.area));
         this._addSeparator(this.menu);
         
         this._addDrawingNameItem(this.menu);
-        this._addOpenDrawingSubMenuItem(this.menu);
-        this._addSaveDrawingSubMenuItem(this.menu);
+        this._addOpenDrawingSubMenuItem(this.menu, _("Open drawing"), 'document-open-symbolic');
+        this._addSaveDrawingSubMenuItem(this.menu, _("Save drawing as…"), 'document-save-as-symbolic');
+        this._addSeparator(this.menu);
         
-        this.menu.addAction(_("Save drawing as a SVG file"), this.area.saveAsSvg.bind(this.area), 'image-x-generic-symbolic');
-        this.menu.addAction(_("Edit style"), manager.openUserStyleFile.bind(manager), 'document-page-setup-symbolic');
-        this.menu.addAction(_("Show help"), () => { this.close(); this.area.toggleHelp(); }, 'preferences-desktop-keyboard-shortcuts-symbolic');
+        groupItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, style_class: 'draw-on-your-screen-menu-group-item' });
+        this.saveButton = new ActionButton(getSummary('save-as-json'), 'document-save-symbolic', this.area.saveAsJson.bind(this.area, false, this._onDrawingSaved.bind(this)), null);
+        this.svgButton = new ActionButton(getSummary('export-to-svg'), Files.Icons.DOCUMENT_EXPORT, this.area.exportToSvg.bind(this.area), null);
+        this.prefsButton = new ActionButton(getSummary('open-preferences'), 'document-page-setup-symbolic', areaManager.openPreferences.bind(areaManager), null);
+        this.helpButton = new ActionButton(getSummary('toggle-help'), 'preferences-desktop-keyboard-shortcuts-symbolic', () => { this.close(); this.area.toggleHelp(); }, null);
+        getActor(groupItem).add_child(this.saveButton);
+        getActor(groupItem).add_child(this.svgButton);
+        getActor(groupItem).add_child(this.prefsButton);
+        getActor(groupItem).add_child(this.helpButton);
+        this.menu.addMenuItem(groupItem);
         
         this._updateActionSensitivity();
         this._updateSectionVisibility();
     },
     
-    // from system.js (GS 3.34-)
-    _createActionButton: function(accessibleName, callback, icon) {
-        let button = new St.Button({ track_hover: true,
-                                     x_align: Clutter.ActorAlign.CENTER,
-                                     accessible_name: accessibleName,
-                                     // use 'popup-menu' and 'popup-menu-item' style classes to provide theme colors
-                                     style_class: 'system-menu-action popup-menu-item popup-menu' });
-        button.child = new St.Icon(typeof icon == 'string' ? { icon_name: icon } : { gicon: icon });
-        button.connect('clicked', () => {
-            callback();
-            this._updateActionSensitivity();
-        });
-        button.bind_property('reactive', button, 'can_focus', GObject.BindingFlags.DEFAULT);
-        this.actionButtons.push(button);
-        return new St.Bin({ child: button, x_expand: true });
-    },
-    
     _updateActionSensitivity: function() {
-        let [undoButton, redoButton, eraseButton, smoothButton] = this.actionButtons;
-        undoButton.reactive = this.area.elements.length > 0;
-        redoButton.reactive = this.area.undoneElements.length > 0;
-        eraseButton.reactive = this.area.elements.length > 0;
-        smoothButton.reactive = this.area.elements.length > 0 && this.area.elements[this.area.elements.length - 1].shape == Area.Tools.NONE;
+        this.undoButton.child.reactive = this.area.elements.length > 0;
+        this.redoButton.child.reactive = this.area.undoneElements.length > 0;
+        this.eraseButton.child.reactive = this.area.elements.length > 0;
+        this.smoothButton.child.reactive = this.area.elements.length > 0 && this.area.elements[this.area.elements.length - 1].shape == this.drawingTools.NONE;
+        this.saveButton.child.reactive = this.area.elements.length > 0;
+        this.svgButton.child.reactive = this.area.elements.length > 0;
+        this.saveDrawingSubMenuItem.setSensitive(this.area.elements.length > 0);
     },
     
     _updateSectionVisibility: function() {
-        let [isText, isImage] = [this.area.currentTool == Area.Tools.TEXT, this.area.currentTool == Area.Tools.IMAGE];
+        let [isText, isImage] = [this.area.currentTool == this.drawingTools.TEXT, this.area.currentTool == this.drawingTools.IMAGE];
         this.lineSection.actor.visible = !isText && !isImage;
         this.fontSection.actor.visible = isText;
         this.imageSection.actor.visible = isImage;
         this.colorItem.setSensitive(!isImage);
+        this.paletteItem.setSensitive(!isImage);
         this.fillItem.setSensitive(!isText && !isImage);
         this.fillSection.setSensitive(!isText && !isImage);
         
@@ -269,18 +332,14 @@ var DrawingMenu = new Lang.Class({
         item.icon = new St.Icon({ style_class: 'popup-menu-icon' });
         getActor(item).insert_child_at_index(item.icon, 1);
         let icon = target[targetProperty] ? iconTrue : iconFalse;
-        if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, Gio.Icon))
+        if (icon)
             item.icon.set_gicon(icon);
-        else if (icon)
-            item.icon.set_icon_name(icon);
         
         item.connect('toggled', (item, state) => {
             target[targetProperty] = state;
             let icon = target[targetProperty] ? iconTrue : iconFalse;
-            if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, Gio.Icon))
+            if (icon)
                 item.icon.set_gicon(icon);
-            else if (icon)
-                item.icon.set_icon_name(icon);
             if (onToggled)
                 onToggled();
         });
@@ -296,26 +355,26 @@ var DrawingMenu = new Lang.Class({
     
     _addSliderItem: function(menu, target, targetProperty) {
         let item = new PopupMenu.PopupBaseMenuItem({ activate: false });
-        let label = new St.Label({ text: _("%d px").format(target[targetProperty]), style_class: 'draw-on-your-screen-menu-slider-label' });
+        let label = new St.Label({ text: DisplayStrings.getPixels(target[targetProperty]), style_class: 'draw-on-your-screen-menu-slider-label' });
         let slider = new Slider.Slider(target[targetProperty] / 50);
         
         if (GS_VERSION < '3.33.0') {
             slider.connect('value-changed', (slider, value, property) => {
                 target[targetProperty] = Math.max(Math.round(value * 50), 0);
-                label.set_text(target[targetProperty] + " px");
+                label.set_text(DisplayStrings.getPixels(target[targetProperty]));
                 if (target[targetProperty] === 0)
-                    label.add_style_class_name(Extension.WARNING_COLOR_STYLE_CLASS_NAME);
+                    label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
                 else
-                    label.remove_style_class_name(Extension.WARNING_COLOR_STYLE_CLASS_NAME);
+                    label.remove_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
             });
         } else {
             slider.connect('notify::value', () => {
                 target[targetProperty] = Math.max(Math.round(slider.value * 50), 0);
-                label.set_text(target[targetProperty] + " px");
+                label.set_text(DisplayStrings.getPixels(target[targetProperty]));
                 if (target[targetProperty] === 0)
-                    label.add_style_class_name(Extension.WARNING_COLOR_STYLE_CLASS_NAME);
+                    label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
                 else
-                    label.remove_style_class_name(Extension.WARNING_COLOR_STYLE_CLASS_NAME);
+                    label.remove_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
             });
         }
         
@@ -327,94 +386,139 @@ var DrawingMenu = new Lang.Class({
         menu.addMenuItem(item);
     },
     
-    _addSubMenuItem: function(menu, icon, obj, target, targetProperty, callback) {
-        if (targetProperty == 'currentImage')
-            icon = obj[target[targetProperty]].gicon;
-        let item = new PopupMenu.PopupSubMenuMenuItem(_(String(obj[target[targetProperty]])), icon ? true : false);
-        if (icon && icon instanceof GObject.Object && GObject.type_is_a(icon, Gio.Icon))
-            item.icon.set_gicon(icon);
-        else if (icon)
-            item.icon.set_icon_name(icon);
+    _addSubMenuItem: function(menu, icon, obj, target, targetProperty) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(String(obj[target[targetProperty]]), icon ? true : false);
         
-        item.menu.itemActivated = () => {
-            item.menu.close();
-        };
+        item.icon.set_gicon(icon);
+        item.menu.itemActivated = item.menu.close;
         
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-            for (let i in obj) {
-                let text;
-                if (targetProperty == 'currentFontWeight')
-                    text = `<span font_weight="${i}">${_(obj[i])}</span>`;
-                else if (targetProperty == 'currentFontStyle')
-                    text = `<span font_style="${obj[i].toLowerCase()}">${_(obj[i])}</span>`;
-                else
-                    text = _(String(obj[i]));
+            Object.keys(obj).forEach(key => {
+                let text = targetProperty == 'currentFontWeight' ? `<span font_weight="${key}">${obj[key]}</span>` :
+                           targetProperty == 'currentFontStyle' ? `<span font_style="${DisplayStrings.FontStyleMarkup[key]}">${obj[key]}</span>` :
+                           String(obj[key]);
                 
-                let iCaptured = Number(i);
                 let subItem = item.menu.addAction(text, () => {
-                    item.label.set_text(_(String(obj[iCaptured])));
-                    target[targetProperty] = iCaptured;
-                    if (targetProperty == 'currentImage')
-                        item.icon.set_gicon(obj[iCaptured].gicon);
-                    if (callback)
-                        callback();
+                    item.label.set_text(String(obj[key]));
+                    target[targetProperty] = Number(key);
                 });
+                
+                subItem.label.get_clutter_text().set_use_markup(true);
+                getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+            });
+            return GLib.SOURCE_REMOVE;
+        });
+        
+        menu.addMenuItem(item);
+    },
+    
+    _addToolSubMenuItem: function(menu, callback) {
+        let item = new PopupMenu.PopupSubMenuMenuItem('', true);
+        item.update = () => {
+            item.label.set_text(DisplayStrings.Tool[this.area.currentTool]);
+            let toolName = this.drawingTools.getNameOf(this.area.currentTool);
+            item.icon.set_gicon(Files.Icons[`TOOL_${toolName}`]);
+        };
+        item.update();
+        
+        item.menu.itemActivated = item.menu.close;
+        
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            Object.keys(DisplayStrings.Tool).forEach(key => {
+                let text = DisplayStrings.Tool[key];
+                let toolName = this.drawingTools.getNameOf(key);
+                let subItemIcon = Files.Icons[`TOOL_${toolName}`];
+                let subItem = item.menu.addAction(text, () => {
+                    this.area.currentTool = Number(key);
+                    item.update();
+                    callback();
+                }, subItemIcon);
                 
                 subItem.label.get_clutter_text().set_use_markup(true);
                 getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
                 
                 // change the display order of tools
-                if (obj == Area.ToolNames && i == Area.Tools.POLYGON)
-                    item.menu.moveMenuItem(subItem, 4);
-                else if (obj == Area.ToolNames && i == Area.Tools.POLYLINE)
-                    item.menu.moveMenuItem(subItem, 5);
-            }
+                if (key == this.drawingTools.POLYGON)
+                    item.menu.moveMenuItem(subItem, Number(this.drawingTools.TEXT));
+                else if (key == this.drawingTools.POLYLINE)
+                    item.menu.moveMenuItem(subItem, Number(this.drawingTools.TEXT) + 1);
+            });
             return GLib.SOURCE_REMOVE;
         });
-        menu.addMenuItem(item);
-    },
-    
-    _addColorSubMenuItem: function(menu) {
-        let item = new PopupMenu.PopupSubMenuMenuItem(_("Color"), true);
-        item.icon.set_gicon(this.colorIcon);
-        item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
         
-        item.menu.itemActivated = () => {
-            item.menu.close();
-        };
-        
-        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-            for (let i = 1; i < this.area.colors.length; i++) {
-                let text = this.area.colors[i].to_string();
-                let iCaptured = i;
-                let colorItem = item.menu.addAction(text, () => {
-                    this.area.currentColor = this.area.colors[iCaptured];
-                    item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
-                });
-                // Foreground color markup is not displayed since 3.36, use style instead but the transparency is lost.
-                colorItem.label.set_style(`color:${this.area.colors[i].to_string().slice(0, 7)};`);
-                getActor(colorItem).connect('key-focus-in', updateSubMenuAdjustment);
-            }
-            return GLib.SOURCE_REMOVE;
-        });
         menu.addMenuItem(item);
         return item;
     },
     
-    _addFontFamilySubMenuItem: function(menu, icon) {
-        let item = new PopupMenu.PopupSubMenuMenuItem(this.area.currentFontFamily, true);
-        item.icon.set_icon_name(icon);
+    _addPaletteSubMenuItem: function(menu, icon) {
+        let text = _(this.area.currentPalette[0] || "Palette");
+        let item = new PopupMenu.PopupSubMenuMenuItem(text, true);
+        item.icon.set_gicon(icon);
         
-        item.menu.itemActivated = () => {
-            item.menu.close();
-        };
+        item.menu.itemActivated = item.menu.close;
+        
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            this.area.palettes.forEach(palette => {
+                let [name, colors] = palette;
+                if (!colors[0])
+                    return;
+                
+                let subItem = item.menu.addAction(_(name || "Palette"), () => {
+                    item.label.set_text(_(name || "Palette"));
+                    this.area.currentPalette = palette;
+                    this._populateColorSubMenu();
+                });
+                getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+            });
+            return GLib.SOURCE_REMOVE;
+        });
+        
+        menu.addMenuItem(item);
+        return item;
+    },
+    
+    _addColorSubMenuItem: function(menu, icon) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(_("Color"), true);
+        this.colorSubMenu = item.menu;
+        item.icon.set_gicon(icon);
+        item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
+        
+        item.menu.itemActivated = item.menu.close;
+        
+        this._populateColorSubMenu();
+        menu.addMenuItem(item);
+        return item;
+    },
+    
+    _populateColorSubMenu: function() {
+        this.colorSubMenu.removeAll();
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            this.area.colors.forEach(color => {
+                let text = String(color);
+                let subItem = this.colorSubMenu.addAction(text, () => {
+                    this.area.currentColor = color;
+                    this.colorItem.icon.set_style(`color:${color.to_string().slice(0, 7)};`);
+                });
+                // Foreground color markup is not displayed since 3.36, use style instead but the transparency is lost.
+                subItem.label.set_style(`color:${color.to_string().slice(0, 7)};`);
+                getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+            });
+            return GLib.SOURCE_REMOVE;
+        });
+    },
+    
+    _addFontFamilySubMenuItem: function(menu, icon) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(DisplayStrings.getFontFamily(this.area.currentFontFamily), true);
+        item.icon.set_gicon(icon);
+        
+        item.menu.itemActivated = item.menu.close;
         
         item.menu.openOld = item.menu.open;
         item.menu.open = (animate) => {
             if (!item.menu.isOpen && item.menu.isEmpty()) {
                 this.area.fontFamilies.forEach(family => {
-                    let subItem = item.menu.addAction(_(family), () => {
-                        item.label.set_text(_(family));
+                    let subItem = item.menu.addAction(DisplayStrings.getFontFamily(family), () => {
+                        item.label.set_text(DisplayStrings.getFontFamily(family));
                         this.area.currentFontFamily = family;
                     });
                     if (FONT_FAMILY_STYLE)
@@ -428,6 +532,34 @@ var DrawingMenu = new Lang.Class({
         menu.addMenuItem(item);
     },
     
+    _addImageSubMenuItem: function(menu, images) {
+        let item = new PopupMenu.PopupSubMenuMenuItem('', true);
+        item.update = () => {
+            item.label.set_text(this.area.currentImage.toString());
+            item.icon.set_gicon(this.area.currentImage.gicon);
+        };
+        item.update();
+        
+        item.menu.itemActivated = item.menu.close;
+        
+        item.menu.openOld = item.menu.open;
+        item.menu.open = (animate) => {
+            if (!item.menu.isOpen && item.menu.isEmpty()) {
+                Files.Images.getSorted().forEach(image => {
+                    let subItem = item.menu.addAction(image.toString(), () => {
+                        this.area.currentImage = image;
+                        item.update();
+                    }, image.thumbnailGicon || undefined);
+                    getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+                });
+            }
+            item.menu.openOld();
+        };
+        
+        menu.addMenuItem(item);
+        return item;
+    },
+    
     _addDrawingNameItem: function(menu) {
         this.drawingNameMenuItem = new PopupMenu.PopupMenuItem('', { reactive: false, activate: false });
         this.drawingNameMenuItem.setSensitive(false);
@@ -436,24 +568,22 @@ var DrawingMenu = new Lang.Class({
     },
     
     _updateDrawingNameMenuItem: function() {
-        getActor(this.drawingNameMenuItem).visible = this.area.jsonName ? true : false;
-        if (this.area.jsonName) {
+        getActor(this.drawingNameMenuItem).visible = this.area.currentJson ? true : false;
+        if (this.area.currentJson) {
             let prefix = this.area.drawingContentsHasChanged ? "* " : "";
-            this.drawingNameMenuItem.label.set_text(`<i>${prefix}${this.area.jsonName}</i>`);
+            this.drawingNameMenuItem.label.set_text(`<i>${prefix}${this.area.currentJson.name}</i>`);
             this.drawingNameMenuItem.label.get_clutter_text().set_use_markup(true);
         }
     },
     
-    _addOpenDrawingSubMenuItem: function(menu) {
-        let item = new PopupMenu.PopupSubMenuMenuItem(_("Open drawing"), true);
+    _addOpenDrawingSubMenuItem: function(menu, label, icon) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(label, true);
         this.openDrawingSubMenuItem = item;
         this.openDrawingSubMenu = item.menu;
-        item.setSensitive(Boolean(Files.getJsons().length));
-        item.icon.set_icon_name('document-open-symbolic');
+        item.setSensitive(Boolean(Files.Jsons.getSorted().length));
+        item.icon.set_icon_name(icon);
         
-        item.menu.itemActivated = () => {
-            item.menu.close();
-        };
+        item.menu.itemActivated = item.menu.close;
         
         item.menu.openOld = item.menu.open;
         item.menu.open = (animate) => {
@@ -467,13 +597,16 @@ var DrawingMenu = new Lang.Class({
     
     _populateOpenDrawingSubMenu: function() {
         this.openDrawingSubMenu.removeAll();
-        let jsons = Files.getJsons();
-        jsons.forEach(json => {
+        Files.Jsons.getSorted().forEach(json => {
+            if (!json.gicon)
+                json.addSvgContents(...this.area.getSvgContentsForJson(json));
+            
             let subItem = this.openDrawingSubMenu.addAction(`<i>${String(json)}</i>`, () => {
-                this.area.loadJson(json.name);
+                this.area.loadJson(json);
                 this._updateDrawingNameMenuItem();
-                this._updateSaveDrawingSubMenuItemSensitivity();
-            });
+                this._updateActionSensitivity();
+            }, json.gicon);
+            
             subItem.label.get_clutter_text().set_use_markup(true);
             getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
             
@@ -483,10 +616,22 @@ var DrawingMenu = new Lang.Class({
             });
             getActor(subItem).add_child(expander);
             
-            let deleteButton = new St.Button({ style_class: 'draw-on-your-screen-menu-delete-button',
+            let insertButton = new St.Button({ style_class: 'button draw-on-your-screen-menu-inline-button',
+                                               child: new St.Icon({ icon_name: 'insert-image-symbolic',
+                                                                    style_class: 'popup-menu-icon' }) });
+            getActor(subItem).add_child(insertButton);
+            
+            insertButton.connect('clicked', () => {
+                this.area.currentImage = json.image;
+                this.imageItem.update();
+                this.area.currentTool = this.drawingTools.IMAGE;
+                this.toolItem.update();
+                this._updateSectionVisibility();
+            });
+            
+            let deleteButton = new St.Button({ style_class: 'button draw-on-your-screen-menu-inline-button draw-on-your-screen-menu-destructive-button',
                                                child: new St.Icon({ icon_name: 'edit-delete-symbolic',
-                                                                    style_class: 'popup-menu-icon',
-                                                                    x_align: Clutter.ActorAlign.END }) });
+                                                                    style_class: 'popup-menu-icon' }) });
             getActor(subItem).add_child(deleteButton);
             
             deleteButton.connect('clicked', () => {
@@ -499,16 +644,13 @@ var DrawingMenu = new Lang.Class({
         this.openDrawingSubMenuItem.setSensitive(!this.openDrawingSubMenu.isEmpty());
     },
     
-    _addSaveDrawingSubMenuItem: function(menu) {
-        let item = new PopupMenu.PopupSubMenuMenuItem(_("Save drawing"), true);
+    _addSaveDrawingSubMenuItem: function(menu, label, icon) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(label, true);
         this.saveDrawingSubMenuItem = item;
-        this._updateSaveDrawingSubMenuItemSensitivity();
         this.saveDrawingSubMenu = item.menu;
-        item.icon.set_icon_name('document-save-symbolic');
+        item.icon.set_icon_name(icon);
         
-        item.menu.itemActivated = () => {
-            item.menu.close();
-        };
+        item.menu.itemActivated = item.menu.close;
         
         item.menu.openOld = item.menu.open;
         item.menu.open = (animate) => {
@@ -530,13 +672,14 @@ var DrawingMenu = new Lang.Class({
     
     _populateSaveDrawingSubMenu: function() {
         this.saveDrawingSubMenu.removeAll();
-        let saveEntry = new DrawingMenuEntry({ initialTextGetter: Files.getDateString,
-                                                entryActivateCallback: (text) => {
-                                                    this.area.saveAsJsonWithName(text, this._onDrawingSaved.bind(this));
-                                                    this.saveDrawingSubMenu.toggle();
-                                                },
-                                                invalidStrings: [Me.metadata['persistent-file-name'], '/'],
-                                                primaryIconName: 'insert-text' });
+        let saveEntry = new Entry({ initialTextGetter: () => this.area.currentJson ? this.area.currentJson.name : "",
+                                    hint_text: _("Type a name"),
+                                    entryActivateCallback: (text) => {
+                                        this.area.saveAsJsonWithName(text, this._onDrawingSaved.bind(this));
+                                        this.saveDrawingSubMenu.toggle();
+                                    },
+                                    invalidStrings: [Me.metadata['persistent-file-name'], '/'],
+                                    primaryIconName: 'insert-text' });
         this.saveDrawingSubMenu.addMenuItem(saveEntry.item);
     },
     
@@ -568,8 +711,51 @@ const updateSubMenuAdjustment = function(itemActor) {
         adjustment.set_value(newScrollValue);
 };
 
+// An action button that uses upstream dash item tooltips.
+const ActionButton = new Lang.Class({
+    Name: 'DrawOnYourScreenDrawingMenuActionButton',
+    Extends: St.Bin,
+    _labelShowing: false,
+    _resetHoverTimeoutId: 0,
+    _showLabelTimeoutId: 0,
+    showLabel: Dash.DashItemContainer.prototype.showLabel,
+    hideLabel: Dash.DashItemContainer.prototype.hideLabel,
+    _syncLabel: Dash.Dash.prototype._syncLabel,
+    
+    _init: function(name, icon, callback, callbackAfter) {
+        this._labelText = name;
+        
+        let button = new St.Button({ track_hover: true,
+                                     x_align: Clutter.ActorAlign.CENTER,
+                                     accessible_name: name,
+                                     // use 'popup-menu' and 'popup-menu-item' style classes to provide theme colors
+                                     //style_class: 'system-menu-action popup-menu-item popup-menu' });
+                                     style_class: 'button draw-on-your-screen-menu-action-button' });
+        button.child = new St.Icon(typeof icon == 'string' ? { icon_name: icon } : { gicon: icon });
+        button.connect('clicked', () => {
+            callback();
+            if (callbackAfter)
+                callbackAfter();
+        });
+        button.bind_property('reactive', button, 'can_focus', GObject.BindingFlags.DEFAULT);
+        button.connect('notify::hover', () => this._syncLabel(this));
+        
+        this.parent({ child: button, x_expand: true });
+    },
+    
+    get label() {
+        if (!this._label) {
+            this._label = new St.Label({ style_class: 'dash-label' });
+            Main.layoutManager.uiGroup.add_actor(this._label);
+            this.connect('destroy', () => this._label.destroy());
+        }
+        
+        return this._label;
+    }
+});
+
 // based on searchItem.js, https://github.com/leonardo-bartoli/gnome-shell-extension-Recents
-const DrawingMenuEntry = new Lang.Class({
+const Entry = new Lang.Class({
     Name: 'DrawOnYourScreenDrawingMenuEntry',
     
     _init: function(params) {
@@ -582,6 +768,7 @@ const DrawingMenuEntry = new Lang.Class({
         this.itemActor = GS_VERSION < '3.33.0' ? this.item.actor : this.item;
         
         this.entry = new St.Entry({
+            hint_text: params.hint_text || "",
             style_class: 'search-entry draw-on-your-screen-menu-entry',
             track_hover: true,
             reactive: true,

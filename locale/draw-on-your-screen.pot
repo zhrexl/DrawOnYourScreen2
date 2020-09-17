@@ -8,9 +8,9 @@
 # You are free to translate them or not.
 msgid ""
 msgstr ""
-"Project-Id-Version: Draw On Your Screen VERSION\n"
+"Project-Id-Version: Draw On Your Screen\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2019-03-04 16:40+0100\n"
+"POT-Creation-Date: 2020-09-17 22:27+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,66 +19,344 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "About"
+#. Translators: %s is a key label
+#, javascript-format
+msgid ""
+"Press <i>%s</i> to get\n"
+"a fourth control point"
 msgstr ""
 
-# You are free to translate the extension name, that is displayed in About page, or not.
-msgid "Draw On You Screen"
+msgid "Mark a point of symmetry"
 msgstr ""
 
-msgid "Version %d"
+msgid "Draw a line of symmetry"
 msgstr ""
 
-msgid "Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot"
+#. Translators: initial content of the text area
+msgctxt "text-area-content"
+msgid "Text"
 msgstr ""
 
-# Add your name here, for example:
-# (add "\n" as separator if there is many translators)
-# msgid "translator-credits"
-# msgstr "Me"
-# or, with mail:
-# msgid "translator-credits"
-# msgstr "<a href=\"mailto:me@mail.org\">Me</a>"
-# or, with page:
-# msgid "translator-credits"
-# msgstr "<a href=\"https://...\">Me</a>"
-# else keep it empty.
-# It will be displayed in about page
-msgid "translator-credits"
+#. Translators: %s is a key label
+#, javascript-format
+msgid "Press <i>%s</i> to mark vertices"
 msgstr ""
 
-msgid "Preferences"
+#. Translators: %s is a key label
+#, javascript-format
+msgid "Type your text and press <i>%s</i>"
+msgstr ""
+
+#. Translators: "released" as the opposite of "grabbed"
+msgid "Keyboard and pointer released"
+msgstr ""
+
+msgid "Keyboard and pointer grabbed"
+msgstr ""
+
+msgid "Leaving drawing mode"
+msgstr ""
+
+#. Translators: %s is a key label
+#, javascript-format
+msgid "Press <i>%s</i> for help"
+msgstr ""
+
+msgid "Entering drawing mode"
 msgstr ""
 
 msgid "Global"
 msgstr ""
 
-msgid "Enter/leave drawing mode"
+msgid "Internal"
 msgstr ""
 
-# There is a similar text in GNOME Boxes (https://gitlab.gnome.org/GNOME/gnome-boxes/tree/master/po)
-msgid "Grab/ungrab keyboard and pointer"
+msgid "System"
 msgstr ""
 
-msgid "Erase all drawings"
+msgid "Dashed line"
 msgstr ""
 
-msgid "Persistent"
+#. Translators: as the alternative to "Dashed line"
+msgid "Full line"
 msgstr ""
 
-msgid "Persistent drawing through session restart"
+msgid "Fill"
 msgstr ""
 
-msgid "Drawing on the desktop"
+#. Translators: as the alternative to "Fill"
+msgid "Outline"
 msgstr ""
 
-msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
+#. Translators: fill-rule SVG attribute
+msgid "Nonzero"
 msgstr ""
 
-msgid "Disable on-screen notifications"
+msgid "Evenodd"
 msgstr ""
 
-msgid "Disable panel indicator"
+#. Translators: generic font-family SVG attribute
+msgctxt "font-family"
+msgid "Sans-Serif"
+msgstr ""
+
+msgctxt "font-family"
+msgid "Serif"
+msgstr ""
+
+msgctxt "font-family"
+msgid "Monospace"
+msgstr ""
+
+msgctxt "font-family"
+msgid "Cursive"
+msgstr ""
+
+msgctxt "font-family"
+msgid "Fantasy"
+msgstr ""
+
+#. Translators: font-style SVG attribute
+msgctxt "font-style"
+msgid "Normal"
+msgstr ""
+
+msgctxt "font-style"
+msgid "Oblique"
+msgstr ""
+
+msgctxt "font-style"
+msgid "Italic"
+msgstr ""
+
+#. Translators: font-weight SVG attribute
+msgctxt "font-weight"
+msgid "Thin"
+msgstr ""
+
+msgctxt "font-weight"
+msgid "Ultra Light"
+msgstr ""
+
+msgctxt "font-weight"
+msgid "Light"
+msgstr ""
+
+msgctxt "font-weight"
+msgid "Semi Light"
+msgstr ""
+
+msgctxt "font-weight"
+msgid "Book"
+msgstr ""
+
+msgctxt "font-weight"
+msgid "Normal"
+msgstr ""
+
+msgctxt "font-weight"
+msgid "Medium"
+msgstr ""
+
+msgctxt "font-weight"
+msgid "Semi Bold"
+msgstr ""
+
+msgctxt "font-weight"
+msgid "Bold"
+msgstr ""
+
+msgctxt "font-weight"
+msgid "Ultra Bold"
+msgstr ""
+
+msgctxt "font-weight"
+msgid "Heavy"
+msgstr ""
+
+msgctxt "font-weight"
+msgid "Ultra Heavy"
+msgstr ""
+
+#. Translators: stroke-linecap SVG attribute
+msgctxt "stroke-linecap"
+msgid "Butt"
+msgstr ""
+
+msgctxt "stroke-linecap"
+msgid "Round"
+msgstr ""
+
+msgctxt "stroke-linecap"
+msgid "Square"
+msgstr ""
+
+#. Translators: stroke-linejoin SVG attribute
+msgctxt "stroke-linejoin"
+msgid "Miter"
+msgstr ""
+
+msgctxt "stroke-linejoin"
+msgid "Round"
+msgstr ""
+
+msgctxt "stroke-linejoin"
+msgid "Bevel"
+msgstr ""
+
+#. Translators: value in pixel unit (e.g. "5 px")
+#, javascript-format
+msgid "%f px"
+msgstr ""
+
+#. Translators: text alignment
+msgid "Right aligned"
+msgstr ""
+
+msgid "Left aligned"
+msgstr ""
+
+msgctxt "drawing-tool"
+msgid "Free drawing"
+msgstr ""
+
+msgctxt "drawing-tool"
+msgid "Line"
+msgstr ""
+
+msgctxt "drawing-tool"
+msgid "Ellipse"
+msgstr ""
+
+msgctxt "drawing-tool"
+msgid "Rectangle"
+msgstr ""
+
+msgctxt "drawing-tool"
+msgid "Text"
+msgstr ""
+
+msgctxt "drawing-tool"
+msgid "Polygon"
+msgstr ""
+
+msgctxt "drawing-tool"
+msgid "Polyline"
+msgstr ""
+
+msgctxt "drawing-tool"
+msgid "Image"
+msgstr ""
+
+msgctxt "drawing-tool"
+msgid "Move"
+msgstr ""
+
+msgctxt "drawing-tool"
+msgid "Resize"
+msgstr ""
+
+msgctxt "drawing-tool"
+msgid "Mirror"
+msgstr ""
+
+msgid "Undo"
+msgstr ""
+
+msgid "Redo"
+msgstr ""
+
+msgid "Erase"
+msgstr ""
+
+msgid "Smooth"
+msgstr ""
+
+msgid "Open drawing"
+msgstr ""
+
+msgid "Save drawing as…"
+msgstr ""
+
+msgid "Palette"
+msgstr ""
+
+msgid "Color"
+msgstr ""
+
+msgid "Type a name"
+msgstr ""
+
+#. Translators: "Preferences" page in preferences
+msgid "Preferences"
+msgstr ""
+
+#. Translators: "Drawing" page in preferences
+msgid "Drawing"
+msgstr ""
+
+#. Translators: "About" page in preferences
+msgid "About"
+msgstr ""
+
+#. Translators: you are free to translate the extension name, that is displayed in About page, or not
+msgid "Draw On You Screen"
+msgstr ""
+
+#. Translators: version number in "About" page
+#, javascript-format
+msgid "Version %f"
+msgstr ""
+
+#. Translators: you are free to translate the extension description, that is displayed in About page, or not
+msgid ""
+"Start drawing with Super+Alt+D and save your beautiful work by taking a "
+"screenshot"
+msgstr ""
+
+#. Translators: add your name here or keep it empty, it will be displayed in about page, e.g.
+#. msgstr ""
+#. "translator1\n"
+#. "<a href=\"mailto:translator2@mail.org\">translator2</a>\n"
+#. "<a href=\"https://...\">translator3</a>"
+msgid "translator-credits"
+msgstr ""
+
+msgid "Palettes"
+msgstr ""
+
+msgid "Add a new palette"
+msgstr ""
+
+msgid "Area"
+msgstr ""
+
+msgid "Auto"
+msgstr ""
+
+msgid "Grid overlay line"
+msgstr ""
+
+msgid "Tools"
+msgstr ""
+
+msgid "Dash array"
+msgstr ""
+
+msgid "Reset settings"
+msgstr ""
+
+msgid "Rename the palette"
+msgstr ""
+
+msgid "Remove the palette"
+msgstr ""
+
+#. Translators: default name of a new palette
+msgid "New palette"
+msgstr ""
+
+msgid "In drawing mode"
 msgstr ""
 
 msgid "Draw"
@@ -102,17 +380,19 @@ msgstr ""
 msgid "Scroll"
 msgstr ""
 
+#. Translators: %s are key labels (Ctrl+F1 and Ctrl+F9)
 msgid "Select color"
 msgstr ""
 
-# %s are key labels (Ctrl+F1 and Ctrl+F9)
+#, javascript-format
 msgid "%s … %s"
 msgstr ""
 
+#. Translators: %s is a key label
 msgid "Ignore pointer movement"
 msgstr ""
 
-# %s is a key label
+#, javascript-format
 msgid "%s held"
 msgstr ""
 
@@ -137,6 +417,9 @@ msgstr ""
 msgid "Smooth free drawing outline"
 msgstr ""
 
+msgid "Unlock image ratio"
+msgstr ""
+
 msgid "Rotate <span alpha=\"50%\">(while moving)</span>"
 msgstr ""
 
@@ -146,73 +429,224 @@ msgstr ""
 msgid "Inverse <span alpha=\"50%\">(while mirroring)</span>"
 msgstr ""
 
-msgid "Internal"
+msgid "Drawing on the desktop"
 msgstr ""
 
-msgid "(in drawing mode)"
+msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
 msgstr ""
 
-msgid "Undo last brushstroke"
+msgid "Erase all drawings"
 msgstr ""
 
-msgid "Redo last brushstroke"
+msgid "Disable panel indicator"
 msgstr ""
 
-msgid "Erase last brushstroke"
+msgid "Disable on-screen notifications"
 msgstr ""
 
-msgid "Smooth last brushstroke"
+msgid "Persistent over toggles"
 msgstr ""
 
-msgid "Select line"
+msgid "Drawing remains when toggling drawing mode"
 msgstr ""
 
-msgid "Select ellipse"
+msgid "Persistent over restarts"
 msgstr ""
 
-msgid "Select rectangle"
+msgid "Drawing is automatically saved to a file"
 msgstr ""
 
-msgid "Select polygon"
+msgid "Enter/leave drawing mode"
 msgstr ""
 
-msgid "Select polyline"
+#. Translators: there is a similar text in GNOME Boxes (https://gitlab.gnome.org/GNOME/gnome-boxes/tree/master/po)
+msgid "Grab/ungrab keyboard and pointer"
 msgstr ""
 
-msgid "Select image"
+msgid "Background color"
 msgstr ""
 
-msgid "Select text"
+msgid "The color of the drawing area background"
 msgstr ""
 
-msgid "Select move"
+msgid "Automatic dash array"
 msgstr ""
 
-msgid "Select resize"
+msgid "Compute the lengths from the line width"
 msgstr ""
 
-msgid "Select mirror"
+msgid "Dash array on"
 msgstr ""
 
-msgid "Toggle fill/outline"
+msgid "The dash length in pixels"
 msgstr ""
 
-msgid "Increment line width"
+msgid "Dash array off"
+msgstr ""
+
+msgid "The gap between the dashes in pixels"
+msgstr ""
+
+msgid "Dash offset"
+msgstr ""
+
+msgid "The dash offset in pixels"
+msgstr ""
+
+msgid "Grid overlay color"
+msgstr ""
+
+msgid "The color of the lines"
+msgstr ""
+
+msgid "Automatic grid overlay line"
+msgstr ""
+
+msgid "Compute the lengths from the screen size"
+msgstr ""
+
+msgid "Grid overlay line spacing"
+msgstr ""
+
+msgid "The gap between lines in pixels"
+msgstr ""
+
+msgid "Grid overlay line width"
+msgstr ""
+
+msgid "The line width in pixels"
+msgstr ""
+
+msgid "Image location"
+msgstr ""
+
+msgid "The location of the directory in which the image tool picks"
+msgstr ""
+
+msgid "Color palettes"
+msgstr ""
+
+msgid "The palettes of drawing colors"
+msgstr ""
+
+msgid "Automatic square area size"
+msgstr ""
+
+msgid "Compute the area size from the screen size"
+msgstr ""
+
+msgid "Square area size"
+msgstr ""
+
+msgid "The size of the area in pixels"
 msgstr ""
 
 msgid "Decrement line width"
 msgstr ""
 
-msgid "Increment line width even more"
-msgstr ""
-
 msgid "Decrement line width even more"
 msgstr ""
 
-msgid "Change linejoin"
+msgid "Erase last brushstroke"
 msgstr ""
 
-msgid "Change linecap"
+msgid "Export drawing to a SVG file"
+msgstr ""
+
+msgid "Increment line width"
+msgstr ""
+
+msgid "Increment line width even more"
+msgstr ""
+
+msgid "Open next drawing"
+msgstr ""
+
+msgid "Open preferences"
+msgstr ""
+
+msgid "Open previous drawing"
+msgstr ""
+
+msgid "Add images from the clipboard"
+msgstr ""
+
+msgid "Redo last brushstroke"
+msgstr ""
+
+msgid "Save drawing"
+msgstr ""
+
+msgid "Select color 1"
+msgstr ""
+
+msgid "Select color 2"
+msgstr ""
+
+msgid "Select color 3"
+msgstr ""
+
+msgid "Select color 4"
+msgstr ""
+
+msgid "Select color 5"
+msgstr ""
+
+msgid "Select color 6"
+msgstr ""
+
+msgid "Select color 7"
+msgstr ""
+
+msgid "Select color 8"
+msgstr ""
+
+msgid "Select color 9"
+msgstr ""
+
+msgid "Select ellipse tool"
+msgstr ""
+
+msgid "Select image tool"
+msgstr ""
+
+msgid "Select line tool"
+msgstr ""
+
+msgid "Select mirror tool"
+msgstr ""
+
+msgid "Select move tool"
+msgstr ""
+
+msgid "Select free drawing"
+msgstr ""
+
+msgid "Select polygon tool"
+msgstr ""
+
+msgid "Select polyline tool"
+msgstr ""
+
+msgid "Select rectangle tool"
+msgstr ""
+
+msgid "Select resize tool"
+msgstr ""
+
+msgid "Select text tool"
+msgstr ""
+
+msgid "Smooth last brushstroke"
+msgstr ""
+
+msgid "Change color palette"
+msgstr ""
+
+msgid "Change color palette (reverse)"
+msgstr ""
+
+msgid "Toggle fill/outline"
 msgstr ""
 
 msgid "Toggle fill rule"
@@ -224,19 +658,25 @@ msgstr ""
 msgid "Change font family (reverse)"
 msgstr ""
 
-msgid "Change font weight"
-msgstr ""
-
 msgid "Change font style"
 msgstr ""
 
+msgid "Change font weight"
+msgstr ""
+
+msgid "Change image"
+msgstr ""
+
+msgid "Change image (reverse)"
+msgstr ""
+
+msgid "Change linecap"
+msgstr ""
+
+msgid "Change linejoin"
+msgstr ""
+
 msgid "Toggle text alignment"
-msgstr ""
-
-msgid "Change image file"
-msgstr ""
-
-msgid "Hide panel and dock"
 msgstr ""
 
 msgid "Add a drawing background"
@@ -245,268 +685,15 @@ msgstr ""
 msgid "Add a grid overlay"
 msgstr ""
 
-msgid "Square drawing area"
-msgstr ""
-
-msgid "Open previous drawing"
-msgstr ""
-
-msgid "Open next drawing"
-msgstr ""
-
-msgid "Save drawing as a SVG file"
-msgstr ""
-
-msgid "Edit style"
-msgstr ""
-
-msgid "Open preferences"
-msgstr ""
-
 msgid "Show help"
 msgstr ""
 
-msgid ""
-"<b>Default</b> drawing style attributes (color palette, font, line, dash) are defined in an editable <b>css</b> file.\n"
-"See <i>“%s”</i>."
+msgid "Hide panel and dock"
 msgstr ""
 
-msgid ""
-"When you save elements made with <b>eraser</b> in a <b>SVG</b> file, "
-"they are colored with background color, transparent if it is disabled.\n"
-"See <i>“%s”</i> or edit the SVG file afterwards."
+#. Translators: It is an action: "Make the drawing area a square"
+msgid "Square drawing area"
 msgstr ""
 
-msgid "Screenshot"
+msgid "Undo last brushstroke"
 msgstr ""
-
-msgid "Screenshot to clipboard"
-msgstr ""
-
-msgid "Area screenshot"
-msgstr ""
-
-msgid "Area screenshot to clipboard"
-msgstr ""
-
-msgid "System"
-msgstr ""
-
-msgid "Undo"
-msgstr ""
-
-msgid "Redo"
-msgstr ""
-
-msgid "Erase"
-msgstr ""
-
-msgid "Smooth"
-msgstr ""
-
-msgid "Free drawing"
-msgstr ""
-
-msgid "Line"
-msgstr ""
-
-msgid "Ellipse"
-msgstr ""
-
-msgid "Rectangle"
-msgstr ""
-
-msgid "Text"
-msgstr ""
-
-msgid "Polygon"
-msgstr ""
-
-msgid "Polyline"
-msgstr ""
-
-msgid "Image"
-msgstr ""
-
-msgid "Move"
-msgstr ""
-
-msgid "Resize"
-msgstr ""
-
-msgid "Mirror"
-msgstr ""
-
-msgid "Color"
-msgstr ""
-
-msgid "Fill"
-msgstr ""
-
-# fill-rule SVG attribute
-msgid "Evenodd"
-msgstr ""
-
-msgid "%d px"
-msgstr ""
-
-# stroke-linejoin SVG attribute
-msgid "Miter"
-msgstr ""
-
-# stroke-linejoin and stroke-linecap SVG attribute
-msgid "Round"
-msgstr ""
-
-# stroke-linejoin SVG attribute
-msgid "Bevel"
-msgstr ""
-
-# stroke-linecap SVG attribute
-msgid "Butt"
-msgstr ""
-
-# stroke-linecap SVG attribute
-msgid "Square"
-msgstr ""
-
-msgid "Dashed"
-msgstr ""
-
-# generic font-family SVG attribute
-msgid "Sans-Serif"
-msgstr ""
-
-# generic font-family SVG attribute
-msgid "Serif"
-msgstr ""
-
-# generic font-family SVG attribute
-msgid "Monospace"
-msgstr ""
-
-# generic font-family SVG attribute
-msgid "Cursive"
-msgstr ""
-
-# generic font-family SVG attribute
-msgid "Fantasy"
-msgstr ""
-
-# font-weight SVG attribute
-msgid "Thin"
-msgstr ""
-
-# font-weight SVG attribute
-msgid "Ultra-light"
-msgstr ""
-
-# font-weight SVG attribute
-msgid "Light"
-msgstr ""
-
-# font-weight SVG attribute
-msgid "Semi-light"
-msgstr ""
-
-# font-weight SVG attribute
-msgid "Book"
-msgstr ""
-
-# font-weight and font-style SVG attribute
-msgid "Normal"
-msgstr ""
-
-# font-weight SVG attribute
-msgid "Medium"
-msgstr ""
-
-# font-weight SVG attribute
-msgid "Semi-bold"
-msgstr ""
-
-# font-weight SVG attribute
-msgid "Bold"
-msgstr ""
-
-# font-weight SVG attribute
-msgid "Ultra-bold"
-msgstr ""
-
-# font-weight SVG attribute
-msgid "Heavy"
-msgstr ""
-
-# font-style SVG attribute
-msgid "Italic"
-msgstr ""
-
-# font-style SVG attribute
-msgid "Oblique"
-msgstr ""
-
-msgid "Right aligned"
-msgstr ""
-
-msgid "Open drawing"
-msgstr ""
-
-msgid "Save drawing"
-msgstr ""
-
-msgid "Leaving drawing mode"
-msgstr ""
-
-# %s is a key label
-msgid "<small>Press <i>%s</i> for help</small>"
-msgstr ""
-
-msgid "Entering drawing mode"
-msgstr ""
-
-# "released" as the opposite of "grabbed"
-msgid "Keyboard and pointer released"
-msgstr ""
-
-msgid "Keyboard and pointer grabbed"
-msgstr ""
-
-# %s is a key label
-msgid ""
-"Press <i>%s</i> to get\n"
-"a fourth control point"
-msgstr ""
-
-msgid "Mark a point of symmetry"
-msgstr ""
-
-msgid "Draw a line of symmetry"
-msgstr ""
-
-# %s is a key label
-msgid ""
-"Press <i>%s</i> to mark vertices"
-msgstr ""
-
-# %s is a key label
-msgid ""
-"Type your text and press <i>%s</i>"
-msgstr ""
-
-# as the alternative to "Fill"
-msgid "Outline"
-msgstr ""
-
-msgid "Dashed line"
-msgstr ""
-
-msgid "Full line"
-msgstr ""
-
-msgid "Left aligned"
-msgstr ""
-
-msgid "Nonzero"
-msgstr ""
-
-

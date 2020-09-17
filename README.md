@@ -7,7 +7,7 @@ Then save your beautiful work by taking a screenshot.
 
 ## Features
 
-* Basic shapes (rectangle, circle, ellipse, line, curve, text, image, free)
+* Basic shapes (rectangle, circle, ellipse, line, curve, polygon, polyline, text, image, free)
 * Basic transformations (move, rotate, resize, stretch, mirror, inverse)
 * Smooth stroke
 * Draw over applications
@@ -26,7 +26,7 @@ Then save your beautiful work by taking a screenshot.
 6. `Super + Alt + D` to test
 7. [https://framagit.org/abakkk/DrawOnYourScreen/issues](https://framagit.org/abakkk/DrawOnYourScreen/issues) to say it doesn't work
 
-## Details
+## Tips and tricks
 
 * Draw arrows:
 
@@ -42,7 +42,11 @@ Then save your beautiful work by taking a screenshot.
 
 * Insertable images:
 
- Add your images (jpeg, png, svg) to `~/.local/share/drawOnYourScreen/images/`.
+ You can insert images (jpeg, png, svg) in your drawings. By default images are sought in `~/.local/share/drawOnYourScreen/images/` but the location is configurable in the preferences. Another way is to copy-past the images from Nautilus or any clipboard source by using the usual `Ctrl + V` shortcut inside the drawing mode.
+
+* Eraser and SVG:
+
+ There is no eraser in SVG so when you export elements made with the eraser to a SVG file, they are colored with the background color, transparent if it is disabled. See `“Add a drawing background”` or edit the SVG file afterwards.
 
 * Screenshot Tool extension:
 

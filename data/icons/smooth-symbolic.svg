@@ -1,6 +1,6 @@
 <svg viewBox="0 0 576 576" xmlns="http://www.w3.org/2000/svg">
-  <rect fill="#555" stroke="none" x="99.06" y="116.46" width="426.79" height="88.9" transform="translate(-1.13,-26.30) translate(297.56,177.87) rotate(-17.00) translate(-297.56,-177.87) translate(-14.89,16.96)"/>
-  <rect fill="#555" stroke="none" x="382.92" y="219.17" width="137.39" height="55" transform="translate(-7.43,-27.23) translate(449.62,218.30) rotate(-16.48) translate(-449.62,-218.30) translate(-2,-19.20)"/>
-  <rect fill="#555" stroke="none" x="99.06" y="116.46" width="426.79" height="88.9" transform="translate(0, 284.75) rotate(180) scale(1, -1) rotate(-180) translate(0, -284.75) translate(-1.13,-26.30) translate(297.56,177.87) rotate(-17.00) translate(-297.56,-177.87) translate(-14.89,16.96)"/>
-  <rect fill="#555" stroke="none" x="382.92" y="219.17" width="137.39" height="55" transform="translate(0, 284.02) rotate(180) scale(1, -1) rotate(-180) translate(0, -284.02) translate(-7.43,-27.23) translate(449.62,218.30) rotate(-16.48) translate(-449.62,-218.30) translate(-2,-19.20)"/>
+  <rect fill="#474747" x="99.06" y="116.46" width="426.79" height="88.9" transform="translate(296.43,151.57) rotate(-17.00) translate(-312.45,-160.91)"/>
+  <rect fill="#474747" x="382.92" y="219.17" width="137.39" height="55" transform="translate(442.19,191.07) rotate(-16.48) translate(-451.62,-237.50)"/>
+  <rect fill="#474747" x="99.06" y="116.46" width="426.79" height="88.9" transform="translate(0, 284.75) rotate(180) scale(1, -1) rotate(-180) translate(296.43,-133.18) rotate(-17.00) translate(-312.45,-160.91)"/>
+  <rect fill="#474747" x="382.92" y="219.17" width="137.39" height="55" transform="translate(0, 284.02) rotate(180) scale(1, -1) rotate(-180) translate(442.19,-92.95) rotate(-16.48) translate(-451.62,-237.50)"/>
 </svg>

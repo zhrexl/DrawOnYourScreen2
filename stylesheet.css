@@ -1,7 +1,3 @@
-@import "./data/default.css";
-
-/* The following styles don't affect the drawing */
-
 /* square area */
 
 .draw-on-your-screen-square-area {
@@ -48,7 +44,7 @@
     padding-bottom: .3em;
 }
 
-.draw-on-your-screen-menu .popup-menu-icon {
+.draw-on-your-screen-menu .popup-menu-item > .popup-menu-icon {
     icon-size: 1em; /* default: 1.09 */
     padding-top: 0.03em;
 }
@@ -80,23 +76,20 @@
     margin-top: 0;
 }
 
-/* system-menu-action: from GS 3.34- */
-.draw-on-your-screen-menu .system-menu-action {
-  min-width: 0;
-  border: none;
-  border-radius: 32px;
-  padding: 12px;
-  margin: 0;
+.draw-on-your-screen-menu-destructive-button:hover {
+    color: #e01b24; /* upstream destructive color, light: #e01b24, dark: #b2161d */
 }
 
-.draw-on-your-screen-menu .system-menu-action:hover,
-.draw-on-your-screen-menu .system-menu-action:focus {
-    border: none;
+/* override .button upstream style class */
+.draw-on-your-screen-menu-action-button {
+    min-height: 0;
+    min-width: 0;
+    border-radius: 32px;
     padding: 12px;
 }
 
-.draw-on-your-screen-menu .system-menu-action > StIcon {
-    icon-size: 16px;
+.draw-on-your-screen-menu-action-button > StIcon {
+    icon-size: 1em;
 }
 
 .draw-on-your-screen-menu-slider-label {
@@ -124,8 +117,13 @@
     padding: 0.35em 0.57em;
 }
 
-.draw-on-your-screen-menu-delete-button:hover {
-    color: #f57900;
+/* override .button upstream style class */
+.draw-on-your-screen-menu-inline-button {
+    min-height: 1px;
+    padding: 2px 4px; /* default 3px 24px */
 }
- 
- 
+
+.draw-on-your-screen-menu-inline-button .popup-menu-icon {
+    icon-size: 0.85em; /* default 1.09 */
+}
+

@@ -1,4 +1,5 @@
 /* jslint esversion: 6 */
+/* exported init, buildPrefsWidget */
 
 /*
  * Copyright 2019 Abakkk
@@ -20,104 +21,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+const Atk = imports.gi.Atk;
+const Gdk = imports.gi.Gdk;
+const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
-const Lang = imports.lang;
 
-const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
-const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+const Shortcuts = Me.imports.shortcuts;
+const gettext = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+const _ = function(string) {
+    if (!string)
+        return "";
+    return gettext(string);
+};
 const _GTK = imports.gettext.domain('gtk30').gettext;
 
-const GS_VERSION = Config.PACKAGE_VERSION;
 const MARGIN = 10;
-
-var GLOBAL_KEYBINDINGS = {
-    'toggle-drawing': "Enter/leave drawing mode",
-    'toggle-modal': "Grab/ungrab keyboard and pointer",
-    'erase-drawing': "Erase all drawings"
-};
-
-var INTERNAL_KEYBINDINGS = {
-    'undo': "Undo last brushstroke",
-    'redo': "Redo last brushstroke",
-    'delete-last-element' : "Erase last brushstroke",
-    'smooth-last-element': "Smooth last brushstroke",
-    '-separator-1': '',
-    'select-none-shape': "Free drawing",
-    'select-line-shape': "Select line",
-    'select-ellipse-shape': "Select ellipse",
-    'select-rectangle-shape': "Select rectangle",
-    'select-polygon-shape': "Select polygon",
-    'select-polyline-shape': "Select polyline",
-    'select-text-shape': "Select text",
-    'select-image-shape': "Select image",
-    'select-move-tool': "Select move",
-    'select-resize-tool': "Select resize",
-    'select-mirror-tool': "Select mirror",
-    '-separator-2': '',
-    'switch-fill': "Toggle fill/outline",
-    'switch-fill-rule': "Toggle fill rule",
-    '-separator-3': '',
-    'increment-line-width': "Increment line width",
-    'decrement-line-width': "Decrement line width",
-    'increment-line-width-more': "Increment line width even more",
-    'decrement-line-width-more': "Decrement line width even more",
-    'switch-linejoin': "Change linejoin",
-    'switch-linecap': "Change linecap",
-    'switch-dash': "Dashed line",
-    '-separator-4': '',
-    'switch-font-family': "Change font family",
-    'reverse-switch-font-family': "Change font family (reverse)",
-    'switch-font-weight': "Change font weight",
-    'switch-font-style': "Change font style",
-    'switch-text-alignment': "Toggle text alignment",
-    'switch-image-file': "Change image file",
-    '-separator-5': '',
-    'toggle-panel-and-dock-visibility': "Hide panel and dock",
-    'toggle-background': "Add a drawing background",
-    'toggle-grid': "Add a grid overlay",
-    'toggle-square-area': "Square drawing area",
-    '-separator-6': '',
-    'open-previous-json': "Open previous drawing",
-    'open-next-json': "Open next drawing",
-    'save-as-json': "Save drawing",
-    'save-as-svg': "Save drawing as a SVG file",
-    'open-user-stylesheet': "Edit style",
-    'open-preferences': "Open preferences",
-    'toggle-help': "Show help"
-};
-
-if (GS_VERSION < "3.36")
-    delete INTERNAL_KEYBINDINGS['open-preferences'];
-
-function getKeyLabel(accel) {
-    let [keyval, mods] = Gtk.accelerator_parse(accel);
-    return Gtk.accelerator_get_label(keyval, mods);
-}
-
-var OTHER_SHORTCUTS = [
-    { desc: "Draw", get shortcut() { return _("Left click"); } },
-    { desc: "Menu", get shortcut() { return _("Right click"); } },
-    { desc: "Toggle fill/outline", get shortcut() { return _("Center click"); } },
-    { desc: "Increment/decrement line width", get shortcut() { return _("Scroll"); } },
-    { desc: "Select color", get shortcut() { return _("%s … %s").format(getKeyLabel('<Primary>1'), getKeyLabel('<Primary>9')); } },
-    { desc: "Ignore pointer movement", get shortcut() { return _("%s held").format(getKeyLabel('space')); } },
-    { desc: "Leave", shortcut: getKeyLabel('Escape') },
-    { desc: "-separator-1", shortcut: "" },
-    { desc: "Select eraser <span alpha=\"50%\">(while starting drawing)</span>", shortcut: getKeyLabel('<Shift>') },
-    { desc: "Duplicate <span alpha=\"50%\">(while starting handling)</span>", shortcut: getKeyLabel('<Shift>') },
-    { desc: "Rotate rectangle, polygon, polyline", shortcut: getKeyLabel('<Primary>') },
-    { desc: "Extend circle to ellipse", shortcut: getKeyLabel('<Primary>') },
-    { desc: "Curve line", shortcut: getKeyLabel('<Primary>') },
-    { desc: "Smooth free drawing outline", shortcut: getKeyLabel('<Primary>') },
-    { desc: "Rotate <span alpha=\"50%\">(while moving)</span>", shortcut: getKeyLabel('<Primary>') },
-    { desc: "Stretch <span alpha=\"50%\">(while resizing)</span>", shortcut: getKeyLabel('<Primary>') },
-    { desc: "Inverse <span alpha=\"50%\">(while mirroring)</span>", shortcut: getKeyLabel('<Primary>') }
-];
+const ROWBOX_MARGIN_PARAMS = { margin_top: MARGIN / 2, margin_bottom: MARGIN / 2, margin_left: MARGIN, margin_right: MARGIN };
 
 function init() {
     Convenience.initTranslations();
@@ -128,7 +52,6 @@ function buildPrefsWidget() {
     let switcher = new Gtk.StackSwitcher({halign: Gtk.Align.CENTER, visible: true, stack: topStack});
     GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
         let window = topStack.get_toplevel();
-        window.resize(720,500);
         let headerBar = window.get_titlebar();
         headerBar.custom_title = switcher;
         return false;
@@ -146,8 +69,13 @@ const TopStack = new GObject.Class({
     _init: function(params) {
         this.parent({ transition_type: 1, transition_duration: 500, expand: true });
         this.prefsPage = new PrefsPage();
+        // Translators: "Preferences" page in preferences
         this.add_titled(this.prefsPage, 'prefs', _("Preferences"));
+        this.drawingPage = new DrawingPage();
+        // Translators: "Drawing" page in preferences
+        this.add_titled(this.drawingPage, 'drawing', _("Drawing"));
         this.aboutPage = new AboutPage();
+        // Translators: "About" page in preferences
         this.add_titled(this.aboutPage, 'about', _("About"));
     }
 });
@@ -158,14 +86,17 @@ const AboutPage = new GObject.Class({
     Extends: Gtk.ScrolledWindow,
 
     _init: function(params) {
-        this.parent();
+        this.parent({ hscrollbar_policy: Gtk.PolicyType.NEVER });
 
-        let vbox= new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN*3 });
+        let vbox= new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN * 3 });
         this.add(vbox);
         
-        let name = "<b> " + _(Me.metadata.name) + "</b>";
-        let version = _("Version %d").format(Me.metadata.version);
-        let description = _(Me.metadata.description);
+        // Translators: you are free to translate the extension name, that is displayed in About page, or not
+        let name = "<b> " + _("Draw On You Screen") + "</b>";
+        // Translators: version number in "About" page
+        let version = _("Version %f").format(Me.metadata.version);
+        // Translators: you are free to translate the extension description, that is displayed in About page, or not
+        let description = _("Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot");
         let link = "<span><a href=\"" + Me.metadata.url + "\">" + Me.metadata.url + "</a></span>";
         let licenceName = _GTK("GNU General Public License, version 2 or later");
         let licenceLink = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html";
@@ -176,7 +107,7 @@ const AboutPage = new GObject.Class({
         
         vbox.add(aboutLabel);
         
-        let creditBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, margin: 2*MARGIN });
+        let creditBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, margin: 2 * MARGIN });
         let leftBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
         let rightBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
         let leftLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 2, justify: 1, use_markup: true, label: "<small>" + _GTK("Created by") + "</small>" });
@@ -187,6 +118,11 @@ const AboutPage = new GObject.Class({
         creditBox.pack_start(rightBox, true, true, 5);
         vbox.add(creditBox);
         
+        // Translators: add your name here or keep it empty, it will be displayed in about page, e.g.
+        // msgstr ""
+        // "translator1\n"
+        // "<a href=\"mailto:translator2@mail.org\">translator2</a>\n"
+        // "<a href=\"https://...\">translator3</a>"
         if (_("translator-credits") != "translator-credits" && _("translator-credits") != "") {
             leftBox.pack_start(new Gtk.Label(), false, false, 0);
             rightBox.pack_start(new Gtk.Label(), false, false, 0);
@@ -196,7 +132,235 @@ const AboutPage = new GObject.Class({
             rightBox.pack_start(rightLabel, false, false, 0);
         }
     }
+});
+
+const DrawingPage = new GObject.Class({
+    Name: 'DrawOnYourScreenDrawingPage',
+    GTypeName: 'DrawOnYourScreenDrawingPage',
+    Extends: Gtk.ScrolledWindow,
+
+    _init: function(params) {
+        this.parent({ hscrollbar_policy: Gtk.PolicyType.NEVER });
+
+        this.settings = Convenience.getSettings(Me.metadata['settings-schema'] + '.drawing');
+        this.schema = this.settings.settings_schema;
+        
+        let box = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: 3 * MARGIN, spacing: 3 * MARGIN });
+        this.add(box);
+        
+        let palettesFrame = new Frame({ label: _("Palettes") });
+        box.add(palettesFrame);
+        
+        let palettesScrolledWindow = new Gtk.ScrolledWindow({ vscrollbar_policy: Gtk.PolicyType.NEVER, margin_top: MARGIN / 2, margin_bottom: MARGIN / 2 });
+        palettesFrame.add(palettesScrolledWindow);
+        this.palettesListBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true });
+        this.palettesListBox.get_style_context().add_class('background');
+        this.palettesListBox.get_accessible().set_name(this.schema.get_key('palettes').get_summary());
+        this.palettesListBox.get_accessible().set_description(this.schema.get_key('palettes').get_description());
+        palettesScrolledWindow.add(this.palettesListBox);
+        
+        this.settings.connect('changed::palettes', this._updatePalettes.bind(this));
+        this._updatePalettes();
+        
+        this.addBox = new Gtk.Box(ROWBOX_MARGIN_PARAMS);
+        this.addBox.margin_bottom = MARGIN; // add space for the scrollbar
+        let addButton = Gtk.Button.new_from_icon_name('list-add-symbolic', Gtk.IconSize.BUTTON);
+        addButton.set_tooltip_text(_("Add a new palette"));
+        this.addBox.pack_start(addButton, true, true, 4);
+        addButton.connect('clicked', this._addNewPalette.bind(this));
+        this.palettesListBox.add(this.addBox);
+        this.addBox.get_parent().set_activatable(false);
+        
+        let areaFrame = new Frame({ label: _("Area") });
+        box.add(areaFrame);
+        
+        let areaListBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN / 2, margin_bottom: MARGIN / 2 });
+        areaListBox.get_style_context().add_class('background');
+        areaFrame.add(areaListBox);
+        
+        let squareAreaRow = new PrefRow({ label: this.schema.get_key('square-area-size').get_summary() });
+        let squareAreaAutoButton = new Gtk.CheckButton({ label: _("Auto"),
+                                                         name: this.schema.get_key('square-area-auto').get_summary(),
+                                                         tooltip_text: this.schema.get_key('square-area-auto').get_description() });
+        let squareAreaSizeButton = new PixelSpinButton({ width_chars: 5, digits: 0, step: 1,
+                                                         range: this.schema.get_key('square-area-size').get_range(),
+                                                         name: this.schema.get_key('square-area-size').get_summary(),
+                                                         tooltip_text: this.schema.get_key('square-area-size').get_description() });
+        this.settings.bind('square-area-auto', squareAreaAutoButton, 'active', 0);
+        this.settings.bind('square-area-size', squareAreaSizeButton, 'value', 0);
+        squareAreaAutoButton.bind_property('active', squareAreaSizeButton, 'sensitive', GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN);
+        squareAreaRow.addWidget(squareAreaAutoButton);
+        squareAreaRow.addWidget(squareAreaSizeButton);
+        areaListBox.add(squareAreaRow);
+        
+        let backgroundColorRow = new PrefRow({ label: this.schema.get_key('background-color').get_summary() });
+        let backgroundColorButton = new ColorStringButton({ use_alpha: true, show_editor: true,
+                                                            name: this.schema.get_key('background-color').get_summary(),
+                                                            tooltip_text: this.schema.get_key('background-color').get_description() });
+        this.settings.bind('background-color', backgroundColorButton, 'color-string', 0);
+        backgroundColorRow.addWidget(backgroundColorButton);
+        areaListBox.add(backgroundColorRow);
+        
+        let gridLineRow = new PrefRow({ label: _("Grid overlay line") });
+        let gridLineAutoButton = new Gtk.CheckButton({ label: _("Auto"),
+                                                       name: this.schema.get_key('grid-line-auto').get_summary(),
+                                                       tooltip_text: this.schema.get_key('grid-line-auto').get_description() });
+        let gridLineWidthButton = new PixelSpinButton({ width_chars: 5, digits: 1, step: 0.1,
+                                                        range: this.schema.get_key('grid-line-width').get_range(),
+                                                        name: this.schema.get_key('grid-line-width').get_summary(),
+                                                        tooltip_text: this.schema.get_key('grid-line-width').get_description() });
+        let gridLineSpacingButton = new PixelSpinButton({ width_chars: 5, digits: 1, step: 1,
+                                                          range: this.schema.get_key('grid-line-spacing').get_range(),
+                                                          name: this.schema.get_key('grid-line-spacing').get_summary(),
+                                                          tooltip_text: this.schema.get_key('grid-line-spacing').get_description() });
+        this.settings.bind('grid-line-auto', gridLineAutoButton, 'active', 0);
+        this.settings.bind('grid-line-width', gridLineWidthButton, 'value', 0);
+        this.settings.bind('grid-line-spacing', gridLineSpacingButton, 'value', 0);
+        gridLineAutoButton.bind_property('active', gridLineWidthButton, 'sensitive', GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN);
+        gridLineAutoButton.bind_property('active', gridLineSpacingButton, 'sensitive', GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN);
+        gridLineRow.addWidget(gridLineAutoButton);
+        gridLineRow.addWidget(gridLineWidthButton);
+        gridLineRow.addWidget(gridLineSpacingButton);
+        areaListBox.add(gridLineRow);
+        
+        let gridColorRow = new PrefRow({ label: this.schema.get_key('grid-color').get_summary() });
+        let gridColorButton = new ColorStringButton({ use_alpha: true, show_editor: true,
+                                                      name: this.schema.get_key('grid-color').get_summary(),
+                                                      tooltip_text: this.schema.get_key('grid-color').get_description() });
+        this.settings.bind('grid-color', gridColorButton, 'color-string', 0);
+        gridColorRow.addWidget(gridColorButton);
+        areaListBox.add(gridColorRow);
+        
+        let toolsFrame = new Frame({ label: _("Tools") });
+        box.add(toolsFrame);
+        
+        let toolsListBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN / 2, margin_bottom: MARGIN / 2 });
+        toolsListBox.get_style_context().add_class('background');
+        toolsFrame.add(toolsListBox);
+        
+        let dashArrayRow = new PrefRow({ label: _("Dash array") });
+        let dashArrayAutoButton = new Gtk.CheckButton({ label: _("Auto"),
+                                                        name: this.schema.get_key('dash-array-auto').get_summary(),
+                                                        tooltip_text: this.schema.get_key('dash-array-auto').get_description() });
+        let dashArrayOnButton = new PixelSpinButton({ width_chars: 5, digits: 1, step: 0.1,
+                                                      range: this.schema.get_key('dash-array-on').get_range(),
+                                                      name: this.schema.get_key('dash-array-on').get_summary(),
+                                                      tooltip_text: this.schema.get_key('dash-array-on').get_description() });
+        let dashArrayOffButton = new PixelSpinButton({ width_chars: 5, digits: 1, step: 0.1,
+                                                       range: this.schema.get_key('dash-array-off').get_range(),
+                                                       name: this.schema.get_key('dash-array-off').get_summary(),
+                                                       tooltip_text: this.schema.get_key('dash-array-off').get_description() });
+        this.settings.bind('dash-array-auto', dashArrayAutoButton, 'active', 0);
+        this.settings.bind('dash-array-on', dashArrayOnButton, 'value', 0);
+        this.settings.bind('dash-array-off', dashArrayOffButton, 'value', 0);
+        dashArrayAutoButton.bind_property('active', dashArrayOnButton, 'sensitive', GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN);
+        dashArrayAutoButton.bind_property('active', dashArrayOffButton, 'sensitive', GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN);
+        dashArrayRow.addWidget(dashArrayAutoButton);
+        dashArrayRow.addWidget(dashArrayOnButton);
+        dashArrayRow.addWidget(dashArrayOffButton);
+        toolsListBox.add(dashArrayRow);
+        
+        let dashOffsetRow = new PrefRow({ label: this.schema.get_key('dash-offset').get_summary() });
+        let dashOffsetButton = new PixelSpinButton({ width_chars: 5, digits: 1, step: 0.1,
+                                                     range: this.schema.get_key('dash-offset').get_range(),
+                                                     name: this.schema.get_key('dash-offset').get_summary(),
+                                                     tooltip_text: this.schema.get_key('dash-offset').get_description() });
+        this.settings.bind('dash-offset', dashOffsetButton, 'value', 0);
+        dashOffsetRow.addWidget(dashOffsetButton);
+        toolsListBox.add(dashOffsetRow);
+        
+        let imageLocationRow = new PrefRow({ label: this.schema.get_key('image-location').get_summary() });
+        let imageLocationButton = new FileChooserButton({ action: Gtk.FileChooserAction.SELECT_FOLDER,
+                                                          name: this.schema.get_key('image-location').get_summary(),
+                                                          tooltip_text: this.schema.get_key('image-location').get_description() });
+        this.settings.bind('image-location', imageLocationButton, 'location', 0);
+        imageLocationRow.addWidget(imageLocationButton);
+        toolsListBox.add(imageLocationRow);
+        
+        let resetButton = new Gtk.Button({ label: _("Reset settings"), halign: Gtk.Align.CENTER });
+        resetButton.get_style_context().add_class('destructive-action');
+        resetButton.connect('clicked', () => this.schema.list_keys().forEach(key => this.settings.reset(key)));
+        box.add(resetButton);
+    },
     
+    _updatePalettes: function() {
+        this.palettes = this.settings.get_value('palettes').deep_unpack();
+        this.palettesListBox.get_children().filter(row=> row.get_child() != this.addBox)
+                                           .slice(this.palettes.length)
+                                           .forEach(row => this.palettesListBox.remove(row));
+        let paletteBoxes = this.palettesListBox.get_children().map(row => row.get_child()).filter(child => child != this.addBox);
+        
+        this.palettes.forEach((palette, paletteIndex) => {
+            let [name, colors] = palette;
+            let paletteBox;
+            
+            if (paletteBoxes[paletteIndex]) {
+                paletteBox = paletteBoxes[paletteIndex];
+                let nameEntry = paletteBox.get_children()[0];
+                if (nameEntry.get_text() !== _(name)) {
+                    GObject.signal_handler_block(nameEntry, nameEntry.paletteNameChangedHandler);
+                    nameEntry.set_text(_(name));
+                    GObject.signal_handler_unblock(nameEntry, nameEntry.paletteNameChangedHandler);
+                }
+            } else {
+                let nameEntry = new Gtk.Entry({ text: name, halign: Gtk.Align.START, tooltip_text: _("Rename the palette") });
+                nameEntry.paletteNameChangedHandler = nameEntry.connect('changed', this._onPaletteNameChanged.bind(this, paletteIndex));
+                let removeButton = Gtk.Button.new_from_icon_name('list-remove-symbolic', Gtk.IconSize.BUTTON);
+                removeButton.set_tooltip_text(_("Remove the palette")); 
+                removeButton.connect('clicked', this._removePalette.bind(this, paletteIndex));
+                paletteBox = new Gtk.Box(ROWBOX_MARGIN_PARAMS);
+                paletteBox.pack_start(nameEntry, true, true, 4);
+                paletteBox.pack_start(new Gtk.Box({ spacing: 4 }), false, false, 4);
+                paletteBox.pack_start(removeButton, false, false, 4);
+                this.palettesListBox.insert(paletteBox, paletteIndex);
+                paletteBox.get_parent().set_activatable(false);
+            }
+            
+            colors.splice(9);
+            while (colors.length < 9)
+                colors.push('transparent');
+            
+            let colorsBox = paletteBox.get_children()[1];
+            let colorButtons = colorsBox.get_children();
+            colors.forEach((color, colorIndex) => {
+                if (colorButtons[colorIndex]) {
+                    colorButtons[colorIndex].color_string = color;
+                } else {
+                    let colorButton = new ColorStringButton({ color_string: color, use_alpha: true, show_editor: true, halign: Gtk.Align.START, hexpand: false });
+                    colorButton.connect('notify::color-string', this._onPaletteColorChanged.bind(this, paletteIndex, colorIndex));
+                    colorsBox.add(colorButton);
+                }
+            });
+            
+            paletteBox.show_all();
+        });
+    },
+    
+    _savePalettes: function() {
+        this.settings.set_value('palettes', new GLib.Variant('a(sas)', this.palettes));
+    },
+    
+    _onPaletteNameChanged: function(index, entry) {
+        this.palettes[index][0] = entry.get_text();
+        this._savePalettes();
+    },
+    
+    _onPaletteColorChanged: function(paletteIndex, colorIndex, colorButton) {
+        this.palettes[paletteIndex][1][colorIndex] = colorButton.get_rgba().to_string();
+        this._savePalettes();
+    },
+    
+    _addNewPalette: function() {
+        let colors = Array(9).fill('Black');
+        // Translators: default name of a new palette
+        this.palettes.push([_("New palette"), colors]);
+        this._savePalettes();
+    },
+    
+    _removePalette: function(paletteIndex) {
+        this.palettes.splice(paletteIndex, 1);
+        this._savePalettes();
+    }
 });
 
 const PrefsPage = new GObject.Class({
@@ -205,143 +369,276 @@ const PrefsPage = new GObject.Class({
     Extends: Gtk.ScrolledWindow,
 
     _init: function(params) {
-        this.parent();
+        this.parent({ hscrollbar_policy: Gtk.PolicyType.NEVER });
 
-        this.settings = Convenience.getSettings();
+        let settings = Convenience.getSettings();
+        let schema = settings.settings_schema;
+        let internalShortcutSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
         
-        let box = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN*3 });
+        let box = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN * 3, spacing: 3 * MARGIN });
         this.add(box);
         
-        let globalFrame = new Gtk.Frame({ label_yalign: 1.0 });
-        globalFrame.set_label_widget(new Gtk.Label({ margin_bottom: MARGIN/2, use_markup: true, label: "<b><big>" + _("Global") + "</big></b>" }));
+        let globalFrame = new Frame({ label: _("Global") });
         box.add(globalFrame);
         
-        let listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN/2, margin_bottom: MARGIN/2 });
+        let listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN, margin_bottom: MARGIN / 2 });
+        listBox.get_style_context().add_class('background');
         globalFrame.add(listBox);
         
-        let styleContext = listBox.get_style_context();
-        styleContext.add_class('background');
+        Shortcuts.GLOBAL_KEYBINDINGS.forEach((settingKeys, index) => {
+            if (index)
+                listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
+            
+            let globalKeybindingsRow = new Gtk.ListBoxRow({ activatable: false });
+            let globalKeybindingsWidget = new KeybindingsWidget(settingKeys, settings);
+            globalKeybindingsRow.add(globalKeybindingsWidget);
+            listBox.add(globalKeybindingsRow);
+        });
         
-        let globalKeybindingsWidget = new KeybindingsWidget(GLOBAL_KEYBINDINGS, this.settings);
-        globalKeybindingsWidget.margin = MARGIN;
-        listBox.add(globalKeybindingsWidget);
+        let persistentOverTogglesKey = schema.get_key('persistent-over-toggles');
+        let persistentOverTogglesRow = new PrefRow({ label: persistentOverTogglesKey.get_summary(), desc: persistentOverTogglesKey.get_description() });
+        let persistentOverTogglesSwitch = new Gtk.Switch();
+        settings.bind('persistent-over-toggles', persistentOverTogglesSwitch, 'active', 0);
+        persistentOverTogglesRow.addWidget(persistentOverTogglesSwitch, true);
+        listBox.add(persistentOverTogglesRow);
         
-        let persistentBox = new Gtk.Box({ margin_top: MARGIN/2, margin_bottom: MARGIN/2, margin_left: MARGIN, margin_right: MARGIN });
-        let persistentLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let persistentLabel1 = new Gtk.Label({label: _("Persistent")});
-        let persistentLabel2 = new Gtk.Label({ use_markup: true, halign: 1, wrap: true, xalign: 0, label: "<small>" + _("Persistent drawing through session restart") + "</small>" });
-        persistentLabel1.set_halign(1);
-        persistentLabel2.get_style_context().add_class('dim-label');
-        persistentLabelBox.pack_start(persistentLabel1, true, true, 0);
-        persistentLabelBox.pack_start(persistentLabel2, true, true, 0);
-        let persistentSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind('persistent-drawing', persistentSwitch, 'active', 0);
-        persistentBox.pack_start(persistentLabelBox, true, true, 4);
-        persistentBox.pack_start(persistentSwitch, false, false, 4);
-        listBox.add(persistentBox);
+        let persistentOverRestartsKey = schema.get_key('persistent-over-restarts');
+        let persistentOverRestartsRow = new PrefRow({ label: persistentOverRestartsKey.get_summary(), desc: persistentOverRestartsKey.get_description() });
+        let persistentOverRestartsSwitch = new Gtk.Switch();
+        settings.bind('persistent-over-restarts', persistentOverRestartsSwitch, 'active', 0);
+        persistentOverRestartsRow.addWidget(persistentOverRestartsSwitch, true);
+        persistentOverTogglesSwitch.bind_property('active', persistentOverRestartsSwitch, 'sensitive', GObject.BindingFlags.SYNC_CREATE);
+        listBox.add(persistentOverRestartsRow);
         
-        let desktopBox = new Gtk.Box({ margin_top: MARGIN/2, margin_bottom: MARGIN/2, margin_left: MARGIN, margin_right: MARGIN });
-        let desktopLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let desktopLabel1 = new Gtk.Label({label: _("Drawing on the desktop")});
-        let desktopLabel2 = new Gtk.Label({ use_markup: true, halign: 1, wrap: true, xalign: 0, label: "<small>" + _("<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>") + "</small>" });
-        desktopLabel1.set_halign(1);
-        desktopLabel2.get_style_context().add_class('dim-label');
-        desktopLabelBox.pack_start(desktopLabel1, true, true, 0);
-        desktopLabelBox.pack_start(desktopLabel2, true, true, 0);
-        let desktopSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind('drawing-on-desktop', desktopSwitch, 'active', 0);
-        desktopBox.pack_start(desktopLabelBox, true, true, 4);
-        desktopBox.pack_start(desktopSwitch, false, false, 4);
-        listBox.add(desktopBox);
+        let desktopKey = schema.get_key('drawing-on-desktop');
+        let desktopRow = new PrefRow({ label: desktopKey.get_summary(), desc: desktopKey.get_description() });
+        let desktopSwitch = new Gtk.Switch();
+        settings.bind('drawing-on-desktop', desktopSwitch, 'active', 0);
+        desktopRow.addWidget(desktopSwitch, true);
+        persistentOverTogglesSwitch.bind_property('active', desktopSwitch, 'sensitive', GObject.BindingFlags.SYNC_CREATE);
+        listBox.add(desktopRow);
         
-        let osdBox = new Gtk.Box({ margin_top: MARGIN/2, margin_bottom: MARGIN/2, margin_left: MARGIN, margin_right: MARGIN });
-        let osdLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let osdLabel1 = new Gtk.Label({label: _("Disable on-screen notifications")});
-        osdLabel1.set_halign(1);
-        osdLabelBox.pack_start(osdLabel1, true, true, 0);
-        let osdSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind('osd-disabled', osdSwitch, 'active', 0);
-        osdBox.pack_start(osdLabelBox, true, true, 4);
-        osdBox.pack_start(osdSwitch, false, false, 4);
-        listBox.add(osdBox);
+        let osdKey = schema.get_key('osd-disabled');
+        let osdRow = new PrefRow({ label: osdKey.get_summary(), desc: osdKey.get_description() });
+        let osdSwitch = new Gtk.Switch();
+        settings.bind('osd-disabled', osdSwitch, 'active', 0);
+        osdRow.addWidget(osdSwitch, true);
+        listBox.add(osdRow);
         
-        let indicatorBox = new Gtk.Box({ margin_top: MARGIN/2, margin_bottom: MARGIN/2, margin_left: MARGIN, margin_right: MARGIN });
-        let indicatorLabelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let indicatorLabel1 = new Gtk.Label({label: _("Disable panel indicator")});
-        indicatorLabel1.set_halign(1);
-        indicatorLabelBox.pack_start(indicatorLabel1, true, true, 0);
-        let indicatorSwitch = new Gtk.Switch({valign: 3});
-        this.settings.bind('indicator-disabled', indicatorSwitch, 'active', 0);
-        indicatorBox.pack_start(indicatorLabelBox, true, true, 4);
-        indicatorBox.pack_start(indicatorSwitch, false, false, 4);
-        listBox.add(indicatorBox);
+        let indicatorKey = schema.get_key('indicator-disabled');
+        let indicatorRow = new PrefRow({ label: indicatorKey.get_summary(), desc: indicatorKey.get_description() });
+        let indicatorSwitch = new Gtk.Switch();
+        settings.bind('indicator-disabled', indicatorSwitch, 'active', 0);
+        indicatorRow.addWidget(indicatorSwitch, true);
+        listBox.add(indicatorRow);
         
-        let children = listBox.get_children();
-        for (let i = 0; i < children.length; i++) {
-            if (children[i].activatable)
-                children[i].set_activatable(false);
-        }
-        
-        let internalFrame = new Gtk.Frame({ margin_top: 3*MARGIN, label_yalign: 1.0 });
-        internalFrame.set_label_widget(new Gtk.Label({ margin_bottom: MARGIN/2, use_markup: true, label: "<b><big>" + _("Internal") + " </big></b>" + _("(in drawing mode)") }));
+        let internalFrame = new Frame({ label: _("Internal"), desc: _("In drawing mode") });
         box.add(internalFrame);
         
-        listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN });
+        listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN, margin_bottom: MARGIN });
+        listBox.get_style_context().add_class('background');
         internalFrame.add(listBox);
         
-        styleContext = listBox.get_style_context();
-        styleContext.add_class('background');
+        Shortcuts.OTHERS.forEach((pairs, index) => {
+            if (index)
+                listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
+            
+            pairs.forEach(pair => {
+                let [action, shortcut] = pair;
+                let otherBox = new Gtk.Box({ margin_left: MARGIN, margin_right: MARGIN });
+                let otherLabel = new Gtk.Label({ label: action, use_markup: true });
+                otherLabel.set_halign(1);
+                let otherLabel2 = new Gtk.Label({ label: shortcut });
+                otherBox.pack_start(otherLabel, true, true, 4);
+                otherBox.pack_start(otherLabel2, false, false, 4);
+                listBox.add(otherBox);
+            });
+        });
         
-        for (let i = 0; i < OTHER_SHORTCUTS.length; i++) {
-            if (OTHER_SHORTCUTS[i].desc.indexOf('-separator-') != -1) {
-                listBox.add(new Gtk.Box({ margin_top: MARGIN, margin_left: MARGIN, margin_right: MARGIN }));
-                continue;
+        listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
+        
+        Shortcuts.INTERNAL_KEYBINDINGS.forEach((settingKeys, index) => {
+            if (index)
+                listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
+            
+            let internalKeybindingsWidget = new KeybindingsWidget(settingKeys, internalShortcutSettings);
+            listBox.add(internalKeybindingsWidget);
+        });
+        
+        listBox.get_children().forEach(row => row.set_activatable(false));
+        
+        let resetButton = new Gtk.Button({ label: _("Reset settings"), halign: Gtk.Align.CENTER });
+        resetButton.get_style_context().add_class('destructive-action');
+        resetButton.connect('clicked', () => {
+            internalShortcutSettings.settings_schema.list_keys().forEach(key => internalShortcutSettings.reset(key));
+            settings.settings_schema.list_keys().forEach(key => settings.reset(key));
+        });
+        box.add(resetButton);
+    }
+});
+
+const Frame = new GObject.Class({
+    Name: 'DrawOnYourScreenFrame',
+    GTypeName: 'DrawOnYourScreenFrame',
+    Extends: Gtk.Frame,
+
+    _init: function(params) {
+        let labelWidget = new Gtk.Label({ margin_bottom: MARGIN / 2, use_markup: true, label: `<b><big>${params.label}</big></b>` });
+        this.parent({ label_yalign: 1.0, label_widget: labelWidget });
+        
+        if (params.desc) {
+            labelWidget.set_tooltip_text(params.desc);
+            this.get_accessible().set_description(params.desc);
+        }
+    }
+});
+
+const PrefRow = new GObject.Class({
+    Name: 'DrawOnYourScreenPrefRow',
+    GTypeName: 'DrawOnYourScreenPrefRow',
+    Extends: Gtk.ListBoxRow,
+
+    _init: function(params) {
+        this.parent({ activatable: false });
+        
+        let hbox = new Gtk.Box(ROWBOX_MARGIN_PARAMS);
+        this.add(hbox);
+        
+        let labelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
+        hbox.pack_start(labelBox, true, true, 4);
+        
+        this.widgetBox = new Gtk.Box({ spacing: 4 });
+        hbox.pack_start(this.widgetBox, false, false, 4);
+        
+        this.label = new Gtk.Label({ use_markup: true, label: params.label, halign: Gtk.Align.START });
+        labelBox.pack_start(this.label, true, true, 0);
+        if (params.desc) {
+            this.desc = new Gtk.Label({ use_markup: true, label: `<small>${params.desc}</small>`, halign: Gtk.Align.START, wrap: true, xalign: 0 });
+            this.desc.get_style_context().add_class('dim-label');
+            labelBox.pack_start(this.desc, true, true, 0);
+            this.widgetBox.set_valign(Gtk.Align.START);
+        }
+    },
+    
+    addWidget: function(widget, setRelationship) {
+        this.widgetBox.add(widget);
+        
+        if (widget.name)
+            widget.get_accessible().set_name(widget.name);
+        
+        if (setRelationship) {
+            this.label.get_accessible().add_relationship(Atk.RelationType.LABEL_FOR, widget.get_accessible());
+            widget.get_accessible().add_relationship(Atk.RelationType.LABELLED_BY, this.label.get_accessible());
+            
+            if (this.desc) {
+                this.desc.get_accessible().add_relationship(Atk.RelationType.DESCRIPTION_FOR, widget.get_accessible());
+                widget.get_accessible().add_relationship(Atk.RelationType.DESCRIBED_BY, this.desc.get_accessible());
             }
-            let otherBox = new Gtk.Box({ margin_left: MARGIN, margin_right: MARGIN });
-            let otherLabel = new Gtk.Label({ label: _(OTHER_SHORTCUTS[i].desc), use_markup: true });
-            otherLabel.set_halign(1);
-            let otherLabel2 = new Gtk.Label({ label: OTHER_SHORTCUTS[i].shortcut });
-            otherBox.pack_start(otherLabel, true, true, 4);
-            otherBox.pack_start(otherLabel2, false, false, 4);
-            listBox.add(otherBox);
+        }
+    }
+});
+
+const PixelSpinButton = new GObject.Class({
+    Name: 'DrawOnYourScreenPixelSpinButton',
+    GTypeName: 'DrawOnYourScreenPixelSpinButton',
+    Extends: Gtk.SpinButton,
+    Properties: {
+        'range': GObject.param_spec_variant('range', 'range', 'GSettings range',
+                                            GLib.VariantType.new('(sv)'), null, GObject.ParamFlags.WRITABLE),
+        
+        'step': GObject.ParamSpec.double('step', 'step', 'step increment',
+                                         GObject.ParamFlags.WRITABLE,
+                                         0, 1000, 1)
+    },
+    
+    set range(range) {
+        let [type, variant] = range.deep_unpack();
+        if (type == 'range') {
+            let [min, max] = variant.deep_unpack();
+            this.adjustment.set_lower(min);
+            this.adjustment.set_upper(max);
+        }
+    },
+    
+    set step(step) {
+        this.adjustment.set_step_increment(step);
+        this.adjustment.set_page_increment(step * 10);
+    },
+    
+    // Add 'px' unit.
+    vfunc_output: function() {
+        this.text = _("%f px").format(Number(this.value).toFixed(2));
+        return true;
+    },
+    
+    // Prevent accidental scrolling.
+    vfunc_scroll_event: function(event) {
+        return this.has_focus ? this.parent(event) : Gdk.EVENT_PROPAGATE;
+    }
+});
+
+// A color button that can be easily bound with a color string setting.
+const ColorStringButton = new GObject.Class({
+    Name: 'DrawOnYourScreenColorStringButton',
+    GTypeName: 'DrawOnYourScreenColorStringButton',
+    Extends: Gtk.ColorButton,
+    Properties: {
+        'color-string': GObject.ParamSpec.string('color-string', 'colorString', 'A string that describes the color',
+                                                 GObject.ParamFlags.READWRITE, 'black')
+    },
+    
+    get color_string() {
+        return this._color_string || 'black';
+    },
+    
+    set color_string(colorString) {
+        this._color_string = colorString;
+        
+        let newRgba = new Gdk.RGBA();
+        newRgba.parse(colorString);
+        this.set_rgba(newRgba);
+    },
+    
+    // Do nothing if the new color is equivalent to the old color (e.g. "black" and "rgb(0,0,0)").
+    vfunc_color_set(args) {
+        let oldRgba = new Gdk.RGBA();
+        oldRgba.parse(this.color_string);
+        
+        if (!this.rgba.equal(oldRgba)) {
+            this._color_string = this.rgba.to_string();
+            this.notify('color-string');
+        }            
+    }
+});
+
+const FileChooserButton = new GObject.Class({
+    Name: 'DrawOnYourScreenFileChooserButton',
+    GTypeName: 'DrawOnYourScreenFileChooserButton',
+    Extends: Gtk.FileChooserButton,
+    Properties: {
+        'location': GObject.ParamSpec.string('location', 'location', 'location',
+                                             GObject.ParamFlags.READWRITE, '')
+    },
+    
+    get location() {
+        return this.get_file().get_path();
+    },
+    
+    set location(location) {
+        if (!location) {
+            this.unselect_all();
+            if (this.get_file())
+                this.set_file(Gio.File.new_for_path('aFileThatDoesNotExist'));
+            return;
         }
         
-        let internalKeybindingsWidget = new KeybindingsWidget(INTERNAL_KEYBINDINGS, this.settings);
-        internalKeybindingsWidget.margin = MARGIN;
-        listBox.add(internalKeybindingsWidget);
-        
-        let styleBox = new Gtk.Box({ margin: MARGIN });
-        let styleLabel = new Gtk.Label({
-            wrap: true,
-            xalign: 0,
-            use_markup: true,
-            label: _("<b>Default</b> drawing style attributes (color palette, font, line, dash) are defined in an editable <b>css</b> file.\n" +
-                     "See <i>“%s”</i>.").format(_("Edit style"))
-        });
-        styleLabel.set_halign(1);
-        styleLabel.get_style_context().add_class('dim-label');
-        styleBox.pack_start(styleLabel, true, true, 4);
-        listBox.add(styleBox);
-        
-        let noteBox = new Gtk.Box({ margin: MARGIN });
-        let noteLabel = new Gtk.Label({
-            wrap: true,
-            xalign: 0,
-            use_markup: true,
-            label: _("When you save elements made with <b>eraser</b> in a <b>SVG</b> file, " +
-                     "they are colored with background color, transparent if it is disabled.\n" +
-                     "See <i>“%s”</i> or edit the SVG file afterwards.").format(_("Add a drawing background"))
-        });
-        noteLabel.set_halign(1);
-        noteLabel.get_style_context().add_class('dim-label');
-        noteBox.pack_start(noteLabel, true, true, 4);
-        listBox.add(noteBox);
-        
-        children = listBox.get_children();
-        for (let i = 0; i < children.length; i++) {
-            if (children[i].activatable)
-                children[i].set_activatable(false);
-        }
+        let file = Gio.File.new_for_commandline_arg(location);
+        if (file.query_exists(null))
+            this.set_file(file);
+    },
+    
+    vfunc_file_set: function(args) {
+        this.notify('location');
     }
 });
 
@@ -351,11 +648,11 @@ const KeybindingsWidget = new GObject.Class({
     GTypeName: 'DrawOnYourScreenKeybindingsWidget',
     Extends: Gtk.Box,
 
-    _init: function(keybindings, settings) {
-        this.parent();
+    _init: function(settingKeys, settings) {
+        this.parent(ROWBOX_MARGIN_PARAMS);
         this.set_orientation(Gtk.Orientation.VERTICAL);
 
-        this._keybindings = keybindings;
+        this._settingKeys = settingKeys;
         this._settings = settings;
 
         this._columns = {
@@ -436,17 +733,27 @@ const KeybindingsWidget = new GObject.Class({
         this.keybinding_column = keybinding_column;
         this.action_column = action_column;
 
+        this._settings.connect('changed', this._onSettingsChanged.bind(this));
         this._refresh();
+    },
+    
+    // Support the case where all the settings has been reset.
+    _onSettingsChanged: function() {
+        if (this._refreshTimeout)
+            GLib.source_remove(this._refreshTimeout);
+        
+        this._refreshTimeout = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            this._refreshTimeout = 0;
+            this._refresh();
+        });
     },
 
     _refresh: function() {
         this._store.clear();
 
-        for(let settings_key in this._keybindings) {
-            if (settings_key.indexOf('-separator-') != -1)
-                continue;
+        this._settingKeys.forEach(settingKey => {
             let [key, mods] = Gtk.accelerator_parse(
-                this._settings.get_strv(settings_key)[0]
+                this._settings.get_strv(settingKey)[0] || ''
             );
 
             let iter = this._store.append();
@@ -458,12 +765,12 @@ const KeybindingsWidget = new GObject.Class({
                     this._columns.KEY
                 ],
                 [
-                    settings_key,
-                    _(this._keybindings[settings_key]),
+                    settingKey,
+                    this._settings.settings_schema.get_key(settingKey).get_summary(),
                     mods,
                     key
                 ]
             );
-        }
+        });
     }
 });
