@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2020-09-17 22:27+0200\n"
+"POT-Creation-Date: 2020-09-18 11:37+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -282,6 +282,12 @@ msgid "Palette"
 msgstr ""
 
 msgid "Color"
+msgstr ""
+
+msgid "Add to images"
+msgstr ""
+
+msgid "Delete"
 msgstr ""
 
 msgid "Type a name"
