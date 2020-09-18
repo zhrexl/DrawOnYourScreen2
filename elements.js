@@ -670,9 +670,9 @@ const TextElement = new Lang.Class({
             layout.set_font_description(this.font);
             layout.set_text(this.text, -1);
             this.textWidth = layout.get_pixel_size()[0];
-            cr.moveTo(this.x, this.y - layout.get_baseline() / Pango.SCALE);
+            cr.moveTo(this.x, this.y);
             layout.set_text(this.text, -1);
-            PangoCairo.show_layout(cr, layout);
+            PangoCairo.show_layout_line(cr, layout.get_line(0));
             
             if (params.showTextCursor) {
                 let cursorPosition = this.cursorPosition == -1 ? this.text.length : this.cursorPosition;
