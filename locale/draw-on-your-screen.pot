@@ -423,7 +423,7 @@ msgstr ""
 msgid "Smooth free drawing outline"
 msgstr ""
 
-msgid "Unlock image ratio"
+msgid "Do not preserve image ratio"
 msgstr ""
 
 msgid "Rotate <span alpha=\"50%\">(while moving)</span>"
