@@ -318,11 +318,12 @@ var Images = {
     },
     
     addImagesFromClipboard: function(callback) {
-        Clipboard.get_text(CLIPBOARD_TYPE, (clipBoard, text) => {
+        Clipboard.get_text(CLIPBOARD_TYPE, (clipboard, text) => {
             if (!text)
                 return;
-
-            let lines = text.split('\n');
+            
+            // Since 3.38 there is a line terminator character, that has to be removed with .trim().
+            let lines = text.split('\n').map(line => line.trim());
             if (lines[0] == 'x-special/nautilus-clipboard')
                 lines = lines.slice(2);
             
@@ -443,7 +444,9 @@ var Jsons = {
             return;
         
         let directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir']]));
-        this._monitor = directory.monitor(Gio.FileMonitorFlags.NONE, null);
+        // It is important to specify that the file to monitor is a directory because maybe the directory does not exist yet
+        // and remove events would not be monitored.
+        this._monitor = directory.monitor_directory(Gio.FileMonitorFlags.NONE, null);
         this._monitorHandler = this._monitor.connect('changed', (monitor, file) => {
             if (file.get_basename() != `${Me.metadata['persistent-file-name']}.json` && file.get_basename().indexOf('.goutputstream'))
                 this.reset();

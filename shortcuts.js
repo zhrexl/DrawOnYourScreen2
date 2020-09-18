@@ -83,7 +83,7 @@ const getOthers = function() {
             [_("Extend circle to ellipse"), getKeyLabel('<Primary>')],
             [_("Curve line"), getKeyLabel('<Primary>')],
             [_("Smooth free drawing outline"), getKeyLabel('<Primary>')],
-            [_("Unlock image ratio"), getKeyLabel('<Primary>')],
+            [_("Do not preserve image ratio"), getKeyLabel('<Primary>')],
             [_("Rotate <span alpha=\"50%\">(while moving)</span>"), getKeyLabel('<Primary>')],
             [_("Stretch <span alpha=\"50%\">(while resizing)</span>"), getKeyLabel('<Primary>')],
             [_("Inverse <span alpha=\"50%\">(while mirroring)</span>"), getKeyLabel('<Primary>')],

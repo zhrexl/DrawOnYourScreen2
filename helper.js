@@ -21,13 +21,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+const Clutter = imports.gi.Clutter;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const St = imports.gi.St;
 
 const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
-const Tweener = imports.ui.tweener;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
@@ -35,6 +35,7 @@ const Shortcuts = Me.imports.shortcuts;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
+const Tweener = GS_VERSION < '3.33.0' ? imports.ui.tweener : null;
 
 const HELPER_ANIMATION_TIME = 0.25;
 const MEDIA_KEYS_SCHEMA = 'org.gnome.settings-daemon.plugins.media-keys';
@@ -175,20 +176,33 @@ var DrawingHelper = new Lang.Class({
         else
             this.vscrollbar_policy = Gtk.PolicyType.NEVER;
         
-        Tweener.removeTweens(this);
-        Tweener.addTween(this, { opacity: 255,
-                                 time: HELPER_ANIMATION_TIME,
-                                 transition: 'easeOutQuad',
-                                 onComplete: null });
+        if (Tweener) {
+            Tweener.removeTweens(this);
+            Tweener.addTween(this, { opacity: 255,
+                                     time: HELPER_ANIMATION_TIME,
+                                     transition: 'easeOutQuad' });
+        } else {
+            this.remove_all_transitions();
+            this.ease({ opacity: 255,
+                        duration: HELPER_ANIMATION_TIME * 1000,
+                        transition: Clutter.AnimationMode.EASE_OUT_QUAD });
+        }
     },
     
     hideHelp: function() {
-        Tweener.removeTweens(this);
-        Tweener.addTween(this, { opacity: 0,
-                                 time: HELPER_ANIMATION_TIME,
-                                 transition: 'easeOutQuad',
-                                 onComplete: this.hide.bind(this) });
-        
+        if (Tweener) {
+            Tweener.removeTweens(this);
+            Tweener.addTween(this, { opacity: 0,
+                                     time: HELPER_ANIMATION_TIME,
+                                     transition: 'easeOutQuad',
+                                     onComplete: this.hide.bind(this) });
+        } else {
+            this.remove_all_transitions();
+            this.ease({ opacity: 0,
+                        duration: HELPER_ANIMATION_TIME * 1000,
+                        transition: Clutter.AnimationMode.EASE_OUT_QUAD,
+                        onComplete: this.hide.bind(this) });
+        }
     }
 });
 

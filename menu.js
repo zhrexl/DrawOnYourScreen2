@@ -616,29 +616,24 @@ var DrawingMenu = new Lang.Class({
             });
             getActor(subItem).add_child(expander);
             
-            let insertButton = new St.Button({ style_class: 'button draw-on-your-screen-menu-inline-button',
-                                               child: new St.Icon({ icon_name: 'insert-image-symbolic',
-                                                                    style_class: 'popup-menu-icon' }) });
-            getActor(subItem).add_child(insertButton);
-            
-            insertButton.connect('clicked', () => {
+            let insertCallback = () => {
                 this.area.currentImage = json.image;
                 this.imageItem.update();
                 this.area.currentTool = this.drawingTools.IMAGE;
                 this.toolItem.update();
                 this._updateSectionVisibility();
-            });
+            };
+            let insertButton = new ActionButton(_("Add to images"), 'insert-image-symbolic', insertCallback, null, true);
+            getActor(subItem).add_child(insertButton);
             
-            let deleteButton = new St.Button({ style_class: 'button draw-on-your-screen-menu-inline-button draw-on-your-screen-menu-destructive-button',
-                                               child: new St.Icon({ icon_name: 'edit-delete-symbolic',
-                                                                    style_class: 'popup-menu-icon' }) });
-            getActor(subItem).add_child(deleteButton);
-            
-            deleteButton.connect('clicked', () => {
+            let deleteCallback = () => {
                 json.delete();
                 subItem.destroy();
                 this.openDrawingSubMenuItem.setSensitive(!this.openDrawingSubMenu.isEmpty());
-            });
+            };
+            let deleteButton = new ActionButton(_("Delete"), 'edit-delete-symbolic', deleteCallback, null, true);
+            deleteButton.child.add_style_class_name('draw-on-your-screen-menu-destructive-button');
+            getActor(subItem).add_child(deleteButton);
         });
         
         this.openDrawingSubMenuItem.setSensitive(!this.openDrawingSubMenu.isEmpty());
@@ -722,16 +717,18 @@ const ActionButton = new Lang.Class({
     hideLabel: Dash.DashItemContainer.prototype.hideLabel,
     _syncLabel: Dash.Dash.prototype._syncLabel,
     
-    _init: function(name, icon, callback, callbackAfter) {
+    _init: function(name, icon, callback, callbackAfter, inline) {
         this._labelText = name;
         
         let button = new St.Button({ track_hover: true,
                                      x_align: Clutter.ActorAlign.CENTER,
                                      accessible_name: name,
-                                     // use 'popup-menu' and 'popup-menu-item' style classes to provide theme colors
-                                     //style_class: 'system-menu-action popup-menu-item popup-menu' });
-                                     style_class: 'button draw-on-your-screen-menu-action-button' });
+                                     style_class: `button draw-on-your-screen-menu-${inline ? 'inline' : 'action'}-button` });
+        
         button.child = new St.Icon(typeof icon == 'string' ? { icon_name: icon } : { gicon: icon });
+        if (inline)
+            button.child.add_style_class_name('popup-menu-icon');
+        
         button.connect('clicked', () => {
             callback();
             if (callbackAfter)
@@ -740,7 +737,7 @@ const ActionButton = new Lang.Class({
         button.bind_property('reactive', button, 'can_focus', GObject.BindingFlags.DEFAULT);
         button.connect('notify::hover', () => this._syncLabel(this));
         
-        this.parent({ child: button, x_expand: true });
+        this.parent({ child: button, x_expand: inline ? false : true });
     },
     
     get label() {
