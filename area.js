@@ -703,6 +703,7 @@ var DrawingArea = new Lang.Class({
     },
     
     _startWriting: function() {
+        let [stageX, stageY] = this.get_transformed_position();
         let [x, y] = [this.currentElement.x, this.currentElement.y];
         this.currentElement.text = '';
         this.currentElement.cursorPosition = 0;
@@ -713,16 +714,22 @@ var DrawingArea = new Lang.Class({
         this.textHasCursor = true;
         this._redisplay();
         
-        this.textEntry = new St.Entry({ visible: false, x, y });
-        this.get_parent().add_child(this.textEntry);
+        // Do not hide and do not set opacity to 0 because ibusCandidatePopup need a mapped text entry to init correctly its position.
+        this.textEntry = new St.Entry({ opacity: 1, x: stageX + x, y: stageY + y });
+        this.get_parent().insert_child_below(this.textEntry, this);
         this.textEntry.grab_key_focus();
         this.updateActionMode();
         this.updatePointerCursor();
         
-        let ibusCandidatePopup = Main.layoutManager.uiGroup.get_children().filter(child =>
-            child.has_style_class_name && child.has_style_class_name('candidate-popup-boxpointer'))[0] || null;
+        let ibusCandidatePopup = Main.layoutManager.uiGroup.get_children().find(child =>
+            child.has_style_class_name && child.has_style_class_name('candidate-popup-boxpointer'));
         if (ibusCandidatePopup) {
-            this.ibusHandler = ibusCandidatePopup.connect('notify::visible', popup => popup.visible && (this.textEntry.visible = true));
+            this.ibusHandler = ibusCandidatePopup.connect('notify::visible', () => {
+                if (ibusCandidatePopup.visible) {
+                    this.get_parent().set_child_above_sibling(this.textEntry, this);
+                    this.textEntry.opacity = 255;
+                }
+            });
             this.textEntry.connect('destroy', () => ibusCandidatePopup.disconnect(this.ibusHandler));
         }
         
