@@ -367,7 +367,8 @@ var DrawingArea = new Lang.Class({
         } else if (button == 2) {
             this.switchFill();
         } else if (button == 3) {
-            this._stopDrawing();
+            this._stopAll();
+            
             this.menu.open(x, y);
             return Clutter.EVENT_STOP;
         }
@@ -376,7 +377,8 @@ var DrawingArea = new Lang.Class({
     },
     
     _onKeyboardPopupMenu: function() {
-        this._stopDrawing();
+        this._stopAll();
+        
         if (this.helper.visible)
             this.toggleHelp();
         this.menu.popup();
@@ -832,6 +834,21 @@ var DrawingArea = new Lang.Class({
         });
     },
     
+    // A priori there is nothing to stop, except transformations, if there is no current element.
+    // 'force' argument is passed when leaving drawing mode to ensure all is clean, as a workaround for possible bugs.
+    _stopAll: function(force) {
+        if (this.grabbedElement)
+            this._stopTransforming();
+            
+        if (!this.currentElement && !force)
+            return;
+        
+        if (this.isWriting)
+            this._stopWriting();
+        
+        this._stopDrawing();
+    },
+    
     erase: function() {
         this.deleteLastElement();
         this.elements = [];
@@ -840,21 +857,8 @@ var DrawingArea = new Lang.Class({
     },
     
     deleteLastElement: function() {
-        if (this.currentElement) {
-            if (this.motionHandler) {
-                this.disconnect(this.motionHandler);
-                this.motionHandler = null;
-            }
-            if (this.buttonReleasedHandler) {
-                this.disconnect(this.buttonReleasedHandler);
-                this.buttonReleasedHandler = null;
-            }
-            if (this.isWriting)
-                this._stopWriting();
-            this.currentElement = null;
-        } else {
-            this.elements.pop();
-        }
+        this._stopAll();
+        this.elements.pop();
         this._redisplay();
     },
     
@@ -1085,25 +1089,16 @@ var DrawingArea = new Lang.Class({
             this.disconnect(this.keyboardPopupMenuHandler);
             this.keyboardPopupMenuHandler = null;
         }
-        if (this.motionHandler) {
-            this.disconnect(this.motionHandler);
-            this.motionHandler = null;
-        }
-        if (this.buttonReleasedHandler) {
-            this.disconnect(this.buttonReleasedHandler);
-            this.buttonReleasedHandler = null;
-        }
         if (this.scrollHandler) {
             this.disconnect(this.scrollHandler);
             this.scrollHandler = null;
         }
         
-        this.currentElement = null;
-        this._stopTextCursorTimeout();
+        this._stopAll(true);
+        
         if (erase)
             this.erase();
-        else
-            this._redisplay();
+        
         this.closeMenu();
         this.get_parent().set_background_color(null);
         Files.Images.reset();
@@ -1143,12 +1138,7 @@ var DrawingArea = new Lang.Class({
     },
     
     exportToSvg: function() {
-        // stop drawing or writing
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting) {
-            this._stopWriting();
-        } else if (this.currentElement && this.currentElement.shape != Shapes.TEXT) {
-            this._stopDrawing();
-        }
+        this._stopAll();
         
         let prefixes = 'xmlns="http://www.w3.org/2000/svg"';
         if (this.elements.some(element => element.shape == Shapes.IMAGE))
@@ -1181,12 +1171,7 @@ var DrawingArea = new Lang.Class({
     },
     
     _saveAsJson: function(json, notify, callback) {
-        // stop drawing or writing
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting) {
-            this._stopWriting();
-        } else if (this.currentElement && this.currentElement.shape != Shapes.TEXT) {
-            this._stopDrawing();
-        }
+        this._stopAll();
         
         // do not use "content = JSON.stringify(this.elements, null, 2);", neither "content = JSON.stringify(this.elements);"
         // do compromise between disk usage and human readability
@@ -1225,12 +1210,8 @@ var DrawingArea = new Lang.Class({
     },
     
     _loadJson: function(json, notify) {
-        // stop drawing or writing
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting) {
-            this._stopWriting();
-        } else if (this.currentElement && this.currentElement.shape != Shapes.TEXT) {
-            this._stopDrawing();
-        }
+        this._stopAll();
+        
         this.elements = [];
         this.currentElement = null;
         
