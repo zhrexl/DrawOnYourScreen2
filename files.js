@@ -444,7 +444,9 @@ var Jsons = {
             return;
         
         let directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir']]));
-        this._monitor = directory.monitor(Gio.FileMonitorFlags.NONE, null);
+        // It is important to specify that the file to monitor is a directory because maybe the directory does not exist yet
+        // and remove events would not be monitored.
+        this._monitor = directory.monitor_directory(Gio.FileMonitorFlags.NONE, null);
         this._monitorHandler = this._monitor.connect('changed', (monitor, file) => {
             if (file.get_basename() != `${Me.metadata['persistent-file-name']}.json` && file.get_basename().indexOf('.goutputstream'))
                 this.reset();
