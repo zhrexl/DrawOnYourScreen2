@@ -318,11 +318,12 @@ var Images = {
     },
     
     addImagesFromClipboard: function(callback) {
-        Clipboard.get_text(CLIPBOARD_TYPE, (clipBoard, text) => {
+        Clipboard.get_text(CLIPBOARD_TYPE, (clipboard, text) => {
             if (!text)
                 return;
-
-            let lines = text.split('\n');
+            
+            // Since 3.38 there is a line terminator character, that has to be removed with .trim().
+            let lines = text.split('\n').map(line => line.trim());
             if (lines[0] == 'x-special/nautilus-clipboard')
                 lines = lines.slice(2);
             
