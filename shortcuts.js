@@ -46,7 +46,7 @@ var INTERNAL_KEYBINDINGS = [
     ['undo', 'redo', 'delete-last-element', 'smooth-last-element'],
     ['select-none-shape', 'select-line-shape', 'select-ellipse-shape', 'select-rectangle-shape', 'select-polygon-shape', 'select-polyline-shape',
      'select-text-shape', 'select-image-shape', 'select-move-tool', 'select-resize-tool', 'select-mirror-tool'],
-    ['switch-fill', 'switch-fill-rule', 'switch-color-palette', 'switch-color-palette-reverse'],
+    ['switch-fill', 'switch-fill-rule', 'switch-color-palette', 'switch-color-palette-reverse', 'pick-color'],
     ['increment-line-width', 'increment-line-width-more', 'decrement-line-width', 'decrement-line-width-more',
      'switch-linejoin', 'switch-linecap', 'switch-dash'],
     ['switch-font-family', 'switch-font-family-reverse', 'switch-font-weight', 'switch-font-style', 'switch-text-alignment'],
@@ -54,6 +54,15 @@ var INTERNAL_KEYBINDINGS = [
     ['toggle-panel-and-dock-visibility', 'toggle-background', 'toggle-grid', 'toggle-square-area'],
     ['open-next-json', 'open-previous-json', 'save-as-json', 'export-to-svg', 'open-preferences', 'toggle-help'],
 ];
+
+if (GS_VERSION < '3.30') {
+    // Remove 'pick-color' keybinding.
+    INTERNAL_KEYBINDINGS.forEach(settingKeys => {
+        let index = settingKeys.indexOf('pick-color');
+        if (index != -1)
+           settingKeys.splice(index, 1);
+    });
+}
 
 if (GS_VERSION < '3.36') {
     // Remove 'open-preferences' keybinding.

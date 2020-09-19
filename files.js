@@ -41,6 +41,7 @@ const ICON_NAMES = [
     'tool-ellipse', 'tool-line', 'tool-mirror', 'tool-move', 'tool-none', 'tool-polygon', 'tool-polyline', 'tool-rectangle', 'tool-resize',
 ];
 const ThemedIconNames = {
+    COLOR_PICKER: 'color-select-symbolic',
     ENTER: 'applications-graphics', LEAVE: 'application-exit',
     GRAB: 'input-touchpad', UNGRAB: 'touchpad-disabled',
     OPEN: 'document-open', SAVE: 'document-save',

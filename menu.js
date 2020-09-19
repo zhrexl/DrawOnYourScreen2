@@ -483,6 +483,17 @@ var DrawingMenu = new Lang.Class({
         item.icon.set_gicon(icon);
         item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
         
+        if (GS_VERSION >= '3.30') {
+            let colorPickerCallback = () => {
+                this.close();
+                this.area.pickColor();
+            };
+            // Translators: It is displayed in a menu button tooltip or as a shortcut action description, so it should NOT use the imperative mood.
+            let colorPickerButton = new ActionButton(_("Pick a color"), Files.Icons.COLOR_PICKER, colorPickerCallback, null, true);
+            let index = getActor(item).get_children().length - 1;
+            getActor(item).insert_child_at_index(colorPickerButton, index);
+        }
+        
         item.menu.itemActivated = item.menu.close;
         
         this._populateColorSubMenu();

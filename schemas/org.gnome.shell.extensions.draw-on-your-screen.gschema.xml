@@ -164,6 +164,10 @@
       <default>["&lt;Primary&gt;v"]</default>
       <summary>Add images from the clipboard</summary>
     </key>
+    <key type="as" name="pick-color">
+      <default><![CDATA[['<Primary>KP_0','<Primary>0']]]></default>
+      <summary>Pick a color</summary>
+    </key>
     <key type="as" name="redo">
       <default>["&lt;Primary&gt;&lt;Shift&gt;z"]</default>
       <summary>Redo last brushstroke</summary>
