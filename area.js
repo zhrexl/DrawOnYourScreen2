@@ -50,6 +50,7 @@ const SVG_DEBUG_EXTENDS = false;
 const TEXT_CURSOR_TIME = 600; // ms
 const ELEMENT_GRABBER_TIME = 80; // ms, default is about 16 ms
 const GRID_TILES_HORIZONTAL_NUMBER = 30;
+const COLOR_PICKER_EXTENSION_UUID = 'color-picker@tuberry'; 
 
 const { Shapes, Transformations } = Elements;
 const { DisplayStrings } = Menu;
@@ -73,10 +74,6 @@ const getColorFromString = function(string, fallback) {
     color = Clutter.Color.get_static(Clutter.StaticColor[fallback.toUpperCase()]);
     color.toString = () => fallback;
     return color;
-};
-
-const getColorFromRGB = function(red, green, blue) {
-    return getColorFromString(`rgb(${red},${green},${blue})`, 'White');
 };
 
 // DrawingArea is the widget in which we draw, thanks to Cairo.
@@ -1038,8 +1035,10 @@ var DrawingArea = new Lang.Class({
     },
     
     _onColorPicked: function(color) {
-        let { red, green, blue } = color;
-        this.currentColor = getColorFromRGB(red, green, blue);
+        if (color instanceof Clutter.Color)
+            color = color.to_string().slice(0, -2);
+        
+        this.currentColor = getColorFromString(color);
         if (this.currentElement) {
             this.currentElement.color = this.currentColor;
             this._redisplay();
@@ -1055,6 +1054,20 @@ var DrawingArea = new Lang.Class({
         
         // Translators: It is displayed in an OSD notification to ask the user to start picking, so it should use the imperative mood.
         this.emit('show-osd', Files.Icons.COLOR_PICKER, pgettext("osd-notification", "Pick a color"), "", -1, false);
+        
+        let extension = Main.extensionManager && Main.extensionManager.lookup(COLOR_PICKER_EXTENSION_UUID);
+        if (extension && extension.state == ExtensionUtils.ExtensionState.ENABLED && extension.stateObj && extension.stateObj.pickAsync) {
+            extension.stateObj.pickAsync().then(result => {
+                if (typeof result == 'string')
+                    this._onColorPicked(result);
+                else
+                    this.initPointerCursor();
+            }).catch(e => {
+                this.initPointerCursor();
+            });
+            
+            return;
+        }
         
         try {
             let screenshot = new Shell.Screenshot();
