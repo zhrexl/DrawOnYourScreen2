@@ -50,7 +50,16 @@ const ThemedIconNames = {
     TOOL_IMAGE: 'insert-image', TOOL_TEXT: 'insert-text',
 };
 
-var Icons = {};
+var Icons = {
+    get FAKE() {
+        if (!this._fake) {
+            let bytes = new GLib.Bytes('<svg/>');
+            this._fake = Gio.BytesIcon.new(bytes);
+        }
+        
+        return this._fake;
+    }
+};
 
 ICON_NAMES.forEach(name => {
     Object.defineProperty(Icons, name.toUpperCase().replace(/-/gi, '_'), {
