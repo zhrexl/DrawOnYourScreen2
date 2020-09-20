@@ -3,86 +3,379 @@
 #
 # This file is distributed under the same license as Draw On Your Screen.
 # Aerowolf <aerowolf@tom.com>, 2019.
-# tubery <tubery@example.com>, 2020.
+# tuberry <tuberry@example.com>, 2020.
 #
 # Some words refer to SVG attributes (font, line, fill rule ...).
 # You are free to translate them or not.
 msgid ""
 msgstr ""
-"Project-Id-Version: Draw On Your Screen VERSION\n"
-"Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues/35\n"
-"POT-Creation-Date: 2019-03-04 16:40+0100\n"
-"PO-Revision-Date: 2020-06-30 16:01+0800\n"
-"Last-Translator: tubery <tubery@example.com>\n"
+"Project-Id-Version: Draw On Your Screen\n"
+"Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
+"POT-Creation-Date: 2020-09-19 15:32+0200\n"
+"PO-Revision-Date: 2020-09-20 16:00+0800\n"
+"Last-Translator: tuberry <tuberry@example.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "About"
-msgstr "关于"
+#. Translators: %s is a key label
+#, javascript-format
+msgid ""
+"Press <i>%s</i> to get\n"
+"a fourth control point"
+msgstr "按 <i>%s</i> 获取第四个控制点"
 
-# You are free to translate the extension name, that is displayed in About page, or not.
-msgid "Draw On You Screen"
-msgstr ""
+msgid "Mark a point of symmetry"
+msgstr "标对称点"
 
-msgid "Version %d"
-msgstr "版本 %d"
+msgid "Draw a line of symmetry"
+msgstr "作对称线"
 
-msgid "Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot"
+#. Translators: initial content of the text area
+msgctxt "text-area-content"
+msgid "Text"
+msgstr "文本框"
 
-msgstr "按 Super+Alt+D 开始绘画，截图以保存您的作品"
+#. Translators: %s is a key label
+#, javascript-format
+msgid "Press <i>%s</i> to mark vertices"
+msgstr "按 <i>%s</i> 标记顶点"
 
-# Add your name here, for example:
-# (add "\n" as separator if there is many translators)
-# msgid "translator-credits"
-# msgstr "Me"
-# or, with mail:
-# msgid "translator-credits"
-# msgstr "<a href=\"mailto:me@mail.org\">Me</a>"
-# or, with page:
-# msgid "translator-credits"
-# msgstr "<a href=\"https://...\">Me</a>"
-# else keep it empty.
-# It will be displayed in about page
-msgid "translator-credits"
-msgstr ""
-"<a href=\"mailto:aerowolf@tom.com\">Aerowolf</a>"
+#. Translators: %s is a key label
+#, javascript-format
+msgid "Type your text and press <i>%s</i>"
+msgstr "输入文本后按 <i>%s</i>"
 
-msgid "Preferences"
-msgstr "设置"
+#. Translators: It is displayed in an OSD notification to ask the user to start picking, so it should use the imperative mood.
+msgctxt "osd-notification"
+msgid "Pick a color"
+msgstr "拾取颜色"
+
+#. Translators: "released" as the opposite of "grabbed"
+msgid "Keyboard and pointer released"
+msgstr "键盘和鼠标已释放"
+
+msgid "Keyboard and pointer grabbed"
+msgstr "键盘和鼠标已捕获"
+
+msgid "Leaving drawing mode"
+msgstr "退出绘画模式"
+
+#. Translators: %s is a key label
+#, javascript-format
+msgid "Press <i>%s</i> for help"
+msgstr "按 <i>%s</i> 获取帮助"
+
+msgid "Entering drawing mode"
+msgstr "进入绘画模式"
 
 msgid "Global"
 msgstr "全局快捷键"
 
-msgid "Enter/leave drawing mode"
-msgstr "进入/退出绘画模式"
+msgid "Internal"
+msgstr "内置快捷键"
 
-# There is a similar text in GNOME Boxes (https://gitlab.gnome.org/GNOME/gnome-boxes/tree/master/po)
-msgid "Grab/ungrab keyboard and pointer"
-msgstr "捕获/释放键盘和鼠标"
+msgid "System"
+msgstr "系统快捷键"
 
-msgid "Erase all drawings"
-msgstr "擦除所有绘画"
+msgid "Dashed line"
+msgstr "虚线"
 
-msgid "Persistent"
-msgstr "持续化"
+#. Translators: as the alternative to "Dashed line"
+msgid "Full line"
+msgstr "实线"
 
-msgid "Persistent drawing through session restart"
-msgstr "重启会话时中断绘画"
+msgid "Fill"
+msgstr "填充"
 
-msgid "Drawing on the desktop"
-msgstr "在桌面上显示绘画"
+#. Translators: as the alternative to "Fill"
+msgid "Outline"
+msgstr "轮廓"
 
-msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
-msgstr "<i>屏幕画板</i>转为<i>桌面画板</i>"
+#. Translators: fill-rule SVG attribute
+msgid "Nonzero"
+msgstr "非零(Nonzero)"
 
-msgid "Disable on-screen notifications"
-msgstr "关闭屏内提示"
+msgid "Evenodd"
+msgstr "偶奇(Evenodd)"
 
-msgid "Disable panel indicator"
-msgstr "隐藏托盘图标"
+#. Translators: generic font-family SVG attribute
+msgctxt "font-family"
+msgid "Sans-Serif"
+msgstr "无衬线体(Sans)"
+
+msgctxt "font-family"
+msgid "Serif"
+msgstr "衬线体(Serif)"
+
+msgctxt "font-family"
+msgid "Monospace"
+msgstr "等宽体(Mono)"
+
+msgctxt "font-family"
+msgid "Cursive"
+msgstr "手写体(Cursive)"
+
+msgctxt "font-family"
+msgid "Fantasy"
+msgstr "梦幻体(Fantasy)"
+
+#. Translators: font-style SVG attribute
+msgctxt "font-style"
+msgid "Normal"
+msgstr "标准(Normal)"
+
+msgctxt "font-style"
+msgid "Oblique"
+msgstr "倾斜(Oblique)"
+
+msgctxt "font-style"
+msgid "Italic"
+msgstr "斜体(Italic)"
+
+#. Translators: font-weight SVG attribute
+msgctxt "font-weight"
+msgid "Thin"
+msgstr "淡体(Thin)"
+
+msgctxt "font-weight"
+msgid "Ultra Light"
+msgstr "特细(Ultra-light)"
+
+msgctxt "font-weight"
+msgid "Light"
+msgstr "细体(Light)"
+
+msgctxt "font-weight"
+msgid "Semi Light"
+msgstr "次细(Semi-light)"
+
+msgctxt "font-weight"
+msgid "Book"
+msgstr "标准(Book)"
+
+msgctxt "font-weight"
+msgid "Normal"
+msgstr "标准(Normal)"
+
+msgctxt "font-weight"
+msgid "Medium"
+msgstr "适中(Medium)"
+
+msgctxt "font-weight"
+msgid "Semi Bold"
+msgstr "次粗(Semi-bold)"
+
+msgctxt "font-weight"
+msgid "Bold"
+msgstr "粗体(Bold)"
+
+msgctxt "font-weight"
+msgid "Ultra Bold"
+msgstr "特粗(Ultra-bold)"
+
+msgctxt "font-weight"
+msgid "Heavy"
+msgstr "浓体(Heavy)"
+
+msgctxt "font-weight"
+msgid "Ultra Heavy"
+msgstr "特浓(Ultra Heavy)"
+
+#. Translators: stroke-linecap SVG attribute
+msgctxt "stroke-linecap"
+msgid "Butt"
+msgstr "对接(Butt)"
+
+msgctxt "stroke-linecap"
+msgid "Round"
+msgstr "圆形(Round)"
+
+msgctxt "stroke-linecap"
+msgid "Square"
+msgstr "方形(Square)"
+
+#. Translators: stroke-linejoin SVG attribute
+msgctxt "stroke-linejoin"
+msgid "Miter"
+msgstr "尖角(Miter)"
+
+msgctxt "stroke-linejoin"
+msgid "Round"
+msgstr "圆角(Round)"
+
+msgctxt "stroke-linejoin"
+msgid "Bevel"
+msgstr "斜角(Bevel)"
+
+#. Translators: value in pixel unit (e.g. "5 px")
+#, javascript-format
+msgid "%f px"
+msgstr "%f px"
+
+#. Translators: text alignment
+msgid "Right aligned"
+msgstr "右对齐"
+
+msgid "Left aligned"
+msgstr "左对齐"
+
+msgctxt "drawing-tool"
+msgid "Free drawing"
+msgstr "任意"
+
+msgctxt "drawing-tool"
+msgid "Line"
+msgstr "直线"
+
+msgctxt "drawing-tool"
+msgid "Ellipse"
+msgstr "椭圆"
+
+msgctxt "drawing-tool"
+msgid "Rectangle"
+msgstr "矩形"
+
+msgctxt "drawing-tool"
+msgid "Text"
+msgstr "文本框"
+
+msgctxt "drawing-tool"
+msgid "Polygon"
+msgstr "多边形"
+
+msgctxt "drawing-tool"
+msgid "Polyline"
+msgstr "折线段"
+
+msgctxt "drawing-tool"
+msgid "Image"
+msgstr "图像"
+
+msgctxt "drawing-tool"
+msgid "Move"
+msgstr "移动位置"
+
+msgctxt "drawing-tool"
+msgid "Resize"
+msgstr "调整尺寸"
+
+msgctxt "drawing-tool"
+msgid "Mirror"
+msgstr "镜像翻转"
+
+msgid "Undo"
+msgstr "撤销"
+
+msgid "Redo"
+msgstr "重画"
+
+msgid "Erase"
+msgstr "擦除"
+
+msgid "Smooth"
+msgstr "平滑"
+
+msgid "Open drawing"
+msgstr "打开绘画"
+
+msgid "Save drawing as…"
+msgstr "另存绘画为…"
+
+msgid "Palette"
+msgstr "颜色表"
+
+msgid "Color"
+msgstr "颜色"
+
+#. Translators: It is displayed in a menu button tooltip or as a shortcut action description, so it should NOT use the imperative mood.
+msgid "Pick a color"
+msgstr "拾色器"
+
+msgid "Add to images"
+msgstr "加入图像集"
+
+msgid "Delete"
+msgstr "删除"
+
+msgid "Type a name"
+msgstr "输入文件名"
+
+#. Translators: "Preferences" page in preferences
+msgid "Preferences"
+msgstr "设置"
+
+#. Translators: "Drawing" page in preferences
+msgid "Drawing"
+msgstr "绘画"
+
+#. Translators: "About" page in preferences
+msgid "About"
+msgstr "关于"
+
+#. Translators: you are free to translate the extension name, that is displayed in About page, or not
+msgid "Draw On You Screen"
+msgstr ""
+
+#. Translators: version number in "About" page
+#, javascript-format
+msgid "Version %f"
+msgstr "版本号 %f"
+
+#. Translators: you are free to translate the extension description, that is displayed in About page, or not
+msgid ""
+"Start drawing with Super+Alt+D and save your beautiful work by taking a "
+"screenshot"
+msgstr "按 Super+Alt+D 开始绘画，截图以保存您的作品"
+
+#. Translators: add your name here or keep it empty, it will be displayed in about page, e.g.
+#. msgstr ""
+#. "translator1\n"
+#. "<a href=\"mailto:translator2@mail.org\">translator2</a>\n"
+#. "<a href=\"https://...\">translator3</a>"
+msgid "translator-credits"
+msgstr ""
+"<a href=\"mailto:aerowolf@tom.com\">Aerowolf</a>\n"
+"<a href=\"https://github.com/tuberry\">tuberry</a>"
+
+msgid "Palettes"
+msgstr "颜色表"
+
+msgid "Add a new palette"
+msgstr "新建颜色表"
+
+msgid "Area"
+msgstr "背景"
+
+msgid "Auto"
+msgstr "自动"
+
+msgid "Grid overlay line"
+msgstr "网格线"
+
+msgid "Tools"
+msgstr "工具"
+
+msgid "Dash array"
+msgstr "虚线范式(dasharray)"
+
+msgid "Reset settings"
+msgstr "重置全部"
+
+msgid "Rename the palette"
+msgstr "重命名颜色表"
+
+msgid "Remove the palette"
+msgstr "移除颜色表"
+
+#. Translators: default name of a new palette
+msgid "New palette"
+msgstr "新颜色表"
+
+msgid "In drawing mode"
+msgstr "绘画时"
 
 msgid "Draw"
 msgstr "绘画"
@@ -100,22 +393,24 @@ msgid "Center click"
 msgstr "中键"
 
 msgid "Increment/decrement line width"
-msgstr "线宽"
+msgstr "增大/减小线宽"
 
 msgid "Scroll"
 msgstr "滚轮"
 
+#. Translators: %s are key labels (Ctrl+F1 and Ctrl+F9)
 msgid "Select color"
-msgstr "颜色"
+msgstr "选择颜色"
 
-# %s are key labels (Ctrl+F1 and Ctrl+F9)
+#, javascript-format
 msgid "%s … %s"
 msgstr "%s ~ %s"
 
+#. Translators: %s is a key label
 msgid "Ignore pointer movement"
 msgstr "忽略鼠标移动"
 
-# %s is a key label
+#, javascript-format
 msgid "%s held"
 msgstr "按住%s"
 
@@ -140,6 +435,9 @@ msgstr "拉直线为曲线"
 msgid "Smooth free drawing outline"
 msgstr "平滑任意轮廓"
 
+msgid "Do not preserve image ratio"
+msgstr "不保持图像纵横比"
+
 msgid "Rotate <span alpha=\"50%\">(while moving)</span>"
 msgstr "旋转<span alpha=\"50%\">(移动位置时)</span>"
 
@@ -149,89 +447,255 @@ msgstr "伸缩<span alpha=\"50%\">(调整尺寸时)</span>"
 msgid "Inverse <span alpha=\"50%\">(while mirroring)</span>"
 msgstr "反向<span alpha=\"50%\">(镜像翻转时)</span>"
 
-msgid "Internal"
-msgstr "内置快捷键"
+msgid "Drawing on the desktop"
+msgstr "桌面显示绘画"
 
-msgid "(in drawing mode)"
-msgstr "(绘画模式有效)"
+msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
+msgstr "<i>屏幕画板</i>变为<i>桌面画板</i>"
 
-msgid "Undo last brushstroke"
-msgstr "撤销上一笔"
+msgid "Erase all drawings"
+msgstr "擦除所有绘画"
 
-msgid "Redo last brushstroke"
-msgstr "重画上一笔"
+msgid "Disable panel indicator"
+msgstr "禁用托盘图标"
 
-msgid "Erase last brushstroke"
-msgstr "擦除上一笔"
+msgid "Disable on-screen notifications"
+msgstr "关闭屏内提示"
 
-msgid "Smooth last brushstroke"
-msgstr "平滑上一笔"
+msgid "Persistent over toggles"
+msgstr "切换继续绘画"
 
-msgid "Select line"
-msgstr "选择直线"
+msgid "Drawing remains when toggling drawing mode"
+msgstr "保留上次退出时的绘画"
 
-msgid "Select ellipse"
-msgstr "选择椭圆"
+msgid "Persistent over restarts"
+msgstr "重启继续绘画"
 
-msgid "Select rectangle"
-msgstr "选择矩形"
+msgid "Drawing is automatically saved to a file"
+msgstr "保留上次关闭时的绘画(自动保存至文件)"
 
-msgid "Select polygon"
-msgstr "选择多边形"
+msgid "Enter/leave drawing mode"
+msgstr "进入/退出绘画模式"
 
-msgid "Select polyline"
-msgstr "选择折线段"
+#. Translators: there is a similar text in GNOME Boxes (https://gitlab.gnome.org/GNOME/gnome-boxes/tree/master/po)
+msgid "Grab/ungrab keyboard and pointer"
+msgstr "捕获/释放键盘鼠标"
 
-msgid "Select text"
-msgstr "选择文本框"
+msgid "Background color"
+msgstr "背景色"
 
-msgid "Select move"
-msgstr "选择移动位置"
+msgid "The color of the drawing area background"
+msgstr "画布颜色"
 
-msgid "Select resize"
-msgstr "选择调整尺寸"
+msgid "Automatic dash array"
+msgstr "自动虚线范式"
 
-msgid "Select mirror"
-msgstr "选择镜像翻转"
+msgid "Compute the lengths from the line width"
+msgstr "以线宽为准计算"
 
-msgid "Toggle fill/outline"
-msgstr "切换填充/轮廓"
+msgid "Dash array on"
+msgstr "开启虚线范式"
 
-msgid "Increment line width"
-msgstr "增加线宽"
+msgid "The dash length in pixels"
+msgstr "虚线段长度(实线部分/像素)"
+
+msgid "Dash array off"
+msgstr "关闭虚线范式"
+
+msgid "The gap between the dashes in pixels"
+msgstr "虚线段间隔(空白部分/像素)"
+
+msgid "Dash offset"
+msgstr "虚线偏移(dashoffset)"
+
+msgid "The dash offset in pixels"
+msgstr "虚线偏移(首段偏移/像素)"
+
+msgid "Grid overlay color"
+msgstr "网格线颜色"
+
+msgid "The color of the lines"
+msgstr "网格线的颜色"
+
+msgid "Automatic grid overlay line"
+msgstr "自动网格线"
+
+msgid "Compute the lengths from the screen size"
+msgstr "以屏幕尺寸为准计算"
+
+msgid "Grid overlay line spacing"
+msgstr "网格大小"
+
+msgid "The gap between lines in pixels"
+msgstr "网格线间隔(像素)"
+
+msgid "Grid overlay line width"
+msgstr "网格线宽"
+
+msgid "The line width in pixels"
+msgstr "网格线的宽度(像素)"
+
+msgid "Image location"
+msgstr "图像位置"
+
+msgid "The location of the directory in which the image tool picks"
+msgstr "插入图像所存放的文件夹"
+
+msgid "Color palettes"
+msgstr "颜色集"
+
+msgid "The palettes of drawing colors"
+msgstr "绘画选取的颜色表"
+
+msgid "Automatic square area size"
+msgstr "自动方形区域大小"
+
+msgid "Compute the area size from the screen size"
+msgstr "以屏幕尺寸为准计算"
+
+msgid "Square area size"
+msgstr "方形区域大小"
+
+msgid "The size of the area in pixels"
+msgstr "方形区域的大小(像素)"
 
 msgid "Decrement line width"
 msgstr "减小线宽"
 
-msgid "Increment line width even more"
-msgstr "大幅增加线宽"
-
 msgid "Decrement line width even more"
 msgstr "大幅减小线宽"
 
-msgid "Change linejoin"
-msgstr "改变笔锋形状"
+msgid "Erase last brushstroke"
+msgstr "擦除上一笔"
 
-msgid "Change linecap"
-msgstr "改变端点样式"
+msgid "Export drawing to a SVG file"
+msgstr "导出为 SVG 文件"
+
+msgid "Increment line width"
+msgstr "增大线宽"
+
+msgid "Increment line width even more"
+msgstr "大幅增大线宽"
+
+msgid "Open next drawing"
+msgstr "打开下一绘画"
+
+msgid "Open preferences"
+msgstr "打开设置"
+
+msgid "Open previous drawing"
+msgstr "打开上一绘画"
+
+msgid "Add images from the clipboard"
+msgstr "添加剪切板中的图像"
+
+msgid "Redo last brushstroke"
+msgstr "重画上一笔"
+
+msgid "Save drawing"
+msgstr "保存"
+
+msgid "Select color 1"
+msgstr "选择颜色1"
+
+msgid "Select color 2"
+msgstr "选择颜色2"
+
+msgid "Select color 3"
+msgstr "选择颜色3"
+
+msgid "Select color 4"
+msgstr "选择颜色4"
+
+msgid "Select color 5"
+msgstr "选择颜色5"
+
+msgid "Select color 6"
+msgstr "选择颜色6"
+
+msgid "Select color 7"
+msgstr "选择颜色7"
+
+msgid "Select color 8"
+msgstr "选择颜色8"
+
+msgid "Select color 9"
+msgstr "选择颜色9"
+
+msgid "Select ellipse tool"
+msgstr "选择椭圆"
+
+msgid "Select image tool"
+msgstr "选择图像"
+
+msgid "Select line tool"
+msgstr "选择直线"
+
+msgid "Select mirror tool"
+msgstr "选择镜像翻转"
+
+msgid "Select move tool"
+msgstr "选择移动位置"
+
+msgid "Select free drawing"
+msgstr "选择任意"
+
+msgid "Select polygon tool"
+msgstr "选择多边形"
+
+msgid "Select polyline tool"
+msgstr "选择折线段"
+
+msgid "Select rectangle tool"
+msgstr "选择矩形"
+
+msgid "Select resize tool"
+msgstr "选择调整尺寸"
+
+msgid "Select text tool"
+msgstr "选择文本框"
+
+msgid "Smooth last brushstroke"
+msgstr "平滑上一笔"
+
+msgid "Change color palette"
+msgstr "改变颜色表"
+
+msgid "Change color palette (reverse)"
+msgstr "改变颜色表(向后)"
+
+msgid "Toggle fill/outline"
+msgstr "切换填充/轮廓"
 
 msgid "Toggle fill rule"
 msgstr "切换填充规则"
 
-msgid "Change font family (generic name)"
-msgstr "改变字体(通用名)"
+msgid "Change font family"
+msgstr "改变字体"
 
-msgid "Change font weight"
-msgstr "改变字体粗细"
+msgid "Change font family (reverse)"
+msgstr "改变字体(向后)"
 
 msgid "Change font style"
 msgstr "改变字体风格"
 
+msgid "Change font weight"
+msgstr "改变字体粗细"
+
+msgid "Change image"
+msgstr "改变图像"
+
+msgid "Change image (reverse)"
+msgstr "改变图像(向后)"
+
+msgid "Change linecap"
+msgstr "改变端点样式(linecap)"
+
+msgid "Change linejoin"
+msgstr "改变笔锋形状(linejoin)"
+
 msgid "Toggle text alignment"
 msgstr "切换文本对齐方式"
-
-msgid "Hide panel and dock"
-msgstr "隐藏顶栏和任务栏"
 
 msgid "Add a drawing background"
 msgstr "添加绘画背景"
@@ -239,269 +703,15 @@ msgstr "添加绘画背景"
 msgid "Add a grid overlay"
 msgstr "添加网格线"
 
-msgid "Square drawing area"
-msgstr "限定方形画布"
-
-msgid "Open previous drawing"
-msgstr "打开上一绘画"
-
-msgid "Open next drawing"
-msgstr "打开下一绘画"
-
-msgid "Save drawing as a SVG file"
-msgstr "另存为 SVG"
-
-msgid "Edit style"
-msgstr "修改样式"
-
-msgid "Open preferences"
-msgstr "打开设置"
-
 msgid "Show help"
 msgstr "显示帮助"
 
-msgid ""
-"<b>Default</b> drawing style attributes (color palette, font, line, dash) "
-"are defined in an editable <b>css</b> file.\n"
-"See <i>“%s”</i>."
-msgstr ""
-"<b>默认</b>绘画样式属性(颜色表、字体、形状等)都定义在一个可编辑的 <b>CSS</b> 文件中。"
-"详见<i>“%s”</i>。"
-
-msgid ""
-"When you save elements made with <b>eraser</b> in a <b>SVG</b> file, they "
-"are colored with background color, transparent if it is disabled.\n"
-"See <i>“%s”</i> or edit the SVG file afterwards."
-msgstr ""
-"<b>擦除</b>的痕迹在保存的 SVG 文件中会以背景色显示，若无背景色则是透明的。"
-"详见<i>“%s”</i>或者自行编辑 SVG 文件。"
-
-msgid "Screenshot"
-msgstr "截屏"
-
-msgid "Screenshot to clipboard"
-msgstr "截屏至剪切板"
-
-msgid "Area screenshot"
-msgstr "区域截图"
-
-msgid "Area screenshot to clipboard"
-msgstr "区域截图至剪切板"
-
-msgid "System"
-msgstr "系统快捷键"
-
-msgid "Undo"
-msgstr "撤销"
-
-msgid "Redo"
-msgstr "重做"
-
-msgid "Erase"
-msgstr "擦除"
-
-msgid "Smooth"
-msgstr "平滑"
-
-msgid "Free drawing"
-msgstr "任意"
-
-msgid "Line"
-msgstr "直线"
-
-msgid "Ellipse"
-msgstr "椭圆"
-
-msgid "Rectangle"
-msgstr "矩形"
-
-msgid "Text"
-msgstr "文本框"
-
-msgid "Polygon"
-msgstr "多边形"
-
-msgid "Polyline"
-msgstr "折线段"
-
-msgid "Move"
-msgstr "移动位置"
-
-msgid "Resize"
-msgstr "调整尺寸"
-
-msgid "Mirror"
-msgstr "镜像翻转"
-
-msgid "Color"
-msgstr "颜色"
-
-msgid "Fill"
-msgstr "填充"
-
-# fill-rule SVG attribute
-msgid "Evenodd"
-msgstr ""
-
-msgid "%d px"
-msgstr ""
-
-# stroke-linejoin SVG attribute
-msgid "Miter"
-msgstr ""
-
-# stroke-linejoin and stroke-linecap SVG attribute
-msgid "Round"
-msgstr ""
-
-# stroke-linejoin SVG attribute
-msgid "Bevel"
-msgstr ""
-
-# stroke-linecap SVG attribute
-msgid "Butt"
-msgstr ""
-
-# stroke-linecap SVG attribute
-msgid "Square"
-msgstr ""
-
-msgid "Dashed"
-msgstr "虚线"
-
-# generic font-family SVG attribute
-msgid "Sans-Serif"
-msgstr "无衬线体(Sans)"
-
-# generic font-family SVG attribute
-msgid "Serif"
-msgstr "衬线体(Serif)"
-
-# generic font-family SVG attribute
-msgid "Monospace"
-msgstr "等宽体(Mono)"
-
-# generic font-family SVG attribute
-msgid "Cursive"
-msgstr "手写体(Cursive)"
-
-# generic font-family SVG attribute
-msgid "Fantasy"
-msgstr "梦幻体(Fantasy)"
-
-# font-weight SVG attribute
-msgid "Thin"
-msgstr "淡体(Thin)"
-
-# font-weight SVG attribute
-msgid "Ultra-light"
-msgstr "特细(Ultra-light)"
-
-# font-weight SVG attribute
-msgid "Light"
-msgstr "细体(Light)"
-
-# font-weight SVG attribute
-msgid "Semi-light"
-msgstr "次细(Semi-light)"
-
-# font-weight SVG attribute
-msgid "Book"
-msgstr "标准(Book)"
-
-# font-weight and font-style SVG attribute
-msgid "Normal"
-msgstr "标准(Normal)"
-
-# font-weight SVG attribute
-msgid "Medium"
-msgstr "适中(Medium)"
-
-# font-weight SVG attribute
-msgid "Semi-bold"
-msgstr "次粗(Semi-bold)"
-
-# font-weight SVG attribute
-msgid "Bold"
-msgstr "粗体(Bold)"
-
-# font-weight SVG attribute
-msgid "Ultra-bold"
-msgstr "特粗(Ultra-bold)"
-
-# font-weight SVG attribute
-msgid "Heavy"
-msgstr "浓体(Heavy)"
-
-# font-style SVG attribute
-msgid "Italic"
-msgstr "斜体(Italic)"
-
-# font-style SVG attribute
-msgid "Oblique"
-msgstr "倾斜(Oblique)"
-
-msgid "Right aligned"
-msgstr "右对齐"
-
-msgid "Open drawing"
-msgstr "打开"
-
-msgid "Save drawing"
-msgstr "保存"
-
-msgid "Leaving drawing mode"
-msgstr "退出绘画模式"
-
-# %s is a key label
-msgid "<small>Press <i>%s</i> for help</small>"
-msgstr "<small>按<i>%s</i>获取帮助</small>"
-
-msgid "Entering drawing mode"
-msgstr "进入绘画模式"
-
-# "released" as the opposite of "grabbed"
-msgid "Keyboard and pointer released"
-msgstr "已释放键盘和鼠标"
-
-msgid "Keyboard and pointer grabbed"
-msgstr "已捕获键盘和鼠标"
-
-# %s is a key label
-msgid ""
-"Press <i>%s</i> to get\n"
-"a fourth control point"
-msgstr "按<i>%s</i>获取第四个控制点\n"
-"(三次贝塞尔曲线)"
-
-msgid "Mark a point of symmetry"
-msgstr "标对称点"
-
-msgid "Draw a line of symmetry"
-msgstr "作对称线"
-
-# %s is a key label
-msgid ""
-"Press <i>%s</i> to mark vertices"
-msgstr "按<i>%s</i>标记顶点"
-
-# %s is a key label
-msgid ""
-"Type your text and press <i>%s</i>"
-msgstr "输入文本后按<i>%s</i>"
-
-# as the alternative to "Fill"
-msgid "Outline"
-msgstr "轮廓"
-
-msgid "Dashed line"
-msgstr "虚线"
-
-msgid "Full line"
-msgstr "实线"
-
-msgid "Left aligned"
-msgstr "左对齐"
-
-msgid "Nonzero"
-msgstr ""
+msgid "Hide panel and dock"
+msgstr "隐藏顶栏和停靠栏"
+
+#. Translators: It is an action: "Make the drawing area a square"
+msgid "Square drawing area"
+msgstr "限定方形画布"
+
+msgid "Undo last brushstroke"
+msgstr "重画上一笔"
