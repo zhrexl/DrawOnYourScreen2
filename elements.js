@@ -771,7 +771,7 @@ const ImageElement = new Lang.Class({
         return {
             shape: this.shape,
             color: this.color,
-            eraser: this.eraser,
+            colored: this.colored,
             transformations: this.transformations,
             image: this.image,
             preserveAspectRatio: this.preserveAspectRatio,
@@ -791,7 +791,7 @@ const ImageElement = new Lang.Class({
             return;
         
         cr.save();
-        this.image.setCairoSource(cr, x, y, width, height, this.preserveAspectRatio);
+        this.image.setCairoSource(cr, x, y, width, height, this.preserveAspectRatio, this.colored ? this.color.toJSON() : null);
         cr.rectangle(x, y, width, height);
         cr.fill();
         cr.restore();
@@ -813,14 +813,15 @@ const ImageElement = new Lang.Class({
     _drawSvg: function(transAttribute) {
         let points = this.points;
         let row = "\n  ";
-        let attributes = this.eraser ? `class="eraser" ` : '';
+        let attributes = '';
         
         if (points.length == 2) {
             attributes += `fill="none"`;
+            let base64 = this.image.getBase64ForColor(this.colored ? this.color.toJSON() : null);
             row += `<image ${attributes} x="${Math.min(points[0][0], points[1][0])}" y="${Math.min(points[0][1], points[1][1])}" ` +
                    `width="${Math.abs(points[1][0] - points[0][0])}" height="${Math.abs(points[1][1] - points[0][1])}"${transAttribute} ` +
                    `preserveAspectRatio="${this.preserveAspectRatio ? 'xMinYMin' : 'none'}" ` +
-                   `id="${this.image.displayName}" xlink:href="data:${this.image.contentType};base64,${this.image.base64}"/>`;
+                   `id="${this.image.displayName}" xlink:href="data:${this.image.contentType};base64,${base64}"/>`;
         }
         
         return row;

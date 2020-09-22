@@ -603,7 +603,7 @@ var DrawingArea = new Lang.Class({
         this._redisplay();
     },
     
-    _startDrawing: function(stageX, stageY, eraser) {
+    _startDrawing: function(stageX, stageY, shiftPressed) {
         let [success, startX, startY] = this.transform_stage_point(stageX, stageY);
         
         if (!success)
@@ -617,7 +617,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
                 color: this.currentColor,
-                eraser: eraser,
+                eraser: shiftPressed,
                 font: this.currentFont.copy(),
                 // Translators: initial content of the text area
                 text: pgettext("text-area-content", "Text"),
@@ -628,7 +628,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
                 color: this.currentColor,
-                eraser: eraser,
+                colored: shiftPressed,
                 image: this.currentImage,
                 points: []
             });
@@ -636,7 +636,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
                 color: this.currentColor,
-                eraser: eraser,
+                eraser: shiftPressed,
                 fill: this.fill,
                 fillRule: this.currentFillRule,
                 line: { lineWidth: this.currentLineWidth, lineJoin: this.currentLineJoin, lineCap: this.currentLineCap },

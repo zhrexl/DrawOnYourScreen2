@@ -315,8 +315,6 @@ var DrawingMenu = new Lang.Class({
         this.lineSection.actor.visible = !isText && !isImage;
         this.fontSection.actor.visible = isText;
         this.imageSection.actor.visible = isImage;
-        this.colorItem.setSensitive(!isImage);
-        this.paletteItem.setSensitive(!isImage);
         this.fillItem.setSensitive(!isText && !isImage);
         this.fillSection.setSensitive(!isText && !isImage);
         
