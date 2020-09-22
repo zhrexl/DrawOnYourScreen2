@@ -767,19 +767,13 @@ const ImageElement = new Lang.Class({
     Name: 'DrawOnYourScreenImageElement',
     Extends: _DrawingElement,
     
-    _init: function(params) {
-        params.fill = false;
-        this.parent(params);
-    },
-    
     toJSON: function() {
         return {
             shape: this.shape,
             color: this.color,
-            fill: this.fill,
             eraser: this.eraser,
             transformations: this.transformations,
-            image: this.image.toJson(),
+            image: this.image,
             preserveAspectRatio: this.preserveAspectRatio,
             points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
         };

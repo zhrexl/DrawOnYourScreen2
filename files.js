@@ -97,7 +97,7 @@ var Image = new Lang.Class({
         return this.displayName;
     },
     
-    toJson: function() {
+    toJSON: function() {
         return {
             displayName: this.displayName,
             contentType: this.contentType,

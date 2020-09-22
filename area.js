@@ -630,7 +630,6 @@ var DrawingArea = new Lang.Class({
                 color: this.currentColor,
                 eraser: eraser,
                 image: this.currentImage,
-                operator: this.currentOperator,
                 points: []
             });
         } else {
