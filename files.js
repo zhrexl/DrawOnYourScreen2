@@ -41,6 +41,7 @@ const ICON_NAMES = [
     'tool-ellipse', 'tool-line', 'tool-mirror', 'tool-move', 'tool-none', 'tool-polygon', 'tool-polyline', 'tool-rectangle', 'tool-resize',
 ];
 const ThemedIconNames = {
+    COLOR_PICKER: 'color-select-symbolic',
     ENTER: 'applications-graphics', LEAVE: 'application-exit',
     GRAB: 'input-touchpad', UNGRAB: 'touchpad-disabled',
     OPEN: 'document-open', SAVE: 'document-save',
@@ -49,7 +50,16 @@ const ThemedIconNames = {
     TOOL_IMAGE: 'insert-image', TOOL_TEXT: 'insert-text',
 };
 
-var Icons = {};
+var Icons = {
+    get FAKE() {
+        if (!this._fake) {
+            let bytes = new GLib.Bytes('<svg/>');
+            this._fake = Gio.BytesIcon.new(bytes);
+        }
+        
+        return this._fake;
+    }
+};
 
 ICON_NAMES.forEach(name => {
     Object.defineProperty(Icons, name.toUpperCase().replace(/-/gi, '_'), {
@@ -73,6 +83,18 @@ Object.keys(ThemedIconNames).forEach(key => {
     });
 });
 
+const replaceColor = function (contents, color) {
+    if (contents instanceof Uint8Array)
+        contents = ByteArray.toString(contents);
+    else
+        contents = contents.toString();
+    
+    return contents.replace(/fill(?=="transparent"|="none"|:transparent|:none)/gi, 'filll')
+                   .replace(/fill="[^"]+"/gi, `fill="${color}"`)
+                   .replace(/fill:[^";]+/gi, `fill:${color};`)
+                   .replace(/filll/gi, 'fill');
+};
+
 // Wrapper around image data. If not subclassed, it is used when loading in the area an image element for a drawing file (.json)
 // and it takes { displayName, contentType, base64, hash } as params.
 var Image = new Lang.Class({
@@ -87,7 +109,7 @@ var Image = new Lang.Class({
         return this.displayName;
     },
     
-    toJson: function() {
+    toJSON: function() {
         return {
             displayName: this.displayName,
             contentType: this.contentType,
@@ -112,6 +134,14 @@ var Image = new Lang.Class({
         this._base64 = base64;
     },
     
+    getBase64ForColor: function(color) {
+        if (!color || this.contentType != 'image/svg+xml')
+            return this.base64;
+        
+        let contents = GLib.base64_decode(this.base64);
+        return GLib.base64_encode(replaceColor(contents, color));
+    },
+    
     // hash is not used
     get hash() {
         if (!this._hash)
@@ -123,7 +153,22 @@ var Image = new Lang.Class({
         this._hash = hash;
     },
     
-    get pixbuf() {
+    getBytesForColor: function(color) {
+        if (!color || this.contentType != 'image/svg+xml')
+            return this.bytes;
+        
+        let contents = this.bytes.get_data();
+        return new GLib.Bytes(replaceColor(contents, color));
+    },
+    
+    getPixbuf: function(color) {
+        if (color) {
+            let stream = Gio.MemoryInputStream.new_from_bytes(this.getBytesForColor(color));
+            let pixbuf = GdkPixbuf.Pixbuf.new_from_stream(stream, null);
+            stream.close(null);
+            return pixbuf;
+        }
+        
         if (!this._pixbuf) {
             let stream = Gio.MemoryInputStream.new_from_bytes(this.bytes);
             this._pixbuf = GdkPixbuf.Pixbuf.new_from_stream(stream, null);
@@ -132,16 +177,16 @@ var Image = new Lang.Class({
         return this._pixbuf;
     },
     
-    getPixbufAtScale: function(width, height) {
-        let stream = Gio.MemoryInputStream.new_from_bytes(this.bytes);
+    getPixbufAtScale: function(width, height, color) {
+        let stream = Gio.MemoryInputStream.new_from_bytes(this.getBytesForColor(color));
         let pixbuf = GdkPixbuf.Pixbuf.new_from_stream_at_scale(stream, width, height, true, null);
         stream.close(null);
         return pixbuf;
     },
     
-    setCairoSource: function(cr, x, y, width, height, preserveAspectRatio) {
-        let pixbuf = preserveAspectRatio ? this.getPixbufAtScale(width, height)
-                                         : this.pixbuf.scale_simple(width, height, GdkPixbuf.InterpType.BILINEAR);
+    setCairoSource: function(cr, x, y, width, height, preserveAspectRatio, color) {
+        let pixbuf = preserveAspectRatio ? this.getPixbufAtScale(width, height, color)
+                                         : this.getPixbuf(color).scale_simple(width, height, GdkPixbuf.InterpType.BILINEAR);
         Gdk.cairo_set_source_pixbuf(cr, pixbuf, x, y);
     }
 });
@@ -542,7 +587,7 @@ var Jsons = {
 
 var getDateString = function() {
     let date = GLib.DateTime.new_now_local();
-    return `${date.format("%F")} ${date.format("%X")}`;
+    return `${date.format("%F")} ${date.format("%T")}`;
 };
 
 var saveSvg = function(content) {

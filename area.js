@@ -29,6 +29,7 @@ const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const Pango = imports.gi.Pango;
+const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 const System = imports.system;
 
@@ -49,6 +50,7 @@ const SVG_DEBUG_EXTENDS = false;
 const TEXT_CURSOR_TIME = 600; // ms
 const ELEMENT_GRABBER_TIME = 80; // ms, default is about 16 ms
 const GRID_TILES_HORIZONTAL_NUMBER = 30;
+const COLOR_PICKER_EXTENSION_UUID = 'color-picker@tuberry'; 
 
 const { Shapes, Transformations } = Elements;
 const { DisplayStrings } = Menu;
@@ -62,15 +64,20 @@ var Tools = Object.assign({
 }, Shapes, Manipulations);
 Object.defineProperty(Tools, 'getNameOf', { enumerable: false });
 
-const getClutterColorFromString = function(string, fallback) {
-    let [success, color] = Clutter.Color.from_string(string);
-    color.toString = () => string;
+// toJSON provides a string suitable for SVG color attribute whereas
+// toString provides a string suitable for displaying the color name to the user.
+const getColorFromString = function(string, fallback) {
+    let [colorString, displayName] = string.split(':');
+    let [success, color] = Clutter.Color.from_string(colorString);
+    color.toJSON = () => colorString;
+    color.toString = () => displayName || colorString;
     if (success)
         return color;
     
     log(`${Me.metadata.uuid}: "${string}" color cannot be parsed.`);
     color = Clutter.Color.get_static(Clutter.StaticColor[fallback.toUpperCase()]);
-    color.toString = () => fallback.slice(0, 1).toUpperCase() + fallback.slice(1);
+    color.toJSON = () => fallback;
+    color.toString = () => fallback;
     return color;
 };
 
@@ -152,7 +159,7 @@ var DrawingArea = new Lang.Class({
     
     set currentPalette(palette) {
         this._currentPalette = palette;
-        this.colors = palette[1].map(colorString => getClutterColorFromString(colorString, 'white'));
+        this.colors = palette[1].map(colorString => getColorFromString(colorString, 'White'));
         if (!this.colors[0])
             this.colors.push(Clutter.Color.get_static(Clutter.StaticColor.WHITE));
     },
@@ -254,9 +261,9 @@ var DrawingArea = new Lang.Class({
             this.squareAreaSize = Me.drawingSettings.get_uint('square-area-size');
         }
         
-        this.areaBackgroundColor = getClutterColorFromString(Me.drawingSettings.get_string('background-color'), 'black');
+        this.areaBackgroundColor = getColorFromString(Me.drawingSettings.get_string('background-color'), 'Black');
         
-        this.gridColor = getClutterColorFromString(Me.drawingSettings.get_string('grid-color'), 'gray');
+        this.gridColor = getColorFromString(Me.drawingSettings.get_string('grid-color'), 'Gray');
         if (Me.drawingSettings.get_boolean('grid-line-auto')) {
             this.gridLineSpacing = Math.round(this.monitor.width / (5 * GRID_TILES_HORIZONTAL_NUMBER));
             this.gridLineWidth = this.gridLineSpacing / 20;
@@ -596,7 +603,7 @@ var DrawingArea = new Lang.Class({
         this._redisplay();
     },
     
-    _startDrawing: function(stageX, stageY, eraser) {
+    _startDrawing: function(stageX, stageY, shiftPressed) {
         let [success, startX, startY] = this.transform_stage_point(stageX, stageY);
         
         if (!success)
@@ -610,7 +617,7 @@ var DrawingArea = new Lang.Class({
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
                 color: this.currentColor,
-                eraser: eraser,
+                eraser: shiftPressed,
                 font: this.currentFont.copy(),
                 // Translators: initial content of the text area
                 text: pgettext("text-area-content", "Text"),
@@ -621,16 +628,15 @@ var DrawingArea = new Lang.Class({
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
                 color: this.currentColor,
-                eraser: eraser,
+                colored: shiftPressed,
                 image: this.currentImage,
-                operator: this.currentOperator,
                 points: []
             });
         } else {
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
                 color: this.currentColor,
-                eraser: eraser,
+                eraser: shiftPressed,
                 fill: this.fill,
                 fillRule: this.currentFillRule,
                 line: { lineWidth: this.currentLineWidth, lineJoin: this.currentLineJoin, lineCap: this.currentLineCap },
@@ -1032,6 +1038,78 @@ var DrawingArea = new Lang.Class({
         });
     },
     
+    _onColorPicked: function(color) {
+        if (color instanceof Clutter.Color)
+            color = color.to_string().slice(0, -2);
+        
+        this.currentColor = getColorFromString(color);
+        if (this.currentElement) {
+            this.currentElement.color = this.currentColor;
+            this._redisplay();
+        }
+        this.emit('show-osd', Files.Icons.COLOR, String(this.currentColor), this.currentColor.to_string().slice(0, 7), -1, false);
+        this.initPointerCursor();
+    },
+    
+    pickColor: function() {
+        if (!Screenshot.PickPixel)
+            // GS 3.28-
+            return;
+        
+        // Translators: It is displayed in an OSD notification to ask the user to start picking, so it should use the imperative mood.
+        this.emit('show-osd', Files.Icons.COLOR_PICKER, pgettext("osd-notification", "Pick a color"), "", -1, false);
+        
+        let extension = Main.extensionManager && Main.extensionManager.lookup(COLOR_PICKER_EXTENSION_UUID);
+        if (extension && extension.state == ExtensionUtils.ExtensionState.ENABLED && extension.stateObj && extension.stateObj.pickAsync) {
+            extension.stateObj.pickAsync().then(result => {
+                if (typeof result == 'string')
+                    this._onColorPicked(result);
+                else
+                    this.initPointerCursor();
+            }).catch(e => {
+                this.initPointerCursor();
+            });
+            
+            return;
+        }
+        
+        try {
+            let screenshot = new Shell.Screenshot();
+            let pickPixel = new Screenshot.PickPixel(screenshot);
+            
+            if (pickPixel.pickAsync) {
+                pickPixel.pickAsync().then(result => {
+                    if (result instanceof Clutter.Color) {
+                        // GS 3.38+
+                        this._onColorPicked(result);
+                    } else {
+                        // GS 3.36
+                        let graphenePoint = result;
+                        screenshot.pick_color(graphenePoint.x, graphenePoint.y, (o, res) => {
+                            let [, color] = screenshot.pick_color_finish(res);
+                            this._onColorPicked(color);
+                        });
+                    }
+                }).catch(() => this.initPointerCursor());
+            } else {
+                // GS 3.34-
+                pickPixel.show();
+                pickPixel.connect('finished', (pickPixel, coords) => {
+                    if (coords)
+                        screenshot.pick_color(...coords, (o, res) => {
+                            let [, color] = screenshot.pick_color_finish(res);
+                            this._onColorPicked(color);
+                        });
+                    else
+                        this.initPointerCursor();
+                });
+            }
+        } catch(e) {
+            log(`${Me.metadata.uuid}: color picker failed: ${e.message}`);
+            this.initPointerCursor();
+        }
+    },
+    
     toggleHelp: function() {
         if (this.helper.visible) {
             this.helper.hideHelp();
@@ -1120,7 +1198,7 @@ var DrawingArea = new Lang.Class({
         
         elements.push(...JSON.parse(json.contents).map(object => {
             if (object.color)
-                object.color = getClutterColorFromString(object.color, 'white');
+                object.color = getColorFromString(object.color, 'White');
             if (object.font && typeof object.font == 'string')
                 object.font = Pango.FontDescription.from_string(object.font);
             if (object.image)
@@ -1227,7 +1305,7 @@ var DrawingArea = new Lang.Class({
         
         this.elements.push(...JSON.parse(json.contents).map(object => {
             if (object.color)
-                object.color = getClutterColorFromString(object.color, 'white');
+                object.color = getColorFromString(object.color, 'White');
             if (object.font && typeof object.font == 'string')
                 object.font = Pango.FontDescription.from_string(object.font);
             if (object.image)

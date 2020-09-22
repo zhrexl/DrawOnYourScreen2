@@ -52,3 +52,7 @@ Then save your beautiful work by taking a screenshot.
 
  [Screenshot Tool](https://extensions.gnome.org/extension/1112/screenshot-tool/) is a convenient extension to “create, copy, store and upload screenshots”. In order to select a screenshoot area with your pointer while keeping the drawing in place, you need first to tell DrawOnYourScreen to ungrab the pointer (`Ctrl + Super + Alt + D`).
 
+* Color Picker extension:
+
+If the GNOME Shell built-in color picker is too basic for you, have a look at the [Color Picker extension](https://extensions.gnome.org/extension/3396/color-picker), which let's you select the pixel accurately, preview the color and adjust its values. Once installed and enabled, it will be transparently integrated into DrawOnYourScreen.
+

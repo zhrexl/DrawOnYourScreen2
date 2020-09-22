@@ -113,7 +113,7 @@ const _DrawingElement = new Lang.Class({
     toJSON: function() {
         return {
             shape: this.shape,
-            color: this.color.toString(),
+            color: this.color,
             line: this.line,
             dash: this.dash,
             fill: this.fill,
@@ -314,7 +314,7 @@ const _DrawingElement = new Lang.Class({
     _drawSvg: function(transAttribute, bgcolorString) {
         let row = "\n  ";
         let points = this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100]);
-        let color = this.eraser ? bgcolorString : this.color.toString();
+        let color = this.eraser ? bgcolorString : this.color.toJSON();
         let fill = this.fill && !this.isStraightLine;
         let attributes = this.eraser ? `class="eraser" ` : '';
         
@@ -633,7 +633,7 @@ const TextElement = new Lang.Class({
         
         return {
             shape: this.shape,
-            color: this.color.toString(),
+            color: this.color,
             eraser: this.eraser,
             transformations: this.transformations,
             text: this.text,
@@ -703,7 +703,7 @@ const TextElement = new Lang.Class({
     _drawSvg: function(transAttribute, bgcolorString) {
         let row = "\n  ";
         let [x, y, height] = [Math.round(this.x*100)/100, Math.round(this.y*100)/100, Math.round(this.height*100)/100];
-        let color = this.eraser ? bgcolorString : this.color.toString();
+        let color = this.eraser ? bgcolorString : this.color.toJSON();
         let attributes = this.eraser ? `class="eraser" ` : '';
         
         if (this.points.length == 2) {
@@ -767,19 +767,13 @@ const ImageElement = new Lang.Class({
     Name: 'DrawOnYourScreenImageElement',
     Extends: _DrawingElement,
     
-    _init: function(params) {
-        params.fill = false;
-        this.parent(params);
-    },
-    
     toJSON: function() {
         return {
             shape: this.shape,
-            color: this.color.toString(),
-            fill: this.fill,
-            eraser: this.eraser,
+            color: this.color,
+            colored: this.colored,
             transformations: this.transformations,
-            image: this.image.toJson(),
+            image: this.image,
             preserveAspectRatio: this.preserveAspectRatio,
             points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
         };
@@ -797,7 +791,7 @@ const ImageElement = new Lang.Class({
             return;
         
         cr.save();
-        this.image.setCairoSource(cr, x, y, width, height, this.preserveAspectRatio);
+        this.image.setCairoSource(cr, x, y, width, height, this.preserveAspectRatio, this.colored ? this.color.toJSON() : null);
         cr.rectangle(x, y, width, height);
         cr.fill();
         cr.restore();
@@ -819,14 +813,15 @@ const ImageElement = new Lang.Class({
     _drawSvg: function(transAttribute) {
         let points = this.points;
         let row = "\n  ";
-        let attributes = this.eraser ? `class="eraser" ` : '';
+        let attributes = '';
         
         if (points.length == 2) {
             attributes += `fill="none"`;
+            let base64 = this.image.getBase64ForColor(this.colored ? this.color.toJSON() : null);
             row += `<image ${attributes} x="${Math.min(points[0][0], points[1][0])}" y="${Math.min(points[0][1], points[1][1])}" ` +
                    `width="${Math.abs(points[1][0] - points[0][0])}" height="${Math.abs(points[1][1] - points[0][1])}"${transAttribute} ` +
                    `preserveAspectRatio="${this.preserveAspectRatio ? 'xMinYMin' : 'none'}" ` +
-                   `id="${this.image.displayName}" xlink:href="data:${this.image.contentType};base64,${this.image.base64}"/>`;
+                   `id="${this.image.displayName}" xlink:href="data:${this.image.contentType};base64,${base64}"/>`;
         }
         
         return row;

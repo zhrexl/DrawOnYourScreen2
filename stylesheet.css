@@ -37,6 +37,7 @@
 
 .draw-on-your-screen-menu {
    font-size: 0.97em; /* default: 1em */
+   min-width: 21em; /* like the aggregate menu */
 }
 
 .draw-on-your-screen-menu .popup-menu-item {
@@ -47,6 +48,11 @@
 .draw-on-your-screen-menu .popup-menu-item > .popup-menu-icon {
     icon-size: 1em; /* default: 1.09 */
     padding-top: 0.03em;
+}
+
+/* max size for uncontrolled contents (font, image and drawing names) */
+.draw-on-your-screen-menu-ellipsized {
+    max-width: 21em;
 }
 
 .draw-on-your-screen-menu .toggle-switch {

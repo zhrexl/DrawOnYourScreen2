@@ -315,8 +315,6 @@ var DrawingMenu = new Lang.Class({
         this.lineSection.actor.visible = !isText && !isImage;
         this.fontSection.actor.visible = isText;
         this.imageSection.actor.visible = isImage;
-        this.colorItem.setSensitive(!isImage);
-        this.paletteItem.setSensitive(!isImage);
         this.fillItem.setSensitive(!isText && !isImage);
         this.fillSection.setSensitive(!isText && !isImage);
         
@@ -483,6 +481,17 @@ var DrawingMenu = new Lang.Class({
         item.icon.set_gicon(icon);
         item.icon.set_style(`color:${this.area.currentColor.to_string().slice(0, 7)};`);
         
+        if (GS_VERSION >= '3.30') {
+            let colorPickerCallback = () => {
+                this.close();
+                this.area.pickColor();
+            };
+            // Translators: It is displayed in a menu button tooltip or as a shortcut action description, so it should NOT use the imperative mood.
+            let colorPickerButton = new ActionButton(_("Pick a color"), Files.Icons.COLOR_PICKER, colorPickerCallback, null, true);
+            let index = getActor(item).get_children().length - 1;
+            getActor(item).insert_child_at_index(colorPickerButton, index);
+        }
+        
         item.menu.itemActivated = item.menu.close;
         
         this._populateColorSubMenu();
@@ -512,6 +521,7 @@ var DrawingMenu = new Lang.Class({
         item.icon.set_gicon(icon);
         
         item.menu.itemActivated = item.menu.close;
+        item.menu.actor.add_style_class_name('draw-on-your-screen-menu-ellipsized');
         
         item.menu.openOld = item.menu.open;
         item.menu.open = (animate) => {
@@ -521,8 +531,12 @@ var DrawingMenu = new Lang.Class({
                         item.label.set_text(DisplayStrings.getFontFamily(family));
                         this.area.currentFontFamily = family;
                     });
+                    
                     if (FONT_FAMILY_STYLE)
-                        subItem.label.set_style(`font-family:${family}`);
+                        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                            subItem.label.set_style(`font-family:${family}`);
+                        });
+                    
                     getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
                 });
             }
@@ -541,6 +555,7 @@ var DrawingMenu = new Lang.Class({
         item.update();
         
         item.menu.itemActivated = item.menu.close;
+        item.menu.actor.add_style_class_name('draw-on-your-screen-menu-ellipsized');
         
         item.menu.openOld = item.menu.open;
         item.menu.open = (animate) => {
@@ -549,7 +564,13 @@ var DrawingMenu = new Lang.Class({
                     let subItem = item.menu.addAction(image.toString(), () => {
                         this.area.currentImage = image;
                         item.update();
-                    }, image.thumbnailGicon || undefined);
+                    }, Files.Icons.FAKE);
+                    
+                    GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                        if (subItem.setIcon && image.thumbnailGicon)
+                            subItem.setIcon(image.thumbnailGicon);
+                    });
+                    
                     getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
                 });
             }
@@ -563,6 +584,7 @@ var DrawingMenu = new Lang.Class({
     _addDrawingNameItem: function(menu) {
         this.drawingNameMenuItem = new PopupMenu.PopupMenuItem('', { reactive: false, activate: false });
         this.drawingNameMenuItem.setSensitive(false);
+        getActor(this.drawingNameMenuItem).add_style_class_name('draw-on-your-screen-menu-ellipsized');
         menu.addMenuItem(this.drawingNameMenuItem);
         this._updateDrawingNameMenuItem();
     },
@@ -584,6 +606,7 @@ var DrawingMenu = new Lang.Class({
         item.icon.set_icon_name(icon);
         
         item.menu.itemActivated = item.menu.close;
+        item.menu.actor.add_style_class_name('draw-on-your-screen-menu-ellipsized');
         
         item.menu.openOld = item.menu.open;
         item.menu.open = (animate) => {
@@ -605,7 +628,12 @@ var DrawingMenu = new Lang.Class({
                 this.area.loadJson(json);
                 this._updateDrawingNameMenuItem();
                 this._updateActionSensitivity();
-            }, json.gicon);
+            }, Files.Icons.FAKE);
+            
+            GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                if (subItem.setIcon)
+                    subItem.setIcon(json.gicon);
+            });
             
             subItem.label.get_clutter_text().set_use_markup(true);
             getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);

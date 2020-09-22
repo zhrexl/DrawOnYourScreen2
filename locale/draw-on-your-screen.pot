@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2020-09-18 11:37+0200\n"
+"POT-Creation-Date: 2020-09-19 15:32+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -45,6 +45,11 @@ msgstr ""
 #. Translators: %s is a key label
 #, javascript-format
 msgid "Type your text and press <i>%s</i>"
+msgstr ""
+
+#. Translators: It is displayed in an OSD notification to ask the user to start picking, so it should use the imperative mood.
+msgctxt "osd-notification"
+msgid "Pick a color"
 msgstr ""
 
 #. Translators: "released" as the opposite of "grabbed"
@@ -282,6 +287,10 @@ msgid "Palette"
 msgstr ""
 
 msgid "Color"
+msgstr ""
+
+#. Translators: It is displayed in a menu button tooltip or as a shortcut action description, so it should NOT use the imperative mood.
+msgid "Pick a color"
 msgstr ""
 
 msgid "Add to images"

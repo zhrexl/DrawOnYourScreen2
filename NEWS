@@ -1,6 +1,13 @@
 v6.4 - September 2020
 =====================
 
+* Can import GIMP palettes.
+* Can color SVG images.
+* Integrate color picker (GS buit-in or Color Picker extension).
+
+v6.4 - September 2020
+=====================
+
 * Prepare GS 3.38 compatibility.
 * Add tooltips to sub-menu buttons also.
 * Fix drawing directory monitoring when it does not exist yet.
