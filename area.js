@@ -64,14 +64,19 @@ var Tools = Object.assign({
 }, Shapes, Manipulations);
 Object.defineProperty(Tools, 'getNameOf', { enumerable: false });
 
+// toJSON provides a string suitable for SVG color attribute whereas
+// toString provides a string suitable for displaying the color name to the user.
 const getColorFromString = function(string, fallback) {
-    let [success, color] = Clutter.Color.from_string(string);
-    color.toString = () => string;
+    let [colorString, displayName] = string.split(':');
+    let [success, color] = Clutter.Color.from_string(colorString);
+    color.toJSON = () => colorString;
+    color.toString = () => displayName || colorString;
     if (success)
         return color;
     
     log(`${Me.metadata.uuid}: "${string}" color cannot be parsed.`);
     color = Clutter.Color.get_static(Clutter.StaticColor[fallback.toUpperCase()]);
+    color.toJSON = () => fallback;
     color.toString = () => fallback;
     return color;
 };

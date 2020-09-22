@@ -113,7 +113,7 @@ const _DrawingElement = new Lang.Class({
     toJSON: function() {
         return {
             shape: this.shape,
-            color: this.color.toString(),
+            color: this.color,
             line: this.line,
             dash: this.dash,
             fill: this.fill,
@@ -314,7 +314,7 @@ const _DrawingElement = new Lang.Class({
     _drawSvg: function(transAttribute, bgcolorString) {
         let row = "\n  ";
         let points = this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100]);
-        let color = this.eraser ? bgcolorString : this.color.toString();
+        let color = this.eraser ? bgcolorString : this.color.toJSON();
         let fill = this.fill && !this.isStraightLine;
         let attributes = this.eraser ? `class="eraser" ` : '';
         
@@ -633,7 +633,7 @@ const TextElement = new Lang.Class({
         
         return {
             shape: this.shape,
-            color: this.color.toString(),
+            color: this.color,
             eraser: this.eraser,
             transformations: this.transformations,
             text: this.text,
@@ -703,7 +703,7 @@ const TextElement = new Lang.Class({
     _drawSvg: function(transAttribute, bgcolorString) {
         let row = "\n  ";
         let [x, y, height] = [Math.round(this.x*100)/100, Math.round(this.y*100)/100, Math.round(this.height*100)/100];
-        let color = this.eraser ? bgcolorString : this.color.toString();
+        let color = this.eraser ? bgcolorString : this.color.toJSON();
         let attributes = this.eraser ? `class="eraser" ` : '';
         
         if (this.points.length == 2) {
@@ -775,7 +775,7 @@ const ImageElement = new Lang.Class({
     toJSON: function() {
         return {
             shape: this.shape,
-            color: this.color.toString(),
+            color: this.color,
             fill: this.fill,
             eraser: this.eraser,
             transformations: this.transformations,

@@ -31,6 +31,7 @@ const Gtk = imports.gi.Gtk;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
+const GimpPaletteParser = Me.imports.gimpPaletteParser;
 const Shortcuts = Me.imports.shortcuts;
 const gettext = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const _ = function(string) {
@@ -150,26 +151,32 @@ const DrawingPage = new GObject.Class({
         
         let palettesFrame = new Frame({ label: _("Palettes") });
         box.add(palettesFrame);
+        let palettesFrameBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
+        palettesFrame.add(palettesFrameBox);
         
-        let palettesScrolledWindow = new Gtk.ScrolledWindow({ vscrollbar_policy: Gtk.PolicyType.NEVER, margin_top: MARGIN / 2, margin_bottom: MARGIN / 2 });
-        palettesFrame.add(palettesScrolledWindow);
+        let palettesScrolledWindow = new Gtk.ScrolledWindow({ vscrollbar_policy: Gtk.PolicyType.NEVER });
+        palettesFrameBox.add(palettesScrolledWindow);
+        let palettesViewport = new Gtk.Viewport({ margin_top: MARGIN / 2, margin_bottom: MARGIN / 2 });
+        palettesScrolledWindow.add(palettesViewport);
         this.palettesListBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true });
         this.palettesListBox.get_style_context().add_class('background');
         this.palettesListBox.get_accessible().set_name(this.schema.get_key('palettes').get_summary());
         this.palettesListBox.get_accessible().set_description(this.schema.get_key('palettes').get_description());
-        palettesScrolledWindow.add(this.palettesListBox);
+        palettesViewport.add(this.palettesListBox);
         
         this.settings.connect('changed::palettes', this._updatePalettes.bind(this));
         this._updatePalettes();
         
-        this.addBox = new Gtk.Box(ROWBOX_MARGIN_PARAMS);
-        this.addBox.margin_bottom = MARGIN; // add space for the scrollbar
+        let addBox = new Gtk.Box(ROWBOX_MARGIN_PARAMS);
         let addButton = Gtk.Button.new_from_icon_name('list-add-symbolic', Gtk.IconSize.BUTTON);
         addButton.set_tooltip_text(_("Add a new palette"));
-        this.addBox.pack_start(addButton, true, true, 4);
+        addBox.pack_start(addButton, true, true, 4);
         addButton.connect('clicked', this._addNewPalette.bind(this));
-        this.palettesListBox.add(this.addBox);
-        this.addBox.get_parent().set_activatable(false);
+        let importButton = Gtk.Button.new_from_icon_name('document-open-symbolic', Gtk.IconSize.BUTTON);
+        importButton.set_tooltip_text(_GTK("Select a File"));
+        addBox.pack_start(importButton, true, true, 4);
+        importButton.connect('clicked', this._importPalette.bind(this));
+        palettesFrameBox.add(addBox);
         
         let areaFrame = new Frame({ label: _("Area") });
         box.add(areaFrame);
@@ -285,10 +292,9 @@ const DrawingPage = new GObject.Class({
     
     _updatePalettes: function() {
         this.palettes = this.settings.get_value('palettes').deep_unpack();
-        this.palettesListBox.get_children().filter(row=> row.get_child() != this.addBox)
-                                           .slice(this.palettes.length)
+        this.palettesListBox.get_children().slice(this.palettes.length)
                                            .forEach(row => this.palettesListBox.remove(row));
-        let paletteBoxes = this.palettesListBox.get_children().map(row => row.get_child()).filter(child => child != this.addBox);
+        let paletteBoxes = this.palettesListBox.get_children().map(row => row.get_child());
         
         this.palettes.forEach((palette, paletteIndex) => {
             let [name, colors] = palette;
@@ -316,17 +322,20 @@ const DrawingPage = new GObject.Class({
                 paletteBox.get_parent().set_activatable(false);
             }
             
-            colors.splice(9);
             while (colors.length < 9)
                 colors.push('transparent');
             
             let colorsBox = paletteBox.get_children()[1];
             let colorButtons = colorsBox.get_children();
             colors.forEach((color, colorIndex) => {
+                let [colorString, displayName] = color.split(':');
                 if (colorButtons[colorIndex]) {
-                    colorButtons[colorIndex].color_string = color;
+                    colorButtons[colorIndex].color_string = colorString;
+                    colorButtons[colorIndex].tooltip_text = displayName || null;
                 } else {
-                    let colorButton = new ColorStringButton({ color_string: color, use_alpha: true, show_editor: true, halign: Gtk.Align.START, hexpand: false });
+                    let colorButton = new ColorStringButton({ color_string: colorString, tooltip_text: displayName || null,
+                                                              use_alpha: true, show_editor: true,
+                                                              halign: Gtk.Align.START, hexpand: false });
                     colorButton.connect('notify::color-string', this._onPaletteColorChanged.bind(this, paletteIndex, colorIndex));
                     colorsBox.add(colorButton);
                 }
@@ -347,6 +356,8 @@ const DrawingPage = new GObject.Class({
     
     _onPaletteColorChanged: function(paletteIndex, colorIndex, colorButton) {
         this.palettes[paletteIndex][1][colorIndex] = colorButton.get_rgba().to_string();
+        if (colorButton.tooltip_text)
+            this.palettes[paletteIndex][1][colorIndex] += `:${colorButton.tooltip_text}`;
         this._savePalettes();
     },
     
@@ -355,6 +366,20 @@ const DrawingPage = new GObject.Class({
         // Translators: default name of a new palette
         this.palettes.push([_("New palette"), colors]);
         this._savePalettes();
+    },
+    
+    _importPalette: function() {
+        let dialog = new Gtk.FileChooserNative({ action: Gtk.FileChooserAction.OPEN, title: _GTK("Select a File") });
+        let filter = new Gtk.FileFilter();
+        filter.set_name("GIMP Palette (*.gpl)");
+        filter.add_pattern('*.gpl');
+        dialog.add_filter(filter);
+        if (dialog.run() == Gtk.ResponseType.ACCEPT) {
+            let file = dialog.get_file();
+            let palettes = GimpPaletteParser.parseFile(file);
+            palettes.forEach(palette => this.palettes.push(palette));
+            this._savePalettes();
+        }
     },
     
     _removePalette: function(paletteIndex) {
