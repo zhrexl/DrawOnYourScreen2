@@ -85,7 +85,7 @@ const getColorFromString = function(string, fallback) {
 // It creates and manages a DrawingElement for each "brushstroke".
 // It handles pointer/mouse/(touch?) events and some keyboard events.
 var DrawingArea = new Lang.Class({
-    Name: 'DrawOnYourScreenDrawingArea',
+    Name: `${Me.uuid}.DrawingArea`,
     Extends: St.DrawingArea,
     Signals: { 'show-osd': { param_types: [Gio.Icon.$gtype, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
                'update-action-mode': {},

@@ -139,7 +139,7 @@ var DisplayStrings = {
 };
 
 var DrawingMenu = new Lang.Class({
-    Name: 'DrawOnYourScreenDrawingMenu',
+    Name: `${Me.uuid}.DrawingMenu`,
     
     _init: function(area, monitor, drawingTools) {
         this.area = area;
@@ -736,7 +736,7 @@ const updateSubMenuAdjustment = function(itemActor) {
 
 // An action button that uses upstream dash item tooltips.
 const ActionButton = new Lang.Class({
-    Name: 'DrawOnYourScreenDrawingMenuActionButton',
+    Name: `${Me.uuid}.DrawingMenuActionButton`,
     Extends: St.Bin,
     _labelShowing: false,
     _resetHoverTimeoutId: 0,
@@ -781,7 +781,7 @@ const ActionButton = new Lang.Class({
 
 // based on searchItem.js, https://github.com/leonardo-bartoli/gnome-shell-extension-Recents
 const Entry = new Lang.Class({
-    Name: 'DrawOnYourScreenDrawingMenuEntry',
+    Name: `${Me.uuid}.DrawingMenuEntry`,
     
     _init: function(params) {
         this.params = params;
