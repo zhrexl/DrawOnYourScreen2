@@ -143,6 +143,7 @@ var DrawingMenu = new Lang.Class({
     
     _init: function(area, monitor, drawingTools) {
         this.area = area;
+        this.monitor = monitor;
         this.drawingTools = drawingTools;
         
         let side = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? St.Side.RIGHT : St.Side.LEFT;
@@ -151,8 +152,8 @@ var DrawingMenu = new Lang.Class({
         this.menuManager.addMenu(this.menu);
         
         Main.layoutManager.uiGroup.add_actor(this.menu.actor);
+        
         this.menu.actor.add_style_class_name('background-menu draw-on-your-screen-menu');
-        this.menu.actor.set_style('max-height:' + monitor.height + 'px;');
         this.menu.actor.hide();
         this.hasSeparators = monitor.height >= 750;
         
@@ -190,6 +191,11 @@ var DrawingMenu = new Lang.Class({
             this.area.updateActionMode();
             this.area.grab_key_focus();
         }
+        
+        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+        let maxHeight = Math.round(workArea.height / scaleFactor);
+        this.menu.actor.set_style(`max-height:${maxHeight}px;`);
     },
     
     popup: function() {
