@@ -53,7 +53,7 @@ function init() {
 }
 
 const Extension = new Lang.Class({
-    Name: 'DrawOnYourScreenExtension',
+    Name: `${Me.uuid}.Extension`,
     
     _init: function() {
         Convenience.initTranslations();
@@ -81,7 +81,7 @@ const Extension = new Lang.Class({
 // distributes keybinding callbacks to the active area
 // and handles stylesheet and monitor changes.
 const AreaManager = new Lang.Class({
-    Name: 'DrawOnYourScreenAreaManager',
+    Name: `${Me.uuid}.AreaManager`,
 
     _init: function() {
         this.areas = [];
@@ -560,7 +560,7 @@ const AreaManager = new Lang.Class({
 
 // The same as the original, without forcing a ratio of 1.
 const OsdWindowConstraint = new Lang.Class({
-    Name: 'DrawOnYourScreenOsdWindowConstraint',
+    Name: `${Me.uuid}.OsdWindowConstraint`,
     Extends: OsdWindow.OsdWindowConstraint,
 
     vfunc_update_allocation: function(actor, actorBox) {
@@ -582,7 +582,7 @@ const OsdWindowConstraint = new Lang.Class({
 });
 
 const DrawingIndicator = new Lang.Class({
-    Name: 'DrawOnYourScreenIndicator',
+    Name: `${Me.uuid}.Indicator`,
 
     _init: function() {
         let [menuAlignment, dontCreateMenu] = [0, true];

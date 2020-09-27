@@ -98,7 +98,7 @@ const replaceColor = function (contents, color) {
 // Wrapper around image data. If not subclassed, it is used when loading in the area an image element for a drawing file (.json)
 // and it takes { displayName, contentType, base64, hash } as params.
 var Image = new Lang.Class({
-    Name: 'DrawOnYourScreenImage',
+    Name: `${Me.uuid}.Image`,
     
     _init: function(params) {
         for (let key in params)
@@ -193,7 +193,7 @@ var Image = new Lang.Class({
 
 // Add a gicon generator to Image. It is used with image files and it takes { file, info } as params.
 const ImageWithGicon = new Lang.Class({
-    Name: 'DrawOnYourScreenImageWithGicon',
+    Name: `${Me.uuid}.ImageWithGicon`,
     Extends: Image,
     
     get displayName() {
@@ -247,7 +247,7 @@ const ImageWithGicon = new Lang.Class({
 
 // It is directly generated from a Json object, without an image file. It takes { bytes, displayName, gicon } as params.
 const ImageFromJson = new Lang.Class({
-    Name: 'DrawOnYourScreenImageFromJson',
+    Name: `${Me.uuid}.ImageFromJson`,
     Extends: Image,
     contentType: 'image/svg+xml',
     
@@ -394,7 +394,7 @@ var Images = {
 
 // Wrapper around a json file (drawing saves).
 var Json = new Lang.Class({
-    Name: 'DrawOnYourScreenJson',
+    Name: `${Me.uuid}.Json`,
     
     _init: function(params) {
         for (let key in params)

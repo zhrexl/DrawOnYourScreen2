@@ -44,6 +44,11 @@ const _GTK = imports.gettext.domain('gtk30').gettext;
 const MARGIN = 10;
 const ROWBOX_MARGIN_PARAMS = { margin_top: MARGIN / 2, margin_bottom: MARGIN / 2, margin_left: MARGIN, margin_right: MARGIN };
 
+// GTypeName is not sanitized in GS 3.28-
+const sanitizeGType = function(name) {
+    return `Gjs_${name.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_')}`;
+}
+
 function init() {
     Convenience.initTranslations();
 }
@@ -63,8 +68,8 @@ function buildPrefsWidget() {
 }
 
 const TopStack = new GObject.Class({
-    Name: 'DrawOnYourScreenTopStack',
-    GTypeName: 'DrawOnYourScreenTopStack',
+    Name: `${Me.uuid}.TopStack`,
+    GTypeName: sanitizeGType(`${Me.uuid}-TopStack`),
     Extends: Gtk.Stack,
     
     _init: function(params) {
@@ -82,8 +87,8 @@ const TopStack = new GObject.Class({
 });
 
 const AboutPage = new GObject.Class({
-    Name: 'DrawOnYourScreenAboutPage',
-    GTypeName: 'DrawOnYourScreenAboutPage',
+    Name: `${Me.uuid}.AboutPage`,
+    GTypeName: sanitizeGType(`${Me.uuid}-AboutPage`),
     Extends: Gtk.ScrolledWindow,
 
     _init: function(params) {
@@ -136,8 +141,8 @@ const AboutPage = new GObject.Class({
 });
 
 const DrawingPage = new GObject.Class({
-    Name: 'DrawOnYourScreenDrawingPage',
-    GTypeName: 'DrawOnYourScreenDrawingPage',
+    Name: `${Me.uuid}.DrawingPage`,
+    GTypeName: sanitizeGType(`${Me.uuid}-DrawingPage`),
     Extends: Gtk.ScrolledWindow,
 
     _init: function(params) {
@@ -389,8 +394,8 @@ const DrawingPage = new GObject.Class({
 });
 
 const PrefsPage = new GObject.Class({
-    Name: 'DrawOnYourScreenPrefsPage',
-    GTypeName: 'DrawOnYourScreenPrefsPage',
+    Name: `${Me.uuid}.PrefsPage`,
+    GTypeName: sanitizeGType(`${Me.uuid}-PrefsPage`),
     Extends: Gtk.ScrolledWindow,
 
     _init: function(params) {
@@ -503,8 +508,8 @@ const PrefsPage = new GObject.Class({
 });
 
 const Frame = new GObject.Class({
-    Name: 'DrawOnYourScreenFrame',
-    GTypeName: 'DrawOnYourScreenFrame',
+    Name: `${Me.uuid}.Frame`,
+    GTypeName: sanitizeGType(`${Me.uuid}-Frame`),
     Extends: Gtk.Frame,
 
     _init: function(params) {
@@ -519,8 +524,8 @@ const Frame = new GObject.Class({
 });
 
 const PrefRow = new GObject.Class({
-    Name: 'DrawOnYourScreenPrefRow',
-    GTypeName: 'DrawOnYourScreenPrefRow',
+    Name: `${Me.uuid}.PrefRow`,
+    GTypeName: sanitizeGType(`${Me.uuid}-PrefRow`),
     Extends: Gtk.ListBoxRow,
 
     _init: function(params) {
@@ -564,8 +569,8 @@ const PrefRow = new GObject.Class({
 });
 
 const PixelSpinButton = new GObject.Class({
-    Name: 'DrawOnYourScreenPixelSpinButton',
-    GTypeName: 'DrawOnYourScreenPixelSpinButton',
+    Name: `${Me.uuid}.PixelSpinButton`,
+    GTypeName: sanitizeGType(`${Me.uuid}-PixelSpinButton`),
     Extends: Gtk.SpinButton,
     Properties: {
         'range': GObject.param_spec_variant('range', 'range', 'GSettings range',
@@ -604,8 +609,8 @@ const PixelSpinButton = new GObject.Class({
 
 // A color button that can be easily bound with a color string setting.
 const ColorStringButton = new GObject.Class({
-    Name: 'DrawOnYourScreenColorStringButton',
-    GTypeName: 'DrawOnYourScreenColorStringButton',
+    Name: `${Me.uuid}.ColorStringButton`,
+    GTypeName: sanitizeGType(`${Me.uuid}-ColorStringButton`),
     Extends: Gtk.ColorButton,
     Properties: {
         'color-string': GObject.ParamSpec.string('color-string', 'colorString', 'A string that describes the color',
@@ -637,8 +642,8 @@ const ColorStringButton = new GObject.Class({
 });
 
 const FileChooserButton = new GObject.Class({
-    Name: 'DrawOnYourScreenFileChooserButton',
-    GTypeName: 'DrawOnYourScreenFileChooserButton',
+    Name: `${Me.uuid}.FileChooserButton`,
+    GTypeName: sanitizeGType(`${Me.uuid}-FileChooserButton`),
     Extends: Gtk.FileChooserButton,
     Properties: {
         'location': GObject.ParamSpec.string('location', 'location', 'location',
@@ -669,8 +674,8 @@ const FileChooserButton = new GObject.Class({
 
 // this code comes from Sticky Notes View by Sam Bull, https://extensions.gnome.org/extension/568/notes/
 const KeybindingsWidget = new GObject.Class({
-    Name: 'DrawOnYourScreenKeybindings.Widget',
-    GTypeName: 'DrawOnYourScreenKeybindingsWidget',
+    Name: `${Me.uuid}.KeybindingsWidget`,
+    GTypeName: sanitizeGType(`${Me.uuid}-KeybindingsWidget`),
     Extends: Gtk.Box,
 
     _init: function(settingKeys, settings) {

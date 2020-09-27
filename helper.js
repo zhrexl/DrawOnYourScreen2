@@ -44,7 +44,7 @@ const MEDIA_KEYS_KEYS = ['screenshot', 'screenshot-clip', 'area-screenshot', 'ar
 // DrawingHelper provides the "help osd" (Ctrl + F1)
 // It uses the same texts as in prefs
 var DrawingHelper = new Lang.Class({
-    Name: 'DrawOnYourScreenDrawingHelper',
+    Name: `${Me.uuid}.DrawingHelper`,
     Extends: St.ScrollView,
     
     _init: function(params, monitor) {

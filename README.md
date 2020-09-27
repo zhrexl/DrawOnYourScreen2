@@ -3,7 +3,7 @@
 Start drawing with Super+Alt+D.
 Then save your beautiful work by taking a screenshot.
 
-![](https://framagit.org/abakkk/DrawOnYourScreen/raw/ressources/screenshot.jpg)
+![](https://framagit.org/abakkk/DrawOnYourScreen/raw/media/screenshot.jpg)
 
 ## Features
 
@@ -28,6 +28,12 @@ Then save your beautiful work by taking a screenshot.
 
 ## Tips and tricks
 
+* Power is nothing without control:
+
+ The `Ctrl` key provides an extra functionality for each tool.
+
+ ![Range of Ctrl key possibilities](https://framagit.org/abakkk/DrawOnYourScreen/-/raw/media/ctrl.webm)
+
 * Draw arrows:
 
  Intersect two lines and curve the second thanks to the `Ctrl` key.
@@ -38,11 +44,13 @@ Then save your beautiful work by taking a screenshot.
 
  Hold the `Shift` key while starting moving.
  
- ![How to duplicate an element](https://framagit.org/abakkk/DrawOnYourScreen/-/raw/ressources/duplicate.webm)
+ ![How to duplicate an element](https://framagit.org/abakkk/DrawOnYourScreen/-/raw/media/duplicate.webm)
 
 * Insertable images:
 
  You can insert images (jpeg, png, svg) in your drawings. By default images are sought in `~/.local/share/drawOnYourScreen/images/` but the location is configurable in the preferences. Another way is to copy-past the images from Nautilus or any clipboard source by using the usual `Ctrl + V` shortcut inside the drawing mode.
+ 
+ ![How to add images from Nautilus](https://framagit.org/abakkk/DrawOnYourScreen/-/raw/media/ctrl-plus-v.webm)
 
 * Eraser and SVG:
 
@@ -54,5 +62,7 @@ Then save your beautiful work by taking a screenshot.
 
 * Color Picker extension:
 
-If the GNOME Shell built-in color picker is too basic for you, have a look at the [Color Picker extension](https://extensions.gnome.org/extension/3396/color-picker), which let's you select the pixel accurately, preview the color and adjust its values. Once installed and enabled, it will be transparently integrated into DrawOnYourScreen.
+ If the GNOME Shell built-in color picker is too basic for you, have a look at the [Color Picker extension](https://extensions.gnome.org/extension/3396/color-picker), which let's you select the pixel accurately, preview the color and adjust its values. Once installed and enabled, it will be transparently integrated into DrawOnYourScreen.
+
+ ![Color Picker extension in action](https://framagit.org/abakkk/DrawOnYourScreen/-/raw/media/color-picker-extension.jpg)
 
