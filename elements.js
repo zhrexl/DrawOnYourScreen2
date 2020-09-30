@@ -62,6 +62,7 @@ const MIN_REFLECTION_LINE_LENGTH = 10;      // px
 const MIN_TRANSLATION_DISTANCE = 1;         // px
 const MIN_ROTATION_ANGLE = Math.PI / 1000;  // rad
 const MIN_DRAWING_SIZE = 3;                 // px
+const MIN_INTERMEDIATE_POINT_DISTANCE = 1;  // px, the higher it is, the fewer points there will be
 
 var DrawingElement = function(params) {
     return params.shape == Shapes.TEXT ? new TextElement(params) :
@@ -420,6 +421,17 @@ const _DrawingElement = new Lang.Class({
                 this.points[2] = this.points[1];
             }
         }
+    },
+    
+    // For free drawing only.
+    addIntermediatePoint: function(x, y, transform) {
+        let points = this.points;
+        if (getNearness(points[points.length - 1], [x, y], MIN_INTERMEDIATE_POINT_DISTANCE))
+            return;
+        
+        points.push([x, y]);
+        if (transform)
+            this._smooth(points.length - 1);
     },
     
     startDrawing: function(startX, startY) {
