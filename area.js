@@ -47,6 +47,7 @@ const pgettext = imports.gettext.domain(Me.metadata['gettext-domain']).pgettext;
 
 const CAIRO_DEBUG_EXTENDS = false;
 const SVG_DEBUG_EXTENDS = false;
+const MOTION_TIME = 5; // ms, time accuracy for free drawing, max is about 33 ms. The lower it is, the smoother the drawing is.
 const TEXT_CURSOR_TIME = 600; // ms
 const ELEMENT_GRABBER_TIME = 80; // ms, default is about 16 ms
 const GRID_TILES_HORIZONTAL_NUMBER = 30;
@@ -664,6 +665,31 @@ var DrawingArea = new Lang.Class({
                 return;
             let controlPressed = event.has_control_modifier();
             this._updateDrawing(x, y, controlPressed);
+            
+            if (this.motionTimeout)
+                GLib.source_remove(this.motionTimeout);
+            
+            if (this.currentTool == Shapes.NONE) {
+                // Minimum time between two motion events is about 33 ms.
+                // Add intermediate points to make quick free drawings smoother.
+                this.motionTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, MOTION_TIME, () => {
+                    if (this.spaceKeyPressed)
+                        return GLib.SOURCE_CONTINUE;
+                    
+                    let [stageX, stageY, mods] = global.get_pointer();
+                    let [s, x, y] = this.transform_stage_point(stageX, stageY);
+                    if (!s)
+                        return GLib.SOURCE_CONTINUE;
+                    
+                    let controlPressed = !!(mods & Clutter.ModifierType.CONTROL_MASK);
+                    
+                    // Important: do not call this._updateDrawing because the area MUST NOT BE REDISPLAYED at this step.
+                    // It would lead to critical issues (bad performances and shell crashes).
+                    this.currentElement.updateDrawing(x, y, controlPressed);
+                    
+                    return GLib.SOURCE_CONTINUE;
+                });
+            }
         });
     },
     
@@ -678,6 +704,10 @@ var DrawingArea = new Lang.Class({
     },
     
     _stopDrawing: function() {
+        if (this.motionTimeout) {
+            GLib.source_remove(this.motionTimeout);
+            this.motionTimeout = null;
+        }
         if (this.motionHandler) {
             this.disconnect(this.motionHandler);
             this.motionHandler = null;
