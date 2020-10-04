@@ -123,7 +123,8 @@ const _DrawingElement = new Lang.Class({
             fill: this.fill,
             fillRule: this.fillRule,
             eraser: this.eraser,
-            transformations: this.transformations.filter(transformation => transformation.type != Transformations.SMOOTH),
+            transformations: this.transformations.filter(transformation => transformation.type != Transformations.SMOOTH)
+                                                 .map(transformation => Object.assign({}, transformation, { undoable: undefined })),
             points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
         };
     },
@@ -409,7 +410,7 @@ const _DrawingElement = new Lang.Class({
         
         let newPoints = this.points.slice();
         
-        this.transformations.push({ type: Transformations.SMOOTH,
+        this.transformations.push({ type: Transformations.SMOOTH, undoable: true,
                                     undo: () => this.points = oldPoints,
                                     redo: () => this.points = newPoints });
     },
@@ -465,7 +466,7 @@ const _DrawingElement = new Lang.Class({
                 return;
                 
             let center = this._getOriginalCenter();
-            this.transformations[0] = { type: Transformations.ROTATION, notUndoable: true,
+            this.transformations[0] = { type: Transformations.ROTATION,
                                         angle: getAngle(center[0], center[1], points[points.length - 1][0], points[points.length - 1][1], x, y) };
             
         } else if (this.shape == Shapes.ELLIPSE && transform) {
@@ -474,7 +475,7 @@ const _DrawingElement = new Lang.Class({
             
             points[2] = [x, y];
             let center = this._getOriginalCenter();
-            this.transformations[0] = { type: Transformations.ROTATION, notUndoable: true,
+            this.transformations[0] = { type: Transformations.ROTATION,
                                         angle: getAngle(center[0], center[1], center[0] + 1, center[1], x, y) };
             
         } else if (this.shape == Shapes.POLYGON || this.shape == Shapes.POLYLINE) {
@@ -500,18 +501,18 @@ const _DrawingElement = new Lang.Class({
             this.transformations.shift();
     },
     
-    startTransformation: function(startX, startY, type) {
+    startTransformation: function(startX, startY, type, undoable) {
         if (type == Transformations.TRANSLATION)
-            this.transformations.push({ startX: startX, startY: startY, type: type, slideX: 0, slideY: 0 });
+            this.transformations.push({ startX, startY, type, undoable, slideX: 0, slideY: 0 });
         else if (type == Transformations.ROTATION)
-            this.transformations.push({ startX: startX, startY: startY, type: type, angle: 0 });
+            this.transformations.push({ startX, startY, type, undoable, angle: 0 });
         else if (type == Transformations.SCALE_PRESERVE || type == Transformations.STRETCH)
-            this.transformations.push({ startX: startX, startY: startY, type: type, scaleX: 1, scaleY: 1, angle: 0 });
+            this.transformations.push({ startX, startY, type, undoable, scaleX: 1, scaleY: 1, angle: 0 });
         else if (type == Transformations.REFLECTION)
-            this.transformations.push({ startX: startX, startY: startY, endX: startX, endY: startY, type: type,
+            this.transformations.push({ startX, startY, endX: startX, endY: startY, type, undoable,
                                         scaleX:  1, scaleY:  1, slideX: 0, slideY: 0, angle: 0 });
         else if (type == Transformations.INVERSION)
-            this.transformations.push({ startX: startX, startY: startY, endX: startX, endY: startY, type: type,
+            this.transformations.push({ startX, startY, endX: startX, endY: startY, type, undoable,
                                         scaleX: -1, scaleY: -1, slideX: startX, slideY: startY,
                                         angle: Math.PI + Math.atan(startY / (startX || 1)) });
         
@@ -596,7 +597,7 @@ const _DrawingElement = new Lang.Class({
     undoTransformation: function() {
         if (this.transformations && this.transformations.length) {
             // Do not undo initial transformations (transformations made during the drawing step).
-            if (this.lastTransformation.notUndoable)
+            if (!this.lastTransformation.undoable)
                 return false;
             
             if (!this._undoneTransformations)
@@ -633,10 +634,6 @@ const _DrawingElement = new Lang.Class({
     
     resetUndoneTransformations: function() {
         delete this._undoneTransformations;
-    },
-    
-    makeAllTransformationsNotUndoable: function() {
-        this.transformations.forEach(transformation => transformation.notUndoable = true);
     },
     
     // The figure rotation center before transformations (original).

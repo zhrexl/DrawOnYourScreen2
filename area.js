@@ -537,19 +537,16 @@ var DrawingArea = new Lang.Class({
             this.grabbedElement = copy;
         }
         
+        let undoable = !duplicate;
+        
         if (this.currentTool == Manipulations.MOVE)
-            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.ROTATION : Transformations.TRANSLATION);
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.ROTATION : Transformations.TRANSLATION, undoable);
         else if (this.currentTool == Manipulations.RESIZE)
-            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.STRETCH : Transformations.SCALE_PRESERVE);
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.STRETCH : Transformations.SCALE_PRESERVE, undoable);
          else if (this.currentTool == Manipulations.MIRROR) {
-            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.INVERSION : Transformations.REFLECTION);
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.INVERSION : Transformations.REFLECTION, undoable);
             this._redisplay();
         }
-        
-        if (duplicate)
-            // For undo, ignore both the transformations inherited from the duplicated element
-            // and the current transformation.
-            this.grabbedElement.makeAllTransformationsNotUndoable();
         
         this.motionHandler = this.connect('motion-event', (actor, event) => {
             if (this.spaceKeyPressed)
@@ -565,28 +562,30 @@ var DrawingArea = new Lang.Class({
     },
     
     _updateTransforming: function(x, y, controlPressed) {
+        let undoable = this.grabbedElement.lastTransformation.undoable || false;
+        
         if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.TRANSLATION) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.ROTATION);
+            this.grabbedElement.startTransformation(x, y, Transformations.ROTATION, undoable);
         } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.ROTATION) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.TRANSLATION);
+            this.grabbedElement.startTransformation(x, y, Transformations.TRANSLATION, undoable);
         }
         
         if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.SCALE_PRESERVE) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.STRETCH);
+            this.grabbedElement.startTransformation(x, y, Transformations.STRETCH, undoable);
         } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.STRETCH) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.SCALE_PRESERVE);
+            this.grabbedElement.startTransformation(x, y, Transformations.SCALE_PRESERVE, undoable);
         }
         
         if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.REFLECTION) {
             this.grabbedElement.transformations.pop();
-            this.grabbedElement.startTransformation(x, y, Transformations.INVERSION);
+            this.grabbedElement.startTransformation(x, y, Transformations.INVERSION, undoable);
         } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.INVERSION) {
             this.grabbedElement.transformations.pop();
-            this.grabbedElement.startTransformation(x, y, Transformations.REFLECTION);
+            this.grabbedElement.startTransformation(x, y, Transformations.REFLECTION, undoable);
         }
         
         this.grabbedElement.updateTransformation(x, y);
