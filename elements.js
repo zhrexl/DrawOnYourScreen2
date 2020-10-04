@@ -31,7 +31,7 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
 var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
-var Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
+var Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5, SMOOTH: 100 };
 
 var getAllFontFamilies = function() {
     return PangoCairo.font_map_get_default().list_families().map(fontFamily => fontFamily.get_name()).sort((a,b) => a.localeCompare(b));
@@ -123,7 +123,7 @@ const _DrawingElement = new Lang.Class({
             fill: this.fill,
             fillRule: this.fillRule,
             eraser: this.eraser,
-            transformations: this.transformations,
+            transformations: this.transformations.filter(transformation => transformation.type != Transformations.SMOOTH),
             points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
         };
     },
@@ -402,9 +402,16 @@ const _DrawingElement = new Lang.Class({
     },
     
     smoothAll: function() {
-        for (let i = 0; i < this.points.length; i++) {
+        let oldPoints = this.points.slice();
+        
+        for (let i = 0; i < this.points.length; i++)
             this._smooth(i);
-        }
+        
+        let newPoints = this.points.slice();
+        
+        this.transformations.push({ type: Transformations.SMOOTH,
+                                    undo: () => this.points = oldPoints,
+                                    redo: () => this.points = newPoints });
     },
     
     addPoint: function() {
@@ -594,7 +601,12 @@ const _DrawingElement = new Lang.Class({
             
             if (!this._undoneTransformations)
                 this._undoneTransformations = [];
-            this._undoneTransformations.push(this.transformations.pop());
+            
+            let transformation = this.transformations.pop();
+            if (transformation.type == Transformations.SMOOTH)
+                transformation.undo();
+            
+            this._undoneTransformations.push(transformation);
             
             return true;
         }
@@ -606,7 +618,12 @@ const _DrawingElement = new Lang.Class({
         if (this._undoneTransformations && this._undoneTransformations.length) {
             if (!this.transformations)
                 this.transformations = [];
-            this.transformations.push(this._undoneTransformations.pop());
+            
+            let transformation = this._undoneTransformations.pop();
+            if (transformation.type == Transformations.SMOOTH)
+                transformation.redo();
+            
+            this.transformations.push(transformation);
             
             return true;
         }
