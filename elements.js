@@ -413,6 +413,9 @@ const _DrawingElement = new Lang.Class({
         this.transformations.push({ type: Transformations.SMOOTH, undoable: true,
                                     undo: () => this.points = oldPoints,
                                     redo: () => this.points = newPoints });
+        
+        if (this._undoneTransformations)
+            this._undoneTransformations = this._undoneTransformations.filter(transformation => transformation.type != Transformations.SMOOTH);
     },
     
     addPoint: function() {
@@ -634,6 +637,10 @@ const _DrawingElement = new Lang.Class({
     
     resetUndoneTransformations: function() {
         delete this._undoneTransformations;
+    },
+    
+    get canUndo() {
+        return this._undoneTransformations && this._undoneTransformations.length ? true : false;
     },
     
     // The figure rotation center before transformations (original).

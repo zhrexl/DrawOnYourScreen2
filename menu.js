@@ -230,12 +230,11 @@ var DrawingMenu = new Lang.Class({
         this.menu.removeAll();
         
         let groupItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, style_class: 'draw-on-your-screen-menu-group-item' });
-        this.undoButton = new ActionButton(_("Undo"), 'edit-undo-symbolic', this.area.undo.bind(this.area), this._updateActionSensitivity.bind(this));
-        this.redoButton = new ActionButton(_("Redo"), 'edit-redo-symbolic', this.area.redo.bind(this.area), this._updateActionSensitivity.bind(this));
+        this.undoButton = new ActionButton(getSummary('undo'), 'edit-undo-symbolic', this.area.undo.bind(this.area), this._updateActionSensitivity.bind(this));
+        this.redoButton = new ActionButton(getSummary('redo'), 'edit-redo-symbolic', this.area.redo.bind(this.area), this._updateActionSensitivity.bind(this));
         this.eraseButton = new ActionButton(_("Erase"), 'edit-clear-all-symbolic', this.area.deleteLastElement.bind(this.area), this._updateActionSensitivity.bind(this));
         this.smoothButton = new ActionButton(_("Smooth"), Files.Icons.SMOOTH, this.area.smoothLastElement.bind(this.area), this._updateActionSensitivity.bind(this));
         this.eraseButton.child.add_style_class_name('draw-on-your-screen-menu-destructive-button');
-        this.smoothButton.child.add_style_class_name('draw-on-your-screen-menu-destructive-button');
         getActor(groupItem).add_child(this.undoButton);
         getActor(groupItem).add_child(this.redoButton);
         getActor(groupItem).add_child(this.eraseButton);
@@ -309,7 +308,7 @@ var DrawingMenu = new Lang.Class({
     
     _updateActionSensitivity: function() {
         this.undoButton.child.reactive = this.area.elements.length > 0;
-        this.redoButton.child.reactive = this.area.undoneElements.length > 0;
+        this.redoButton.child.reactive = this.area.undoneElements.length > 0 || (this.area.elements.length && this.area.elements[this.area.elements.length - 1].canUndo);
         this.eraseButton.child.reactive = this.area.elements.length > 0;
         this.smoothButton.child.reactive = this.area.elements.length > 0 && this.area.elements[this.area.elements.length - 1].shape == this.drawingTools.NONE;
         this.saveButton.child.reactive = this.area.elements.length > 0;
