@@ -458,7 +458,7 @@ const _DrawingElement = new Lang.Class({
                 return;
                 
             let center = this._getOriginalCenter();
-            this.transformations[0] = { type: Transformations.ROTATION,
+            this.transformations[0] = { type: Transformations.ROTATION, notUndoable: true,
                                         angle: getAngle(center[0], center[1], points[points.length - 1][0], points[points.length - 1][1], x, y) };
             
         } else if (this.shape == Shapes.ELLIPSE && transform) {
@@ -467,7 +467,7 @@ const _DrawingElement = new Lang.Class({
             
             points[2] = [x, y];
             let center = this._getOriginalCenter();
-            this.transformations[0] = { type: Transformations.ROTATION,
+            this.transformations[0] = { type: Transformations.ROTATION, notUndoable: true,
                                         angle: getAngle(center[0], center[1], center[0] + 1, center[1], x, y) };
             
         } else if (this.shape == Shapes.POLYGON || this.shape == Shapes.POLYLINE) {
@@ -584,6 +584,42 @@ const _DrawingElement = new Lang.Class({
             delete transformation.endX;
             delete transformation.endY;
         }
+    },
+    
+    undoTransformation: function() {
+        if (this.transformations && this.transformations.length) {
+            // Do not undo initial transformations (transformations made during the drawing step).
+            if (this.lastTransformation.notUndoable)
+                return false;
+            
+            if (!this._undoneTransformations)
+                this._undoneTransformations = [];
+            this._undoneTransformations.push(this.transformations.pop());
+            
+            return true;
+        }
+        
+        return false;
+    },
+    
+    redoTransformation: function() {
+        if (this._undoneTransformations && this._undoneTransformations.length) {
+            if (!this.transformations)
+                this.transformations = [];
+            this.transformations.push(this._undoneTransformations.pop());
+            
+            return true;
+        }
+        
+        return false;
+    },
+    
+    resetUndoneTransformations: function() {
+        delete this._undoneTransformations;
+    },
+    
+    makeAllTransformationsNotUndoable: function() {
+        this.transformations.forEach(transformation => transformation.notUndoable = true);
     },
     
     // The figure rotation center before transformations (original).

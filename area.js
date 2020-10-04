@@ -546,6 +546,10 @@ var DrawingArea = new Lang.Class({
             this._redisplay();
         }
         
+        if (duplicate)
+            // For undo, ignore both the transformations inherited from the duplicated element
+            // and the current transformation.
+            this.grabbedElement.makeAllTransformationsNotUndoable();
         
         this.motionHandler = this.connect('motion-event', (actor, event) => {
             if (this.spaceKeyPressed)
@@ -907,18 +911,36 @@ var DrawingArea = new Lang.Class({
     deleteLastElement: function() {
         this._stopAll();
         this.elements.pop();
+        
+        if (this.elements.length)
+            this.elements[this.elements.length - 1].resetUndoneTransformations();
+        
         this._redisplay();
     },
     
     undo: function() {
-        if (this.elements.length > 0)
+        if (!this.elements.length)
+            return;
+        
+        let success = this.elements[this.elements.length - 1].undoTransformation();
+        if (!success) {
             this.undoneElements.push(this.elements.pop());
+            if (this.elements.length)
+                this.elements[this.elements.length - 1].resetUndoneTransformations();
+        }
+        
         this._redisplay();
     },
     
     redo: function() {
-        if (this.undoneElements.length > 0)
+        let success = false;
+        
+        if (this.elements.length)
+            success = this.elements[this.elements.length - 1].redoTransformation();
+            
+        if (!success && this.undoneElements.length > 0)
             this.elements.push(this.undoneElements.pop());
+        
         this._redisplay();
     },
     
