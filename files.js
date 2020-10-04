@@ -31,6 +31,7 @@ const St = imports.gi.St;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
+const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 const EXAMPLE_IMAGE_DIRECTORY = Me.dir.get_child('data').get_child('images');
 const DEFAULT_USER_IMAGE_LOCATION = GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir'], 'images']);
 const Clipboard = St.Clipboard.get_default();
@@ -98,7 +99,7 @@ const replaceColor = function (contents, color) {
 // Wrapper around image data. If not subclassed, it is used when loading in the area an image element for a drawing file (.json)
 // and it takes { displayName, contentType, base64, hash } as params.
 var Image = new Lang.Class({
-    Name: `${Me.uuid}.Image`,
+    Name: `${UUID}-Image`,
     
     _init: function(params) {
         for (let key in params)
@@ -193,7 +194,7 @@ var Image = new Lang.Class({
 
 // Add a gicon generator to Image. It is used with image files and it takes { file, info } as params.
 const ImageWithGicon = new Lang.Class({
-    Name: `${Me.uuid}.ImageWithGicon`,
+    Name: `${UUID}-ImageWithGicon`,
     Extends: Image,
     
     get displayName() {
@@ -247,7 +248,7 @@ const ImageWithGicon = new Lang.Class({
 
 // It is directly generated from a Json object, without an image file. It takes { bytes, displayName, gicon } as params.
 const ImageFromJson = new Lang.Class({
-    Name: `${Me.uuid}.ImageFromJson`,
+    Name: `${UUID}-ImageFromJson`,
     Extends: Image,
     contentType: 'image/svg+xml',
     
@@ -394,7 +395,7 @@ var Images = {
 
 // Wrapper around a json file (drawing saves).
 var Json = new Lang.Class({
-    Name: `${Me.uuid}.Json`,
+    Name: `${UUID}-Json`,
     
     _init: function(params) {
         for (let key in params)

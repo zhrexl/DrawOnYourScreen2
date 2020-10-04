@@ -51,6 +51,7 @@ const TEXT_CURSOR_TIME = 600; // ms
 const ELEMENT_GRABBER_TIME = 80; // ms, default is about 16 ms
 const GRID_TILES_HORIZONTAL_NUMBER = 30;
 const COLOR_PICKER_EXTENSION_UUID = 'color-picker@tuberry'; 
+const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
 const { Shapes, Transformations } = Elements;
 const { DisplayStrings } = Menu;
@@ -85,7 +86,7 @@ const getColorFromString = function(string, fallback) {
 // It creates and manages a DrawingElement for each "brushstroke".
 // It handles pointer/mouse/(touch?) events and some keyboard events.
 var DrawingArea = new Lang.Class({
-    Name: `${Me.uuid}.DrawingArea`,
+    Name: `${UUID}-DrawingArea`,
     Extends: St.DrawingArea,
     Signals: { 'show-osd': { param_types: [Gio.Icon.$gtype, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
                'update-action-mode': {},

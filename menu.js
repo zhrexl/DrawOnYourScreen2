@@ -46,6 +46,7 @@ const GS_VERSION = Config.PACKAGE_VERSION;
 const FONT_FAMILY_STYLE = true;
 // use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
 const WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
+const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
 const getActor = function(object) {
     return GS_VERSION < '3.33.0' ? object.actor : object;
@@ -139,7 +140,7 @@ var DisplayStrings = {
 };
 
 var DrawingMenu = new Lang.Class({
-    Name: `${Me.uuid}.DrawingMenu`,
+    Name: `${UUID}-DrawingMenu`,
     
     _init: function(area, monitor, drawingTools) {
         this.area = area;
@@ -742,7 +743,7 @@ const updateSubMenuAdjustment = function(itemActor) {
 
 // An action button that uses upstream dash item tooltips.
 const ActionButton = new Lang.Class({
-    Name: `${Me.uuid}.DrawingMenuActionButton`,
+    Name: `${UUID}-DrawingMenuActionButton`,
     Extends: St.Bin,
     _labelShowing: false,
     _resetHoverTimeoutId: 0,
@@ -787,7 +788,7 @@ const ActionButton = new Lang.Class({
 
 // based on searchItem.js, https://github.com/leonardo-bartoli/gnome-shell-extension-Recents
 const Entry = new Lang.Class({
-    Name: `${Me.uuid}.DrawingMenuEntry`,
+    Name: `${UUID}-DrawingMenuEntry`,
     
     _init: function(params) {
         this.params = params;

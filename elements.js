@@ -28,6 +28,7 @@ const Pango = imports.gi.Pango;
 const PangoCairo = imports.gi.PangoCairo;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
 var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
 var Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
@@ -72,7 +73,7 @@ var DrawingElement = function(params) {
 // It can be converted into a cairo path as well as a svg element.
 // See DrawingArea._startDrawing() to know its params.
 const _DrawingElement = new Lang.Class({
-    Name: `${Me.uuid}.DrawingElement`,
+    Name: `${UUID}-DrawingElement`,
     
     _init: function(params) {
         for (let key in params)
@@ -626,7 +627,7 @@ const _DrawingElement = new Lang.Class({
 });
 
 const TextElement = new Lang.Class({
-    Name: `${Me.uuid}.TextElement`,
+    Name: `${UUID}-TextElement`,
     Extends: _DrawingElement,
     
     toJSON: function() {
@@ -766,7 +767,7 @@ const TextElement = new Lang.Class({
 });
 
 const ImageElement = new Lang.Class({
-    Name: `${Me.uuid}.ImageElement`,
+    Name: `${UUID}-ImageElement`,
     Extends: _DrawingElement,
     
     toJSON: function() {

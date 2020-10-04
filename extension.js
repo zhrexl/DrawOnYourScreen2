@@ -41,6 +41,7 @@ const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
 const GS_VERSION = Config.PACKAGE_VERSION;
 const HIDE_TIMEOUT_LONG = 2500; // ms, default is 1500 ms
+const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
 // custom Shell.ActionMode, assuming that they are unused
 const DRAWING_ACTION_MODE = Math.pow(2,14);
@@ -53,7 +54,7 @@ function init() {
 }
 
 const Extension = new Lang.Class({
-    Name: `${Me.uuid}.Extension`,
+    Name: `${UUID}-Extension`,
     
     _init: function() {
         Convenience.initTranslations();
@@ -81,7 +82,7 @@ const Extension = new Lang.Class({
 // distributes keybinding callbacks to the active area
 // and handles stylesheet and monitor changes.
 const AreaManager = new Lang.Class({
-    Name: `${Me.uuid}.AreaManager`,
+    Name: `${UUID}-AreaManager`,
 
     _init: function() {
         this.areas = [];
@@ -560,7 +561,7 @@ const AreaManager = new Lang.Class({
 
 // The same as the original, without forcing a ratio of 1.
 const OsdWindowConstraint = new Lang.Class({
-    Name: `${Me.uuid}.OsdWindowConstraint`,
+    Name: `${UUID}-OsdWindowConstraint`,
     Extends: OsdWindow.OsdWindowConstraint,
 
     vfunc_update_allocation: function(actor, actorBox) {
@@ -582,7 +583,7 @@ const OsdWindowConstraint = new Lang.Class({
 });
 
 const DrawingIndicator = new Lang.Class({
-    Name: `${Me.uuid}.Indicator`,
+    Name: `${UUID}-Indicator`,
 
     _init: function() {
         let [menuAlignment, dontCreateMenu] = [0, true];
