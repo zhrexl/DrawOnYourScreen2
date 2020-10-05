@@ -395,8 +395,14 @@ var DrawingArea = new Lang.Class({
     },
     
     _onStageKeyPressed: function(actor, event) {
-        if (event.get_key_symbol() == Clutter.KEY_space)
+        if (event.get_key_symbol() == Clutter.KEY_Escape) {
+            if (this.helper.visible)
+                this.toggleHelp();
+            else
+                this.emit('leave-drawing-mode');
+        } else if (event.get_key_symbol() == Clutter.KEY_space) {
             this.spaceKeyPressed = true;
+        }
         
         return Clutter.EVENT_PROPAGATE;
     },
@@ -409,38 +415,28 @@ var DrawingArea = new Lang.Class({
     },
     
     _onKeyPressed: function(actor, event) {
-        if (this.currentElement && this.currentElement.shape == Shapes.LINE) {
-            if (event.get_key_symbol() == Clutter.KEY_Return ||
-                event.get_key_symbol() == Clutter.KEY_KP_Enter ||
-                event.get_key_symbol() == Clutter.KEY_Control_L) {
-                if (this.currentElement.points.length == 2)
-                    // Translators: %s is a key label
-                    this.emit('show-osd', Files.Icons.ARC, _("Press <i>%s</i> to get\na fourth control point")
-                                                           .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
-                this.currentElement.addPoint();
-                this.updatePointerCursor(true);
-                this._redisplay();
-                return Clutter.EVENT_STOP;
-            } else {
-                return Clutter.EVENT_PROPAGATE;
-            }
-        
+        if (this.currentElement && this.currentElement.shape == Shapes.LINE &&
+            (event.get_key_symbol() == Clutter.KEY_Return ||
+             event.get_key_symbol() == Clutter.KEY_KP_Enter ||
+             event.get_key_symbol() == Clutter.KEY_Control_L)) {
+            
+            if (this.currentElement.points.length == 2)
+                // Translators: %s is a key label
+                this.emit('show-osd', Files.Icons.ARC, _("Press <i>%s</i> to get\na fourth control point")
+                                                       .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
+            this.currentElement.addPoint();
+            this.updatePointerCursor(true);
+            this._redisplay();
+            return Clutter.EVENT_STOP;
         } else if (this.currentElement &&
                    (this.currentElement.shape == Shapes.POLYGON || this.currentElement.shape == Shapes.POLYLINE) &&
                    (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == Clutter.KEY_KP_Enter)) {
+            
             this.currentElement.addPoint();
             return Clutter.EVENT_STOP;
-            
-        } else if (event.get_key_symbol() == Clutter.KEY_Escape) {
-            if (this.helper.visible)
-                this.toggleHelp();
-            else
-                this.emit('leave-drawing-mode');
-            return Clutter.EVENT_STOP;
-            
-        } else {
-            return Clutter.EVENT_PROPAGATE;
         }
+        
+        return Clutter.EVENT_PROPAGATE;
     },
     
     _onScroll: function(actor, event) {
@@ -1186,6 +1182,21 @@ var DrawingArea = new Lang.Class({
             this.toggleHelp();
         if (this.textEntry && this.reactive)
             this.textEntry.grab_key_focus();
+        
+        if (this.reactive) {
+            this.stageKeyPressedHandler = global.stage.connect('key-press-event', this._onStageKeyPressed.bind(this));
+            this.stageKeyReleasedHandler = global.stage.connect('key-release-event', this._onStageKeyReleased.bind(this));
+        } else {
+            if (this.stageKeyPressedHandler) {
+                global.stage.disconnect(this.stageKeyPressedHandler);
+                this.stageKeyPressedHandler = null;
+            }
+            if (this.stageKeyReleasedHandler) {
+                global.stage.disconnect(this.stageKeyReleasedHandler);
+                this.stageKeyReleasedHandler = null;
+            }
+            this.spaceKeyPressed = false;
+        }
     },
     
     _onDestroy: function() {
@@ -1200,8 +1211,6 @@ var DrawingArea = new Lang.Class({
     },
     
     enterDrawingMode: function() {
-        this.stageKeyPressedHandler = global.stage.connect('key-press-event', this._onStageKeyPressed.bind(this));
-        this.stageKeyReleasedHandler = global.stage.connect('key-release-event', this._onStageKeyReleased.bind(this));
         this.keyPressedHandler = this.connect('key-press-event', this._onKeyPressed.bind(this));
         this.buttonPressedHandler = this.connect('button-press-event', this._onButtonPressed.bind(this));
         this.keyboardPopupMenuHandler = this.connect('popup-menu', this._onKeyboardPopupMenu.bind(this));
@@ -1210,14 +1219,6 @@ var DrawingArea = new Lang.Class({
     },
     
     leaveDrawingMode: function(save, erase) {
-        if (this.stageKeyPressedHandler) {
-            global.stage.disconnect(this.stageKeyPressedHandler);
-            this.stageKeyPressedHandler = null;
-        }
-        if (this.stageKeyReleasedHandler) {
-            global.stage.disconnect(this.stageKeyReleasedHandler);
-            this.stageKeyReleasedHandler = null;
-        }
         if (this.keyPressedHandler) {
             this.disconnect(this.keyPressedHandler);
             this.keyPressedHandler = null;
