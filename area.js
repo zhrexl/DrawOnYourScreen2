@@ -47,10 +47,12 @@ const pgettext = imports.gettext.domain(Me.metadata['gettext-domain']).pgettext;
 
 const CAIRO_DEBUG_EXTENDS = false;
 const SVG_DEBUG_EXTENDS = false;
+const MOTION_TIME = 1; // ms, time accuracy for free drawing, max is about 33 ms. The lower it is, the smoother the drawing is.
 const TEXT_CURSOR_TIME = 600; // ms
 const ELEMENT_GRABBER_TIME = 80; // ms, default is about 16 ms
 const GRID_TILES_HORIZONTAL_NUMBER = 30;
 const COLOR_PICKER_EXTENSION_UUID = 'color-picker@tuberry'; 
+const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
 const { Shapes, Transformations } = Elements;
 const { DisplayStrings } = Menu;
@@ -85,7 +87,7 @@ const getColorFromString = function(string, fallback) {
 // It creates and manages a DrawingElement for each "brushstroke".
 // It handles pointer/mouse/(touch?) events and some keyboard events.
 var DrawingArea = new Lang.Class({
-    Name: `${Me.uuid}.DrawingArea`,
+    Name: `${UUID}-DrawingArea`,
     Extends: St.DrawingArea,
     Signals: { 'show-osd': { param_types: [Gio.Icon.$gtype, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
                'update-action-mode': {},
@@ -393,8 +395,14 @@ var DrawingArea = new Lang.Class({
     },
     
     _onStageKeyPressed: function(actor, event) {
-        if (event.get_key_symbol() == Clutter.KEY_space)
+        if (event.get_key_symbol() == Clutter.KEY_Escape) {
+            if (this.helper.visible)
+                this.toggleHelp();
+            else
+                this.emit('leave-drawing-mode');
+        } else if (event.get_key_symbol() == Clutter.KEY_space) {
             this.spaceKeyPressed = true;
+        }
         
         return Clutter.EVENT_PROPAGATE;
     },
@@ -407,38 +415,28 @@ var DrawingArea = new Lang.Class({
     },
     
     _onKeyPressed: function(actor, event) {
-        if (this.currentElement && this.currentElement.shape == Shapes.LINE) {
-            if (event.get_key_symbol() == Clutter.KEY_Return ||
-                event.get_key_symbol() == Clutter.KEY_KP_Enter ||
-                event.get_key_symbol() == Clutter.KEY_Control_L) {
-                if (this.currentElement.points.length == 2)
-                    // Translators: %s is a key label
-                    this.emit('show-osd', Files.Icons.ARC, _("Press <i>%s</i> to get\na fourth control point")
-                                                           .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
-                this.currentElement.addPoint();
-                this.updatePointerCursor(true);
-                this._redisplay();
-                return Clutter.EVENT_STOP;
-            } else {
-                return Clutter.EVENT_PROPAGATE;
-            }
-        
+        if (this.currentElement && this.currentElement.shape == Shapes.LINE &&
+            (event.get_key_symbol() == Clutter.KEY_Return ||
+             event.get_key_symbol() == Clutter.KEY_KP_Enter ||
+             event.get_key_symbol() == Clutter.KEY_Control_L)) {
+            
+            if (this.currentElement.points.length == 2)
+                // Translators: %s is a key label
+                this.emit('show-osd', Files.Icons.ARC, _("Press <i>%s</i> to get\na fourth control point")
+                                                       .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
+            this.currentElement.addPoint();
+            this.updatePointerCursor(true);
+            this._redisplay();
+            return Clutter.EVENT_STOP;
         } else if (this.currentElement &&
                    (this.currentElement.shape == Shapes.POLYGON || this.currentElement.shape == Shapes.POLYLINE) &&
                    (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == Clutter.KEY_KP_Enter)) {
+            
             this.currentElement.addPoint();
             return Clutter.EVENT_STOP;
-            
-        } else if (event.get_key_symbol() == Clutter.KEY_Escape) {
-            if (this.helper.visible)
-                this.toggleHelp();
-            else
-                this.emit('leave-drawing-mode');
-            return Clutter.EVENT_STOP;
-            
-        } else {
-            return Clutter.EVENT_PROPAGATE;
         }
+        
+        return Clutter.EVENT_PROPAGATE;
     },
     
     _onScroll: function(actor, event) {
@@ -535,15 +533,16 @@ var DrawingArea = new Lang.Class({
             this.grabbedElement = copy;
         }
         
+        let undoable = !duplicate;
+        
         if (this.currentTool == Manipulations.MOVE)
-            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.ROTATION : Transformations.TRANSLATION);
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.ROTATION : Transformations.TRANSLATION, undoable);
         else if (this.currentTool == Manipulations.RESIZE)
-            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.STRETCH : Transformations.SCALE_PRESERVE);
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.STRETCH : Transformations.SCALE_PRESERVE, undoable);
          else if (this.currentTool == Manipulations.MIRROR) {
-            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.INVERSION : Transformations.REFLECTION);
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.INVERSION : Transformations.REFLECTION, undoable);
             this._redisplay();
         }
-        
         
         this.motionHandler = this.connect('motion-event', (actor, event) => {
             if (this.spaceKeyPressed)
@@ -559,28 +558,30 @@ var DrawingArea = new Lang.Class({
     },
     
     _updateTransforming: function(x, y, controlPressed) {
+        let undoable = this.grabbedElement.lastTransformation.undoable || false;
+        
         if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.TRANSLATION) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.ROTATION);
+            this.grabbedElement.startTransformation(x, y, Transformations.ROTATION, undoable);
         } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.ROTATION) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.TRANSLATION);
+            this.grabbedElement.startTransformation(x, y, Transformations.TRANSLATION, undoable);
         }
         
         if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.SCALE_PRESERVE) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.STRETCH);
+            this.grabbedElement.startTransformation(x, y, Transformations.STRETCH, undoable);
         } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.STRETCH) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.SCALE_PRESERVE);
+            this.grabbedElement.startTransformation(x, y, Transformations.SCALE_PRESERVE, undoable);
         }
         
         if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.REFLECTION) {
             this.grabbedElement.transformations.pop();
-            this.grabbedElement.startTransformation(x, y, Transformations.INVERSION);
+            this.grabbedElement.startTransformation(x, y, Transformations.INVERSION, undoable);
         } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.INVERSION) {
             this.grabbedElement.transformations.pop();
-            this.grabbedElement.startTransformation(x, y, Transformations.REFLECTION);
+            this.grabbedElement.startTransformation(x, y, Transformations.REFLECTION, undoable);
         }
         
         this.grabbedElement.updateTransformation(x, y);
@@ -655,6 +656,11 @@ var DrawingArea = new Lang.Class({
         }
         
         this.motionHandler = this.connect('motion-event', (actor, event) => {
+            if (this.motionTimeout) {
+                GLib.source_remove(this.motionTimeout);
+                this.motionTimeout = null;
+            }
+            
             if (this.spaceKeyPressed)
                 return;
             
@@ -664,6 +670,30 @@ var DrawingArea = new Lang.Class({
                 return;
             let controlPressed = event.has_control_modifier();
             this._updateDrawing(x, y, controlPressed);
+            
+            if (this.currentTool == Shapes.NONE) {
+                let device = event.get_device();
+                let sequence = event.get_event_sequence();
+                
+                // Minimum time between two motion events is about 33 ms.
+                // Add intermediate points to make quick free drawings smoother.
+                this.motionTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, MOTION_TIME, () => {
+                    let [success, coords] = device.get_coords(sequence);
+                    if (!success)
+                        return GLib.SOURCE_CONTINUE;
+                    
+                    let [s, x, y] = this.transform_stage_point(coords.x, coords.y);
+                    if (!s)
+                        return GLib.SOURCE_CONTINUE;
+                    
+                    // Important: do not call this._updateDrawing because the area MUST NOT BE REDISPLAYED at this step.
+                    // It would lead to critical issues (bad performances and shell crashes).
+                    // The area will be redisplayed, including the intermediate points, at the next motion event.
+                    this.currentElement.addIntermediatePoint(x, y, controlPressed);
+                    
+                    return GLib.SOURCE_CONTINUE;
+                });
+            }
         });
     },
     
@@ -678,6 +708,10 @@ var DrawingArea = new Lang.Class({
     },
     
     _stopDrawing: function() {
+        if (this.motionTimeout) {
+            GLib.source_remove(this.motionTimeout);
+            this.motionTimeout = null;
+        }
         if (this.motionHandler) {
             this.disconnect(this.motionHandler);
             this.motionHandler = null;
@@ -872,18 +906,36 @@ var DrawingArea = new Lang.Class({
     deleteLastElement: function() {
         this._stopAll();
         this.elements.pop();
+        
+        if (this.elements.length)
+            this.elements[this.elements.length - 1].resetUndoneTransformations();
+        
         this._redisplay();
     },
     
     undo: function() {
-        if (this.elements.length > 0)
+        if (!this.elements.length)
+            return;
+        
+        let success = this.elements[this.elements.length - 1].undoTransformation();
+        if (!success) {
             this.undoneElements.push(this.elements.pop());
+            if (this.elements.length)
+                this.elements[this.elements.length - 1].resetUndoneTransformations();
+        }
+        
         this._redisplay();
     },
     
     redo: function() {
-        if (this.undoneElements.length > 0)
+        let success = false;
+        
+        if (this.elements.length)
+            success = this.elements[this.elements.length - 1].redoTransformation();
+            
+        if (!success && this.undoneElements.length > 0)
             this.elements.push(this.undoneElements.pop());
+        
         this._redisplay();
     },
     
@@ -1130,6 +1182,21 @@ var DrawingArea = new Lang.Class({
             this.toggleHelp();
         if (this.textEntry && this.reactive)
             this.textEntry.grab_key_focus();
+        
+        if (this.reactive) {
+            this.stageKeyPressedHandler = global.stage.connect('key-press-event', this._onStageKeyPressed.bind(this));
+            this.stageKeyReleasedHandler = global.stage.connect('key-release-event', this._onStageKeyReleased.bind(this));
+        } else {
+            if (this.stageKeyPressedHandler) {
+                global.stage.disconnect(this.stageKeyPressedHandler);
+                this.stageKeyPressedHandler = null;
+            }
+            if (this.stageKeyReleasedHandler) {
+                global.stage.disconnect(this.stageKeyReleasedHandler);
+                this.stageKeyReleasedHandler = null;
+            }
+            this.spaceKeyPressed = false;
+        }
     },
     
     _onDestroy: function() {
@@ -1144,8 +1211,6 @@ var DrawingArea = new Lang.Class({
     },
     
     enterDrawingMode: function() {
-        this.stageKeyPressedHandler = global.stage.connect('key-press-event', this._onStageKeyPressed.bind(this));
-        this.stageKeyReleasedHandler = global.stage.connect('key-release-event', this._onStageKeyReleased.bind(this));
         this.keyPressedHandler = this.connect('key-press-event', this._onKeyPressed.bind(this));
         this.buttonPressedHandler = this.connect('button-press-event', this._onButtonPressed.bind(this));
         this.keyboardPopupMenuHandler = this.connect('popup-menu', this._onKeyboardPopupMenu.bind(this));
@@ -1154,14 +1219,6 @@ var DrawingArea = new Lang.Class({
     },
     
     leaveDrawingMode: function(save, erase) {
-        if (this.stageKeyPressedHandler) {
-            global.stage.disconnect(this.stageKeyPressedHandler);
-            this.stageKeyPressedHandler = null;
-        }
-        if (this.stageKeyReleasedHandler) {
-            global.stage.disconnect(this.stageKeyReleasedHandler);
-            this.stageKeyReleasedHandler = null;
-        }
         if (this.keyPressedHandler) {
             this.disconnect(this.keyPressedHandler);
             this.keyPressedHandler = null;

@@ -28,9 +28,10 @@ const Pango = imports.gi.Pango;
 const PangoCairo = imports.gi.PangoCairo;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
 var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
-var Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5 };
+var Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5, SMOOTH: 100 };
 
 var getAllFontFamilies = function() {
     return PangoCairo.font_map_get_default().list_families().map(fontFamily => fontFamily.get_name()).sort((a,b) => a.localeCompare(b));
@@ -61,6 +62,7 @@ const MIN_REFLECTION_LINE_LENGTH = 10;      // px
 const MIN_TRANSLATION_DISTANCE = 1;         // px
 const MIN_ROTATION_ANGLE = Math.PI / 1000;  // rad
 const MIN_DRAWING_SIZE = 3;                 // px
+const MIN_INTERMEDIATE_POINT_DISTANCE = 1;  // px, the higher it is, the fewer points there will be
 
 var DrawingElement = function(params) {
     return params.shape == Shapes.TEXT ? new TextElement(params) :
@@ -72,7 +74,7 @@ var DrawingElement = function(params) {
 // It can be converted into a cairo path as well as a svg element.
 // See DrawingArea._startDrawing() to know its params.
 const _DrawingElement = new Lang.Class({
-    Name: `${Me.uuid}.DrawingElement`,
+    Name: `${UUID}-DrawingElement`,
     
     _init: function(params) {
         for (let key in params)
@@ -121,7 +123,8 @@ const _DrawingElement = new Lang.Class({
             fill: this.fill,
             fillRule: this.fillRule,
             eraser: this.eraser,
-            transformations: this.transformations,
+            transformations: this.transformations.filter(transformation => transformation.type != Transformations.SMOOTH)
+                                                 .map(transformation => Object.assign({}, transformation, { undoable: undefined })),
             points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
         };
     },
@@ -400,9 +403,19 @@ const _DrawingElement = new Lang.Class({
     },
     
     smoothAll: function() {
-        for (let i = 0; i < this.points.length; i++) {
+        let oldPoints = this.points.slice();
+        
+        for (let i = 0; i < this.points.length; i++)
             this._smooth(i);
-        }
+        
+        let newPoints = this.points.slice();
+        
+        this.transformations.push({ type: Transformations.SMOOTH, undoable: true,
+                                    undo: () => this.points = oldPoints,
+                                    redo: () => this.points = newPoints });
+        
+        if (this._undoneTransformations)
+            this._undoneTransformations = this._undoneTransformations.filter(transformation => transformation.type != Transformations.SMOOTH);
     },
     
     addPoint: function() {
@@ -419,6 +432,17 @@ const _DrawingElement = new Lang.Class({
                 this.points[2] = this.points[1];
             }
         }
+    },
+    
+    // For free drawing only.
+    addIntermediatePoint: function(x, y, transform) {
+        let points = this.points;
+        if (getNearness(points[points.length - 1], [x, y], MIN_INTERMEDIATE_POINT_DISTANCE))
+            return;
+        
+        points.push([x, y]);
+        if (transform)
+            this._smooth(points.length - 1);
     },
     
     startDrawing: function(startX, startY) {
@@ -480,18 +504,18 @@ const _DrawingElement = new Lang.Class({
             this.transformations.shift();
     },
     
-    startTransformation: function(startX, startY, type) {
+    startTransformation: function(startX, startY, type, undoable) {
         if (type == Transformations.TRANSLATION)
-            this.transformations.push({ startX: startX, startY: startY, type: type, slideX: 0, slideY: 0 });
+            this.transformations.push({ startX, startY, type, undoable, slideX: 0, slideY: 0 });
         else if (type == Transformations.ROTATION)
-            this.transformations.push({ startX: startX, startY: startY, type: type, angle: 0 });
+            this.transformations.push({ startX, startY, type, undoable, angle: 0 });
         else if (type == Transformations.SCALE_PRESERVE || type == Transformations.STRETCH)
-            this.transformations.push({ startX: startX, startY: startY, type: type, scaleX: 1, scaleY: 1, angle: 0 });
+            this.transformations.push({ startX, startY, type, undoable, scaleX: 1, scaleY: 1, angle: 0 });
         else if (type == Transformations.REFLECTION)
-            this.transformations.push({ startX: startX, startY: startY, endX: startX, endY: startY, type: type,
+            this.transformations.push({ startX, startY, endX: startX, endY: startY, type, undoable,
                                         scaleX:  1, scaleY:  1, slideX: 0, slideY: 0, angle: 0 });
         else if (type == Transformations.INVERSION)
-            this.transformations.push({ startX: startX, startY: startY, endX: startX, endY: startY, type: type,
+            this.transformations.push({ startX, startY, endX: startX, endY: startY, type, undoable,
                                         scaleX: -1, scaleY: -1, slideX: startX, slideY: startY,
                                         angle: Math.PI + Math.atan(startY / (startX || 1)) });
         
@@ -573,6 +597,52 @@ const _DrawingElement = new Lang.Class({
         }
     },
     
+    undoTransformation: function() {
+        if (this.transformations && this.transformations.length) {
+            // Do not undo initial transformations (transformations made during the drawing step).
+            if (!this.lastTransformation.undoable)
+                return false;
+            
+            if (!this._undoneTransformations)
+                this._undoneTransformations = [];
+            
+            let transformation = this.transformations.pop();
+            if (transformation.type == Transformations.SMOOTH)
+                transformation.undo();
+            
+            this._undoneTransformations.push(transformation);
+            
+            return true;
+        }
+        
+        return false;
+    },
+    
+    redoTransformation: function() {
+        if (this._undoneTransformations && this._undoneTransformations.length) {
+            if (!this.transformations)
+                this.transformations = [];
+            
+            let transformation = this._undoneTransformations.pop();
+            if (transformation.type == Transformations.SMOOTH)
+                transformation.redo();
+            
+            this.transformations.push(transformation);
+            
+            return true;
+        }
+        
+        return false;
+    },
+    
+    resetUndoneTransformations: function() {
+        delete this._undoneTransformations;
+    },
+    
+    get canUndo() {
+        return this._undoneTransformations && this._undoneTransformations.length ? true : false;
+    },
+    
     // The figure rotation center before transformations (original).
     // this.textWidth is computed during Cairo building.
     _getOriginalCenter: function() {
@@ -626,7 +696,7 @@ const _DrawingElement = new Lang.Class({
 });
 
 const TextElement = new Lang.Class({
-    Name: `${Me.uuid}.TextElement`,
+    Name: `${UUID}-TextElement`,
     Extends: _DrawingElement,
     
     toJSON: function() {
@@ -766,7 +836,7 @@ const TextElement = new Lang.Class({
 });
 
 const ImageElement = new Lang.Class({
-    Name: `${Me.uuid}.ImageElement`,
+    Name: `${UUID}-ImageElement`,
     Extends: _DrawingElement,
     
     toJSON: function() {

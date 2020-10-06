@@ -40,11 +40,12 @@ const Tweener = GS_VERSION < '3.33.0' ? imports.ui.tweener : null;
 const HELPER_ANIMATION_TIME = 0.25;
 const MEDIA_KEYS_SCHEMA = 'org.gnome.settings-daemon.plugins.media-keys';
 const MEDIA_KEYS_KEYS = ['screenshot', 'screenshot-clip', 'area-screenshot', 'area-screenshot-clip'];
+const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
 // DrawingHelper provides the "help osd" (Ctrl + F1)
 // It uses the same texts as in prefs
 var DrawingHelper = new Lang.Class({
-    Name: `${Me.uuid}.DrawingHelper`,
+    Name: `${UUID}-DrawingHelper`,
     Extends: St.ScrollView,
     
     _init: function(params, monitor) {

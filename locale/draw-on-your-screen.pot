@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2020-09-19 15:32+0200\n"
+"POT-Creation-Date: 2020-10-04 22:45+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -263,12 +263,6 @@ msgstr ""
 
 msgctxt "drawing-tool"
 msgid "Mirror"
-msgstr ""
-
-msgid "Undo"
-msgstr ""
-
-msgid "Redo"
 msgstr ""
 
 msgid "Erase"
@@ -586,7 +580,7 @@ msgstr ""
 msgid "Add images from the clipboard"
 msgstr ""
 
-msgid "Redo last brushstroke"
+msgid "Redo"
 msgstr ""
 
 msgid "Save drawing"
@@ -710,5 +704,5 @@ msgstr ""
 msgid "Square drawing area"
 msgstr ""
 
-msgid "Undo last brushstroke"
+msgid "Undo"
 msgstr ""

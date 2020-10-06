@@ -170,7 +170,7 @@
     </key>
     <key type="as" name="redo">
       <default>["&lt;Primary&gt;&lt;Shift&gt;z"]</default>
-      <summary>Redo last brushstroke</summary>
+      <summary>Redo</summary>
     </key>
     <key type="as" name="save-as-json">
       <default>["&lt;Primary&gt;s"]</default>
@@ -340,7 +340,7 @@
     </key>
     <key type="as" name="undo">
       <default>["&lt;Primary&gt;z"]</default>
-      <summary>Undo last brushstroke</summary>
+      <summary>Undo</summary>
     </key>
   </schema>
 </schemalist>
