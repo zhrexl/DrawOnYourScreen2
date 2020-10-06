@@ -1,3 +1,10 @@
+v8.1 - October 2020
+===================
+
+* Fix unsanitized GType names #46
+* Quick free drawings are smoother #45
+* Transformations are undoable/redoable
+
 v8 - September 2020
 ===================
 
