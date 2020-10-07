@@ -1,0 +1,733 @@
+# <language> translations for Draw On Your Screen.
+# Copyright (C) 2019 Listed translators
+#
+# This file is distributed under the same license as Draw On Your Screen.
+# Onno Giesmann <nutzer3105@gmail.com>, 2020.
+#
+# Some words refer to SVG attributes (font, line, fill rule ...).
+# You are free to translate them or not.
+msgid ""
+msgstr ""
+"Project-Id-Version: Draw On Your Screen\n"
+"Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/"
+"issues\n"
+"POT-Creation-Date: 2020-09-19 15:32+0200\n"
+"PO-Revision-Date: 2020-10-04 14:33+0200\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.4.1\n"
+"Last-Translator: Onno Giesmann <nutzer3105@gmail.com>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: de\n"
+
+#. Translators: %s is a key label
+#, javascript-format
+msgid ""
+"Press <i>%s</i> to get\n"
+"a fourth control point"
+msgstr ""
+"<i>%s</i> drücken, um einen\n"
+"vierten Kontrollpunkt zu erhalten"
+
+msgid "Mark a point of symmetry"
+msgstr "Symmetriepunkt markieren"
+
+msgid "Draw a line of symmetry"
+msgstr "Symmetrielinie zeichnen"
+
+#. Translators: initial content of the text area
+msgctxt "text-area-content"
+msgid "Text"
+msgstr "Text"
+
+#. Translators: %s is a key label
+#, javascript-format
+msgid "Press <i>%s</i> to mark vertices"
+msgstr ""
+"<i>%s</i> drücken, um\n"
+"Scheitelpunkte zu markieren"
+
+#. Translators: %s is a key label
+#, javascript-format
+msgid "Type your text and press <i>%s</i>"
+msgstr ""
+"Text eingeben\n"
+"Danach <i>%s</i> drücken"
+
+#. Translators: It is displayed in an OSD notification to ask the user to start picking, so it should use the imperative mood.
+msgctxt "osd-notification"
+msgid "Pick a color"
+msgstr "Wählen Sie eine Farbe"
+
+#. Translators: "released" as the opposite of "grabbed"
+msgid "Keyboard and pointer released"
+msgstr "Tastatur und Zeiger losgelöst"
+
+msgid "Keyboard and pointer grabbed"
+msgstr "Tastatur und Zeiger gekoppelt"
+
+msgid "Leaving drawing mode"
+msgstr "Verlasse Zeichnungsmodus"
+
+#. Translators: %s is a key label
+#, javascript-format
+msgid "Press <i>%s</i> for help"
+msgstr "Für Hilfe <i>%s</i> drücken"
+
+msgid "Entering drawing mode"
+msgstr "Beginne Zeichnungsmodus"
+
+msgid "Global"
+msgstr "Global"
+
+msgid "Internal"
+msgstr "Intern"
+
+msgid "System"
+msgstr "System"
+
+msgid "Dashed line"
+msgstr "Gestrichelte Linie"
+
+#. Translators: as the alternative to "Dashed line"
+msgid "Full line"
+msgstr "Volle Linie"
+
+msgid "Fill"
+msgstr "Füllen"
+
+#. Translators: as the alternative to "Fill"
+msgid "Outline"
+msgstr "Außenlinie"
+
+#. Translators: fill-rule SVG attribute
+msgid "Nonzero"
+msgstr "Nonzero"
+
+msgid "Evenodd"
+msgstr "Evenodd"
+
+#. Translators: generic font-family SVG attribute
+msgctxt "font-family"
+msgid "Sans-Serif"
+msgstr "Sans-Serif"
+
+msgctxt "font-family"
+msgid "Serif"
+msgstr "Serif"
+
+msgctxt "font-family"
+msgid "Monospace"
+msgstr "Monospace"
+
+msgctxt "font-family"
+msgid "Cursive"
+msgstr "Cursive"
+
+msgctxt "font-family"
+msgid "Fantasy"
+msgstr "Fantasy"
+
+#. Translators: font-style SVG attribute
+msgctxt "font-style"
+msgid "Normal"
+msgstr "Normal"
+
+msgctxt "font-style"
+msgid "Oblique"
+msgstr "Schräg"
+
+msgctxt "font-style"
+msgid "Italic"
+msgstr "Kursiv"
+
+#. Translators: font-weight SVG attribute
+msgctxt "font-weight"
+msgid "Thin"
+msgstr "Fein"
+
+msgctxt "font-weight"
+msgid "Ultra Light"
+msgstr "Ultraleicht"
+
+msgctxt "font-weight"
+msgid "Light"
+msgstr "Leicht"
+
+msgctxt "font-weight"
+msgid "Semi Light"
+msgstr "Halbleicht"
+
+msgctxt "font-weight"
+msgid "Book"
+msgstr "Buch"
+
+msgctxt "font-weight"
+msgid "Normal"
+msgstr "Normal"
+
+msgctxt "font-weight"
+msgid "Medium"
+msgstr "Medium"
+
+msgctxt "font-weight"
+msgid "Semi Bold"
+msgstr "Halbfett"
+
+msgctxt "font-weight"
+msgid "Bold"
+msgstr "Fett"
+
+msgctxt "font-weight"
+msgid "Ultra Bold"
+msgstr "Ultrafett"
+
+msgctxt "font-weight"
+msgid "Heavy"
+msgstr "Kräftig"
+
+msgctxt "font-weight"
+msgid "Ultra Heavy"
+msgstr "Ultrakräftig"
+
+#. Translators: stroke-linecap SVG attribute
+msgctxt "stroke-linecap"
+msgid "Butt"
+msgstr "Rechtwinkeliges Ende"
+
+msgctxt "stroke-linecap"
+msgid "Round"
+msgstr "Ende mit Halbkreis"
+
+msgctxt "stroke-linecap"
+msgid "Square"
+msgstr "Ende mit Rechteck"
+
+#. Translators: stroke-linejoin SVG attribute
+msgctxt "stroke-linejoin"
+msgid "Miter"
+msgstr "Ecken mit Gehrung"
+
+msgctxt "stroke-linejoin"
+msgid "Round"
+msgstr "Abgerundete Ecken"
+
+msgctxt "stroke-linejoin"
+msgid "Bevel"
+msgstr "Abgeschrägte Ecken"
+
+#. Translators: value in pixel unit (e.g. "5 px")
+#, javascript-format
+msgid "%f px"
+msgstr "%f px"
+
+#. Translators: text alignment
+msgid "Right aligned"
+msgstr "Rechtsbündig"
+
+msgid "Left aligned"
+msgstr "Linksbündig"
+
+msgctxt "drawing-tool"
+msgid "Free drawing"
+msgstr "Freies Zeichnen"
+
+msgctxt "drawing-tool"
+msgid "Line"
+msgstr "Linie"
+
+msgctxt "drawing-tool"
+msgid "Ellipse"
+msgstr "Ellipse"
+
+msgctxt "drawing-tool"
+msgid "Rectangle"
+msgstr "Rechteck"
+
+msgctxt "drawing-tool"
+msgid "Text"
+msgstr "Text"
+
+msgctxt "drawing-tool"
+msgid "Polygon"
+msgstr "Vieleck"
+
+msgctxt "drawing-tool"
+msgid "Polyline"
+msgstr "Linienzug"
+
+msgctxt "drawing-tool"
+msgid "Image"
+msgstr "Bild"
+
+msgctxt "drawing-tool"
+msgid "Move"
+msgstr "Verschieben"
+
+msgctxt "drawing-tool"
+msgid "Resize"
+msgstr "Größenänderung"
+
+msgctxt "drawing-tool"
+msgid "Mirror"
+msgstr "Spiegeln"
+
+msgid "Undo"
+msgstr "Rückgängig"
+
+msgid "Redo"
+msgstr "Wiederherstellen"
+
+msgid "Erase"
+msgstr "Entfernen"
+
+msgid "Smooth"
+msgstr "Glätten"
+
+msgid "Open drawing"
+msgstr "Zeichnung öffnen"
+
+msgid "Save drawing as…"
+msgstr "Zeichnung speichern als…"
+
+msgid "Palette"
+msgstr "Farbpalette"
+
+msgid "Color"
+msgstr "Farbe"
+
+#. Translators: It is displayed in a menu button tooltip or as a shortcut action description, so it should NOT use the imperative mood.
+msgid "Pick a color"
+msgstr "Auswählen einer Farbe"
+
+msgid "Add to images"
+msgstr "Zu Bildern hinzufügen"
+
+msgid "Delete"
+msgstr "Löschen"
+
+msgid "Type a name"
+msgstr "Namen eingeben"
+
+#. Translators: "Preferences" page in preferences
+msgid "Preferences"
+msgstr "Einstellungen"
+
+#. Translators: "Drawing" page in preferences
+msgid "Drawing"
+msgstr "Zeichnung"
+
+#. Translators: "About" page in preferences
+msgid "About"
+msgstr "Info"
+
+#. Translators: you are free to translate the extension name, that is displayed in About page, or not
+msgid "Draw On You Screen"
+msgstr "Zeichnungen auf Ihrem Bildschirm"
+
+#. Translators: version number in "About" page
+#, javascript-format
+msgid "Version %f"
+msgstr "Version %f"
+
+#. Translators: you are free to translate the extension description, that is displayed in About page, or not
+msgid ""
+"Start drawing with Super+Alt+D and save your beautiful work by taking a "
+"screenshot"
+msgstr ""
+"Beginnen Sie mit dem Zeichnen durch Drücken von Super+Alt+D.\n"
+"Sie können Ihr Werk danach auch in einem Bildschirmfoto festhalten"
+
+#. Translators: add your name here or keep it empty, it will be displayed in about page, e.g.
+#. msgstr ""
+#. "translator1\n"
+#. "<a href=\"mailto:translator2@mail.org\">translator2</a>\n"
+#. "<a href=\"https://...\">translator3</a>"
+msgid "translator-credits"
+msgstr "Onno Giesmann, Oktober 2020"
+
+msgid "Palettes"
+msgstr "Farbpaletten"
+
+msgid "Add a new palette"
+msgstr "Neue Farbpalette hinzufügen"
+
+msgid "Area"
+msgstr "Bereich"
+
+msgid "Auto"
+msgstr "Auto"
+
+msgid "Grid overlay line"
+msgstr "Gitterlinien anzeigen"
+
+msgid "Tools"
+msgstr "Werkzeuge"
+
+msgid "Dash array"
+msgstr "Strichdichte"
+
+msgid "Reset settings"
+msgstr "Einstellungen zurücksetzen"
+
+msgid "Rename the palette"
+msgstr "Farbpalette umbenennen"
+
+msgid "Remove the palette"
+msgstr "Farbpalette entfernen"
+
+#. Translators: default name of a new palette
+msgid "New palette"
+msgstr "Neue Farbpalette"
+
+msgid "In drawing mode"
+msgstr "Im Zeichnungsmodus"
+
+msgid "Draw"
+msgstr "Zeichnen"
+
+msgid "Left click"
+msgstr "Linksklick"
+
+msgid "Menu"
+msgstr "Menü"
+
+msgid "Right click"
+msgstr "Rechtsklick"
+
+msgid "Center click"
+msgstr "Mittelklick"
+
+msgid "Increment/decrement line width"
+msgstr "Breitere/schwächere Linienstärke"
+
+msgid "Scroll"
+msgstr "Scrollen"
+
+#. Translators: %s are key labels (Ctrl+F1 and Ctrl+F9)
+msgid "Select color"
+msgstr "Farbe wählen"
+
+#, javascript-format
+msgid "%s … %s"
+msgstr "%s … %s"
+
+#. Translators: %s is a key label
+msgid "Ignore pointer movement"
+msgstr "Zeigerbewegung ignorieren"
+
+#, javascript-format
+msgid "%s held"
+msgstr "%s festhalten"
+
+msgid "Leave"
+msgstr "Beenden"
+
+msgid "Select eraser <span alpha=\"50%\">(while starting drawing)</span>"
+msgstr ""
+"Radierer auswählen <span alpha=\"50%\">(während dem Beginnen mit "
+"Zeichnen)</span>"
+
+msgid "Duplicate <span alpha=\"50%\">(while starting handling)</span>"
+msgstr ""
+"Duplizieren <span alpha=\"50%\">(beim Starten der Handhabung)</span>"
+
+msgid "Rotate rectangle, polygon, polyline"
+msgstr "Drehen von Rechteck, Vieleck, Linienzug"
+
+msgid "Extend circle to ellipse"
+msgstr "Kreis zur Ellipse erweitern"
+
+msgid "Curve line"
+msgstr "Kurvenlinie"
+
+msgid "Smooth free drawing outline"
+msgstr "Glatte freie Zeichnungskontur"
+
+msgid "Do not preserve image ratio"
+msgstr "Bildverhältnis nicht beibehalten"
+
+msgid "Rotate <span alpha=\"50%\">(while moving)</span>"
+msgstr "Drehen <span alpha=\"50%\">(während der Bewegung)</span>"
+
+msgid "Stretch <span alpha=\"50%\">(while resizing)</span>"
+msgstr "Dehnen <span alpha=\"50%\">(während der Veränderung)</span>"
+
+msgid "Inverse <span alpha=\"50%\">(while mirroring)</span>"
+msgstr "Umkehren <span alpha=\"50%\">(während dem Spiegeln)</span>"
+
+msgid "Drawing on the desktop"
+msgstr "Zeichnen auf dem Schreibtisch"
+
+msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
+msgstr ""
+"<i>Zeichnungen auf Ihrem Bildschirm</i> wird zu <i>Zeichnungen auf "
+"Ihrem Schreibtisch</i>"
+
+msgid "Erase all drawings"
+msgstr "Alle Zeichnungen löschen"
+
+msgid "Disable panel indicator"
+msgstr "Symbol in der Leiste deaktivieren"
+
+msgid "Disable on-screen notifications"
+msgstr "Meldungen auf dem Bildschirm abschalten"
+
+msgid "Persistent over toggles"
+msgstr "Nach Umschalten beibehalten"
+
+msgid "Drawing remains when toggling drawing mode"
+msgstr ""
+"Die Zeichnung bleibt erhalten, wenn der Zeichnungsmodus an- oder "
+"ausgeschaltet wird"
+
+msgid "Persistent over restarts"
+msgstr "Nach Neustarts beibehalten"
+
+msgid "Drawing is automatically saved to a file"
+msgstr "Die Zeichnung wird automatisch in eine Datei gespeichert"
+
+msgid "Enter/leave drawing mode"
+msgstr "Zeichnungsmodus starten/beenden"
+
+#. Translators: there is a similar text in GNOME Boxes (https://gitlab.gnome.org/GNOME/gnome-boxes/tree/master/po)
+msgid "Grab/ungrab keyboard and pointer"
+msgstr "Tastatur und Zeiger ankoppeln/loslösen"
+
+msgid "Background color"
+msgstr "Hintergrundfarbe"
+
+msgid "The color of the drawing area background"
+msgstr "Hintergrundfarbe der Zeichenfläche"
+
+msgid "Automatic dash array"
+msgstr "Automatische Strichdichte"
+
+msgid "Compute the lengths from the line width"
+msgstr "Längen aus der Linienbreite berechnen"
+
+msgid "Dash array on"
+msgstr "Strichdichte aktiv"
+
+msgid "The dash length in pixels"
+msgstr "Strichlänge in Pixel"
+
+msgid "Dash array off"
+msgstr "Strichdichte nicht aktiv"
+
+msgid "The gap between the dashes in pixels"
+msgstr "Abstand zwischen den Strichen (in Pixel)"
+
+msgid "Dash offset"
+msgstr "Strich-Versatz"
+
+msgid "The dash offset in pixels"
+msgstr "Versatz der Striche (in Pixel)"
+
+msgid "Grid overlay color"
+msgstr "Farbe der Gitterlinien"
+
+msgid "The color of the lines"
+msgstr "Die Farbe der Linien"
+
+msgid "Automatic grid overlay line"
+msgstr "Automatische Gitternetzlinien"
+
+msgid "Compute the lengths from the screen size"
+msgstr "Längen aus der Bildschirmgröße berechnen"
+
+msgid "Grid overlay line spacing"
+msgstr "Freiraum zwischen den Gitternetzlinien"
+
+msgid "The gap between lines in pixels"
+msgstr "Abstand zwischen den Linien (in Pixel)"
+
+msgid "Grid overlay line width"
+msgstr "Stärke der Gitternetzlinien"
+
+msgid "The line width in pixels"
+msgstr "Linienbreite in Pixel"
+
+msgid "Image location"
+msgstr "Ort der Bilder"
+
+msgid "The location of the directory in which the image tool picks"
+msgstr ""
+"Verzeichnis mit Bildern, die für das Werkzeug \"Bild\" verwendet werden"
+
+msgid "Color palettes"
+msgstr "Farbpaletten"
+
+msgid "The palettes of drawing colors"
+msgstr "Paletten mit Zeichenfarben"
+
+msgid "Automatic square area size"
+msgstr "Automatische Flächengröße des Rechtecks"
+
+msgid "Compute the area size from the screen size"
+msgstr "Flächengröße anhand der Bildschirmgröße berechnen"
+
+msgid "Square area size"
+msgstr "Rechteck-Flächengröße"
+
+msgid "The size of the area in pixels"
+msgstr "Größe der Fläche (in Pixel)"
+
+msgid "Decrement line width"
+msgstr "Linienstärke verringern"
+
+msgid "Decrement line width even more"
+msgstr "Linienstärke noch mehr verringern"
+
+msgid "Erase last brushstroke"
+msgstr "Letzten Pinselstrich entfernen"
+
+msgid "Export drawing to a SVG file"
+msgstr "Zeichnung als SVG-Datei exportieren"
+
+msgid "Increment line width"
+msgstr "Linienstärke erhöhen"
+
+msgid "Increment line width even more"
+msgstr "Linienstärke noch mehr erhöhen"
+
+msgid "Open next drawing"
+msgstr "Nächste Zeichnung öffnen"
+
+msgid "Open preferences"
+msgstr "Einstellungen öffnen"
+
+msgid "Open previous drawing"
+msgstr "Vorige Zeichnung öffnen"
+
+msgid "Add images from the clipboard"
+msgstr "Bilder aus der Zwischenablage einfügen"
+
+msgid "Redo last brushstroke"
+msgstr "Letzten Pinselstrich wiederherstellen"
+
+msgid "Save drawing"
+msgstr "Zeichnung speichern"
+
+msgid "Select color 1"
+msgstr "Farbe 1 auswählen"
+
+msgid "Select color 2"
+msgstr "Farbe 2 auswählen"
+
+msgid "Select color 3"
+msgstr "Farbe 3 auswählen"
+
+msgid "Select color 4"
+msgstr "Farbe 4 auswählen"
+
+msgid "Select color 5"
+msgstr "Farbe 5 auswählen"
+
+msgid "Select color 6"
+msgstr "Farbe 6 auswählen"
+
+msgid "Select color 7"
+msgstr "Farbe 7 auswählen"
+
+msgid "Select color 8"
+msgstr "Farbe 8 auswählen"
+
+msgid "Select color 9"
+msgstr "Farbe 9 auswählen"
+
+msgid "Select ellipse tool"
+msgstr "Werkzeug Ellipse auswählen"
+
+msgid "Select image tool"
+msgstr "Werkzeug Bild auswählen"
+
+msgid "Select line tool"
+msgstr "Werkzeug Linie auswählen"
+
+msgid "Select mirror tool"
+msgstr "Werkzeug Spiegeln auswählen"
+
+msgid "Select move tool"
+msgstr "Werkzeug Verschieben auswählen"
+
+msgid "Select free drawing"
+msgstr "Werkzeug Freies Zeichnen auswählen"
+
+msgid "Select polygon tool"
+msgstr "Werkzeug Vieleck auswählen"
+
+msgid "Select polyline tool"
+msgstr "Werkzeug Linienzug auswählen"
+
+msgid "Select rectangle tool"
+msgstr "Werkzeug Rechteck auswählen"
+
+msgid "Select resize tool"
+msgstr "Werkzeug Größenänderung auswählen"
+
+msgid "Select text tool"
+msgstr "Werkzeug Text auswählen"
+
+msgid "Smooth last brushstroke"
+msgstr "Letzten Pinselstrich glätten"
+
+msgid "Change color palette"
+msgstr "Farbpalette wechseln"
+
+msgid "Change color palette (reverse)"
+msgstr "Farbpalette wechseln (rückwärts)"
+
+msgid "Toggle fill/outline"
+msgstr "Füllen/Außenlinie umschalten"
+
+msgid "Toggle fill rule"
+msgstr "Füll-Regel umschalten"
+
+msgid "Change font family"
+msgstr "Schriftenfamilie ändern"
+
+msgid "Change font family (reverse)"
+msgstr "Schriftenfamilie ändern (rückwärts)"
+
+msgid "Change font style"
+msgstr "Schriftart ändern"
+
+msgid "Change font weight"
+msgstr "Schriftgröße ändern"
+
+msgid "Change image"
+msgstr "Bild ändern"
+
+msgid "Change image (reverse)"
+msgstr "Bild ändern (rückwärts)"
+
+msgid "Change linecap"
+msgstr "Linien-Kappenstil ändern"
+
+msgid "Change linejoin"
+msgstr "Linienverbindung ändern"
+
+msgid "Toggle text alignment"
+msgstr "Textausrichtung umschalten"
+
+msgid "Add a drawing background"
+msgstr "Zeichnungshintergrund hinzufügen"
+
+msgid "Add a grid overlay"
+msgstr "Gitternetz hinzufügen"
+
+msgid "Show help"
+msgstr "Hilfe anzeigen"
+
+msgid "Hide panel and dock"
+msgstr "Leiste und Dock ausblenden"
+
+#. Translators: It is an action: "Make the drawing area a square"
+msgid "Square drawing area"
+msgstr "Rechteckigen Zeichnungsbereich erstellen"
+
+msgid "Undo last brushstroke"
+msgstr "Letzten Pinselstrich wieder entfernen"
