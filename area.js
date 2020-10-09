@@ -45,8 +45,6 @@ const Menu = Me.imports.menu;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const pgettext = imports.gettext.domain(Me.metadata['gettext-domain']).pgettext;
 
-const CAIRO_DEBUG_EXTENDS = false;
-const SVG_DEBUG_EXTENDS = false;
 const MOTION_TIME = 1; // ms, time accuracy for free drawing, max is about 33 ms. The lower it is, the smoother the drawing is.
 const TEXT_CURSOR_TIME = 600; // ms
 const ELEMENT_GRABBER_TIME = 80; // ms, default is about 16 ms
@@ -312,11 +310,6 @@ var DrawingArea = new Lang.Class({
     },
     
     _repaintBack: function(cr) {
-        if (CAIRO_DEBUG_EXTENDS) {
-            cr.scale(0.5, 0.5);
-            cr.translate(this.monitor.width, this.monitor.height);
-        }
-        
         for (let i = 0; i < this.elements.length; i++) {
             cr.save();
             
@@ -1341,16 +1334,9 @@ var DrawingArea = new Lang.Class({
         if (this.elements.some(element => element.shape == Shapes.IMAGE))
             prefixes += ' xmlns:xlink="http://www.w3.org/1999/xlink"';
         let content = `<svg viewBox="0 0 ${this.width} ${this.height}" ${prefixes}>`;
-        if (SVG_DEBUG_EXTENDS)
-            content = `<svg viewBox="${-this.width} ${-this.height} ${2 * this.width} ${2 * this.height}" xmlns="http://www.w3.org/2000/svg">`;
         let backgroundColorString = this.hasBackground ? String(this.areaBackgroundColor) : 'transparent';
-        if (backgroundColorString != 'transparent') {
+        if (backgroundColorString != 'transparent')
             content += `\n  <rect id="background" width="100%" height="100%" fill="${backgroundColorString}"/>`;
-        }
-        if (SVG_DEBUG_EXTENDS) {
-            content += `\n  <line stroke="black" x1="0" y1="${-this.height}" x2="0" y2="${this.height}"/>`;
-            content += `\n  <line stroke="black" x1="${-this.width}" y1="0" x2="${this.width}" y2="0"/>`;
-        }
         this.elements.forEach(element => content += element.buildSVG(backgroundColorString));
         content += "\n</svg>";
         
