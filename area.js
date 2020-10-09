@@ -884,8 +884,12 @@ var DrawingArea = new Lang.Class({
     // A priori there is nothing to stop, except transformations, if there is no current element.
     // 'force' argument is passed when leaving drawing mode to ensure all is clean, as a workaround for possible bugs.
     _stopAll: function(force) {
-        if (this.grabbedElement)
+        if (this.grabbedElement) {
             this._stopTransforming();
+            this.grabbedElement = null;
+            this.grabbedElementLocked = null;
+            this.updatePointerCursor();
+        }
             
         if (!this.currentElement && !force)
             return;
