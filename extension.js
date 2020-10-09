@@ -131,9 +131,9 @@ const AreaManager = new Lang.Class({
     
     onDesktopSettingChanged: function() {
         if (this.onDesktop)
-            this.areas.forEach(area => area.get_parent().show());
+            this.areas.forEach(area => area.show());
         else
-            this.areas.forEach(area => area.get_parent().hide());
+            this.areas.forEach(area => area.hide());
     },
     
     onPersistentOverRestartsSettingChanged: function() {
@@ -167,19 +167,15 @@ const AreaManager = new Lang.Class({
         
         for (let i = 0; i < this.monitors.length; i++) {
             let monitor = this.monitors[i];
-            let container = new St.Widget({ name: 'drawOnYourSreenContainer' + i });
             let helper = new Helper.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
             let loadPersistent = i == Main.layoutManager.primaryIndex && this.persistentOverRestarts;
             let area = new Area.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, loadPersistent);
-            container.add_child(area);
-            container.add_child(helper);
             
-            Main.layoutManager._backgroundGroup.insert_child_above(container, Main.layoutManager._bgManagers[i].backgroundActor);
+            Main.layoutManager._backgroundGroup.insert_child_above(area, Main.layoutManager._bgManagers[i].backgroundActor);
             if (!this.onDesktop)
-                container.hide();
+                area.hide();
             
-            container.set_position(monitor.x, monitor.y);
-            container.set_size(monitor.width, monitor.height);
+            area.set_position(monitor.x, monitor.y);
             area.set_size(monitor.width, monitor.height);
             area.leaveDrawingHandler = area.connect('leave-drawing-mode', this.toggleDrawing.bind(this));
             area.updateActionModeHandler = area.connect('update-action-mode', this.updateActionMode.bind(this));
@@ -333,25 +329,24 @@ const AreaManager = new Lang.Class({
         }
     },
     
-    toggleContainer: function() {
+    toggleArea: function() {
         if (!this.activeArea)
             return;
         
-        let activeContainer = this.activeArea.get_parent();
         let activeIndex = this.areas.indexOf(this.activeArea);
         
-        if (activeContainer.get_parent() == Main.uiGroup) {
+        if (this.activeArea.get_parent() == Main.uiGroup) {
             Main.uiGroup.set_child_at_index(Main.layoutManager.keyboardBox, this.oldKeyboardIndex);
-            Main.uiGroup.remove_actor(activeContainer);
-            Main.layoutManager._backgroundGroup.insert_child_above(activeContainer, Main.layoutManager._bgManagers[activeIndex].backgroundActor);
+            Main.uiGroup.remove_actor(this.activeArea);
+            Main.layoutManager._backgroundGroup.insert_child_above(this.activeArea, Main.layoutManager._bgManagers[activeIndex].backgroundActor);
             if (!this.onDesktop)
-                activeContainer.hide();
+                this.activeArea.hide();
         } else {
-            Main.layoutManager._backgroundGroup.remove_actor(activeContainer);
-            Main.uiGroup.add_child(activeContainer);
+            Main.layoutManager._backgroundGroup.remove_actor(this.activeArea);
+            Main.uiGroup.add_child(this.activeArea);
             // move the keyboard above the area to make it available with text entries
             this.oldKeyboardIndex = Main.uiGroup.get_children().indexOf(Main.layoutManager.keyboardBox);
-            Main.uiGroup.set_child_above_sibling(Main.layoutManager.keyboardBox, activeContainer);
+            Main.uiGroup.set_child_above_sibling(Main.layoutManager.keyboardBox, this.activeArea);
         }
     },
     
@@ -397,15 +392,15 @@ const AreaManager = new Lang.Class({
             
             if (Main._findModal(this.activeArea) != -1)
                 this.toggleModal();
-            this.toggleContainer();
+            this.toggleArea();
             this.activeArea = null;
         } else {
             // avoid to deal with Meta changes (global.display/global.screen)
             let currentIndex = Main.layoutManager.monitors.indexOf(Main.layoutManager.currentMonitor);
             this.activeArea = this.areas[currentIndex];
-            this.toggleContainer();
+            this.toggleArea();
             if (!this.toggleModal()) {
-                this.toggleContainer();
+                this.toggleArea();
                 this.activeArea = null;
                 return;
             }
@@ -517,9 +512,7 @@ const AreaManager = new Lang.Class({
             area.disconnect(area.leaveDrawingHandler);
             area.disconnect(area.updateActionModeHandler);
             area.disconnect(area.showOsdHandler);
-            let container = area.get_parent();
-            container.get_parent().remove_actor(container);
-            container.destroy();
+            area.destroy();
         }
         this.areas = [];
     },
