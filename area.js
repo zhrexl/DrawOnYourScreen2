@@ -140,6 +140,7 @@ var DrawingArea = new Lang.Class({
         this.foreLayer = new DrawingLayer(this._repaintFore.bind(this), this._getHasImageFore.bind(this));
         this.layerContainer.add_child(this.foreLayer);
         this.gridLayer = new DrawingLayer(this._repaintGrid.bind(this));
+        this.gridLayer.hide();
         this.layerContainer.add_child(this.gridLayer);
         
         this.elements = [];
@@ -157,7 +158,6 @@ var DrawingArea = new Lang.Class({
         this.currentLineCap = Cairo.LineCap.ROUND;
         this.currentFillRule = Cairo.FillRule.WINDING;
         this.isSquareArea = false;
-        this.hasGrid = false;
         this.hasBackground = false;
         this.textHasCursor = false;
         this.dashedLine = false;
@@ -348,7 +348,7 @@ var DrawingArea = new Lang.Class({
     },
     
     _repaintGrid: function(cr) {
-        if (!this.reactive || !this.hasGrid)
+        if (!this.reactive)
             return;
         
         Clutter.cairo_set_source_color(cr, this.gridColor);
@@ -386,7 +386,8 @@ var DrawingArea = new Lang.Class({
         // force area to emit 'repaint'
         this.backLayer.queue_repaint();
         this.foreLayer.queue_repaint();
-        this.gridLayer.queue_repaint();
+        if (this.hasGrid)
+            this.gridLayer.queue_repaint();
     },
     
     _transformStagePoint: function(x, y) {
@@ -1008,9 +1009,13 @@ var DrawingArea = new Lang.Class({
         this.set_background_color(this.hasBackground ? this.areaBackgroundColor : null);
     },
     
+    get hasGrid() {
+        return this.gridLayer.visible;
+    },
+    
     toggleGrid: function() {
-        this.hasGrid = !this.hasGrid;
-        this._redisplay();
+        // The grid layer is repainted when the visibility changes.
+        this.gridLayer.visible = !this.gridLayer.visible;
     },
     
     toggleSquareArea: function() {
