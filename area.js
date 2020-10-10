@@ -328,10 +328,17 @@ var DrawingArea = new Lang.Class({
             cr.stroke();
             cr.restore();
         }
+        
+        if (this.currentElement && this.currentElement.eraser) {
+            this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
+                                                 showTextRectangle: this.currentElement.shape != Shapes.TEXT || !this.isWriting,
+                                                 dummyStroke: this.currentElement.fill && this.currentElement.line.lineWidth == 0 });
+            cr.stroke();
+        }
     },
     
     _repaintFore: function(cr) {
-        if (!this.currentElement)
+        if (!this.currentElement || this.currentElement.eraser)
             return;
         
         this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
@@ -746,8 +753,10 @@ var DrawingArea = new Lang.Class({
         
         this.currentElement.updateDrawing(x, y, controlPressed);
         
-        //this._redisplay();
-        this.foreLayer.queue_repaint();
+        if (this.currentElement.eraser)
+            this._redisplay();
+        else
+            this.foreLayer.queue_repaint();
         this.updatePointerCursor(controlPressed);
     },
     
