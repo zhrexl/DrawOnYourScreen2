@@ -1335,7 +1335,7 @@ var DrawingArea = new Lang.Class({
         };
         
         let getImageSvgContent = () => {
-            return `<svg viewBox="0 0 ${this.width} ${this.height}" ${prefixes}>${elementsContent}\n</svg>`;
+            return `<svg viewBox="0 0 ${this.layerContainer.width} ${this.layerContainer.height}" ${prefixes}>${elementsContent}\n</svg>`;
         };
         
         return [getGiconSvgContent, getImageSvgContent];
@@ -1347,7 +1347,7 @@ var DrawingArea = new Lang.Class({
         let prefixes = 'xmlns="http://www.w3.org/2000/svg"';
         if (this.elements.some(element => element.shape == Shapes.IMAGE))
             prefixes += ' xmlns:xlink="http://www.w3.org/1999/xlink"';
-        let content = `<svg viewBox="0 0 ${this.width} ${this.height}" ${prefixes}>`;
+        let content = `<svg viewBox="0 0 ${this.layerContainer.width} ${this.layerContainer.height}" ${prefixes}>`;
         let backgroundColorString = this.hasBackground ? String(this.areaBackgroundColor) : 'transparent';
         if (backgroundColorString != 'transparent')
             content += `\n  <rect id="background" width="100%" height="100%" fill="${backgroundColorString}"/>`;
