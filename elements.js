@@ -577,11 +577,12 @@ const _DrawingElement = new Lang.Class({
     },
     
     stopTransformation: function() {
+        this.showSymmetryElement = false;
+        
         // Clean transformations
         let transformation = this.lastTransformation;
-        
-        if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION)
-            this.showSymmetryElement = false;
+        if (!transformation)
+            return;
         
         if (transformation.type == Transformations.REFLECTION &&
                 getNearness([transformation.startX, transformation.startY], [transformation.endX, transformation.endY], MIN_REFLECTION_LINE_LENGTH) ||

@@ -45,8 +45,6 @@ const Menu = Me.imports.menu;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const pgettext = imports.gettext.domain(Me.metadata['gettext-domain']).pgettext;
 
-const CAIRO_DEBUG_EXTENDS = false;
-const SVG_DEBUG_EXTENDS = false;
 const MOTION_TIME = 1; // ms, time accuracy for free drawing, max is about 33 ms. The lower it is, the smoother the drawing is.
 const TEXT_CURSOR_TIME = 600; // ms
 const ELEMENT_GRABBER_TIME = 80; // ms, default is about 16 ms
@@ -83,12 +81,47 @@ const getColorFromString = function(string, fallback) {
     return color;
 };
 
-// DrawingArea is the widget in which we draw, thanks to Cairo.
-// It creates and manages a DrawingElement for each "brushstroke".
+// Drawing layers are the proper drawing area widgets (painted thanks to Cairo).
+const DrawingLayer = new Lang.Class({
+    Name: `${UUID}-DrawingLayer`,
+    Extends: St.DrawingArea,
+
+    _init: function(repaintFunction, getHasImageFunction) {
+        this._repaint = repaintFunction;
+        this._getHasImage = getHasImageFunction || (() => false);
+        this.parent();
+    },
+    
+    // Bind the size of layers and layer container.
+    vfunc_parent_set: function() {
+        this.clear_constraints();
+        
+        if (this.get_parent())
+            this.add_constraint(new Clutter.BindConstraint({ coordinate: Clutter.BindCoordinate.SIZE, source: this.get_parent() }));
+    },
+    
+    vfunc_repaint: function() {
+        let cr = this.get_context();
+        
+        try {
+            this._repaint(cr);
+        } catch(e) {
+            logError(e, "An error occured while painting");
+        }
+        
+        cr.$dispose();
+        if (this._getHasImage())
+            System.gc();
+    }
+});
+
+// Darwing area is a container that manages drawing elements and drawing layers.
+// There is a drawing element for each "brushstroke".
+// There is a separated layer for the current element so only the current element is redisplayed when drawing.
 // It handles pointer/mouse/(touch?) events and some keyboard events.
 var DrawingArea = new Lang.Class({
     Name: `${UUID}-DrawingArea`,
-    Extends: St.DrawingArea,
+    Extends: St.Widget,
     Signals: { 'show-osd': { param_types: [Gio.Icon.$gtype, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
                'update-action-mode': {},
                'leave-drawing-mode': {} },
@@ -97,6 +130,18 @@ var DrawingArea = new Lang.Class({
         this.parent({ style_class: 'draw-on-your-screen', name: params.name});
         this.monitor = monitor;
         this.helper = helper;
+        
+        this.layerContainer = new St.Widget({ width: monitor.width, height: monitor.height });
+        this.add_child(this.layerContainer);
+        this.add_child(this.helper);
+        
+        this.backLayer = new DrawingLayer(this._repaintBack.bind(this), this._getHasImageBack.bind(this));
+        this.layerContainer.add_child(this.backLayer);
+        this.foreLayer = new DrawingLayer(this._repaintFore.bind(this), this._getHasImageFore.bind(this));
+        this.layerContainer.add_child(this.foreLayer);
+        this.gridLayer = new DrawingLayer(this._repaintGrid.bind(this));
+        this.gridLayer.hide();
+        this.layerContainer.add_child(this.gridLayer);
         
         this.elements = [];
         this.undoneElements = [];
@@ -113,7 +158,6 @@ var DrawingArea = new Lang.Class({
         this.currentLineCap = Cairo.LineCap.ROUND;
         this.currentFillRule = Cairo.FillRule.WINDING;
         this.isSquareArea = false;
-        this.hasGrid = false;
         this.hasBackground = false;
         this.textHasCursor = false;
         this.dashedLine = false;
@@ -225,25 +269,6 @@ var DrawingArea = new Lang.Class({
         return this._fontFamilies;
     },
     
-    vfunc_repaint: function() {
-        let cr = this.get_context();
-        
-        try {
-            this._repaint(cr);
-        } catch(e) {
-            logError(e, "An error occured while painting");
-        }
-        
-        cr.$dispose();
-        if (this.elements.some(element => element.shape == Shapes.IMAGE) || this.currentElement && this.currentElement.shape == Shapes.IMAGE)
-            System.gc();
-    },
-    
-    _redisplay: function() {
-        // force area to emit 'repaint'
-        this.queue_repaint();
-    },
-    
     _onDrawingSettingsChanged: function() {
         this.palettes = Me.drawingSettings.get_value('palettes').deep_unpack();
         if (!this.colors) {
@@ -284,12 +309,7 @@ var DrawingArea = new Lang.Class({
         }
     },
     
-    _repaint: function(cr) {
-        if (CAIRO_DEBUG_EXTENDS) {
-            cr.scale(0.5, 0.5);
-            cr.translate(this.monitor.width, this.monitor.height);
-        }
-        
+    _repaintBack: function(cr) {
         for (let i = 0; i < this.elements.length; i++) {
             cr.save();
             
@@ -309,41 +329,72 @@ var DrawingArea = new Lang.Class({
             cr.restore();
         }
         
-        if (this.currentElement) {
-            cr.save();
+        if (this.currentElement && this.currentElement.eraser) {
             this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
                                                  showTextRectangle: this.currentElement.shape != Shapes.TEXT || !this.isWriting,
                                                  dummyStroke: this.currentElement.fill && this.currentElement.line.lineWidth == 0 });
-            
             cr.stroke();
-            cr.restore();
         }
+    },
+    
+    _repaintFore: function(cr) {
+        if (!this.currentElement || this.currentElement.eraser)
+            return;
         
-        if (this.reactive && this.hasGrid) {
-            cr.save();
-            Clutter.cairo_set_source_color(cr, this.gridColor);
-            
-            let [gridX, gridY] = [0, 0];
-            while (gridX < this.monitor.width / 2) {
-                cr.setLineWidth((gridX / this.gridLineSpacing) % 5 ? this.gridLineWidth / 2 : this.gridLineWidth);
-                cr.moveTo(this.monitor.width / 2 + gridX, 0);
-                cr.lineTo(this.monitor.width / 2 + gridX, this.monitor.height);
-                cr.moveTo(this.monitor.width / 2 - gridX, 0);
-                cr.lineTo(this.monitor.width / 2 - gridX, this.monitor.height);
-                gridX += this.gridLineSpacing;
-                cr.stroke();
-            }
-            while (gridY < this.monitor.height / 2) {
-                cr.setLineWidth((gridY / this.gridLineSpacing) % 5 ? this.gridLineWidth / 2 : this.gridLineWidth);
-                cr.moveTo(0, this.monitor.height / 2 + gridY);
-                cr.lineTo(this.monitor.width, this.monitor.height / 2 + gridY);
-                cr.moveTo(0, this.monitor.height / 2 - gridY);
-                cr.lineTo(this.monitor.width, this.monitor.height / 2 - gridY);
-                gridY += this.gridLineSpacing;
-                cr.stroke();
-            }
-            cr.restore();
+        this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
+                                             showTextRectangle: this.currentElement.shape != Shapes.TEXT || !this.isWriting,
+                                             dummyStroke: this.currentElement.fill && this.currentElement.line.lineWidth == 0 });
+        cr.stroke();
+    },
+    
+    _repaintGrid: function(cr) {
+        if (!this.reactive)
+            return;
+        
+        Clutter.cairo_set_source_color(cr, this.gridColor);
+        
+        let [gridX, gridY] = [0, 0];
+        while (gridX < this.monitor.width / 2) {
+            cr.setLineWidth((gridX / this.gridLineSpacing) % 5 ? this.gridLineWidth / 2 : this.gridLineWidth);
+            cr.moveTo(this.monitor.width / 2 + gridX, 0);
+            cr.lineTo(this.monitor.width / 2 + gridX, this.monitor.height);
+            cr.moveTo(this.monitor.width / 2 - gridX, 0);
+            cr.lineTo(this.monitor.width / 2 - gridX, this.monitor.height);
+            gridX += this.gridLineSpacing;
+            cr.stroke();
         }
+        while (gridY < this.monitor.height / 2) {
+            cr.setLineWidth((gridY / this.gridLineSpacing) % 5 ? this.gridLineWidth / 2 : this.gridLineWidth);
+            cr.moveTo(0, this.monitor.height / 2 + gridY);
+            cr.lineTo(this.monitor.width, this.monitor.height / 2 + gridY);
+            cr.moveTo(0, this.monitor.height / 2 - gridY);
+            cr.lineTo(this.monitor.width, this.monitor.height / 2 - gridY);
+            gridY += this.gridLineSpacing;
+            cr.stroke();
+        }
+    },
+    
+    _getHasImageBack: function() {
+        return this.elements.some(element => element.shape == Shapes.IMAGE);
+    },
+    
+    _getHasImageFore: function() {
+        return this.currentElement && this.currentElement.shape == Shapes.IMAGE || false;
+    },
+    
+    _redisplay: function() {
+        // force area to emit 'repaint'
+        this.backLayer.queue_repaint();
+        this.foreLayer.queue_repaint();
+        if (this.hasGrid)
+            this.gridLayer.queue_repaint();
+    },
+    
+    _transformStagePoint: function(x, y) {
+        if (!this.layerContainer.get_allocation_box().contains(x, y))
+            return [false, 0, 0];
+        
+        return this.layerContainer.transform_stage_point(x, y);
     },
     
     _onButtonPressed: function(actor, event) {
@@ -479,7 +530,7 @@ var DrawingArea = new Lang.Class({
             this.elementGrabberTimestamp = event.get_time();
             
             let coords = event.get_coords();
-            let [s, x, y] = this.transform_stage_point(coords[0], coords[1]);
+            let [s, x, y] = this._transformStagePoint(coords[0], coords[1]);
             if (!s)
                 return;
             
@@ -499,7 +550,7 @@ var DrawingArea = new Lang.Class({
     },
     
     _startTransforming: function(stageX, stageY, controlPressed, duplicate) {
-        let [success, startX, startY] = this.transform_stage_point(stageX, stageY);
+        let [success, startX, startY] = this._transformStagePoint(stageX, stageY);
         
         if (!success)
             return;
@@ -549,7 +600,7 @@ var DrawingArea = new Lang.Class({
                 return;
             
             let coords = event.get_coords();
-            let [s, x, y] = this.transform_stage_point(coords[0], coords[1]);
+            let [s, x, y] = this._transformStagePoint(coords[0], coords[1]);
             if (!s)
                 return;
             let controlPressed = event.has_control_modifier();
@@ -605,8 +656,7 @@ var DrawingArea = new Lang.Class({
     },
     
     _startDrawing: function(stageX, stageY, shiftPressed) {
-        let [success, startX, startY] = this.transform_stage_point(stageX, stageY);
-        
+        let [success, startX, startY] = this._transformStagePoint(stageX, stageY);
         if (!success)
             return;
         
@@ -665,9 +715,10 @@ var DrawingArea = new Lang.Class({
                 return;
             
             let coords = event.get_coords();
-            let [s, x, y] = this.transform_stage_point(coords[0], coords[1]);
+            let [s, x, y] = this._transformStagePoint(coords[0], coords[1]);
             if (!s)
                 return;
+            
             let controlPressed = event.has_control_modifier();
             this._updateDrawing(x, y, controlPressed);
             
@@ -682,7 +733,7 @@ var DrawingArea = new Lang.Class({
                     if (!success)
                         return GLib.SOURCE_CONTINUE;
                     
-                    let [s, x, y] = this.transform_stage_point(coords.x, coords.y);
+                    let [s, x, y] = this._transformStagePoint(coords.x, coords.y);
                     if (!s)
                         return GLib.SOURCE_CONTINUE;
                     
@@ -703,7 +754,10 @@ var DrawingArea = new Lang.Class({
         
         this.currentElement.updateDrawing(x, y, controlPressed);
         
-        this._redisplay();
+        if (this.currentElement.eraser)
+            this._redisplay();
+        else
+            this.foreLayer.queue_repaint();
         this.updatePointerCursor(controlPressed);
     },
     
@@ -748,15 +802,15 @@ var DrawingArea = new Lang.Class({
         this.currentElement.text = '';
         this.currentElement.cursorPosition = 0;
         // Translators: %s is a key label
-        this.emit('show-osd', Files.Icons.TOOL_TEXT, _("Type your text and press <i>%s</i>")
-                                                     .format(Gtk.accelerator_get_label(Clutter.KEY_Escape, 0)), "", -1, true);
+        this.emit('show-osd', Files.Icons.TOOL_TEXT, _("Press <i>%s</i>\nto start a new line")
+                                                     .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 1)), "", -1, true);
         this._updateTextCursorTimeout();
         this.textHasCursor = true;
         this._redisplay();
         
         // Do not hide and do not set opacity to 0 because ibusCandidatePopup need a mapped text entry to init correctly its position.
         this.textEntry = new St.Entry({ opacity: 1, x: stageX + x, y: stageY + y });
-        this.get_parent().insert_child_below(this.textEntry, this);
+        this.insert_child_below(this.textEntry, null);
         this.textEntry.grab_key_focus();
         this.updateActionMode();
         this.updatePointerCursor();
@@ -766,7 +820,7 @@ var DrawingArea = new Lang.Class({
         if (ibusCandidatePopup) {
             this.ibusHandler = ibusCandidatePopup.connect('notify::visible', () => {
                 if (ibusCandidatePopup.visible) {
-                    this.get_parent().set_child_above_sibling(this.textEntry, this);
+                    this.set_child_above_sibling(this.textEntry, null);
                     this.textEntry.opacity = 255;
                 }
             });
@@ -774,9 +828,7 @@ var DrawingArea = new Lang.Class({
         }
         
         this.textEntry.clutterText.connect('activate', (clutterText) => {
-            let startNewLine = true;
-            this._stopWriting(startNewLine);
-            clutterText.text = "";
+            this._stopWriting();
         });
         
         this.textEntry.clutterText.connect('text-changed', (clutterText) => {
@@ -790,7 +842,15 @@ var DrawingArea = new Lang.Class({
         
         this.textEntry.clutterText.connect('key-press-event', (clutterText, event) => {
             if (event.get_key_symbol() == Clutter.KEY_Escape) {
+                this.currentElement.text = "";
                 this._stopWriting();
+                return Clutter.EVENT_STOP;
+            } else if (event.has_shift_modifier() &&
+                       (event.get_key_symbol() == Clutter.KEY_Return ||
+                        event.get_key_symbol() == Clutter.KEY_KP_Enter)) {
+                let startNewLine = true;
+                this._stopWriting(startNewLine);
+                clutterText.text = "";
                 return Clutter.EVENT_STOP;
             }
             
@@ -884,8 +944,12 @@ var DrawingArea = new Lang.Class({
     // A priori there is nothing to stop, except transformations, if there is no current element.
     // 'force' argument is passed when leaving drawing mode to ensure all is clean, as a workaround for possible bugs.
     _stopAll: function(force) {
-        if (this.grabbedElement)
+        if (this.grabbedElement) {
             this._stopTransforming();
+            this.grabbedElement = null;
+            this.grabbedElementLocked = null;
+            this.updatePointerCursor();
+        }
             
         if (!this.currentElement && !force)
             return;
@@ -948,24 +1012,28 @@ var DrawingArea = new Lang.Class({
     
     toggleBackground: function() {
         this.hasBackground = !this.hasBackground;
-        this.get_parent().set_background_color(this.hasBackground ? this.areaBackgroundColor : null);
+        this.set_background_color(this.hasBackground ? this.areaBackgroundColor : null);
+    },
+    
+    get hasGrid() {
+        return this.gridLayer.visible;
     },
     
     toggleGrid: function() {
-        this.hasGrid = !this.hasGrid;
-        this._redisplay();
+        // The grid layer is repainted when the visibility changes.
+        this.gridLayer.visible = !this.gridLayer.visible;
     },
     
     toggleSquareArea: function() {
         this.isSquareArea = !this.isSquareArea;
         if (this.isSquareArea) {
-            this.set_position((this.monitor.width - this.squareAreaSize) / 2, (this.monitor.height - this.squareAreaSize) / 2);
-            this.set_size(this.squareAreaSize, this.squareAreaSize);
-            this.add_style_class_name('draw-on-your-screen-square-area');
+            this.layerContainer.set_position((this.monitor.width - this.squareAreaSize) / 2, (this.monitor.height - this.squareAreaSize) / 2);
+            this.layerContainer.set_size(this.squareAreaSize, this.squareAreaSize);
+            this.layerContainer.add_style_class_name('draw-on-your-screen-square-area');
         } else {
-            this.set_position(0, 0);
-            this.set_size(this.monitor.width, this.monitor.height);
-            this.remove_style_class_name('draw-on-your-screen-square-area');
+            this.layerContainer.set_position(0, 0);
+            this.layerContainer.set_size(this.monitor.width, this.monitor.height);
+            this.layerContainer.remove_style_class_name('draw-on-your-screen-square-area');
         }
     },
     
@@ -1215,7 +1283,7 @@ var DrawingArea = new Lang.Class({
         this.buttonPressedHandler = this.connect('button-press-event', this._onButtonPressed.bind(this));
         this.keyboardPopupMenuHandler = this.connect('popup-menu', this._onKeyboardPopupMenu.bind(this));
         this.scrollHandler = this.connect('scroll-event', this._onScroll.bind(this));
-        this.get_parent().set_background_color(this.reactive && this.hasBackground ? this.areaBackgroundColor : null);
+        this.set_background_color(this.reactive && this.hasBackground ? this.areaBackgroundColor : null);
     },
     
     leaveDrawingMode: function(save, erase) {
@@ -1242,7 +1310,7 @@ var DrawingArea = new Lang.Class({
             this.erase();
         
         this.closeMenu();
-        this.get_parent().set_background_color(null);
+        this.set_background_color(null);
         Files.Images.reset();
         if (save)
             this.savePersistent();
@@ -1273,7 +1341,7 @@ var DrawingArea = new Lang.Class({
         };
         
         let getImageSvgContent = () => {
-            return `<svg viewBox="0 0 ${this.width} ${this.height}" ${prefixes}>${elementsContent}\n</svg>`;
+            return `<svg viewBox="0 0 ${this.layerContainer.width} ${this.layerContainer.height}" ${prefixes}>${elementsContent}\n</svg>`;
         };
         
         return [getGiconSvgContent, getImageSvgContent];
@@ -1285,23 +1353,15 @@ var DrawingArea = new Lang.Class({
         let prefixes = 'xmlns="http://www.w3.org/2000/svg"';
         if (this.elements.some(element => element.shape == Shapes.IMAGE))
             prefixes += ' xmlns:xlink="http://www.w3.org/1999/xlink"';
-        let content = `<svg viewBox="0 0 ${this.width} ${this.height}" ${prefixes}>`;
-        if (SVG_DEBUG_EXTENDS)
-            content = `<svg viewBox="${-this.width} ${-this.height} ${2 * this.width} ${2 * this.height}" xmlns="http://www.w3.org/2000/svg">`;
+        let content = `<svg viewBox="0 0 ${this.layerContainer.width} ${this.layerContainer.height}" ${prefixes}>`;
         let backgroundColorString = this.hasBackground ? String(this.areaBackgroundColor) : 'transparent';
-        if (backgroundColorString != 'transparent') {
+        if (backgroundColorString != 'transparent')
             content += `\n  <rect id="background" width="100%" height="100%" fill="${backgroundColorString}"/>`;
-        }
-        if (SVG_DEBUG_EXTENDS) {
-            content += `\n  <line stroke="black" x1="0" y1="${-this.height}" x2="0" y2="${this.height}"/>`;
-            content += `\n  <line stroke="black" x1="${-this.width}" y1="0" x2="${this.width}" y2="0"/>`;
-        }
         this.elements.forEach(element => content += element.buildSVG(backgroundColorString));
         content += "\n</svg>";
         
         if (Files.saveSvg(content)) {
-            // pass the parent (bgContainer) to Flashspot because coords of this are relative
-            let flashspot = new Screenshot.Flashspot(this.get_parent());
+            let flashspot = new Screenshot.Flashspot(this);
             flashspot.fire();
             if (global.play_theme_sound) {
                 global.play_theme_sound(0, 'screen-capture', "Save as SVG", null);

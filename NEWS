@@ -1,3 +1,9 @@
+v9 - October 2020
+=================
+
+* Split the drawing area in several layers (performance)
+* Start a new line with "Shift + Enter" (text tool)
+
 v8.1 - October 2020
 ===================
 
