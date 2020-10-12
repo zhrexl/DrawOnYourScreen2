@@ -48,10 +48,10 @@ msgstr ""
 
 #. Translators: %s is a key label
 #, javascript-format
-msgid "Type your text and press <i>%s</i>"
+msgid "Press <i>%s</i>\nto start a new line"
 msgstr ""
-"Saisissez votre texte\n"
-"et appuyez sur <i>%s</i>"
+"Appuyez sur <i>%s</i>\n"
+"pour démarrer une nouvelle ligne"
 
 #. Translators: It is displayed in an OSD notification to ask the user to start picking, so it should use the imperative mood.
 msgctxt "osd-notification"
