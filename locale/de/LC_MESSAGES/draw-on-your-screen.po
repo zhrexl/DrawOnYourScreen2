@@ -9,18 +9,17 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen\n"
-"Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/"
-"issues\n"
-"POT-Creation-Date: 2020-09-19 15:32+0200\n"
-"PO-Revision-Date: 2020-10-04 14:33+0200\n"
+"Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
+"POT-Creation-Date: 2020-10-04 22:45+0200\n"
+"PO-Revision-Date: 2020-10-15 13:46+0200\n"
+"Last-Translator: Onno Giesmann <nutzer3105@gmail.com>\n"
 "Language-Team: \n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 2.4.1\n"
-"Last-Translator: Onno Giesmann <nutzer3105@gmail.com>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"Language: de\n"
 
 #. Translators: %s is a key label
 #, javascript-format
@@ -51,10 +50,12 @@ msgstr ""
 
 #. Translators: %s is a key label
 #, javascript-format
-msgid "Type your text and press <i>%s</i>"
+msgid ""
+"Press <i>%s</i>\n"
+"to start a new line"
 msgstr ""
-"Text eingeben\n"
-"Danach <i>%s</i> drücken"
+"<i>%s</i> drücken, um\n"
+"neue Zeile zu beginnen"
 
 #. Translators: It is displayed in an OSD notification to ask the user to start picking, so it should use the imperative mood.
 msgctxt "osd-notification"
@@ -274,12 +275,6 @@ msgctxt "drawing-tool"
 msgid "Mirror"
 msgstr "Spiegeln"
 
-msgid "Undo"
-msgstr "Rückgängig"
-
-msgid "Redo"
-msgstr "Wiederherstellen"
-
 msgid "Erase"
 msgstr "Entfernen"
 
@@ -427,12 +422,11 @@ msgstr "Beenden"
 
 msgid "Select eraser <span alpha=\"50%\">(while starting drawing)</span>"
 msgstr ""
-"Radierer auswählen <span alpha=\"50%\">(während dem Beginnen mit "
-"Zeichnen)</span>"
+"Radierer auswählen <span alpha=\"50%\">(während dem Beginnen mit Zeichnen)</"
+"span>"
 
 msgid "Duplicate <span alpha=\"50%\">(while starting handling)</span>"
-msgstr ""
-"Duplizieren <span alpha=\"50%\">(beim Starten der Handhabung)</span>"
+msgstr "Duplizieren <span alpha=\"50%\">(beim Starten der Handhabung)</span>"
 
 msgid "Rotate rectangle, polygon, polyline"
 msgstr "Drehen von Rechteck, Vieleck, Linienzug"
@@ -463,8 +457,8 @@ msgstr "Zeichnen auf dem Schreibtisch"
 
 msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
 msgstr ""
-"<i>Zeichnungen auf Ihrem Bildschirm</i> wird zu <i>Zeichnungen auf "
-"Ihrem Schreibtisch</i>"
+"<i>Zeichnungen auf Ihrem Bildschirm</i> wird zu <i>Zeichnungen auf Ihrem "
+"Schreibtisch</i>"
 
 msgid "Erase all drawings"
 msgstr "Alle Zeichnungen löschen"
@@ -605,8 +599,8 @@ msgstr "Vorige Zeichnung öffnen"
 msgid "Add images from the clipboard"
 msgstr "Bilder aus der Zwischenablage einfügen"
 
-msgid "Redo last brushstroke"
-msgstr "Letzten Pinselstrich wiederherstellen"
+msgid "Redo"
+msgstr "Wiederherstellen"
 
 msgid "Save drawing"
 msgstr "Zeichnung speichern"
@@ -729,5 +723,17 @@ msgstr "Leiste und Dock ausblenden"
 msgid "Square drawing area"
 msgstr "Rechteckigen Zeichnungsbereich erstellen"
 
-msgid "Undo last brushstroke"
-msgstr "Letzten Pinselstrich wieder entfernen"
+msgid "Undo"
+msgstr "Rückgängig"
+
+#, javascript-format
+#~ msgid "Type your text and press <i>%s</i>"
+#~ msgstr ""
+#~ "Text eingeben\n"
+#~ "Danach <i>%s</i> drücken"
+
+#~ msgid "Redo last brushstroke"
+#~ msgstr "Letzten Pinselstrich wiederherstellen"
+
+#~ msgid "Undo last brushstroke"
+#~ msgstr "Letzten Pinselstrich wieder entfernen"
