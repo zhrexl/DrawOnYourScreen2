@@ -390,11 +390,12 @@ var DrawingArea = new Lang.Class({
             this.gridLayer.queue_repaint();
     },
     
-    _transformStagePoint: function(x, y) {
-        if (!this.layerContainer.get_allocation_box().contains(x, y))
+    _transformStagePoint: function(stageX, stageY) {
+        let [s, x, y] = this.transform_stage_point(stageX, stageY);
+        if (!s || !this.layerContainer.get_allocation_box().contains(x, y))
             return [false, 0, 0];
         
-        return this.layerContainer.transform_stage_point(x, y);
+        return this.layerContainer.transform_stage_point(stageX, stageY);
     },
     
     _onButtonPressed: function(actor, event) {
