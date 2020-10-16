@@ -142,10 +142,11 @@ var DisplayStrings = {
 var DrawingMenu = new Lang.Class({
     Name: `${UUID}-DrawingMenu`,
     
-    _init: function(area, monitor, drawingTools) {
+    _init: function(area, monitor, drawingTools, areaManagerUtils) {
         this.area = area;
         this.monitor = monitor;
         this.drawingTools = drawingTools;
+        this.areaManagerUtils = areaManagerUtils;
         
         let side = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? St.Side.RIGHT : St.Side.LEFT;
         this.menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor, 0.25, side);
@@ -178,6 +179,7 @@ var DrawingMenu = new Lang.Class({
     disable: function() {
         delete this.area;
         delete this.drawingTools;
+        delete this.areaManagerUtils;
         this.menuManager.removeMenu(this.menu);
         Main.layoutManager.uiGroup.remove_actor(this.menu.actor);
         this.menu.destroy();
@@ -279,8 +281,7 @@ var DrawingMenu = new Lang.Class({
         imageSection.itemActivated = () => {};
         this.imageSection = imageSection;
         
-        let areaManager = Me.stateObj.areaManager;
-        this._addSimpleSwitchItem(this.menu, getSummary('toggle-panel-and-dock-visibility'), !!areaManager.hiddenList, areaManager.togglePanelAndDockOpacity.bind(areaManager));
+        this._addSimpleSwitchItem(this.menu, getSummary('toggle-panel-and-dock-visibility'), !!this.areaManagerUtils.getHiddenList(), this.areaManagerUtils.togglePanelAndDockOpacity);
         this._addSimpleSwitchItem(this.menu, getSummary('toggle-background'), this.area.hasBackground, this.area.toggleBackground.bind(this.area));
         this._addSimpleSwitchItem(this.menu, getSummary('toggle-grid'), this.area.hasGrid, this.area.toggleGrid.bind(this.area));
         this._addSimpleSwitchItem(this.menu, getSummary('toggle-square-area'), this.area.isSquareArea, this.area.toggleSquareArea.bind(this.area));
@@ -294,7 +295,7 @@ var DrawingMenu = new Lang.Class({
         groupItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, style_class: 'draw-on-your-screen-menu-group-item' });
         this.saveButton = new ActionButton(getSummary('save-as-json'), 'document-save-symbolic', this.area.saveAsJson.bind(this.area, false, this._onDrawingSaved.bind(this)), null);
         this.svgButton = new ActionButton(getSummary('export-to-svg'), Files.Icons.DOCUMENT_EXPORT, this.area.exportToSvg.bind(this.area), null);
-        this.prefsButton = new ActionButton(getSummary('open-preferences'), 'document-page-setup-symbolic', areaManager.openPreferences.bind(areaManager), null);
+        this.prefsButton = new ActionButton(getSummary('open-preferences'), 'document-page-setup-symbolic', this.areaManagerUtils.openPreferences, null);
         this.helpButton = new ActionButton(getSummary('toggle-help'), 'preferences-desktop-keyboard-shortcuts-symbolic', () => { this.close(); this.area.toggleHelp(); }, null);
         getActor(groupItem).add_child(this.saveButton);
         getActor(groupItem).add_child(this.svgButton);

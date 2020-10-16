@@ -123,13 +123,15 @@ var DrawingArea = new Lang.Class({
     Name: `${UUID}-DrawingArea`,
     Extends: St.Widget,
     Signals: { 'show-osd': { param_types: [Gio.Icon.$gtype, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
+               'pointer-cursor-changed': { param_types: [GObject.TYPE_STRING] },
                'update-action-mode': {},
                'leave-drawing-mode': {} },
 
-    _init: function(params, monitor, helper, loadPersistent) {
+    _init: function(params, monitor, helper, areaManagerUtils, loadPersistent) {
         this.parent({ style_class: 'draw-on-your-screen', name: params.name});
         this.monitor = monitor;
         this.helper = helper;
+        this.areaManagerUtils = areaManagerUtils;
         
         this.layerContainer = new St.Widget({ width: monitor.width, height: monitor.height });
         this.add_child(this.layerContainer);
@@ -174,7 +176,7 @@ var DrawingArea = new Lang.Class({
     
     get menu() {
         if (!this._menu)
-            this._menu = new Menu.DrawingMenu(this, this.monitor, Tools);
+            this._menu = new Menu.DrawingMenu(this, this.monitor, Tools, this.areaManagerUtils);
         return this._menu;
     },
     
@@ -903,7 +905,7 @@ var DrawingArea = new Lang.Class({
     setPointerCursor: function(pointerCursorName) {
         if (!this.currentPointerCursorName || this.currentPointerCursorName != pointerCursorName) {
             this.currentPointerCursorName = pointerCursorName;
-            Me.stateObj.areaManager.setCursor(pointerCursorName);
+            this.emit('pointer-cursor-changed', pointerCursorName);
         }
     },
     
@@ -1273,6 +1275,7 @@ var DrawingArea = new Lang.Class({
         this.erase();
         if (this._menu)
             this._menu.disable();
+        delete this.areaManagerUtils;
     },
     
     updateActionMode: function() {
