@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Draw On Your Screen 6.1\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
 "POT-Creation-Date: 2020-09-19 15:32+0200\n"
-"PO-Revision-Date: 2020-09-20 05:07+0200\n"
+"PO-Revision-Date: 2020-10-21 09:23+0200\n"
 "Last-Translator: Abakkk\n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -48,7 +48,9 @@ msgstr ""
 
 #. Translators: %s is a key label
 #, javascript-format
-msgid "Press <i>%s</i>\nto start a new line"
+msgid ""
+"Press <i>%s</i>\n"
+"to start a new line"
 msgstr ""
 "Appuyez sur <i>%s</i>\n"
 "pour démarrer une nouvelle ligne"
@@ -461,7 +463,7 @@ msgid "Drawing on the desktop"
 msgstr "Dessin sur le bureau"
 
 msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
-msgstr "<i>Dessine Sur Ton Écran</i> deviens <i>Dessine Sur Ton Bureau</i>"
+msgstr "<i>Dessine Sur Ton Écran</i> devient <i>Dessine Sur Ton Bureau</i>"
 
 msgid "Erase all drawings"
 msgstr "Effacer tous les dessins"
