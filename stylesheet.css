@@ -1,10 +1,10 @@
 /* square area */
 
-.draw-on-your-screen-square-area {
+.draw-on-your-screen .draw-on-your-screen-square-area {
     outline: 2px solid rgba(255, 0, 0, 0.7);
 }
 
-.draw-on-your-screen-square-area:insensitive {
+.draw-on-your-screen:insensitive .draw-on-your-screen-square-area {
     outline: none;
 }
 

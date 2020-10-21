@@ -169,7 +169,13 @@ const AreaManager = new Lang.Class({
             let monitor = this.monitors[i];
             let helper = new Helper.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
             let loadPersistent = i == Main.layoutManager.primaryIndex && this.persistentOverRestarts;
-            let area = new Area.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, loadPersistent);
+            // Some utils for the drawing area menus.
+            let areaManagerUtils = {
+                getHiddenList: () => this.hiddenList,
+                togglePanelAndDockOpacity: this.togglePanelAndDockOpacity.bind(this),
+                openPreferences: this.openPreferences.bind(this)
+            };
+            let area = new Area.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, areaManagerUtils, loadPersistent);
             
             Main.layoutManager._backgroundGroup.insert_child_above(area, Main.layoutManager._bgManagers[i].backgroundActor);
             if (!this.onDesktop)
@@ -179,6 +185,7 @@ const AreaManager = new Lang.Class({
             area.set_size(monitor.width, monitor.height);
             area.leaveDrawingHandler = area.connect('leave-drawing-mode', this.toggleDrawing.bind(this));
             area.updateActionModeHandler = area.connect('update-action-mode', this.updateActionMode.bind(this));
+            area.pointerCursorChangedHandler = area.connect('pointer-cursor-changed', this.setCursor.bind(this));
             area.showOsdHandler = area.connect('show-osd', this.showOsd.bind(this));
             this.areas.push(area);
         }
@@ -361,7 +368,7 @@ const AreaManager = new Lang.Class({
             if (source && source == global.display)
                 // Translators: "released" as the opposite of "grabbed"
                 this.showOsd(null, Files.Icons.UNGRAB, _("Keyboard and pointer released"), null, null, false);
-            this.setCursor('DEFAULT');
+            this.setCursor(null, 'DEFAULT');
             this.activeArea.reactive = false;
             this.removeInternalKeybindings();
         } else {
@@ -499,7 +506,7 @@ const AreaManager = new Lang.Class({
             OsdWindow.HIDE_TIMEOUT = hideTimeoutSave;
     },
     
-    setCursor: function(cursorName) {
+    setCursor: function(sourceActor_, cursorName) {
         // check display or screen (API changes)
         if (global.display.set_cursor)
             global.display.set_cursor(Meta.Cursor[cursorName]);
