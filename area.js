@@ -48,6 +48,7 @@ const pgettext = imports.gettext.domain(Me.metadata['gettext-domain']).pgettext;
 const MOTION_TIME = 1; // ms, time accuracy for free drawing, max is about 33 ms. The lower it is, the smoother the drawing is.
 const TEXT_CURSOR_TIME = 600; // ms
 const ELEMENT_GRABBER_TIME = 80; // ms, default is about 16 ms
+const TOGGLE_ANIMATION_DURATION = 300; // ms
 const GRID_TILES_HORIZONTAL_NUMBER = 30;
 const COLOR_PICKER_EXTENSION_UUID = 'color-picker@tuberry'; 
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
@@ -143,6 +144,7 @@ var DrawingArea = new Lang.Class({
         this.layerContainer.add_child(this.foreLayer);
         this.gridLayer = new DrawingLayer(this._repaintGrid.bind(this));
         this.gridLayer.hide();
+        this.gridLayer.opacity = 0;
         this.layerContainer.add_child(this.gridLayer);
         
         this.elements = [];
@@ -1015,7 +1017,16 @@ var DrawingArea = new Lang.Class({
     
     toggleBackground: function() {
         this.hasBackground = !this.hasBackground;
-        this.set_background_color(this.hasBackground ? this.areaBackgroundColor : null);
+        let backgroundColor = this.hasBackground ? this.areaBackgroundColor : Clutter.Color.get_static(Clutter.StaticColor.TRANSPARENT);
+        
+        if (this.ease) {
+            this.remove_all_transitions();
+            this.ease({ backgroundColor,
+                        duration: TOGGLE_ANIMATION_DURATION,
+                        transition: Clutter.AnimationMode.EASE_IN_OUT_QUAD });
+        } else {
+            this.set_background_color(backgroundColor);
+        }
     },
     
     get hasGrid() {
@@ -1024,19 +1035,43 @@ var DrawingArea = new Lang.Class({
     
     toggleGrid: function() {
         // The grid layer is repainted when the visibility changes.
-        this.gridLayer.visible = !this.gridLayer.visible;
+        if (this.gridLayer.ease) {
+            this.gridLayer.remove_all_transitions();
+            let visible = !this.gridLayer.visible;
+            this.gridLayer.visible = true;
+            this.gridLayer.ease({ opacity: visible ? 255 : 0,
+                                  duration: TOGGLE_ANIMATION_DURATION,
+                                  transition: Clutter.AnimationMode.EASE_IN_OUT_QUAD,
+                                  onStopped: () => this.gridLayer.visible = visible });
+        } else {
+            this.gridLayer.visible = !this.gridLayer.visible;
+        }
     },
     
     toggleSquareArea: function() {
         this.isSquareArea = !this.isSquareArea;
+        let x, y, width, height, onComplete;
+        
         if (this.isSquareArea) {
-            this.layerContainer.set_position((this.monitor.width - this.squareAreaSize) / 2, (this.monitor.height - this.squareAreaSize) / 2);
-            this.layerContainer.set_size(this.squareAreaSize, this.squareAreaSize);
             this.layerContainer.add_style_class_name('draw-on-your-screen-square-area');
+            [x, y] = [(this.monitor.width - this.squareAreaSize) / 2, (this.monitor.height - this.squareAreaSize) / 2];
+            width = height = this.squareAreaSize;
+            onComplete = () => {};
         } else {
-            this.layerContainer.set_position(0, 0);
-            this.layerContainer.set_size(this.monitor.width, this.monitor.height);
-            this.layerContainer.remove_style_class_name('draw-on-your-screen-square-area');
+            x = y = 0;
+            [width, height] = [this.monitor.width, this.monitor.height];
+            onComplete = () => this.layerContainer.remove_style_class_name('draw-on-your-screen-square-area');
+        }
+        
+        if (this.layerContainer.ease) {
+            this.layerContainer.remove_all_transitions();
+            this.layerContainer.ease({ x, y, width, height, onComplete,
+                                       duration: TOGGLE_ANIMATION_DURATION,
+                                       transition: Clutter.AnimationMode.EASE_OUT_QUAD });
+        } else {
+            this.layerContainer.set_position(x, y);
+            this.layerContainer.set_size(width, height);
+            onComplete();
         }
     },
     
