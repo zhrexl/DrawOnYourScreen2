@@ -813,7 +813,9 @@ var DrawingArea = new Lang.Class({
         this.textHasCursor = true;
         this._redisplay();
         
-        // Do not hide and do not set opacity to 0 because ibusCandidatePopup need a mapped text entry to init correctly its position.
+        // Do not hide and do not set opacity to 0 because:
+        // 1. ibusCandidatePopup need a mapped text entry to init correctly its position.
+        // 2. 'cursor-changed' signal is no emitted if the text entry is not visible.
         this.textEntry = new St.Entry({ opacity: 1, x: stageX + x, y: stageY + y });
         this.insert_child_below(this.textEntry, null);
         this.textEntry.grab_key_focus();
@@ -832,17 +834,26 @@ var DrawingArea = new Lang.Class({
             this.textEntry.connect('destroy', () => ibusCandidatePopup.disconnect(this.ibusHandler));
         }
         
+        this.textEntry.clutterText.set_single_line_mode(false);
         this.textEntry.clutterText.connect('activate', (clutterText) => {
             this._stopWriting();
         });
         
-        this.textEntry.clutterText.connect('text-changed', (clutterText) => {
-            GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                this.currentElement.text = clutterText.text;
-                this.currentElement.cursorPosition = clutterText.cursorPosition;
-                this._updateTextCursorTimeout();
-                this._redisplay();
-            });
+        let showCursorOnPositionChanged = true;
+        this.textEntry.clutterText.connect('text-changed', clutterText => {
+            this.textEntry.y = stageY + y + (this.textEntry.clutterText.get_layout().get_line_count() - 1) * this.currentElement.height;
+            this.currentElement.text = clutterText.text;
+            showCursorOnPositionChanged = false;
+            this._redisplay();
+        });
+        
+        this.textEntry.clutterText.connect('cursor-changed', clutterText => {
+            this.currentElement.cursorPosition = clutterText.cursorPosition;
+            this._updateTextCursorTimeout();
+            let cursorPosition = clutterText.cursorPosition == -1 ? clutterText.text.length : clutterText.cursorPosition;
+            this.textHasCursor = showCursorOnPositionChanged || GLib.unichar_isspace(clutterText.text.charAt(cursorPosition - 1));
+            showCursorOnPositionChanged = true;
+            this._redisplay();
         });
         
         this.textEntry.clutterText.connect('key-press-event', (clutterText, event) => {
@@ -853,53 +864,25 @@ var DrawingArea = new Lang.Class({
             } else if (event.has_shift_modifier() &&
                        (event.get_key_symbol() == Clutter.KEY_Return ||
                         event.get_key_symbol() == Clutter.KEY_KP_Enter)) {
-                let startNewLine = true;
-                this._stopWriting(startNewLine);
-                clutterText.text = "";
+                clutterText.insert_unichar('\n');
                 return Clutter.EVENT_STOP;
-            }
-            
-            // 'cursor-changed' signal is not emitted if the text entry is not visible.
-            // So key events related to the cursor must be listened.
-            if (event.get_key_symbol() == Clutter.KEY_Left || event.get_key_symbol() == Clutter.KEY_Right ||
-                event.get_key_symbol() == Clutter.KEY_Home || event.get_key_symbol() == Clutter.KEY_End) {
-                GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                    this.currentElement.cursorPosition = clutterText.cursorPosition;
-                    this._updateTextCursorTimeout();
-                    this.textHasCursor = true;
-                    this._redisplay();
-                });
             }
             
             return Clutter.EVENT_PROPAGATE;
         });
     },
     
-    _stopWriting: function(startNewLine) {
+    _stopWriting: function() {
         if (this.currentElement.text.length > 0)
             this.elements.push(this.currentElement);
             
-        if (startNewLine && this.currentElement.points.length == 2) {
-            this.currentElement.lineIndex = this.currentElement.lineIndex || 0;
-            // copy object, the original keep existing in this.elements
-            this.currentElement = Object.create(this.currentElement);
-            this.currentElement.lineIndex ++;
-            // define a new 'points' array, the original keep existing in this.elements
-            this.currentElement.points = [
-                [this.currentElement.points[0][0], this.currentElement.points[0][1] + this.currentElement.height],
-                [this.currentElement.points[1][0], this.currentElement.points[1][1] + this.currentElement.height]
-            ];
-            this.currentElement.text = "";
-            this.textEntry.set_y(this.currentElement.y);
-        } else {
-            this.currentElement = null;
-            this._stopTextCursorTimeout();
-            this.textEntry.destroy();
-            delete this.textEntry;
-            this.grab_key_focus();
-            this.updateActionMode();
-            this.updatePointerCursor();
-        }
+        this.currentElement = null;
+        this._stopTextCursorTimeout();
+        this.textEntry.destroy();
+        delete this.textEntry;
+        this.grab_key_focus();
+        this.updateActionMode();
+        this.updatePointerCursor();
         
         this._redisplay();
     },

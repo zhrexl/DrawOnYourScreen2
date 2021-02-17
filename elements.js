@@ -645,7 +645,6 @@ const _DrawingElement = new Lang.Class({
     },
     
     // The figure rotation center before transformations (original).
-    // this.textWidth is computed during Cairo building.
     _getOriginalCenter: function() {
         if (!this._originalCenter) {
             let points = this.points;
@@ -710,7 +709,6 @@ const TextElement = new Lang.Class({
             eraser: this.eraser,
             transformations: this.transformations,
             text: this.text,
-            lineIndex: this.lineIndex !== undefined ? this.lineIndex : undefined,
             textRightAligned: this.textRightAligned,
             font: this.font.to_string(),
             points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
@@ -730,42 +728,50 @@ const TextElement = new Lang.Class({
         return Math.abs(this.points[1][1] - this.points[0][1]);
     },
     
-    // When rotating grouped lines, lineOffset is used to retrieve the rotation center of the first line.
-    get lineOffset() {
-        return (this.lineIndex || 0) * this.height;
+    // this.lineWidths is computed during Cairo building.
+    _getLineX: function(index) {
+        return this.points[1][0] - (this.textRightAligned && this.lineWidths && this.lineWidths[index] ? this.lineWidths[index] : 0);
     },
     
     _drawCairo: function(cr, params) {
-        if (this.points.length == 2) {
-            let layout = PangoCairo.create_layout(cr);
-            let fontSize = this.height * Pango.SCALE;
-            this.font.set_absolute_size(fontSize);
-            layout.set_font_description(this.font);
-            layout.set_text(this.text, -1);
-            this.textWidth = layout.get_pixel_size()[0];
-            cr.moveTo(this.x, this.y);
-            layout.set_text(this.text, -1);
-            PangoCairo.show_layout_line(cr, layout.get_line(0));
+        if (this.points.length != 2)
+            return;
+        
+        let layout = PangoCairo.create_layout(cr);
+        let fontSize = this.height * Pango.SCALE;
+        this.font.set_absolute_size(fontSize);
+        layout.set_font_description(this.font);
+        layout.set_text(this.text, -1);
+        this.textWidth = layout.get_pixel_size()[0];
+        this.lineWidths = layout.get_lines_readonly().map(layoutLine => layoutLine.get_pixel_extents()[1].width)
+        
+        layout.get_lines_readonly().forEach((layoutLine, index) => {
+            cr.moveTo(this._getLineX(index), this.y + this.height * index);
+            PangoCairo.show_layout_line(cr, layoutLine);
+        });
+        
+        // Cannot use 'layout.index_to_line_x(cursorPosition, 0)' because character position != byte index
+        if (params.showTextCursor) {
+            let layoutCopy = layout.copy();
+            if (this.cursorPosition != -1)
+                layoutCopy.set_text(this.text.slice(0, this.cursorPosition), -1);
             
-            if (params.showTextCursor) {
-                let cursorPosition = this.cursorPosition == -1 ? this.text.length : this.cursorPosition;
-                layout.set_text(this.text.slice(0, cursorPosition), -1);
-                let width = layout.get_pixel_size()[0];
-                cr.rectangle(this.x + width, this.y,
-                             this.height / 25, - this.height);
-                cr.fill();
-            }
-            
-            if (params.showTextRectangle) {
-                cr.rectangle(this.x, this.y - this.lineOffset,
-                             this.textWidth, - this.height);
-                setDummyStroke(cr);
-            } else if (params.drawTextRectangle) {
-                cr.rectangle(this.x, this.y,
-                             this.textWidth, - this.height);
-                // Only draw the rectangle to find the element, not to show it.
-                cr.setLineWidth(0);
-            }
+            let cursorLineIndex = layoutCopy.get_line_count() - 1;
+            let cursorX = this._getLineX(cursorLineIndex) + layoutCopy.get_line_readonly(cursorLineIndex).get_pixel_extents()[1].width;
+            let cursorY = this.y + this.height * cursorLineIndex;
+            cr.rectangle(cursorX, cursorY, this.height / 25, - this.height);
+            cr.fill();
+        }
+        
+        if (params.showTextRectangle) {
+            cr.rectangle(this.x, this.y - this.height,
+                         this.textWidth, this.height * layout.get_line_count());
+            setDummyStroke(cr);
+        } else if (params.drawTextRectangle) {
+            cr.rectangle(this.x, this.y - this.height,
+                         this.textWidth, this.height * layout.get_line_count());
+            // Only draw the rectangle to find the element, not to show it.
+            cr.setLineWidth(0);
         }
     },
     
@@ -774,31 +780,47 @@ const TextElement = new Lang.Class({
     },
     
     _drawSvg: function(transAttribute, bgcolorString) {
-        let row = "\n  ";
-        let [x, y, height] = [Math.round(this.x*100)/100, Math.round(this.y*100)/100, Math.round(this.height*100)/100];
+        if (this.points.length != 2)
+            return "";
+        
+        let row = "";
+        let height = Math.round(this.height * 100) / 100;
         let color = this.eraser ? bgcolorString : this.color.toJSON();
         let attributes = this.eraser ? `class="eraser" ` : '';
+        attributes += `fill="${color}" ` +
+                      `font-size="${height}" ` +
+                      `font-family="${this.font.get_family()}"`;
         
-        if (this.points.length == 2) {
-            attributes += `fill="${color}" ` +
-                          `font-size="${height}" ` +
-                          `font-family="${this.font.get_family()}"`;
-            
-            // this.font.to_string() is not valid to fill the svg 'font' shorthand property.
-            // Each property must be filled separately.
-            ['Stretch', 'Style', 'Variant'].forEach(attribute => {
-                let lower = attribute.toLowerCase();
-                if (this.font[`get_${lower}`]() != Pango[attribute].NORMAL) {
-                    let font = new Pango.FontDescription();
-                    font[`set_${lower}`](this.font[`get_${lower}`]());
-                    attributes += ` font-${lower}="${font.to_string()}"`;
-                }
-            });
-            if (this.font.get_weight() != Pango.Weight.NORMAL)
-                attributes += ` font-weight="${this.font.get_weight()}"`;
-            row += `<text ${attributes} x="${x}" `;
-            row += `y="${y}"${transAttribute}>${this.text}</text>`;
+        // this.font.to_string() is not valid to fill the svg 'font' shorthand property.
+        // Each property must be filled separately.
+        ['Stretch', 'Style', 'Variant'].forEach(attribute => {
+            let lower = attribute.toLowerCase();
+            if (this.font[`get_${lower}`]() != Pango[attribute].NORMAL) {
+                let font = new Pango.FontDescription();
+                font[`set_${lower}`](this.font[`get_${lower}`]());
+                attributes += ` font-${lower}="${font.to_string()}"`;
+            }
+        });
+        if (this.font.get_weight() != Pango.Weight.NORMAL)
+            attributes += ` font-weight="${this.font.get_weight()}"`;
+        
+        // It is a fallback for thumbnails. The following layout is not the same than the Cairo one and
+        // layoutLine.get_pixel_extents does not return the correct value with non-latin fonts.
+        // An alternative would be to store this.lineWidths in the json.
+        if (this.textRightAligned && !this.lineWidths) {
+            let clutterText = new Clutter.Text({ text: this.text });
+            let layout = clutterText.get_layout();
+            let fontSize = height * Pango.SCALE;
+            this.font.set_absolute_size(fontSize);
+            layout.set_font_description(this.font);
+            this.lineWidths = layout.get_lines_readonly().map(layoutLine => layoutLine.get_pixel_extents()[1].width);
         }
+        
+        this.text.split(/\r\n|\r|\n/).forEach((text, index) => {
+            let x = Math.round(this._getLineX(index) * 100) / 100;
+            let y = Math.round((this.y + this.height * index) * 100) / 100;
+            row += `\n <text ${attributes} x="${x}" y="${y}"${transAttribute}>${text}</text>`;
+        });
         
         return row;
     },
@@ -827,7 +849,7 @@ const TextElement = new Lang.Class({
     _getOriginalCenter: function() {
         if (!this._originalCenter) {
             let points = this.points;
-            this._originalCenter = this.textWidth ? [points[1][0], Math.max(points[0][1], points[1][1]) - this.lineOffset] :
+            this._originalCenter = points.length == 2 ? [points[1][0], Math.max(points[0][1], points[1][1])] :
                                    points.length >= 3 ? getCentroid(points) :
                                    getNaiveCenter(points);
         }
