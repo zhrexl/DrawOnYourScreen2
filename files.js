@@ -41,7 +41,7 @@ const ICON_NAMES = [
     'arc', 'color', 'dashed-line', 'document-export', 'fillrule-evenodd', 'fillrule-nonzero', 'fill', 'full-line', 'linecap', 'linejoin', 'palette', 'smooth', 'stroke',
     'tool-ellipse', 'tool-line', 'tool-mirror', 'tool-move', 'tool-none', 'tool-polygon', 'tool-polyline', 'tool-rectangle', 'tool-resize',
 ];
-const ThemedIconNames = {
+const ThemedIconName = {
     COLOR_PICKER: 'color-select-symbolic',
     ENTER: 'applications-graphics', LEAVE: 'application-exit',
     GRAB: 'input-touchpad', UNGRAB: 'touchpad-disabled',
@@ -74,11 +74,11 @@ ICON_NAMES.forEach(name => {
     });
 });
 
-Object.keys(ThemedIconNames).forEach(key => {
+Object.keys(ThemedIconName).forEach(key => {
     Object.defineProperty(Icons, key, {
         get: function() {
             if (!this[`_${key}`])
-                this[`_${key}`] = new Gio.ThemedIcon({ name: `${ThemedIconNames[key]}-symbolic` });
+                this[`_${key}`] = new Gio.ThemedIcon({ name: `${ThemedIconName[key]}-symbolic` });
             return this[`_${key}`];
         }
     });

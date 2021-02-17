@@ -1,5 +1,5 @@
 /* jslint esversion: 6 */
-/* exported Shapes, Transformations, getAllFontFamilies, DrawingElement */
+/* exported Shape, TextAlignment, Transformation, getAllFontFamilies, DrawingElement */
 
 /*
  * Copyright 2019 Abakkk
@@ -30,9 +30,9 @@ const PangoCairo = imports.gi.PangoCairo;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
-var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
+var Shape = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
 var TextAlignment = { LEFT: 0, CENTER: 1, RIGHT: 2 };
-var Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5, SMOOTH: 100 };
+var Transformation = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5, SMOOTH: 100 };
 
 var getAllFontFamilies = function() {
     return PangoCairo.font_map_get_default().list_families().map(fontFamily => fontFamily.get_name()).sort((a,b) => a.localeCompare(b));
@@ -66,8 +66,8 @@ const MIN_DRAWING_SIZE = 3;                 // px
 const MIN_INTERMEDIATE_POINT_DISTANCE = 1;  // px, the higher it is, the fewer points there will be
 
 var DrawingElement = function(params) {
-    return params.shape == Shapes.TEXT ? new TextElement(params) :
-           params.shape == Shapes.IMAGE ? new ImageElement(params) :
+    return params.shape == Shape.TEXT ? new TextElement(params) :
+           params.shape == Shape.IMAGE ? new ImageElement(params) :
            new _DrawingElement(params);
 };
 
@@ -104,9 +104,9 @@ const _DrawingElement = new Lang.Class({
         if (params.transform && params.transform.center) {
             let angle = (params.transform.angle || 0) + (params.transform.startAngle || 0);
             if (angle)
-                this.transformations.push({ type: Transformations.ROTATION, angle: angle });
+                this.transformations.push({ type: Transformation.ROTATION, angle: angle });
         }
-        if (params.shape == Shapes.ELLIPSE && params.transform && params.transform.ratio && params.transform.ratio != 1 && params.points.length >= 2) {
+        if (params.shape == Shape.ELLIPSE && params.transform && params.transform.ratio && params.transform.ratio != 1 && params.points.length >= 2) {
             let [ratio, p0, p1] = [params.transform.ratio, params.points[0], params.points[1]];
             // Add a fake point that will give the right ellipse ratio when building the element.
             this.points.push([ratio * (p1[0] - p0[0]) + p0[0], ratio * (p1[1] - p0[1]) + p0[1]]);
@@ -129,7 +129,7 @@ const _DrawingElement = new Lang.Class({
             fill: this.fill,
             fillRule: this.fillRule,
             eraser: this.eraser,
-            transformations: this.transformations.filter(transformation => transformation.type != Transformations.SMOOTH)
+            transformations: this.transformations.filter(transformation => transformation.type != Transformation.SMOOTH)
                                                  .map(transformation => Object.assign({}, transformation, { undoable: undefined })),
             points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
         };
@@ -142,7 +142,7 @@ const _DrawingElement = new Lang.Class({
         if (this.showSymmetryElement) {
             let transformation = this.lastTransformation;
             setDummyStroke(cr);
-            if (transformation.type == Transformations.REFLECTION) {
+            if (transformation.type == Transformation.REFLECTION) {
                 cr.moveTo(transformation.startX, transformation.startY);
                 cr.lineTo(transformation.endX, transformation.endY);
             } else {
@@ -177,21 +177,21 @@ const _DrawingElement = new Lang.Class({
         }
         
         this.transformations.slice(0).reverse().forEach(transformation => {
-            if (transformation.type == Transformations.TRANSLATION) {
+            if (transformation.type == Transformation.TRANSLATION) {
                 cr.translate(transformation.slideX, transformation.slideY);
-            } else if (transformation.type == Transformations.ROTATION) {
+            } else if (transformation.type == Transformation.ROTATION) {
                 let center = this._getTransformedCenter(transformation);
                 cr.translate(center[0], center[1]);
                 cr.rotate(transformation.angle);
                 cr.translate(-center[0], -center[1]);
-            } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.STRETCH) {
+            } else if (transformation.type == Transformation.SCALE_PRESERVE || transformation.type == Transformation.STRETCH) {
                 let center = this._getTransformedCenter(transformation);
                 cr.translate(center[0], center[1]);
                 cr.rotate(transformation.angle);
                 cr.scale(transformation.scaleX, transformation.scaleY);
                 cr.rotate(-transformation.angle);
                 cr.translate(-center[0], -center[1]);
-            } else if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION) {
+            } else if (transformation.type == Transformation.REFLECTION || transformation.type == Transformation.INVERSION) {
                 cr.translate(transformation.slideX, transformation.slideY);
                 cr.rotate(transformation.angle);
                 cr.scale(transformation.scaleX, transformation.scaleY);
@@ -208,21 +208,21 @@ const _DrawingElement = new Lang.Class({
     _drawCairo: function(cr, params) {
         let [points, shape] = [this.points, this.shape];
         
-        if (shape == Shapes.LINE && points.length == 3) {
+        if (shape == Shape.LINE && points.length == 3) {
             cr.moveTo(points[0][0], points[0][1]);
             cr.curveTo(points[0][0], points[0][1], points[1][0], points[1][1], points[2][0], points[2][1]);
             
-        } else if (shape == Shapes.LINE && points.length == 4) {
+        } else if (shape == Shape.LINE && points.length == 4) {
             cr.moveTo(points[0][0], points[0][1]);
             cr.curveTo(points[1][0], points[1][1], points[2][0], points[2][1], points[3][0], points[3][1]);
             
-        } else if (shape == Shapes.NONE || shape == Shapes.LINE) {
+        } else if (shape == Shape.NONE || shape == Shape.LINE) {
             cr.moveTo(points[0][0], points[0][1]);
             for (let j = 1; j < points.length; j++) {
                 cr.lineTo(points[j][0], points[j][1]);
             }
             
-        } else if (shape == Shapes.ELLIPSE && points.length >= 2) {
+        } else if (shape == Shape.ELLIPSE && points.length >= 2) {
             let radius = Math.hypot(points[1][0] - points[0][0], points[1][1] - points[0][1]);
             let ratio = 1;
             
@@ -238,15 +238,15 @@ const _DrawingElement = new Lang.Class({
             } else
                 cr.arc(points[0][0], points[0][1], radius, 0, 2 * Math.PI);
             
-        } else if (shape == Shapes.RECTANGLE && points.length == 2) {
+        } else if (shape == Shape.RECTANGLE && points.length == 2) {
             cr.rectangle(points[0][0], points[0][1], points[1][0] - points[0][0], points[1][1] - points[0][1]);
         
-        } else if ((shape == Shapes.POLYGON || shape == Shapes.POLYLINE) && points.length >= 2) {
+        } else if ((shape == Shape.POLYGON || shape == Shape.POLYLINE) && points.length >= 2) {
             cr.moveTo(points[0][0], points[0][1]);
             for (let j = 1; j < points.length; j++) {
                 cr.lineTo(points[j][0], points[j][1]);
             }
-            if (shape == Shapes.POLYGON)
+            if (shape == Shape.POLYGON)
                 cr.closePath();
             
         }
@@ -268,19 +268,19 @@ const _DrawingElement = new Lang.Class({
         this.transformations.slice(0).reverse().forEach(transformation => {
             let center = this._getTransformedCenter(transformation);
             
-            if (transformation.type == Transformations.TRANSLATION) {
+            if (transformation.type == Transformation.TRANSLATION) {
                 transforms.push(['translate', transformation.slideX, transformation.slideY]);
-            } else if (transformation.type == Transformations.ROTATION) {
+            } else if (transformation.type == Transformation.ROTATION) {
                 transforms.push(['translate', center[0], center[1]]);
                 transforms.push(['rotate', transformation.angle * RADIAN]);
                 transforms.push(['translate', -center[0], -center[1]]);
-            } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.STRETCH) {
+            } else if (transformation.type == Transformation.SCALE_PRESERVE || transformation.type == Transformation.STRETCH) {
                 transforms.push(['translate', center[0], center[1]]);
                 transforms.push(['rotate', transformation.angle * RADIAN]);
                 transforms.push(['scale', transformation.scaleX, transformation.scaleY]);
                 transforms.push(['rotate', -transformation.angle * RADIAN]);
                 transforms.push(['translate', -center[0], -center[1]]);
-            } else if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION) {
+            } else if (transformation.type == Transformation.REFLECTION || transformation.type == Transformation.INVERSION) {
                 transforms.push(['translate', transformation.slideX, transformation.slideY]);
                 transforms.push(['rotate', transformation.angle * RADIAN]);
                 transforms.push(['scale', transformation.scaleX, transformation.scaleY]);
@@ -348,45 +348,45 @@ const _DrawingElement = new Lang.Class({
                 attributes += ` stroke-dasharray="${this.dash.array[0]} ${this.dash.array[1]}" stroke-dashoffset="${this.dash.offset}"`;
         }
         
-        if (this.shape == Shapes.LINE && points.length == 4) {
+        if (this.shape == Shape.LINE && points.length == 4) {
             row += `<path ${attributes} d="M${points[0][0]} ${points[0][1]}`;
             row += ` C ${points[1][0]} ${points[1][1]}, ${points[2][0]} ${points[2][1]}, ${points[3][0]} ${points[3][1]}`;
             row += `${fill ? 'z' : ''}"${transAttribute}/>`;
             
-        } else if (this.shape == Shapes.LINE && points.length == 3) {
+        } else if (this.shape == Shape.LINE && points.length == 3) {
             row += `<path ${attributes} d="M${points[0][0]} ${points[0][1]}`;
             row += ` C ${points[0][0]} ${points[0][1]}, ${points[1][0]} ${points[1][1]}, ${points[2][0]} ${points[2][1]}`;
             row += `${fill ? 'z' : ''}"${transAttribute}/>`;
             
-        } else if (this.shape == Shapes.LINE) {
+        } else if (this.shape == Shape.LINE) {
             row += `<line ${attributes} x1="${points[0][0]}" y1="${points[0][1]}" x2="${points[1][0]}" y2="${points[1][1]}"${transAttribute}/>`;
         
-        } else if (this.shape == Shapes.NONE) {
+        } else if (this.shape == Shape.NONE) {
             row += `<path ${attributes} d="M${points[0][0]} ${points[0][1]}`;
             for (let i = 1; i < points.length; i++)
                 row += ` L ${points[i][0]} ${points[i][1]}`;
             row += `${fill ? 'z' : ''}"${transAttribute}/>`;
             
-        } else if (this.shape == Shapes.ELLIPSE && points.length == 3) {
+        } else if (this.shape == Shape.ELLIPSE && points.length == 3) {
             let ry = Math.hypot(points[1][0] - points[0][0], points[1][1] - points[0][1]);
             let rx = Math.hypot(points[2][0] - points[0][0], points[2][1] - points[0][1]);
             row += `<ellipse ${attributes} cx="${points[0][0]}" cy="${points[0][1]}" rx="${rx}" ry="${ry}"${transAttribute}/>`;
             
-        } else if (this.shape == Shapes.ELLIPSE && points.length == 2) {
+        } else if (this.shape == Shape.ELLIPSE && points.length == 2) {
             let r = Math.hypot(points[1][0] - points[0][0], points[1][1] - points[0][1]);
             row += `<circle ${attributes} cx="${points[0][0]}" cy="${points[0][1]}" r="${r}"${transAttribute}/>`;
             
-        } else if (this.shape == Shapes.RECTANGLE && points.length == 2) {
+        } else if (this.shape == Shape.RECTANGLE && points.length == 2) {
             row += `<rect ${attributes} x="${Math.min(points[0][0], points[1][0])}" y="${Math.min(points[0][1], points[1][1])}" ` +
                    `width="${Math.abs(points[1][0] - points[0][0])}" height="${Math.abs(points[1][1] - points[0][1])}"${transAttribute}/>`;
                    
-        } else if (this.shape == Shapes.POLYGON && points.length >= 3) {
+        } else if (this.shape == Shape.POLYGON && points.length >= 3) {
             row += `<polygon ${attributes} points="`;
             for (let i = 0; i < points.length; i++)
                 row += ` ${points[i][0]},${points[i][1]}`;
             row += `"${transAttribute}/>`;
         
-        } else if (this.shape == Shapes.POLYLINE && points.length >= 2) {
+        } else if (this.shape == Shape.POLYLINE && points.length >= 2) {
             row += `<polyline ${attributes} points="`;
             for (let i = 0; i < points.length; i++)
                 row += ` ${points[i][0]},${points[i][1]}`;
@@ -405,7 +405,7 @@ const _DrawingElement = new Lang.Class({
     },
     
     get isStraightLine() {
-        return this.shape == Shapes.LINE && this.points.length == 2;
+        return this.shape == Shape.LINE && this.points.length == 2;
     },
     
     smoothAll: function() {
@@ -416,21 +416,21 @@ const _DrawingElement = new Lang.Class({
         
         let newPoints = this.points.slice();
         
-        this.transformations.push({ type: Transformations.SMOOTH, undoable: true,
+        this.transformations.push({ type: Transformation.SMOOTH, undoable: true,
                                     undo: () => this.points = oldPoints,
                                     redo: () => this.points = newPoints });
         
         if (this._undoneTransformations)
-            this._undoneTransformations = this._undoneTransformations.filter(transformation => transformation.type != Transformations.SMOOTH);
+            this._undoneTransformations = this._undoneTransformations.filter(transformation => transformation.type != Transformation.SMOOTH);
     },
     
     addPoint: function() {
-        if (this.shape == Shapes.POLYGON || this.shape == Shapes.POLYLINE) {
+        if (this.shape == Shape.POLYGON || this.shape == Shape.POLYLINE) {
             // copy last point
             let [lastPoint, secondToLastPoint] = [this.points[this.points.length - 1], this.points[this.points.length - 2]];
             if (!getNearness(secondToLastPoint, lastPoint, MIN_DRAWING_SIZE))
                 this.points.push([lastPoint[0], lastPoint[1]]);
-        } else if (this.shape == Shapes.LINE) {
+        } else if (this.shape == Shape.LINE) {
             if (this.points.length == 2) {
                 this.points[2] = this.points[1];
             } else if (this.points.length == 3) {
@@ -454,7 +454,7 @@ const _DrawingElement = new Lang.Class({
     startDrawing: function(startX, startY) {
         this.points.push([startX, startY]);
         
-        if (this.shape == Shapes.POLYGON || this.shape == Shapes.POLYLINE)
+        if (this.shape == Shape.POLYGON || this.shape == Shape.POLYLINE)
             this.points.push([startX, startY]);
     },
     
@@ -465,29 +465,29 @@ const _DrawingElement = new Lang.Class({
         
         transform = transform || this.transformations.length >= 1;
         
-        if (this.shape == Shapes.NONE) {
+        if (this.shape == Shape.NONE) {
             points.push([x, y]);
             if (transform)
                 this._smooth(points.length - 1);
             
-        } else if ((this.shape == Shapes.RECTANGLE || this.shape == Shapes.POLYGON || this.shape == Shapes.POLYLINE) && transform) {
+        } else if ((this.shape == Shape.RECTANGLE || this.shape == Shape.POLYGON || this.shape == Shape.POLYLINE) && transform) {
             if (points.length < 2)
                 return;
                 
             let center = this._getOriginalCenter();
-            this.transformations[0] = { type: Transformations.ROTATION,
+            this.transformations[0] = { type: Transformation.ROTATION,
                                         angle: getAngle(center[0], center[1], points[points.length - 1][0], points[points.length - 1][1], x, y) };
             
-        } else if (this.shape == Shapes.ELLIPSE && transform) {
+        } else if (this.shape == Shape.ELLIPSE && transform) {
             if (points.length < 2)
                 return;
             
             points[2] = [x, y];
             let center = this._getOriginalCenter();
-            this.transformations[0] = { type: Transformations.ROTATION,
+            this.transformations[0] = { type: Transformation.ROTATION,
                                         angle: getAngle(center[0], center[1], center[0] + 1, center[1], x, y) };
             
-        } else if (this.shape == Shapes.POLYGON || this.shape == Shapes.POLYLINE) {
+        } else if (this.shape == Shape.POLYGON || this.shape == Shape.POLYLINE) {
             points[points.length - 1] = [x, y];
             
         } else {
@@ -498,51 +498,51 @@ const _DrawingElement = new Lang.Class({
     
     stopDrawing: function() {
         // skip when the size is too small to be visible (3px) (except for free drawing)
-        if (this.shape != Shapes.NONE && this.points.length >= 2) {
+        if (this.shape != Shape.NONE && this.points.length >= 2) {
             let lastPoint = this.points[this.points.length - 1];
             let secondToLastPoint = this.points[this.points.length - 2];
             if (getNearness(secondToLastPoint, lastPoint, MIN_DRAWING_SIZE))
                 this.points.pop();
         }
         
-        if (this.transformations[0] && this.transformations[0].type == Transformations.ROTATION &&
+        if (this.transformations[0] && this.transformations[0].type == Transformation.ROTATION &&
                 Math.abs(this.transformations[0].angle) < MIN_ROTATION_ANGLE)
             this.transformations.shift();
     },
     
     startTransformation: function(startX, startY, type, undoable) {
-        if (type == Transformations.TRANSLATION)
+        if (type == Transformation.TRANSLATION)
             this.transformations.push({ startX, startY, type, undoable, slideX: 0, slideY: 0 });
-        else if (type == Transformations.ROTATION)
+        else if (type == Transformation.ROTATION)
             this.transformations.push({ startX, startY, type, undoable, angle: 0 });
-        else if (type == Transformations.SCALE_PRESERVE || type == Transformations.STRETCH)
+        else if (type == Transformation.SCALE_PRESERVE || type == Transformation.STRETCH)
             this.transformations.push({ startX, startY, type, undoable, scaleX: 1, scaleY: 1, angle: 0 });
-        else if (type == Transformations.REFLECTION)
+        else if (type == Transformation.REFLECTION)
             this.transformations.push({ startX, startY, endX: startX, endY: startY, type, undoable,
                                         scaleX:  1, scaleY:  1, slideX: 0, slideY: 0, angle: 0 });
-        else if (type == Transformations.INVERSION)
+        else if (type == Transformation.INVERSION)
             this.transformations.push({ startX, startY, endX: startX, endY: startY, type, undoable,
                                         scaleX: -1, scaleY: -1, slideX: startX, slideY: startY,
                                         angle: Math.PI + Math.atan(startY / (startX || 1)) });
         
-        if (type == Transformations.REFLECTION || type == Transformations.INVERSION)
+        if (type == Transformation.REFLECTION || type == Transformation.INVERSION)
             this.showSymmetryElement = true;
     },
     
     updateTransformation: function(x, y) {
         let transformation = this.lastTransformation;
         
-        if (transformation.type == Transformations.TRANSLATION) {
+        if (transformation.type == Transformation.TRANSLATION) {
             transformation.slideX = x - transformation.startX;
             transformation.slideY = y - transformation.startY;
-        } else if (transformation.type == Transformations.ROTATION) {
+        } else if (transformation.type == Transformation.ROTATION) {
             let center = this._getTransformedCenter(transformation);
             transformation.angle = getAngle(center[0], center[1], transformation.startX, transformation.startY, x, y);
-        } else if (transformation.type == Transformations.SCALE_PRESERVE) {
+        } else if (transformation.type == Transformation.SCALE_PRESERVE) {
             let center = this._getTransformedCenter(transformation);
             let scale = Math.hypot(x - center[0], y - center[1]) / Math.hypot(transformation.startX - center[0], transformation.startY - center[1]) || 1;
             [transformation.scaleX, transformation.scaleY] = [scale, scale];
-        } else if (transformation.type == Transformations.STRETCH) {
+        } else if (transformation.type == Transformation.STRETCH) {
             let center = this._getTransformedCenter(transformation);
             let startAngle = getAngle(center[0], center[1], center[0] + 1, center[1], transformation.startX, transformation.startY);
             let vertical = Math.abs(Math.sin(startAngle)) >= Math.sin(Math.PI / 2 - STRETCH_TOLERANCE);
@@ -551,7 +551,7 @@ const _DrawingElement = new Lang.Class({
             transformation.scaleX = vertical ? 1 : scale;
             transformation.scaleY = !vertical ? 1 : scale;
             transformation.angle = vertical || horizontal ? 0 : getAngle(center[0], center[1], center[0] + 1, center[1], x, y);
-        } else if (transformation.type == Transformations.REFLECTION) {
+        } else if (transformation.type == Transformation.REFLECTION) {
             [transformation.endX, transformation.endY] = [x, y];
             if (getNearness([transformation.startX, transformation.startY], [x, y], MIN_REFLECTION_LINE_LENGTH)) {
                 // do nothing to avoid jumps (no transformation at starting and locked transformation after)
@@ -574,7 +574,7 @@ const _DrawingElement = new Lang.Class({
                 [transformation.slideX, transformation.slideY] = [transformation.startX - transformation.startY * tan, 0];
                 transformation.angle = Math.PI - Math.atan(tan);
             }
-        } else if (transformation.type == Transformations.INVERSION) {
+        } else if (transformation.type == Transformation.INVERSION) {
             [transformation.endX, transformation.endY] = [x, y];
             [transformation.scaleX, transformation.scaleY] = [-1, -1];
             [transformation.slideX, transformation.slideY] = [x, y];
@@ -590,10 +590,10 @@ const _DrawingElement = new Lang.Class({
         if (!transformation)
             return;
         
-        if (transformation.type == Transformations.REFLECTION &&
+        if (transformation.type == Transformation.REFLECTION &&
                 getNearness([transformation.startX, transformation.startY], [transformation.endX, transformation.endY], MIN_REFLECTION_LINE_LENGTH) ||
-            transformation.type == Transformations.TRANSLATION && Math.hypot(transformation.slideX, transformation.slideY) < MIN_TRANSLATION_DISTANCE ||
-            transformation.type == Transformations.ROTATION && Math.abs(transformation.angle) < MIN_ROTATION_ANGLE) {
+            transformation.type == Transformation.TRANSLATION && Math.hypot(transformation.slideX, transformation.slideY) < MIN_TRANSLATION_DISTANCE ||
+            transformation.type == Transformation.ROTATION && Math.abs(transformation.angle) < MIN_ROTATION_ANGLE) {
             
             this.transformations.pop();
         } else {
@@ -614,7 +614,7 @@ const _DrawingElement = new Lang.Class({
                 this._undoneTransformations = [];
             
             let transformation = this.transformations.pop();
-            if (transformation.type == Transformations.SMOOTH)
+            if (transformation.type == Transformation.SMOOTH)
                 transformation.undo();
             
             this._undoneTransformations.push(transformation);
@@ -631,7 +631,7 @@ const _DrawingElement = new Lang.Class({
                 this.transformations = [];
             
             let transformation = this._undoneTransformations.pop();
-            if (transformation.type == Transformations.SMOOTH)
+            if (transformation.type == Transformation.SMOOTH)
                 transformation.redo();
             
             this.transformations.push(transformation);
@@ -654,9 +654,9 @@ const _DrawingElement = new Lang.Class({
     _getOriginalCenter: function() {
         if (!this._originalCenter) {
             let points = this.points;
-            this._originalCenter = this.shape == Shapes.ELLIPSE ? [points[0][0], points[0][1]] :
-                                   this.shape == Shapes.LINE && points.length == 4 ? getCurveCenter(points[0], points[1], points[2], points[3]) :
-                                   this.shape == Shapes.LINE && points.length == 3 ? getCurveCenter(points[0], points[0], points[1], points[2]) :
+            this._originalCenter = this.shape == Shape.ELLIPSE ? [points[0][0], points[0][1]] :
+                                   this.shape == Shape.LINE && points.length == 4 ? getCurveCenter(points[0], points[1], points[2], points[3]) :
+                                   this.shape == Shape.LINE && points.length == 3 ? getCurveCenter(points[0], points[0], points[1], points[2]) :
                                    points.length >= 3 ? getCentroid(points) :
                                    getNaiveCenter(points);
         }
@@ -672,13 +672,13 @@ const _DrawingElement = new Lang.Class({
             // Apply transformations to the matrice in reverse order
             // because Pango multiply matrices by the left when applying a transformation
             this.transformations.slice(0, this.transformations.indexOf(transformation)).reverse().forEach(transformation => {
-                if (transformation.type == Transformations.TRANSLATION) {
+                if (transformation.type == Transformation.TRANSLATION) {
                     matrix.translate(transformation.slideX, transformation.slideY);
-                } else if (transformation.type == Transformations.ROTATION) {
+                } else if (transformation.type == Transformation.ROTATION) {
                     // nothing, the center position is preserved.
-                } else if (transformation.type == Transformations.SCALE_PRESERVE || transformation.type == Transformations.STRETCH) {
+                } else if (transformation.type == Transformation.SCALE_PRESERVE || transformation.type == Transformation.STRETCH) {
                     // nothing, the center position is preserved.
-                } else if (transformation.type == Transformations.REFLECTION || transformation.type == Transformations.INVERSION) {
+                } else if (transformation.type == Transformation.REFLECTION || transformation.type == Transformation.INVERSION) {
                     matrix.translate(transformation.slideX, transformation.slideY);
                     matrix.rotate(-transformation.angle * RADIAN);
                     matrix.scale(transformation.scaleX, transformation.scaleY);
@@ -757,7 +757,7 @@ const TextElement = new Lang.Class({
         layout.set_font_description(this.font);
         layout.set_text(this.text, -1);
         this.textWidth = layout.get_pixel_size()[0];
-        this.lineWidths = layout.get_lines_readonly().map(layoutLine => layoutLine.get_pixel_extents()[1].width)
+        this.lineWidths = layout.get_lines_readonly().map(layoutLine => layoutLine.get_pixel_extents()[1].width);
         
         layout.get_lines_readonly().forEach((layoutLine, index) => {
             cr.moveTo(this._getLineX(index), this.y + this.height * index);

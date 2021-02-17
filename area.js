@@ -1,5 +1,5 @@
 /* jslint esversion: 6 */
-/* exported Tools, DrawingArea */
+/* exported Tool, DrawingArea */
 
 /*
  * Copyright 2019 Abakkk
@@ -53,17 +53,17 @@ const GRID_TILES_HORIZONTAL_NUMBER = 30;
 const COLOR_PICKER_EXTENSION_UUID = 'color-picker@tuberry'; 
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
-const { Shapes, TextAlignment, Transformations } = Elements;
+const { Shape, TextAlignment, Transformation } = Elements;
 const { DisplayStrings } = Menu;
 
 const FontGenericFamilies = ['Sans-Serif', 'Serif', 'Monospace', 'Cursive', 'Fantasy'];
-const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
-var Tools = Object.assign({
+const Manipulation = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
+var Tool = Object.assign({
     getNameOf: function(value) {
         return Object.keys(this).find(key => this[key] == value);
     }
-}, Shapes, Manipulations);
-Object.defineProperty(Tools, 'getNameOf', { enumerable: false });
+}, Shape, Manipulation);
+Object.defineProperty(Tool, 'getNameOf', { enumerable: false });
 
 // toJSON provides a string suitable for SVG color attribute whereas
 // toString provides a string suitable for displaying the color name to the user.
@@ -150,7 +150,7 @@ var DrawingArea = new Lang.Class({
         this.elements = [];
         this.undoneElements = [];
         this.currentElement = null;
-        this.currentTool = Shapes.NONE;
+        this.currentTool = Shape.NONE;
         this.currentImage = null;
         this.currentTextAlignment = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? TextAlignment.RIGHT : TextAlignment.LEFT;
         let fontName = St.Settings && St.Settings.get().font_name || Convenience.getSettings('org.gnome.desktop.interface').get_string('font-name');
@@ -178,7 +178,7 @@ var DrawingArea = new Lang.Class({
     
     get menu() {
         if (!this._menu)
-            this._menu = new Menu.DrawingMenu(this, this.monitor, Tools, this.areaManagerUtils);
+            this._menu = new Menu.DrawingMenu(this, this.monitor, Tool, this.areaManagerUtils);
         return this._menu;
     },
     
@@ -251,7 +251,7 @@ var DrawingArea = new Lang.Class({
     
     get hasManipulationTool() {
         // No Object.values method in GS 3.24.
-        return Object.keys(Manipulations).map(key => Manipulations[key]).indexOf(this.currentTool) != -1;
+        return Object.keys(Manipulation).map(key => Manipulation[key]).indexOf(this.currentTool) != -1;
     },
     
     // Boolean wrapper for switch menu item.
@@ -325,7 +325,7 @@ var DrawingArea = new Lang.Class({
             
             if (this.elements[i].fill && !this.elements[i].isStraightLine) {
                 cr.fillPreserve();
-                if (this.elements[i].shape == Shapes.NONE || this.elements[i].shape == Shapes.LINE)
+                if (this.elements[i].shape == Shape.NONE || this.elements[i].shape == Shape.LINE)
                     cr.closePath();
             } 
             
@@ -335,7 +335,7 @@ var DrawingArea = new Lang.Class({
         
         if (this.currentElement && this.currentElement.eraser) {
             this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
-                                                 showTextRectangle: this.currentElement.shape != Shapes.TEXT || !this.isWriting,
+                                                 showTextRectangle: this.currentElement.shape != Shape.TEXT || !this.isWriting,
                                                  dummyStroke: this.currentElement.fill && this.currentElement.line.lineWidth == 0 });
             cr.stroke();
         }
@@ -346,7 +346,7 @@ var DrawingArea = new Lang.Class({
             return;
         
         this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
-                                             showTextRectangle: this.currentElement.shape != Shapes.TEXT || !this.isWriting,
+                                             showTextRectangle: this.currentElement.shape != Shape.TEXT || !this.isWriting,
                                              dummyStroke: this.currentElement.fill && this.currentElement.line.lineWidth == 0 });
         cr.stroke();
     },
@@ -379,11 +379,11 @@ var DrawingArea = new Lang.Class({
     },
     
     _getHasImageBack: function() {
-        return this.elements.some(element => element.shape == Shapes.IMAGE);
+        return this.elements.some(element => element.shape == Shape.IMAGE);
     },
     
     _getHasImageFore: function() {
-        return this.currentElement && this.currentElement.shape == Shapes.IMAGE || false;
+        return this.currentElement && this.currentElement.shape == Shape.IMAGE || false;
     },
     
     _redisplay: function() {
@@ -411,7 +411,7 @@ var DrawingArea = new Lang.Class({
         let controlPressed = event.has_control_modifier();
         let shiftPressed = event.has_shift_modifier();
         
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting)
+        if (this.currentElement && this.currentElement.shape == Shape.TEXT && this.isWriting)
             // finish writing
             this._stopWriting();
         
@@ -471,7 +471,7 @@ var DrawingArea = new Lang.Class({
     },
     
     _onKeyPressed: function(actor, event) {
-        if (this.currentElement && this.currentElement.shape == Shapes.LINE &&
+        if (this.currentElement && this.currentElement.shape == Shape.LINE &&
             (event.get_key_symbol() == Clutter.KEY_Return ||
              event.get_key_symbol() == Clutter.KEY_KP_Enter ||
              event.get_key_symbol() == Clutter.KEY_Control_L)) {
@@ -485,7 +485,7 @@ var DrawingArea = new Lang.Class({
             this._redisplay();
             return Clutter.EVENT_STOP;
         } else if (this.currentElement &&
-                   (this.currentElement.shape == Shapes.POLYGON || this.currentElement.shape == Shapes.POLYLINE) &&
+                   (this.currentElement.shape == Shape.POLYGON || this.currentElement.shape == Shape.POLYLINE) &&
                    (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == Clutter.KEY_KP_Enter)) {
             
             this.currentElement.addPoint();
@@ -560,7 +560,7 @@ var DrawingArea = new Lang.Class({
         if (!success)
             return;
         
-        if (this.currentTool == Manipulations.MIRROR) {
+        if (this.currentTool == Manipulation.MIRROR) {
             this.grabbedElementLocked = !this.grabbedElementLocked;
             if (this.grabbedElementLocked) {
                 this.updatePointerCursor();
@@ -591,12 +591,12 @@ var DrawingArea = new Lang.Class({
         
         let undoable = !duplicate;
         
-        if (this.currentTool == Manipulations.MOVE)
-            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.ROTATION : Transformations.TRANSLATION, undoable);
-        else if (this.currentTool == Manipulations.RESIZE)
-            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.STRETCH : Transformations.SCALE_PRESERVE, undoable);
-         else if (this.currentTool == Manipulations.MIRROR) {
-            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.INVERSION : Transformations.REFLECTION, undoable);
+        if (this.currentTool == Manipulation.MOVE)
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformation.ROTATION : Transformation.TRANSLATION, undoable);
+        else if (this.currentTool == Manipulation.RESIZE)
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformation.STRETCH : Transformation.SCALE_PRESERVE, undoable);
+         else if (this.currentTool == Manipulation.MIRROR) {
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformation.INVERSION : Transformation.REFLECTION, undoable);
             this._redisplay();
         }
         
@@ -616,28 +616,28 @@ var DrawingArea = new Lang.Class({
     _updateTransforming: function(x, y, controlPressed) {
         let undoable = this.grabbedElement.lastTransformation.undoable || false;
         
-        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.TRANSLATION) {
+        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformation.TRANSLATION) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.ROTATION, undoable);
-        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.ROTATION) {
+            this.grabbedElement.startTransformation(x, y, Transformation.ROTATION, undoable);
+        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformation.ROTATION) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.TRANSLATION, undoable);
+            this.grabbedElement.startTransformation(x, y, Transformation.TRANSLATION, undoable);
         }
         
-        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.SCALE_PRESERVE) {
+        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformation.SCALE_PRESERVE) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.STRETCH, undoable);
-        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.STRETCH) {
+            this.grabbedElement.startTransformation(x, y, Transformation.STRETCH, undoable);
+        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformation.STRETCH) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.SCALE_PRESERVE, undoable);
+            this.grabbedElement.startTransformation(x, y, Transformation.SCALE_PRESERVE, undoable);
         }
         
-        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.REFLECTION) {
+        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformation.REFLECTION) {
             this.grabbedElement.transformations.pop();
-            this.grabbedElement.startTransformation(x, y, Transformations.INVERSION, undoable);
-        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.INVERSION) {
+            this.grabbedElement.startTransformation(x, y, Transformation.INVERSION, undoable);
+        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformation.INVERSION) {
             this.grabbedElement.transformations.pop();
-            this.grabbedElement.startTransformation(x, y, Transformations.REFLECTION, undoable);
+            this.grabbedElement.startTransformation(x, y, Transformation.REFLECTION, undoable);
         }
         
         this.grabbedElement.updateTransformation(x, y);
@@ -669,7 +669,7 @@ var DrawingArea = new Lang.Class({
             this._stopDrawing();
         });
         
-        if (this.currentTool == Shapes.TEXT) {
+        if (this.currentTool == Shape.TEXT) {
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
                 color: this.currentColor,
@@ -680,7 +680,7 @@ var DrawingArea = new Lang.Class({
                 textAlignment: this.currentTextAlignment,
                 points: []
             });
-        } else if (this.currentTool == Shapes.IMAGE) {
+        } else if (this.currentTool == Shape.IMAGE) {
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
                 color: this.currentColor,
@@ -703,8 +703,8 @@ var DrawingArea = new Lang.Class({
         
         this.currentElement.startDrawing(startX, startY);
         
-        if (this.currentTool == Shapes.POLYGON || this.currentTool == Shapes.POLYLINE) {
-            let icon = Files.Icons[this.currentTool == Shapes.POLYGON ? 'TOOL_POLYGON' : 'TOOL_POLYLINE'];
+        if (this.currentTool == Shape.POLYGON || this.currentTool == Shape.POLYLINE) {
+            let icon = Files.Icons[this.currentTool == Shape.POLYGON ? 'TOOL_POLYGON' : 'TOOL_POLYLINE'];
             // Translators: %s is a key label
             this.emit('show-osd', icon, _("Press <i>%s</i> to mark vertices")
                                         .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
@@ -727,7 +727,7 @@ var DrawingArea = new Lang.Class({
             let controlPressed = event.has_control_modifier();
             this._updateDrawing(x, y, controlPressed);
             
-            if (this.currentTool == Shapes.NONE) {
+            if (this.currentTool == Shape.NONE) {
                 let device = event.get_device();
                 let sequence = event.get_event_sequence();
                 
@@ -781,14 +781,14 @@ var DrawingArea = new Lang.Class({
         }
         
         // skip when a polygon has not at least 3 points
-        if (this.currentElement && this.currentElement.shape == Shapes.POLYGON && this.currentElement.points.length < 3)
+        if (this.currentElement && this.currentElement.shape == Shape.POLYGON && this.currentElement.points.length < 3)
             this.currentElement = null;
         
         if (this.currentElement)
             this.currentElement.stopDrawing();
         
         if (this.currentElement && this.currentElement.points.length >= 2) {
-            if (this.currentElement.shape == Shapes.TEXT && !this.isWriting) {
+            if (this.currentElement.shape == Shape.TEXT && !this.isWriting) {
                 this._startWriting();
                 return;
             }
@@ -891,15 +891,15 @@ var DrawingArea = new Lang.Class({
     },
     
     updatePointerCursor: function(controlPressed) {
-        if (this.currentTool == Manipulations.MIRROR && this.grabbedElementLocked)
+        if (this.currentTool == Manipulation.MIRROR && this.grabbedElementLocked)
             this.setPointerCursor('CROSSHAIR');
         else if (this.hasManipulationTool)
             this.setPointerCursor(this.grabbedElement ? 'MOVE_OR_RESIZE_WINDOW' : 'DEFAULT');
-        else if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting)
+        else if (this.currentElement && this.currentElement.shape == Shape.TEXT && this.isWriting)
             this.setPointerCursor('IBEAM');
         else if (!this.currentElement)
-            this.setPointerCursor(this.currentTool == Shapes.NONE ? 'POINTING_HAND' : 'CROSSHAIR');
-        else if (this.currentElement.shape != Shapes.NONE && controlPressed)
+            this.setPointerCursor(this.currentTool == Shape.NONE ? 'POINTING_HAND' : 'CROSSHAIR');
+        else if (this.currentElement.shape != Shape.NONE && controlPressed)
             this.setPointerCursor('MOVE_OR_RESIZE_WINDOW');
     },
     
@@ -988,7 +988,7 @@ var DrawingArea = new Lang.Class({
     },
     
     smoothLastElement: function() {
-        if (this.elements.length > 0 && this.elements[this.elements.length - 1].shape == Shapes.NONE) {
+        if (this.elements.length > 0 && this.elements[this.elements.length - 1].shape == Shape.NONE) {
             this.elements[this.elements.length - 1].smoothAll();
             this._redisplay();
         }
@@ -1069,7 +1069,7 @@ var DrawingArea = new Lang.Class({
     
     selectTool: function(tool) {
         this.currentTool = tool;
-        this.emit('show-osd', Files.Icons[`TOOL_${Tools.getNameOf(tool)}`] || null, DisplayStrings.Tool[tool], "", -1, false);
+        this.emit('show-osd', Files.Icons[`TOOL_${Tool.getNameOf(tool)}`] || null, DisplayStrings.Tool[tool], "", -1, false);
         this.updatePointerCursor();
     },
     
@@ -1169,7 +1169,7 @@ var DrawingArea = new Lang.Class({
     pasteImageFiles: function() {
         Files.Images.addImagesFromClipboard(lastImage => {
             this.currentImage = lastImage;
-            this.currentTool = Shapes.IMAGE;
+            this.currentTool = Shape.IMAGE;
             this.updatePointerCursor();
             this.emit('show-osd', this.currentImage.gicon, this.currentImage.toString(), "", -1, false);
         });
@@ -1369,7 +1369,7 @@ var DrawingArea = new Lang.Class({
         this._stopAll();
         
         let prefixes = 'xmlns="http://www.w3.org/2000/svg"';
-        if (this.elements.some(element => element.shape == Shapes.IMAGE))
+        if (this.elements.some(element => element.shape == Shape.IMAGE))
             prefixes += ' xmlns:xlink="http://www.w3.org/1999/xlink"';
         let content = `<svg viewBox="0 0 ${this.layerContainer.width} ${this.layerContainer.height}" ${prefixes}>`;
         let backgroundColorString = this.hasBackground ? String(this.areaBackgroundColor) : 'transparent';
