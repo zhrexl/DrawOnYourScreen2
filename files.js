@@ -47,7 +47,7 @@ const ThemedIconNames = {
     GRAB: 'input-touchpad', UNGRAB: 'touchpad-disabled',
     OPEN: 'document-open', SAVE: 'document-save',
     FONT_FAMILY: 'font-x-generic', FONT_STYLE: 'format-text-italic', FONT_WEIGHT:'format-text-bold',
-    LEFT_ALIGNED: 'format-justify-left', RIGHT_ALIGNED: 'format-justify-right',
+    LEFT_ALIGNED: 'format-justify-left', CENTERED: 'format-justify-center',RIGHT_ALIGNED: 'format-justify-right',
     TOOL_IMAGE: 'insert-image', TOOL_TEXT: 'insert-text',
 };
 

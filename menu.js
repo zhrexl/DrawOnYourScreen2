@@ -47,6 +47,7 @@ const FONT_FAMILY_STYLE = true;
 // use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
 const WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
+const TextAlignmentIcon = { 0: Files.Icons.LEFT_ALIGNED, 1: Files.Icons.CENTERED, 2: Files.Icons.RIGHT_ALIGNED };
 
 const getActor = function(object) {
     return GS_VERSION < '3.33.0' ? object.actor : object;
@@ -124,9 +125,12 @@ var DisplayStrings = {
         return _("%f px").format(value);
     },
     
-    getTextAlignment: function(rightAligned) {
+    get TextAlignment() {
         // Translators: text alignment
-        return rightAligned ? _("Right aligned") : _("Left aligned");
+        if (!this._textAlignments)
+            this._textAlignments = { 0: _("Left aligned"), 1: _("Centered"), 2: _("Right aligned") };
+        
+        return this._textAlignments;
     },
     
     get Tool() {
@@ -268,7 +272,7 @@ var DrawingMenu = new Lang.Class({
         this._addFontFamilySubMenuItem(fontSection, Files.Icons.FONT_FAMILY);
         this._addSubMenuItem(fontSection, Files.Icons.FONT_WEIGHT, DisplayStrings.FontWeight, this.area, 'currentFontWeight');
         this._addSubMenuItem(fontSection, Files.Icons.FONT_STYLE, DisplayStrings.FontStyle, this.area, 'currentFontStyle');
-        this._addSwitchItem(fontSection, DisplayStrings.getTextAlignment(true), Files.Icons.LEFT_ALIGNED, Files.Icons.RIGHT_ALIGNED, this.area, 'currentTextRightAligned');
+        this._addTextAlignmentSubMenuItem(fontSection);
         this._addSeparator(fontSection);
         this.menu.addMenuItem(fontSection);
         fontSection.itemActivated = () => {};
@@ -549,6 +553,28 @@ var DrawingMenu = new Lang.Class({
             }
             item.menu.openOld();
         };
+        
+        menu.addMenuItem(item);
+    },
+    
+    _addTextAlignmentSubMenuItem: function(menu) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(DisplayStrings.TextAlignment[this.area.currentTextAlignment], true);
+        item.icon.set_gicon(TextAlignmentIcon[this.area.currentTextAlignment]);
+        
+        item.menu.itemActivated = item.menu.close;
+        
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            Object.keys(TextAlignmentIcon).forEach(key => {
+                let subItem = item.menu.addAction(DisplayStrings.TextAlignment[key], () => {
+                    item.label.set_text(DisplayStrings.TextAlignment[key]);
+                    this.area.currentTextAlignment = key;
+                    item.icon.set_gicon(TextAlignmentIcon[key]);
+                });
+                
+                getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+            });
+            return GLib.SOURCE_REMOVE;
+        });
         
         menu.addMenuItem(item);
     },

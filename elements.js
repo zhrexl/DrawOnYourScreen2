@@ -31,6 +31,7 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
 var Shapes = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
+var TextAlignment = { LEFT: 0, CENTER: 1, RIGHT: 2 };
 var Transformations = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5, SMOOTH: 100 };
 
 var getAllFontFamilies = function() {
@@ -111,6 +112,11 @@ const _DrawingElement = new Lang.Class({
             this.points.push([ratio * (p1[0] - p0[0]) + p0[0], ratio * (p1[1] - p0[1]) + p0[1]]);
         }
         delete this.transform;
+        
+        // v10-
+        if (this.textRightAligned)
+            this.textAlignment = TextAlignment.RIGHT;
+        delete this.textRightAligned;
     },
     
     // toJSON is called by JSON.stringify
@@ -709,7 +715,7 @@ const TextElement = new Lang.Class({
             eraser: this.eraser,
             transformations: this.transformations,
             text: this.text,
-            textRightAligned: this.textRightAligned,
+            textAlignment: this.textAlignment,
             font: this.font.to_string(),
             points: this.points.map((point) => [Math.round(point[0]*100)/100, Math.round(point[1]*100)/100])
         };
@@ -717,7 +723,11 @@ const TextElement = new Lang.Class({
     
     get x() {
         // this.textWidth is computed during Cairo building.
-        return this.points[1][0] - (this.textRightAligned ? this.textWidth : 0);
+        let offset = this.textAlignment == TextAlignment.RIGHT ? this.textWidth :
+                     this.textAlignment == TextAlignment.CENTER ? this.textWidth / 2 :
+                     0;
+        
+        return this.points[1][0] - offset;
     },
     
     get y() {
@@ -730,7 +740,11 @@ const TextElement = new Lang.Class({
     
     // this.lineWidths is computed during Cairo building.
     _getLineX: function(index) {
-        return this.points[1][0] - (this.textRightAligned && this.lineWidths && this.lineWidths[index] ? this.lineWidths[index] : 0);
+        let offset = this.textAlignment == TextAlignment.RIGHT && this.lineWidths && this.lineWidths[index] ? this.lineWidths[index] :
+                     this.textAlignment == TextAlignment.CENTER && this.lineWidths && this.lineWidths[index] ? this.lineWidths[index] / 2 :
+                     0;
+        
+        return this.points[1][0] - offset;
     },
     
     _drawCairo: function(cr, params) {
@@ -807,7 +821,7 @@ const TextElement = new Lang.Class({
         // It is a fallback for thumbnails. The following layout is not the same than the Cairo one and
         // layoutLine.get_pixel_extents does not return the correct value with non-latin fonts.
         // An alternative would be to store this.lineWidths in the json.
-        if (this.textRightAligned && !this.lineWidths) {
+        if (this.textAlignment != TextAlignment.LEFT && !this.lineWidths) {
             let clutterText = new Clutter.Text({ text: this.text });
             let layout = clutterText.get_layout();
             let fontSize = height * Pango.SCALE;

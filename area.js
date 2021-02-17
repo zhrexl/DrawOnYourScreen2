@@ -53,7 +53,7 @@ const GRID_TILES_HORIZONTAL_NUMBER = 30;
 const COLOR_PICKER_EXTENSION_UUID = 'color-picker@tuberry'; 
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
-const { Shapes, Transformations } = Elements;
+const { Shapes, TextAlignment, Transformations } = Elements;
 const { DisplayStrings } = Menu;
 
 const FontGenericFamilies = ['Sans-Serif', 'Serif', 'Monospace', 'Cursive', 'Fantasy'];
@@ -152,7 +152,7 @@ var DrawingArea = new Lang.Class({
         this.currentElement = null;
         this.currentTool = Shapes.NONE;
         this.currentImage = null;
-        this.currentTextRightAligned = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL;
+        this.currentTextAlignment = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? TextAlignment.RIGHT : TextAlignment.LEFT;
         let fontName = St.Settings && St.Settings.get().font_name || Convenience.getSettings('org.gnome.desktop.interface').get_string('font-name');
         this.currentFont = Pango.FontDescription.from_string(fontName);
         this.currentFont.unset_fields(Pango.FontMask.SIZE);
@@ -677,7 +677,7 @@ var DrawingArea = new Lang.Class({
                 font: this.currentFont.copy(),
                 // Translators: initial content of the text area
                 text: pgettext("text-area-content", "Text"),
-                textRightAligned: this.currentTextRightAligned,
+                textAlignment: this.currentTextAlignment,
                 points: []
             });
         } else if (this.currentTool == Shapes.IMAGE) {
@@ -1151,13 +1151,13 @@ var DrawingArea = new Lang.Class({
     },
     
     switchTextAlignment: function() {
-        this.currentTextRightAligned = !this.currentTextRightAligned;
-        if (this.currentElement && this.currentElement.textRightAligned !== undefined) {
-            this.currentElement.textRightAligned = this.currentTextRightAligned;
+        this.currentTextAlignment = this.currentTextAlignment == 2 ? 0 : this.currentTextAlignment + 1;
+        if (this.currentElement && this.currentElement.textAlignment != this.currentTextAlignment) {
+            this.currentElement.textAlignment = this.currentTextAlignment;
             this._redisplay();
         }
-        let icon = Files.Icons[this.currentTextRightAligned ? 'RIGHT_ALIGNED' : 'LEFT_ALIGNED'];
-        this.emit('show-osd', icon, DisplayStrings.getTextAlignment(this.currentTextRightAligned), "", -1, false);
+        let icon = Files.Icons[this.currentTextAlignment == TextAlignment.RIGHT ? 'RIGHT_ALIGNED' : this.currentTextAlignment == TextAlignment.CENTER ? 'CENTERED' : 'LEFT_ALIGNED'];
+        this.emit('show-osd', icon, DisplayStrings.TextAlignment[this.currentTextAlignment], "", -1, false);
     },
     
     switchImageFile: function(reverse) {
