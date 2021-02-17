@@ -808,7 +808,7 @@ var DrawingArea = new Lang.Class({
         this.currentElement.cursorPosition = 0;
         // Translators: %s is a key label
         this.emit('show-osd', Files.Icons.TOOL_TEXT, _("Press <i>%s</i>\nto start a new line")
-                                                     .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 1)), "", -1, true);
+                                                     .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
         this._updateTextCursorTimeout();
         this.textHasCursor = true;
         this._redisplay();
@@ -835,6 +835,7 @@ var DrawingArea = new Lang.Class({
         }
         
         this.textEntry.clutterText.set_single_line_mode(false);
+        this.textEntry.clutterText.set_activatable(false);
         this.textEntry.clutterText.connect('activate', (clutterText) => {
             this._stopWriting();
         });
@@ -860,11 +861,6 @@ var DrawingArea = new Lang.Class({
             if (event.get_key_symbol() == Clutter.KEY_Escape) {
                 this.currentElement.text = "";
                 this._stopWriting();
-                return Clutter.EVENT_STOP;
-            } else if (event.has_shift_modifier() &&
-                       (event.get_key_symbol() == Clutter.KEY_Return ||
-                        event.get_key_symbol() == Clutter.KEY_KP_Enter)) {
-                clutterText.insert_unichar('\n');
                 return Clutter.EVENT_STOP;
             }
             
