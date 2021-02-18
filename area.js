@@ -330,6 +330,7 @@ var DrawingArea = new Lang.Class({
             } 
             
             cr.stroke();
+            this.elements[i]._addMarks(cr);
             cr.restore();
         }
         

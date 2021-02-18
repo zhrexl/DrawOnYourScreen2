@@ -64,6 +64,7 @@ const MIN_TRANSLATION_DISTANCE = 1;         // px
 const MIN_ROTATION_ANGLE = Math.PI / 1000;  // rad
 const MIN_DRAWING_SIZE = 3;                 // px
 const MIN_INTERMEDIATE_POINT_DISTANCE = 1;  // px, the higher it is, the fewer points there will be
+const MARK_COLOR = Clutter.Color.get_static(Clutter.StaticColor.BLUE);
 
 var DrawingElement = function(params) {
     return params.shape == Shape.TEXT ? new TextElement(params) :
@@ -139,18 +140,6 @@ const _DrawingElement = new Lang.Class({
         if (this.color)
             Clutter.cairo_set_source_color(cr, this.color);
         
-        if (this.showSymmetryElement) {
-            let transformation = this.lastTransformation;
-            setDummyStroke(cr);
-            if (transformation.type == Transformation.REFLECTION) {
-                cr.moveTo(transformation.startX, transformation.startY);
-                cr.lineTo(transformation.endX, transformation.endY);
-            } else {
-                cr.arc(transformation.endX, transformation.endY, INVERSION_CIRCLE_RADIUS, 0, 2 * Math.PI);
-            }
-            cr.stroke();
-        }
-        
         if (this.line) {
             cr.setLineCap(this.line.lineCap);
             cr.setLineJoin(this.line.lineJoin);
@@ -203,6 +192,43 @@ const _DrawingElement = new Lang.Class({
         this._drawCairo(cr, params);
         
         cr.identityMatrix();
+    },
+    
+    _addMarks: function(cr) {
+        if (this.showSymmetryElement) {
+            setDummyStroke(cr);
+            Clutter.cairo_set_source_color(cr, MARK_COLOR);
+            
+            let transformation = this.lastTransformation;
+            if (transformation.type == Transformation.REFLECTION) {
+                cr.moveTo(transformation.startX, transformation.startY);
+                cr.lineTo(transformation.endX, transformation.endY);
+            } else {
+                cr.arc(transformation.endX, transformation.endY, INVERSION_CIRCLE_RADIUS, 0, 2 * Math.PI);
+            }
+            cr.stroke();
+        }
+        
+        if (this.showRotationCenter) {
+            setDummyStroke(cr);
+            Clutter.cairo_set_source_color(cr, MARK_COLOR);
+            
+            let center = this._getTransformedCenter(this.lastTransformation);
+            cr.arc(center[0], center[1], INVERSION_CIRCLE_RADIUS, 0, 2 * Math.PI);
+            cr.stroke();
+        }
+        
+        if (this.showStretchAxes) {
+            setDummyStroke(cr);
+            Clutter.cairo_set_source_color(cr, MARK_COLOR);
+            
+            let center = this._getTransformedCenter(this.lastTransformation);
+            for (let i = 0; i <=1; i++) {
+                cr.moveTo(center[0] - 1000 * Math.cos(i * Math.PI / 2), center[1] - 1000 * Math.sin(i * Math.PI / 2));
+                cr.lineTo(center[0] + 1000 * Math.cos(i * Math.PI / 2), center[1] + 1000 * Math.sin(i * Math.PI / 2));
+            }
+            cr.stroke();
+        }
     },
     
     _drawCairo: function(cr, params) {
@@ -527,6 +553,10 @@ const _DrawingElement = new Lang.Class({
         
         if (type == Transformation.REFLECTION || type == Transformation.INVERSION)
             this.showSymmetryElement = true;
+        else if (type == Transformation.ROTATION)
+            this.showRotationCenter = true;
+        else if (type == Transformation.STRETCH)
+            this.showStretchAxes = true;
     },
     
     updateTransformation: function(x, y) {
@@ -584,6 +614,8 @@ const _DrawingElement = new Lang.Class({
     
     stopTransformation: function() {
         this.showSymmetryElement = false;
+        this.showRotationCenter = false;
+        this.showStretchAxes = false;
         
         // Clean transformations
         let transformation = this.lastTransformation;
