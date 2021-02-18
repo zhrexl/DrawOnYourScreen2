@@ -22,6 +22,7 @@
  */
 
 const Gtk = imports.gi.Gtk;
+const IS_GTK3 = imports.gi.versions.Gtk == 3;
 
 const GS_VERSION = imports.misc.config.PACKAGE_VERSION;
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -32,7 +33,11 @@ const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const internalShortcutsSchema = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts').settings_schema;
 
 const getKeyLabel = function(accel) {
-    let [keyval, mods] = Gtk.accelerator_parse(accel);
+    let success_, keyval, mods;
+    if (IS_GTK3)
+        [keyval, mods] = Gtk.accelerator_parse(accel);
+    else
+        [success_, keyval, mods] = Gtk.accelerator_parse(accel);
     return Gtk.accelerator_get_label(keyval, mods);
 };
 
