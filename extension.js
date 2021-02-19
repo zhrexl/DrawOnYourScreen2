@@ -171,7 +171,7 @@ const AreaManager = new Lang.Class({
             let loadPersistent = i == Main.layoutManager.primaryIndex && this.persistentOverRestarts;
             // Some utils for the drawing area menus.
             let areaManagerUtils = {
-                getHiddenList: () => this.hiddenList,
+                getHiddenList: () => this.hiddenList || null,
                 togglePanelAndDockOpacity: this.togglePanelAndDockOpacity.bind(this),
                 openPreferences: this.openPreferences.bind(this)
             };

@@ -26,7 +26,7 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
-const IS_GTK3 = imports.gi.versions.Gtk == 3;
+const IS_GTK3 = Gtk.get_major_version() == 3;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -72,7 +72,7 @@ const getChildrenOf = function(widget) {
         let i = 0;
         let children = [];
         let child;
-        while (child = listModel.get_item(i)) {
+        while (!!(child = listModel.get_item(i))) {
             children.push(child);
             i++;
         }
@@ -107,7 +107,8 @@ const TopStack = new GObject.Class({
     Extends: Gtk.Stack,
     
     _init: function(params) {
-        this.parent({ transition_type: Gtk.StackTransitionType.CROSSFADE, transition_duration: 500 });
+        this.parent({ transition_type: Gtk.StackTransitionType.CROSSFADE, transition_duration: 500, hexpand: true, vexpand: true });
+        
         this.prefsPage = new PrefsPage();
         // Translators: "Preferences" page in preferences
         this.add_titled(this.prefsPage, 'prefs', _("Preferences"));
@@ -710,7 +711,7 @@ const FileChooserButton = new GObject.Class({
     },
     
     set location(location) {
-        if (this._location != location) {
+        if (!this._location || this._location != location) {
             this._location = location;
             this.label = location ?
                          Gio.File.new_for_commandline_arg(location).query_info('standard::display-name', Gio.FileQueryInfoFlags.NONE, null).get_display_name() :

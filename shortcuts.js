@@ -22,7 +22,7 @@
  */
 
 const Gtk = imports.gi.Gtk;
-const IS_GTK3 = imports.gi.versions.Gtk == 3;
+const IS_GTK3 = Gtk.get_major_version() == 3;
 
 const GS_VERSION = imports.misc.config.PACKAGE_VERSION;
 const ExtensionUtils = imports.misc.extensionUtils;
