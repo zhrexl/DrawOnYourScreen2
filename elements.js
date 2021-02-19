@@ -809,11 +809,11 @@ const TextElement = new Lang.Class({
             cr.fill();
         }
         
-        if (params.showTextRectangle) {
+        if (params.showElementBounds) {
             cr.rectangle(this.x, this.y - this.height,
                          this.textWidth, this.height * layout.get_line_count());
             setDummyStroke(cr);
-        } else if (params.drawTextRectangle) {
+        } else if (params.drawElementBounds) {
             cr.rectangle(this.x, this.y - this.height,
                          this.textWidth, this.height * layout.get_line_count());
             // Only draw the rectangle to find the element, not to show it.
@@ -937,10 +937,10 @@ const ImageElement = new Lang.Class({
         cr.fill();
         cr.restore();
         
-        if (params.showTextRectangle) {
+        if (params.showElementBounds) {
             cr.rectangle(x, y, width, height);
             setDummyStroke(cr);
-        } else if (params.drawTextRectangle) {
+        } else if (params.drawElementBounds) {
             cr.rectangle(x, y, width, height);
             // Only draw the rectangle to find the element, not to show it.
             cr.setLineWidth(0);

@@ -317,8 +317,8 @@ var DrawingArea = new Lang.Class({
         for (let i = 0; i < this.elements.length; i++) {
             cr.save();
             
-            this.elements[i].buildCairo(cr, { showTextRectangle: this.grabbedElement && this.grabbedElement == this.elements[i],
-                                              drawTextRectangle: this.grabPoint ? true : false });
+            this.elements[i].buildCairo(cr, { showElementBounds: this.grabbedElement && this.grabbedElement == this.elements[i],
+                                              drawElementBounds: this.grabPoint ? true : false });
             
             if (this.grabPoint)
                 this._searchElementToGrab(cr, this.elements[i]);
@@ -336,7 +336,7 @@ var DrawingArea = new Lang.Class({
         
         if (this.currentElement && this.currentElement.eraser) {
             this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
-                                                 showTextRectangle: this.currentElement.shape != Shape.TEXT || !this.isWriting,
+                                                 showElementBounds: this.currentElement.shape != Shape.TEXT || !this.isWriting,
                                                  dummyStroke: this.currentElement.fill && this.currentElement.line.lineWidth == 0 });
             cr.stroke();
         }
@@ -347,7 +347,7 @@ var DrawingArea = new Lang.Class({
             return;
         
         this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
-                                             showTextRectangle: this.currentElement.shape != Shape.TEXT || !this.isWriting,
+                                             showElementBounds: this.currentElement.shape != Shape.TEXT || !this.isWriting,
                                              dummyStroke: this.currentElement.fill && this.currentElement.line.lineWidth == 0 });
         cr.stroke();
     },
