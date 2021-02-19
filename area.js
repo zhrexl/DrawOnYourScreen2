@@ -735,9 +735,17 @@ var DrawingArea = new Lang.Class({
                 // Minimum time between two motion events is about 33 ms.
                 // Add intermediate points to make quick free drawings smoother.
                 this.motionTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, MOTION_TIME, () => {
-                    let [success, coords] = device.get_coords(sequence);
-                    if (!success)
-                        return GLib.SOURCE_CONTINUE;
+                    let success, coords;
+                    if (device.get_coords) {
+                        [success, coords] = device.get_coords(sequence);
+                        if (!success)
+                            return GLib.SOURCE_CONTINUE;
+                    } else {
+                        // GS 40+, device.get_coords() has been removed
+                        // and seat.query_state() is unusable with null sequences.
+                        let pointer = global.get_pointer();
+                        coords = { x: pointer[0], y: pointer[1] };
+                    }
                     
                     let [s, x, y] = this._transformStagePoint(coords.x, coords.y);
                     if (!s)
