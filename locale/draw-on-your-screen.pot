@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2020-10-04 22:45+0200\n"
+"POT-Creation-Date: 2021-02-17 14:14+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -44,7 +44,9 @@ msgstr ""
 
 #. Translators: %s is a key label
 #, javascript-format
-msgid "Press <i>%s</i>\nto start a new line"
+msgid ""
+"Press <i>%s</i>\n"
+"to start a new line"
 msgstr ""
 
 #. Translators: It is displayed in an OSD notification to ask the user to start picking, so it should use the imperative mood.
@@ -214,11 +216,13 @@ msgstr ""
 msgid "%f px"
 msgstr ""
 
-#. Translators: text alignment
-msgid "Right aligned"
+msgid "Left aligned"
 msgstr ""
 
-msgid "Left aligned"
+msgid "Centered"
+msgstr ""
+
+msgid "Right aligned"
 msgstr ""
 
 msgctxt "drawing-tool"
@@ -685,7 +689,7 @@ msgstr ""
 msgid "Change linejoin"
 msgstr ""
 
-msgid "Toggle text alignment"
+msgid "Change text alignment"
 msgstr ""
 
 msgid "Add a drawing background"

@@ -171,7 +171,7 @@ const AreaManager = new Lang.Class({
             let loadPersistent = i == Main.layoutManager.primaryIndex && this.persistentOverRestarts;
             // Some utils for the drawing area menus.
             let areaManagerUtils = {
-                getHiddenList: () => this.hiddenList,
+                getHiddenList: () => this.hiddenList || null,
                 togglePanelAndDockOpacity: this.togglePanelAndDockOpacity.bind(this),
                 openPreferences: this.openPreferences.bind(this)
             };
@@ -210,17 +210,17 @@ const AreaManager = new Lang.Class({
             'switch-fill' : this.activeArea.switchFill.bind(this.activeArea),
             'switch-image-file' : this.activeArea.switchImageFile.bind(this.activeArea, false),
             'switch-image-file-reverse' : this.activeArea.switchImageFile.bind(this.activeArea, true),
-            'select-none-shape': () => this.activeArea.selectTool(Area.Tools.NONE),
-            'select-line-shape': () => this.activeArea.selectTool(Area.Tools.LINE),
-            'select-ellipse-shape': () => this.activeArea.selectTool(Area.Tools.ELLIPSE),
-            'select-rectangle-shape': () => this.activeArea.selectTool(Area.Tools.RECTANGLE),
-            'select-text-shape': () => this.activeArea.selectTool(Area.Tools.TEXT),
-            'select-image-shape': () => this.activeArea.selectTool(Area.Tools.IMAGE),
-            'select-polygon-shape': () => this.activeArea.selectTool(Area.Tools.POLYGON),
-            'select-polyline-shape': () => this.activeArea.selectTool(Area.Tools.POLYLINE),
-            'select-move-tool': () => this.activeArea.selectTool(Area.Tools.MOVE),
-            'select-resize-tool': () => this.activeArea.selectTool(Area.Tools.RESIZE),
-            'select-mirror-tool': () => this.activeArea.selectTool(Area.Tools.MIRROR)
+            'select-none-shape': () => this.activeArea.selectTool(Area.Tool.NONE),
+            'select-line-shape': () => this.activeArea.selectTool(Area.Tool.LINE),
+            'select-ellipse-shape': () => this.activeArea.selectTool(Area.Tool.ELLIPSE),
+            'select-rectangle-shape': () => this.activeArea.selectTool(Area.Tool.RECTANGLE),
+            'select-text-shape': () => this.activeArea.selectTool(Area.Tool.TEXT),
+            'select-image-shape': () => this.activeArea.selectTool(Area.Tool.IMAGE),
+            'select-polygon-shape': () => this.activeArea.selectTool(Area.Tool.POLYGON),
+            'select-polyline-shape': () => this.activeArea.selectTool(Area.Tool.POLYLINE),
+            'select-move-tool': () => this.activeArea.selectTool(Area.Tool.MOVE),
+            'select-resize-tool': () => this.activeArea.selectTool(Area.Tool.RESIZE),
+            'select-mirror-tool': () => this.activeArea.selectTool(Area.Tool.MIRROR)
         };
         
         // available when writing

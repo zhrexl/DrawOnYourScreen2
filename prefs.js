@@ -21,12 +21,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Atk = imports.gi.Atk;
 const Gdk = imports.gi.Gdk;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
+const IS_GTK3 = Gtk.get_major_version() == 3;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -39,11 +39,46 @@ const _ = function(string) {
         return "";
     return gettext(string);
 };
-const _GTK = imports.gettext.domain('gtk30').gettext;
+const _GTK = imports.gettext.domain(IS_GTK3 ? 'gtk30' : 'gtk40').gettext;
 
 const MARGIN = 10;
-const ROWBOX_MARGIN_PARAMS = { margin_top: MARGIN / 2, margin_bottom: MARGIN / 2, margin_left: MARGIN, margin_right: MARGIN };
+const ROWBOX_MARGIN_PARAMS = { margin_top: MARGIN / 2, margin_bottom: MARGIN / 2, margin_start: MARGIN, margin_end: MARGIN, spacing: 4 };
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
+
+if (IS_GTK3) {
+    Gtk.Container.prototype.append = Gtk.Container.prototype.add;
+    Gtk.Bin.prototype.set_child = Gtk.Container.prototype.add;
+}
+
+const setAccessibleLabel = function(widget, label) {
+    if (IS_GTK3)
+        widget.get_accessible().set_name(label);
+    else
+        widget.update_property([Gtk.AccessibleProperty.LABEL], [label]);
+};
+
+const setAccessibleDescription = function(widget, description) {
+    if (IS_GTK3)
+        widget.get_accessible().set_description(description);
+    else
+        widget.update_property([Gtk.AccessibleProperty.DESCRIPTION], [description]);
+};
+
+const getChildrenOf = function(widget) {
+    if (IS_GTK3) {
+        return widget.get_children();
+    } else {
+        let listModel = widget.observe_children();
+        let i = 0;
+        let children = [];
+        let child;
+        while (!!(child = listModel.get_item(i))) {
+            children.push(child);
+            i++;
+        }
+        return children;
+    }
+};
 
 function init() {
     Convenience.initTranslations();
@@ -51,15 +86,19 @@ function init() {
 
 function buildPrefsWidget() {
     let topStack = new TopStack();
-    let switcher = new Gtk.StackSwitcher({halign: Gtk.Align.CENTER, visible: true, stack: topStack});
+    let switcher = new Gtk.StackSwitcher({ halign: Gtk.Align.CENTER, visible: true, stack: topStack });
+    
     GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-        let window = topStack.get_toplevel();
-        let headerBar = window.get_titlebar();
-        headerBar.custom_title = switcher;
-        return false;
+        if (IS_GTK3)
+            topStack.get_toplevel().get_titlebar().set_custom_title(switcher);
+        else
+            topStack.get_root().get_titlebar().set_title_widget(switcher);
+        
+        return GLib.SOURCE_REMOVE;
     });
     
-    topStack.show_all();
+    if (IS_GTK3)
+        topStack.show_all();
     return topStack;
 }
 
@@ -68,7 +107,8 @@ const TopStack = new GObject.Class({
     Extends: Gtk.Stack,
     
     _init: function(params) {
-        this.parent({ transition_type: 1, transition_duration: 500, expand: true });
+        this.parent({ transition_type: Gtk.StackTransitionType.CROSSFADE, transition_duration: 500, hexpand: true, vexpand: true });
+        
         this.prefsPage = new PrefsPage();
         // Translators: "Preferences" page in preferences
         this.add_titled(this.prefsPage, 'prefs', _("Preferences"));
@@ -88,8 +128,8 @@ const AboutPage = new GObject.Class({
     _init: function(params) {
         this.parent({ hscrollbar_policy: Gtk.PolicyType.NEVER });
 
-        let vbox= new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN * 3 });
-        this.add(vbox);
+        let vbox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin_top: 3 * MARGIN, margin_bottom: 3 * MARGIN, margin_start: 3 * MARGIN, margin_end: 3 * MARGIN });
+        this.set_child(vbox);
         
         // Translators: you are free to translate the extension name, that is displayed in About page, or not
         let name = "<b> " + _("Draw On You Screen") + "</b>";
@@ -102,21 +142,21 @@ const AboutPage = new GObject.Class({
         let licenceLink = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html";
         let licence = "<small>" + _GTK("This program comes with absolutely no warranty.\nSee the <a href=\"%s\">%s</a> for details.").format(licenceLink, licenceName) + "</small>";
         
-        let aboutLabel = new Gtk.Label({ wrap: true, justify: 2, use_markup: true, label:
+        let aboutLabel = new Gtk.Label({ wrap: true, justify: Gtk.Justification.CENTER, use_markup: true, label:
             name + "\n\n" + version + "\n\n" + description + "\n\n" + link + "\n\n" + licence + "\n" });
         
-        vbox.add(aboutLabel);
+        vbox.append(aboutLabel);
         
-        let creditBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, margin: 2 * MARGIN });
-        let leftBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let rightBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        let leftLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 2, justify: 1, use_markup: true, label: "<small>" + _GTK("Created by") + "</small>" });
-        let rightLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 1, justify: 0, use_markup: true, label: "<small><a href=\"https://framagit.org/abakkk\">Abakkk</a></small>" });
-        leftBox.pack_start(leftLabel, false, false, 0);
-        rightBox.pack_start(rightLabel, false, false, 0);
-        creditBox.pack_start(leftBox, true, true, 5);
-        creditBox.pack_start(rightBox, true, true, 5);
-        vbox.add(creditBox);
+        let creditBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, margin_top: 2 * MARGIN, margin_bottom: 2 * MARGIN, margin_start: 2 * MARGIN, margin_end: 2 * MARGIN, spacing: 5 });
+        let leftBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, hexpand: true });
+        let rightBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, hexpand: true });
+        leftBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.END, justify: Gtk.Justification.RIGHT,
+                                       use_markup: true, label: "<small>" + _GTK("Created by") + "</small>" }));
+        rightBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.START, justify: Gtk.Justification.LEFT,
+                                        use_markup: true, label: "<small><a href=\"https://framagit.org/abakkk\">Abakkk</a></small>" }));
+        creditBox.append(leftBox);
+        creditBox.append(rightBox);
+        vbox.append(creditBox);
         
         // Translators: add your name here or keep it empty, it will be displayed in about page, e.g.
         // msgstr ""
@@ -124,12 +164,10 @@ const AboutPage = new GObject.Class({
         // "<a href=\"mailto:translator2@mail.org\">translator2</a>\n"
         // "<a href=\"https://...\">translator3</a>"
         if (_("translator-credits") != "translator-credits" && _("translator-credits") != "") {
-            leftBox.pack_start(new Gtk.Label(), false, false, 0);
-            rightBox.pack_start(new Gtk.Label(), false, false, 0);
-            leftLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 2, justify: 1, use_markup: true, label: "<small>" + _GTK("Translated by") + "</small>" });
-            rightLabel = new Gtk.Label({ wrap: true, valign: 1, halign: 1, justify: 0, use_markup: true, label: "<small>" + _("translator-credits") + "</small>" });
-            leftBox.pack_start(leftLabel, false, false, 0);
-            rightBox.pack_start(rightLabel, false, false, 0);
+            leftBox.append(new Gtk.Label());
+            rightBox.append(new Gtk.Label());
+            leftBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.END, justify: 1, use_markup: true, label: "<small>" + _GTK("Translated by") + "</small>" }));
+            rightBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.START, justify: 0, use_markup: true, label: "<small>" + _("translator-credits") + "</small>" }));
         }
     }
 });
@@ -144,44 +182,46 @@ const DrawingPage = new GObject.Class({
         this.settings = Convenience.getSettings(Me.metadata['settings-schema'] + '.drawing');
         this.schema = this.settings.settings_schema;
         
-        let box = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: 3 * MARGIN, spacing: 3 * MARGIN });
-        this.add(box);
+        let box = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin_top: 3 * MARGIN, margin_bottom: 3 * MARGIN, margin_start: 3 * MARGIN, margin_end: 3 * MARGIN, spacing: 3 * MARGIN });
+        this.set_child(box);
         
         let palettesFrame = new Frame({ label: _("Palettes") });
-        box.add(palettesFrame);
+        box.append(palettesFrame);
         let palettesFrameBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        palettesFrame.add(palettesFrameBox);
+        palettesFrame.set_child(palettesFrameBox);
         
         let palettesScrolledWindow = new Gtk.ScrolledWindow({ vscrollbar_policy: Gtk.PolicyType.NEVER });
-        palettesFrameBox.add(palettesScrolledWindow);
-        let palettesViewport = new Gtk.Viewport({ margin_top: MARGIN / 2, margin_bottom: MARGIN / 2 });
-        palettesScrolledWindow.add(palettesViewport);
+        palettesFrameBox.append(palettesScrolledWindow);
         this.palettesListBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true });
         this.palettesListBox.get_style_context().add_class('background');
-        this.palettesListBox.get_accessible().set_name(this.schema.get_key('palettes').get_summary());
-        this.palettesListBox.get_accessible().set_description(this.schema.get_key('palettes').get_description());
-        palettesViewport.add(this.palettesListBox);
+        setAccessibleLabel(this.palettesListBox, this.schema.get_key('palettes').get_summary());
+        setAccessibleDescription(this.palettesListBox, this.schema.get_key('palettes').get_description());
+        palettesScrolledWindow.set_child(this.palettesListBox);
+        palettesScrolledWindow.get_child().set_margin_top(MARGIN / 2);
+        palettesScrolledWindow.get_child().set_margin_bottom(MARGIN / 2);
         
         this.settings.connect('changed::palettes', this._updatePalettes.bind(this));
         this._updatePalettes();
         
         let addBox = new Gtk.Box(ROWBOX_MARGIN_PARAMS);
-        let addButton = Gtk.Button.new_from_icon_name('list-add-symbolic', Gtk.IconSize.BUTTON);
+        let addButton = IS_GTK3 ? Gtk.Button.new_from_icon_name('list-add-symbolic', Gtk.IconSize.BUTTON) : Gtk.Button.new_from_icon_name('list-add-symbolic');
         addButton.set_tooltip_text(_("Add a new palette"));
-        addBox.pack_start(addButton, true, true, 4);
+        addButton.set_hexpand(true);
+        addBox.append(addButton);
         addButton.connect('clicked', this._addNewPalette.bind(this));
-        let importButton = Gtk.Button.new_from_icon_name('document-open-symbolic', Gtk.IconSize.BUTTON);
+        let importButton = IS_GTK3 ?  Gtk.Button.new_from_icon_name('document-open-symbolic', Gtk.IconSize.BUTTON) : Gtk.Button.new_from_icon_name('document-open-symbolic');
         importButton.set_tooltip_text(_GTK("Select a File"));
-        addBox.pack_start(importButton, true, true, 4);
+        importButton.set_hexpand(true);
+        addBox.append(importButton);
         importButton.connect('clicked', this._importPalette.bind(this));
-        palettesFrameBox.add(addBox);
+        palettesFrameBox.append(addBox);
         
         let areaFrame = new Frame({ label: _("Area") });
-        box.add(areaFrame);
+        box.append(areaFrame);
         
         let areaListBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN / 2, margin_bottom: MARGIN / 2 });
         areaListBox.get_style_context().add_class('background');
-        areaFrame.add(areaListBox);
+        areaFrame.set_child(areaListBox);
         
         let squareAreaRow = new PrefRow({ label: this.schema.get_key('square-area-size').get_summary() });
         let squareAreaAutoButton = new Gtk.CheckButton({ label: _("Auto"),
@@ -196,7 +236,7 @@ const DrawingPage = new GObject.Class({
         squareAreaAutoButton.bind_property('active', squareAreaSizeButton, 'sensitive', GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN);
         squareAreaRow.addWidget(squareAreaAutoButton);
         squareAreaRow.addWidget(squareAreaSizeButton);
-        areaListBox.add(squareAreaRow);
+        areaListBox.insert(squareAreaRow, -1);
         
         let backgroundColorRow = new PrefRow({ label: this.schema.get_key('background-color').get_summary() });
         let backgroundColorButton = new ColorStringButton({ use_alpha: true, show_editor: true,
@@ -204,7 +244,7 @@ const DrawingPage = new GObject.Class({
                                                             tooltip_text: this.schema.get_key('background-color').get_description() });
         this.settings.bind('background-color', backgroundColorButton, 'color-string', 0);
         backgroundColorRow.addWidget(backgroundColorButton);
-        areaListBox.add(backgroundColorRow);
+        areaListBox.insert(backgroundColorRow, -1);
         
         let gridLineRow = new PrefRow({ label: _("Grid overlay line") });
         let gridLineAutoButton = new Gtk.CheckButton({ label: _("Auto"),
@@ -226,7 +266,7 @@ const DrawingPage = new GObject.Class({
         gridLineRow.addWidget(gridLineAutoButton);
         gridLineRow.addWidget(gridLineWidthButton);
         gridLineRow.addWidget(gridLineSpacingButton);
-        areaListBox.add(gridLineRow);
+        areaListBox.insert(gridLineRow, -1);
         
         let gridColorRow = new PrefRow({ label: this.schema.get_key('grid-color').get_summary() });
         let gridColorButton = new ColorStringButton({ use_alpha: true, show_editor: true,
@@ -234,14 +274,14 @@ const DrawingPage = new GObject.Class({
                                                       tooltip_text: this.schema.get_key('grid-color').get_description() });
         this.settings.bind('grid-color', gridColorButton, 'color-string', 0);
         gridColorRow.addWidget(gridColorButton);
-        areaListBox.add(gridColorRow);
+        areaListBox.insert(gridColorRow, -1);
         
         let toolsFrame = new Frame({ label: _("Tools") });
-        box.add(toolsFrame);
+        box.append(toolsFrame);
         
         let toolsListBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN / 2, margin_bottom: MARGIN / 2 });
         toolsListBox.get_style_context().add_class('background');
-        toolsFrame.add(toolsListBox);
+        toolsFrame.set_child(toolsListBox);
         
         let dashArrayRow = new PrefRow({ label: _("Dash array") });
         let dashArrayAutoButton = new Gtk.CheckButton({ label: _("Auto"),
@@ -263,7 +303,7 @@ const DrawingPage = new GObject.Class({
         dashArrayRow.addWidget(dashArrayAutoButton);
         dashArrayRow.addWidget(dashArrayOnButton);
         dashArrayRow.addWidget(dashArrayOffButton);
-        toolsListBox.add(dashArrayRow);
+        toolsListBox.insert(dashArrayRow, -1);
         
         let dashOffsetRow = new PrefRow({ label: this.schema.get_key('dash-offset').get_summary() });
         let dashOffsetButton = new PixelSpinButton({ width_chars: 5, digits: 1, step: 0.1,
@@ -272,7 +312,7 @@ const DrawingPage = new GObject.Class({
                                                      tooltip_text: this.schema.get_key('dash-offset').get_description() });
         this.settings.bind('dash-offset', dashOffsetButton, 'value', 0);
         dashOffsetRow.addWidget(dashOffsetButton);
-        toolsListBox.add(dashOffsetRow);
+        toolsListBox.insert(dashOffsetRow, -1);
         
         let imageLocationRow = new PrefRow({ label: this.schema.get_key('image-location').get_summary() });
         let imageLocationButton = new FileChooserButton({ action: Gtk.FileChooserAction.SELECT_FOLDER,
@@ -280,19 +320,19 @@ const DrawingPage = new GObject.Class({
                                                           tooltip_text: this.schema.get_key('image-location').get_description() });
         this.settings.bind('image-location', imageLocationButton, 'location', 0);
         imageLocationRow.addWidget(imageLocationButton);
-        toolsListBox.add(imageLocationRow);
+        toolsListBox.insert(imageLocationRow, -1);
         
         let resetButton = new Gtk.Button({ label: _("Reset settings"), halign: Gtk.Align.CENTER });
         resetButton.get_style_context().add_class('destructive-action');
         resetButton.connect('clicked', () => this.schema.list_keys().forEach(key => this.settings.reset(key)));
-        box.add(resetButton);
+        box.append(resetButton);
     },
     
     _updatePalettes: function() {
         this.palettes = this.settings.get_value('palettes').deep_unpack();
-        this.palettesListBox.get_children().slice(this.palettes.length)
+        getChildrenOf(this.palettesListBox).slice(this.palettes.length)
                                            .forEach(row => this.palettesListBox.remove(row));
-        let paletteBoxes = this.palettesListBox.get_children().map(row => row.get_child());
+        let paletteBoxes = getChildrenOf(this.palettesListBox).map(row => row.get_child());
         
         this.palettes.forEach((palette, paletteIndex) => {
             let [name, colors] = palette;
@@ -300,22 +340,24 @@ const DrawingPage = new GObject.Class({
             
             if (paletteBoxes[paletteIndex]) {
                 paletteBox = paletteBoxes[paletteIndex];
-                let nameEntry = paletteBox.get_children()[0];
+                let nameEntry = getChildrenOf(paletteBox)[0];
                 if (nameEntry.get_text() !== _(name)) {
                     GObject.signal_handler_block(nameEntry, nameEntry.paletteNameChangedHandler);
                     nameEntry.set_text(_(name));
                     GObject.signal_handler_unblock(nameEntry, nameEntry.paletteNameChangedHandler);
                 }
             } else {
-                let nameEntry = new Gtk.Entry({ text: name, halign: Gtk.Align.START, tooltip_text: _("Rename the palette") });
+                let nameEntry = new Gtk.Entry({ text: name, halign: Gtk.Align.START, tooltip_text: _("Rename the palette"), hexpand: true });
                 nameEntry.paletteNameChangedHandler = nameEntry.connect('changed', this._onPaletteNameChanged.bind(this, paletteIndex));
-                let removeButton = Gtk.Button.new_from_icon_name('list-remove-symbolic', Gtk.IconSize.BUTTON);
+                // Minimum size, for Gtk4
+                nameEntry.set_size_request(nameEntry.get_preferred_size()[1].width, -1);
+                let removeButton = IS_GTK3 ? Gtk.Button.new_from_icon_name('list-remove-symbolic', Gtk.IconSize.BUTTON) : Gtk.Button.new_from_icon_name('list-remove-symbolic');
                 removeButton.set_tooltip_text(_("Remove the palette")); 
                 removeButton.connect('clicked', this._removePalette.bind(this, paletteIndex));
                 paletteBox = new Gtk.Box(ROWBOX_MARGIN_PARAMS);
-                paletteBox.pack_start(nameEntry, true, true, 4);
-                paletteBox.pack_start(new Gtk.Box({ spacing: 4 }), false, false, 4);
-                paletteBox.pack_start(removeButton, false, false, 4);
+                paletteBox.append(nameEntry);
+                paletteBox.append(new Gtk.Box({ spacing: 4 }));
+                paletteBox.append(removeButton);
                 this.palettesListBox.insert(paletteBox, paletteIndex);
                 paletteBox.get_parent().set_activatable(false);
             }
@@ -323,8 +365,8 @@ const DrawingPage = new GObject.Class({
             while (colors.length < 9)
                 colors.push('transparent');
             
-            let colorsBox = paletteBox.get_children()[1];
-            let colorButtons = colorsBox.get_children();
+            let colorsBox = getChildrenOf(paletteBox)[1];
+            let colorButtons = getChildrenOf(colorsBox);
             colors.forEach((color, colorIndex) => {
                 let [colorString, displayName] = color.split(':');
                 if (colorButtons[colorIndex]) {
@@ -335,11 +377,12 @@ const DrawingPage = new GObject.Class({
                                                               use_alpha: true, show_editor: true,
                                                               halign: Gtk.Align.START, hexpand: false });
                     colorButton.connect('notify::color-string', this._onPaletteColorChanged.bind(this, paletteIndex, colorIndex));
-                    colorsBox.add(colorButton);
+                    colorsBox.append(colorButton);
                 }
             });
             
-            paletteBox.show_all();
+            if (IS_GTK3)
+                paletteBox.show_all();
         });
     },
     
@@ -367,17 +410,31 @@ const DrawingPage = new GObject.Class({
     },
     
     _importPalette: function() {
-        let dialog = new Gtk.FileChooserNative({ action: Gtk.FileChooserAction.OPEN, title: _GTK("Select a File") });
+        let dialog = new Gtk.FileChooserDialog({
+            title: _GTK("Select a File"),
+            action: Gtk.FileChooserAction.OPEN,
+            modal: true,
+            transient_for: IS_GTK3 ? this.get_toplevel() : this.get_root(),
+        });
+        dialog.add_button(_GTK("_Cancel"), Gtk.ResponseType.CANCEL);
+        dialog.add_button(_GTK("_Open"), Gtk.ResponseType.ACCEPT);
+        
         let filter = new Gtk.FileFilter();
         filter.set_name("GIMP Palette (*.gpl)");
         filter.add_pattern('*.gpl');
         dialog.add_filter(filter);
-        if (dialog.run() == Gtk.ResponseType.ACCEPT) {
-            let file = dialog.get_file();
-            let palettes = GimpPaletteParser.parseFile(file);
-            palettes.forEach(palette => this.palettes.push(palette));
-            this._savePalettes();
-        }
+        
+        dialog.connect('response', (dialog, response) => {
+            if (response == Gtk.ResponseType.ACCEPT) {
+                let file = dialog.get_file();
+                let palettes = GimpPaletteParser.parseFile(file);
+                palettes.forEach(palette => this.palettes.push(palette));
+                this._savePalettes();
+            }
+            dialog.destroy();
+        });
+        
+        dialog.show();
     },
     
     _removePalette: function(paletteIndex) {
@@ -397,24 +454,24 @@ const PrefsPage = new GObject.Class({
         let schema = settings.settings_schema;
         let internalShortcutSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
         
-        let box = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin: MARGIN * 3, spacing: 3 * MARGIN });
-        this.add(box);
+        let box = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin_top: 3 * MARGIN, margin_bottom: 3 * MARGIN, margin_start: 3 * MARGIN, margin_end: 3 * MARGIN, spacing: 3 * MARGIN });
+        this.set_child(box);
         
         let globalFrame = new Frame({ label: _("Global") });
-        box.add(globalFrame);
+        box.append(globalFrame);
         
         let listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN, margin_bottom: MARGIN / 2 });
         listBox.get_style_context().add_class('background');
-        globalFrame.add(listBox);
+        globalFrame.set_child(listBox);
         
         Shortcuts.GLOBAL_KEYBINDINGS.forEach((settingKeys, index) => {
             if (index)
-                listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
+                listBox.insert(new Gtk.Box(ROWBOX_MARGIN_PARAMS), -1);
             
             let globalKeybindingsRow = new Gtk.ListBoxRow({ activatable: false });
             let globalKeybindingsWidget = new KeybindingsWidget(settingKeys, settings);
-            globalKeybindingsRow.add(globalKeybindingsWidget);
-            listBox.add(globalKeybindingsRow);
+            globalKeybindingsRow.set_child(globalKeybindingsWidget);
+            listBox.insert(globalKeybindingsRow, -1);
         });
         
         let persistentOverTogglesKey = schema.get_key('persistent-over-toggles');
@@ -422,7 +479,7 @@ const PrefsPage = new GObject.Class({
         let persistentOverTogglesSwitch = new Gtk.Switch();
         settings.bind('persistent-over-toggles', persistentOverTogglesSwitch, 'active', 0);
         persistentOverTogglesRow.addWidget(persistentOverTogglesSwitch, true);
-        listBox.add(persistentOverTogglesRow);
+        listBox.insert(persistentOverTogglesRow, -1);
         
         let persistentOverRestartsKey = schema.get_key('persistent-over-restarts');
         let persistentOverRestartsRow = new PrefRow({ label: persistentOverRestartsKey.get_summary(), desc: persistentOverRestartsKey.get_description() });
@@ -430,7 +487,7 @@ const PrefsPage = new GObject.Class({
         settings.bind('persistent-over-restarts', persistentOverRestartsSwitch, 'active', 0);
         persistentOverRestartsRow.addWidget(persistentOverRestartsSwitch, true);
         persistentOverTogglesSwitch.bind_property('active', persistentOverRestartsSwitch, 'sensitive', GObject.BindingFlags.SYNC_CREATE);
-        listBox.add(persistentOverRestartsRow);
+        listBox.insert(persistentOverRestartsRow, -1);
         
         let desktopKey = schema.get_key('drawing-on-desktop');
         let desktopRow = new PrefRow({ label: desktopKey.get_summary(), desc: desktopKey.get_description() });
@@ -438,56 +495,53 @@ const PrefsPage = new GObject.Class({
         settings.bind('drawing-on-desktop', desktopSwitch, 'active', 0);
         desktopRow.addWidget(desktopSwitch, true);
         persistentOverTogglesSwitch.bind_property('active', desktopSwitch, 'sensitive', GObject.BindingFlags.SYNC_CREATE);
-        listBox.add(desktopRow);
+        listBox.insert(desktopRow, -1);
         
         let osdKey = schema.get_key('osd-disabled');
         let osdRow = new PrefRow({ label: osdKey.get_summary(), desc: osdKey.get_description() });
         let osdSwitch = new Gtk.Switch();
         settings.bind('osd-disabled', osdSwitch, 'active', 0);
         osdRow.addWidget(osdSwitch, true);
-        listBox.add(osdRow);
+        listBox.insert(osdRow, -1);
         
         let indicatorKey = schema.get_key('indicator-disabled');
         let indicatorRow = new PrefRow({ label: indicatorKey.get_summary(), desc: indicatorKey.get_description() });
         let indicatorSwitch = new Gtk.Switch();
         settings.bind('indicator-disabled', indicatorSwitch, 'active', 0);
         indicatorRow.addWidget(indicatorSwitch, true);
-        listBox.add(indicatorRow);
+        listBox.insert(indicatorRow, -1);
         
         let internalFrame = new Frame({ label: _("Internal"), desc: _("In drawing mode") });
-        box.add(internalFrame);
+        box.append(internalFrame);
         
         listBox = new Gtk.ListBox({ selection_mode: 0, hexpand: true, margin_top: MARGIN, margin_bottom: MARGIN });
         listBox.get_style_context().add_class('background');
-        internalFrame.add(listBox);
+        internalFrame.set_child(listBox);
         
         Shortcuts.OTHERS.forEach((pairs, index) => {
             if (index)
-                listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
+                listBox.insert(new Gtk.Box(ROWBOX_MARGIN_PARAMS), -1);
             
             pairs.forEach(pair => {
                 let [action, shortcut] = pair;
-                let otherBox = new Gtk.Box({ margin_left: MARGIN, margin_right: MARGIN });
-                let otherLabel = new Gtk.Label({ label: action, use_markup: true });
-                otherLabel.set_halign(1);
-                let otherLabel2 = new Gtk.Label({ label: shortcut });
-                otherBox.pack_start(otherLabel, true, true, 4);
-                otherBox.pack_start(otherLabel2, false, false, 4);
-                listBox.add(otherBox);
+                let otherBox = new Gtk.Box({ margin_start: MARGIN, margin_end: MARGIN, spacing: 4 });
+                otherBox.append(new Gtk.Label({ label: action, use_markup: true, halign: Gtk.Align.START, hexpand: true }));
+                otherBox.append(new Gtk.Label({ label: shortcut }));
+                listBox.insert(otherBox, -1);
             });
         });
         
-        listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
+        listBox.insert(new Gtk.Box(ROWBOX_MARGIN_PARAMS), -1);
         
         Shortcuts.INTERNAL_KEYBINDINGS.forEach((settingKeys, index) => {
             if (index)
-                listBox.add(new Gtk.Box(ROWBOX_MARGIN_PARAMS));
+                listBox.insert(new Gtk.Box(ROWBOX_MARGIN_PARAMS), -1);
             
             let internalKeybindingsWidget = new KeybindingsWidget(settingKeys, internalShortcutSettings);
-            listBox.add(internalKeybindingsWidget);
+            listBox.insert(internalKeybindingsWidget, -1);
         });
         
-        listBox.get_children().forEach(row => row.set_activatable(false));
+        getChildrenOf(listBox).forEach(row => row.set_activatable(false));
         
         let resetButton = new Gtk.Button({ label: _("Reset settings"), halign: Gtk.Align.CENTER });
         resetButton.get_style_context().add_class('destructive-action');
@@ -495,7 +549,7 @@ const PrefsPage = new GObject.Class({
             internalShortcutSettings.settings_schema.list_keys().forEach(key => internalShortcutSettings.reset(key));
             settings.settings_schema.list_keys().forEach(key => settings.reset(key));
         });
-        box.add(resetButton);
+        box.append(resetButton);
     }
 });
 
@@ -504,12 +558,12 @@ const Frame = new GObject.Class({
     Extends: Gtk.Frame,
 
     _init: function(params) {
-        let labelWidget = new Gtk.Label({ margin_bottom: MARGIN / 2, use_markup: true, label: `<b><big>${params.label}</big></b>` });
-        this.parent({ label_yalign: 1.0, label_widget: labelWidget });
+        let labelWidget = new Gtk.Label({ use_markup: true, label: `<b><big>${params.label}</big></b>` });
+        this.parent({ label_widget: labelWidget });
         
         if (params.desc) {
             labelWidget.set_tooltip_text(params.desc);
-            this.get_accessible().set_description(params.desc);
+            setAccessibleDescription(this, params.desc);
         }
     }
 });
@@ -522,43 +576,43 @@ const PrefRow = new GObject.Class({
         this.parent({ activatable: false });
         
         let hbox = new Gtk.Box(ROWBOX_MARGIN_PARAMS);
-        this.add(hbox);
+        this.set_child(hbox);
         
-        let labelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
-        hbox.pack_start(labelBox, true, true, 4);
+        let labelBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, hexpand: true });
+        hbox.append(labelBox);
         
         this.widgetBox = new Gtk.Box({ spacing: 4 });
-        hbox.pack_start(this.widgetBox, false, false, 4);
+        hbox.append(this.widgetBox);
         
-        this.label = new Gtk.Label({ use_markup: true, label: params.label, halign: Gtk.Align.START });
-        labelBox.pack_start(this.label, true, true, 0);
+        this.label = new Gtk.Label({ use_markup: true, label: params.label, halign: Gtk.Align.START, vexpand: true });
+        labelBox.append(this.label);
         if (params.desc) {
-            this.desc = new Gtk.Label({ use_markup: true, label: `<small>${params.desc}</small>`, halign: Gtk.Align.START, wrap: true, xalign: 0 });
+            this.desc = new Gtk.Label({ use_markup: true, label: `<small>${params.desc}</small>`, halign: Gtk.Align.START, wrap: true, xalign: 0, vexpand: true });
             this.desc.get_style_context().add_class('dim-label');
-            labelBox.pack_start(this.desc, true, true, 0);
+            labelBox.append(this.desc);
             this.widgetBox.set_valign(Gtk.Align.START);
         }
     },
     
     addWidget: function(widget, setRelationship) {
-        this.widgetBox.add(widget);
+        this.widgetBox.append(widget);
         
         if (widget.name)
-            widget.get_accessible().set_name(widget.name);
+            setAccessibleLabel(widget, widget.name);
         
-        if (setRelationship) {
-            this.label.get_accessible().add_relationship(Atk.RelationType.LABEL_FOR, widget.get_accessible());
-            widget.get_accessible().add_relationship(Atk.RelationType.LABELLED_BY, this.label.get_accessible());
+        if (setRelationship && IS_GTK3) {
+            this.label.get_accessible().add_relationship(imports.gi.Atk.RelationType.LABEL_FOR, widget.get_accessible());
+            widget.get_accessible().add_relationship(imports.gi.Atk.RelationType.LABELLED_BY, this.label.get_accessible());
             
             if (this.desc) {
-                this.desc.get_accessible().add_relationship(Atk.RelationType.DESCRIPTION_FOR, widget.get_accessible());
-                widget.get_accessible().add_relationship(Atk.RelationType.DESCRIBED_BY, this.desc.get_accessible());
+                this.desc.get_accessible().add_relationship(imports.gi.Atk.RelationType.DESCRIPTION_FOR, widget.get_accessible());
+                widget.get_accessible().add_relationship(imports.gi.Atk.RelationType.DESCRIBED_BY, this.desc.get_accessible());
             }
         }
     }
 });
 
-const PixelSpinButton = new GObject.Class({
+const PixelSpinButton = new GObject.Class(Object.assign({
     Name: `${UUID}-PixelSpinButton`,
     Extends: Gtk.SpinButton,
     Properties: {
@@ -584,17 +638,22 @@ const PixelSpinButton = new GObject.Class({
         this.adjustment.set_page_increment(step * 10);
     },
     
-    // Add 'px' unit.
-    vfunc_output: function() {
-        this.text = _("%f px").format(Number(this.value).toFixed(2));
-        return true;
-    },
-    
+    vfunc_constructed() {
+        this.parent();
+        
+        // No virtual functions with Gtk4 :/.
+        // Add 'px' unit.
+        this.connect('output', spinButton => {
+            this.text = _("%f px").format(Number(spinButton.value).toFixed(2));
+            return true;
+        });
+    }
+}, IS_GTK3 ? {
     // Prevent accidental scrolling.
     vfunc_scroll_event: function(event) {
         return this.has_focus ? this.parent(event) : Gdk.EVENT_PROPAGATE;
     }
-});
+} : {}));
 
 // A color button that can be easily bound with a color string setting.
 const ColorStringButton = new GObject.Class({
@@ -617,49 +676,75 @@ const ColorStringButton = new GObject.Class({
         this.set_rgba(newRgba);
     },
     
-    // Do nothing if the new color is equivalent to the old color (e.g. "black" and "rgb(0,0,0)").
-    vfunc_color_set(args) {
-        let oldRgba = new Gdk.RGBA();
-        oldRgba.parse(this.color_string);
+    vfunc_constructed() {
+        this.parent();
         
-        if (!this.rgba.equal(oldRgba)) {
-            this._color_string = this.rgba.to_string();
-            this.notify('color-string');
-        }            
+        // No virtual functions with Gtk4 :/.
+        // Do nothing if the new color is equivalent to the old color (e.g. "black" and "rgb(0,0,0)").
+        this.connect('color-set', colorButton => {
+            let oldRgba = new Gdk.RGBA();
+            oldRgba.parse(colorButton.color_string);
+            
+            if (!this.rgba.equal(oldRgba)) {
+                this._color_string = colorButton.rgba.to_string();
+                this.notify('color-string');
+            }
+        });
     }
 });
 
 const FileChooserButton = new GObject.Class({
     Name: `${UUID}-FileChooserButton`,
-    Extends: Gtk.FileChooserButton,
+    Extends: Gtk.Button,
     Properties: {
+        'action': GObject.ParamSpec.enum('action', 'action', 'action',
+                                         GObject.ParamFlags.READWRITE,
+                                         Gtk.FileChooserAction.$gtype,
+                                         Gtk.FileChooserAction.SELECT_FOLDER),
+        
         'location': GObject.ParamSpec.string('location', 'location', 'location',
                                              GObject.ParamFlags.READWRITE, '')
     },
     
     get location() {
-        return this.get_file().get_path();
+        return this._location || "";
     },
     
     set location(location) {
-        if (!location) {
-            this.unselect_all();
-            if (this.get_file())
-                this.set_file(Gio.File.new_for_path('aFileThatDoesNotExist'));
-            return;
+        if (!this._location || this._location != location) {
+            this._location = location;
+            this.label = location ?
+                         Gio.File.new_for_commandline_arg(location).query_info('standard::display-name', Gio.FileQueryInfoFlags.NONE, null).get_display_name() :
+                         _GTK("(None)");
+            
+            this.notify('location');
         }
-        
-        let file = Gio.File.new_for_commandline_arg(location);
-        if (file.query_exists(null))
-            this.set_file(file);
     },
     
-    vfunc_file_set: function(args) {
-        this.notify('location');
+    vfunc_clicked: function() {
+        let dialog = new Gtk.FileChooserDialog({
+            title: _(this.name),
+            action: this.action,
+            modal: true,
+            transient_for: IS_GTK3 ? this.get_toplevel() : this.get_root(),
+        });
+        dialog.add_button(_GTK("_Cancel"), Gtk.ResponseType.CANCEL);
+        dialog.add_button(_GTK("_Select"), Gtk.ResponseType.ACCEPT);
+        
+        if (this.location)
+            dialog.set_file(Gio.File.new_for_commandline_arg(this.location));
+        
+        dialog.connect('response', (dialog, response) => {
+            if (response == Gtk.ResponseType.ACCEPT)
+                    this.location = dialog.get_file().get_path();
+            dialog.destroy();
+        });
+        
+        dialog.show();
     }
 });
 
-// this code comes from Sticky Notes View by Sam Bull, https://extensions.gnome.org/extension/568/notes/
+// From Sticky Notes View by Sam Bull, https://extensions.gnome.org/extension/568/notes/
 const KeybindingsWidget = new GObject.Class({
     Name: `${UUID}-KeybindingsWidget`,
     Extends: Gtk.Box,
@@ -713,7 +798,7 @@ const KeybindingsWidget = new GObject.Class({
             let [success, iterator ] =
                 this._store.get_iter_from_string(iter);
 
-            if(!success) {
+            if (!success) {
                 printerr("Can't change keybinding");
             }
 
@@ -745,7 +830,7 @@ const KeybindingsWidget = new GObject.Class({
         this._tree_view.columns_autosize();
         this._tree_view.set_headers_visible(false);
 
-        this.add(this._tree_view);
+        this.append(this._tree_view);
         this.keybinding_column = keybinding_column;
         this.action_column = action_column;
 
@@ -768,9 +853,11 @@ const KeybindingsWidget = new GObject.Class({
         this._store.clear();
 
         this._settingKeys.forEach(settingKey => {
-            let [key, mods] = Gtk.accelerator_parse(
-                this._settings.get_strv(settingKey)[0] || ''
-            );
+            let success_, key, mods;
+            if (IS_GTK3)
+                [key, mods] = Gtk.accelerator_parse(this._settings.get_strv(settingKey)[0] || '');
+            else
+                [success_, key, mods] = Gtk.accelerator_parse(this._settings.get_strv(settingKey)[0] || '');
 
             let iter = this._store.append();
             this._store.set(iter,

@@ -315,7 +315,7 @@
     </key>
     <key type="as" name="switch-text-alignment">
       <default>["&lt;Primary&gt;&lt;Alt&gt;a"]</default>
-      <summary>Toggle text alignment</summary>
+      <summary>Change text alignment</summary>
     </key>
     <key type="as" name="toggle-background">
       <default>["&lt;Primary&gt;b"]</default>

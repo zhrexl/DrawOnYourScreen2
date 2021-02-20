@@ -41,13 +41,13 @@ const ICON_NAMES = [
     'arc', 'color', 'dashed-line', 'document-export', 'fillrule-evenodd', 'fillrule-nonzero', 'fill', 'full-line', 'linecap', 'linejoin', 'palette', 'smooth', 'stroke',
     'tool-ellipse', 'tool-line', 'tool-mirror', 'tool-move', 'tool-none', 'tool-polygon', 'tool-polyline', 'tool-rectangle', 'tool-resize',
 ];
-const ThemedIconNames = {
+const ThemedIconName = {
     COLOR_PICKER: 'color-select-symbolic',
     ENTER: 'applications-graphics', LEAVE: 'application-exit',
     GRAB: 'input-touchpad', UNGRAB: 'touchpad-disabled',
     OPEN: 'document-open', SAVE: 'document-save',
     FONT_FAMILY: 'font-x-generic', FONT_STYLE: 'format-text-italic', FONT_WEIGHT:'format-text-bold',
-    LEFT_ALIGNED: 'format-justify-left', RIGHT_ALIGNED: 'format-justify-right',
+    LEFT_ALIGNED: 'format-justify-left', CENTERED: 'format-justify-center',RIGHT_ALIGNED: 'format-justify-right',
     TOOL_IMAGE: 'insert-image', TOOL_TEXT: 'insert-text',
 };
 
@@ -74,11 +74,11 @@ ICON_NAMES.forEach(name => {
     });
 });
 
-Object.keys(ThemedIconNames).forEach(key => {
+Object.keys(ThemedIconName).forEach(key => {
     Object.defineProperty(Icons, key, {
         get: function() {
             if (!this[`_${key}`])
-                this[`_${key}`] = new Gio.ThemedIcon({ name: `${ThemedIconNames[key]}-symbolic` });
+                this[`_${key}`] = new Gio.ThemedIcon({ name: `${ThemedIconName[key]}-symbolic` });
             return this[`_${key}`];
         }
     });

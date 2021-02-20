@@ -47,6 +47,7 @@ const FONT_FAMILY_STYLE = true;
 // use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
 const WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
+const TextAlignmentIcon = { 0: Files.Icons.LEFT_ALIGNED, 1: Files.Icons.CENTERED, 2: Files.Icons.RIGHT_ALIGNED };
 
 const getActor = function(object) {
     return GS_VERSION < '3.33.0' ? object.actor : object;
@@ -71,52 +72,52 @@ var DisplayStrings = {
     },
     
     get FillRule() {
-        if (!this._fillRules)
+        if (!this._FillRule)
             // Translators: fill-rule SVG attribute
-            this._fillRules = { 0: _("Nonzero"), 1: _("Evenodd") };
-        return this._fillRules;
+            this._FillRule = { 0: _("Nonzero"), 1: _("Evenodd") };
+        return this._FillRule;
     },
     
     getFontFamily: function(family) {
-        if (!this._fontGenericFamilies)
+        if (!this._FontGenericFamily)
             // Translators: generic font-family SVG attribute
-            this._fontGenericFamilies = { 'Sans-Serif': pgettext("font-family", "Sans-Serif"), 'Serif': pgettext("font-family", "Serif"),
-                                          'Monospace': pgettext("font-family", "Monospace"), 'Cursive': pgettext("font-family", "Cursive"),
-                                          'Fantasy': pgettext("font-family", "Fantasy") };
-        return this._fontGenericFamilies[family] || family;
+            this._FontGenericFamily = { 'Sans-Serif': pgettext("font-family", "Sans-Serif"), 'Serif': pgettext("font-family", "Serif"),
+                                        'Monospace': pgettext("font-family", "Monospace"), 'Cursive': pgettext("font-family", "Cursive"),
+                                        'Fantasy': pgettext("font-family", "Fantasy") };
+        return this._FontGenericFamily[family] || family;
     },
     
     get FontStyle() {
-        if (!this._fontStyles)
+        if (!this._FontStyle)
             // Translators: font-style SVG attribute
-            this._fontStyles = { 0: pgettext("font-style", "Normal"), 1: pgettext("font-style", "Oblique"), 2: pgettext("font-style", "Italic") };
-        return this._fontStyles;
+            this._FontStyle = { 0: pgettext("font-style", "Normal"), 1: pgettext("font-style", "Oblique"), 2: pgettext("font-style", "Italic") };
+        return this._FontStyle;
     },
     
     FontStyleMarkup: { 0: 'normal', 1: 'oblique', 2: 'italic' },
     
     get FontWeight() {
-        if (!this._fontWeights)
+        if (!this._FontWeight)
             // Translators: font-weight SVG attribute
-            this._fontWeights = { 100: pgettext("font-weight", "Thin"), 200: pgettext("font-weight", "Ultra Light"), 300: pgettext("font-weight", "Light"),
-                                  350: pgettext("font-weight", "Semi Light"), 380: pgettext("font-weight", "Book"), 400: pgettext("font-weight", "Normal"),
-                                  500: pgettext("font-weight", "Medium"), 600: pgettext("font-weight", "Semi Bold"), 700: pgettext("font-weight", "Bold"),
-                                  800: pgettext("font-weight", "Ultra Bold"), 900: pgettext("font-weight", "Heavy"), 1000: pgettext("font-weight", "Ultra Heavy") };
-        return this._fontWeights;
+            this._FontWeight = { 100: pgettext("font-weight", "Thin"), 200: pgettext("font-weight", "Ultra Light"), 300: pgettext("font-weight", "Light"),
+                                 350: pgettext("font-weight", "Semi Light"), 380: pgettext("font-weight", "Book"), 400: pgettext("font-weight", "Normal"),
+                                 500: pgettext("font-weight", "Medium"), 600: pgettext("font-weight", "Semi Bold"), 700: pgettext("font-weight", "Bold"),
+                                 800: pgettext("font-weight", "Ultra Bold"), 900: pgettext("font-weight", "Heavy"), 1000: pgettext("font-weight", "Ultra Heavy") };
+        return this._FontWeight;
     },
     
     get LineCap() {
-        if (!this._lineCaps)
+        if (!this._LineCap)
             // Translators: stroke-linecap SVG attribute
-            this._lineCaps = { 0: pgettext("stroke-linecap", "Butt"), 1: pgettext("stroke-linecap", "Round"), 2: pgettext("stroke-linecap", "Square") };
-        return this._lineCaps;
+            this._LineCap = { 0: pgettext("stroke-linecap", "Butt"), 1: pgettext("stroke-linecap", "Round"), 2: pgettext("stroke-linecap", "Square") };
+        return this._LineCap;
     },
     
     get LineJoin() {
-        if (!this._lineJoins)
+        if (!this._LineJoin)
             // Translators: stroke-linejoin SVG attribute
-            this._lineJoins = { 0: pgettext("stroke-linejoin", "Miter"), 1: pgettext("stroke-linejoin", "Round"), 2: pgettext("stroke-linejoin", "Bevel") };
-        return this._lineJoins;
+            this._LineJoin = { 0: pgettext("stroke-linejoin", "Miter"), 1: pgettext("stroke-linejoin", "Round"), 2: pgettext("stroke-linejoin", "Bevel") };
+        return this._LineJoin;
     },
     
     getPixels(value) {
@@ -124,28 +125,31 @@ var DisplayStrings = {
         return _("%f px").format(value);
     },
     
-    getTextAlignment: function(rightAligned) {
+    get TextAlignment() {
         // Translators: text alignment
-        return rightAligned ? _("Right aligned") : _("Left aligned");
+        if (!this._TextAlignment)
+            this._TextAlignment = { 0: _("Left aligned"), 1: _("Centered"), 2: _("Right aligned") };
+        
+        return this._TextAlignment;
     },
     
     get Tool() {
-        if (!this._tools)
-            this._tools = { 0: pgettext("drawing-tool", "Free drawing"), 1: pgettext("drawing-tool", "Line"), 2: pgettext("drawing-tool", "Ellipse"),
-                            3: pgettext("drawing-tool", "Rectangle"), 4: pgettext("drawing-tool", "Text"), 5: pgettext("drawing-tool", "Polygon"),
-                            6: pgettext("drawing-tool", "Polyline"), 7: pgettext("drawing-tool", "Image"),
-                            100: pgettext("drawing-tool", "Move"), 101: pgettext("drawing-tool", "Resize"), 102: pgettext("drawing-tool", "Mirror") };
-        return this._tools;
+        if (!this._Tool)
+            this._Tool = { 0: pgettext("drawing-tool", "Free drawing"), 1: pgettext("drawing-tool", "Line"), 2: pgettext("drawing-tool", "Ellipse"),
+                           3: pgettext("drawing-tool", "Rectangle"), 4: pgettext("drawing-tool", "Text"), 5: pgettext("drawing-tool", "Polygon"),
+                           6: pgettext("drawing-tool", "Polyline"), 7: pgettext("drawing-tool", "Image"),
+                           100: pgettext("drawing-tool", "Move"), 101: pgettext("drawing-tool", "Resize"), 102: pgettext("drawing-tool", "Mirror") };
+        return this._Tool;
     }
 };
 
 var DrawingMenu = new Lang.Class({
     Name: `${UUID}-DrawingMenu`,
     
-    _init: function(area, monitor, drawingTools, areaManagerUtils) {
+    _init: function(area, monitor, DrawingTool, areaManagerUtils) {
         this.area = area;
         this.monitor = monitor;
-        this.drawingTools = drawingTools;
+        this.DrawingTool = DrawingTool;
         this.areaManagerUtils = areaManagerUtils;
         
         let side = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? St.Side.RIGHT : St.Side.LEFT;
@@ -178,7 +182,7 @@ var DrawingMenu = new Lang.Class({
     
     disable: function() {
         delete this.area;
-        delete this.drawingTools;
+        delete this.DrawingTool;
         delete this.areaManagerUtils;
         this.menuManager.removeMenu(this.menu);
         Main.layoutManager.uiGroup.remove_actor(this.menu.actor);
@@ -268,7 +272,7 @@ var DrawingMenu = new Lang.Class({
         this._addFontFamilySubMenuItem(fontSection, Files.Icons.FONT_FAMILY);
         this._addSubMenuItem(fontSection, Files.Icons.FONT_WEIGHT, DisplayStrings.FontWeight, this.area, 'currentFontWeight');
         this._addSubMenuItem(fontSection, Files.Icons.FONT_STYLE, DisplayStrings.FontStyle, this.area, 'currentFontStyle');
-        this._addSwitchItem(fontSection, DisplayStrings.getTextAlignment(true), Files.Icons.LEFT_ALIGNED, Files.Icons.RIGHT_ALIGNED, this.area, 'currentTextRightAligned');
+        this._addTextAlignmentSubMenuItem(fontSection);
         this._addSeparator(fontSection);
         this.menu.addMenuItem(fontSection);
         fontSection.itemActivated = () => {};
@@ -311,14 +315,14 @@ var DrawingMenu = new Lang.Class({
         this.undoButton.child.reactive = this.area.elements.length > 0;
         this.redoButton.child.reactive = this.area.undoneElements.length > 0 || (this.area.elements.length && this.area.elements[this.area.elements.length - 1].canUndo);
         this.eraseButton.child.reactive = this.area.elements.length > 0;
-        this.smoothButton.child.reactive = this.area.elements.length > 0 && this.area.elements[this.area.elements.length - 1].shape == this.drawingTools.NONE;
+        this.smoothButton.child.reactive = this.area.elements.length > 0 && this.area.elements[this.area.elements.length - 1].shape == this.DrawingTool.NONE;
         this.saveButton.child.reactive = this.area.elements.length > 0;
         this.svgButton.child.reactive = this.area.elements.length > 0;
         this.saveDrawingSubMenuItem.setSensitive(this.area.elements.length > 0);
     },
     
     _updateSectionVisibility: function() {
-        let [isText, isImage] = [this.area.currentTool == this.drawingTools.TEXT, this.area.currentTool == this.drawingTools.IMAGE];
+        let [isText, isImage] = [this.area.currentTool == this.DrawingTool.TEXT, this.area.currentTool == this.DrawingTool.IMAGE];
         this.lineSection.actor.visible = !isText && !isImage;
         this.fontSection.actor.visible = isText;
         this.imageSection.actor.visible = isImage;
@@ -421,7 +425,7 @@ var DrawingMenu = new Lang.Class({
         let item = new PopupMenu.PopupSubMenuMenuItem('', true);
         item.update = () => {
             item.label.set_text(DisplayStrings.Tool[this.area.currentTool]);
-            let toolName = this.drawingTools.getNameOf(this.area.currentTool);
+            let toolName = this.DrawingTool.getNameOf(this.area.currentTool);
             item.icon.set_gicon(Files.Icons[`TOOL_${toolName}`]);
         };
         item.update();
@@ -431,7 +435,7 @@ var DrawingMenu = new Lang.Class({
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             Object.keys(DisplayStrings.Tool).forEach(key => {
                 let text = DisplayStrings.Tool[key];
-                let toolName = this.drawingTools.getNameOf(key);
+                let toolName = this.DrawingTool.getNameOf(key);
                 let subItemIcon = Files.Icons[`TOOL_${toolName}`];
                 let subItem = item.menu.addAction(text, () => {
                     this.area.currentTool = Number(key);
@@ -443,10 +447,10 @@ var DrawingMenu = new Lang.Class({
                 getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
                 
                 // change the display order of tools
-                if (key == this.drawingTools.POLYGON)
-                    item.menu.moveMenuItem(subItem, Number(this.drawingTools.TEXT));
-                else if (key == this.drawingTools.POLYLINE)
-                    item.menu.moveMenuItem(subItem, Number(this.drawingTools.TEXT) + 1);
+                if (key == this.DrawingTool.POLYGON)
+                    item.menu.moveMenuItem(subItem, Number(this.DrawingTool.TEXT));
+                else if (key == this.DrawingTool.POLYLINE)
+                    item.menu.moveMenuItem(subItem, Number(this.DrawingTool.TEXT) + 1);
             });
             return GLib.SOURCE_REMOVE;
         });
@@ -553,6 +557,28 @@ var DrawingMenu = new Lang.Class({
         menu.addMenuItem(item);
     },
     
+    _addTextAlignmentSubMenuItem: function(menu) {
+        let item = new PopupMenu.PopupSubMenuMenuItem(DisplayStrings.TextAlignment[this.area.currentTextAlignment], true);
+        item.icon.set_gicon(TextAlignmentIcon[this.area.currentTextAlignment]);
+        
+        item.menu.itemActivated = item.menu.close;
+        
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            Object.keys(TextAlignmentIcon).forEach(key => {
+                let subItem = item.menu.addAction(DisplayStrings.TextAlignment[key], () => {
+                    item.label.set_text(DisplayStrings.TextAlignment[key]);
+                    this.area.currentTextAlignment = key;
+                    item.icon.set_gicon(TextAlignmentIcon[key]);
+                });
+                
+                getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+            });
+            return GLib.SOURCE_REMOVE;
+        });
+        
+        menu.addMenuItem(item);
+    },
+    
     _addImageSubMenuItem: function(menu, images) {
         let item = new PopupMenu.PopupSubMenuMenuItem('', true);
         item.update = () => {
@@ -654,7 +680,7 @@ var DrawingMenu = new Lang.Class({
             let insertCallback = () => {
                 this.area.currentImage = json.image;
                 this.imageItem.update();
-                this.area.currentTool = this.drawingTools.IMAGE;
+                this.area.currentTool = this.DrawingTool.IMAGE;
                 this.toolItem.update();
                 this._updateSectionVisibility();
             };

@@ -1,5 +1,5 @@
 /* jslint esversion: 6 */
-/* exported Tools, DrawingArea */
+/* exported Tool, DrawingArea */
 
 /*
  * Copyright 2019 Abakkk
@@ -48,21 +48,22 @@ const pgettext = imports.gettext.domain(Me.metadata['gettext-domain']).pgettext;
 const MOTION_TIME = 1; // ms, time accuracy for free drawing, max is about 33 ms. The lower it is, the smoother the drawing is.
 const TEXT_CURSOR_TIME = 600; // ms
 const ELEMENT_GRABBER_TIME = 80; // ms, default is about 16 ms
+const TOGGLE_ANIMATION_DURATION = 300; // ms
 const GRID_TILES_HORIZONTAL_NUMBER = 30;
 const COLOR_PICKER_EXTENSION_UUID = 'color-picker@tuberry'; 
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
-const { Shapes, Transformations } = Elements;
+const { Shape, TextAlignment, Transformation } = Elements;
 const { DisplayStrings } = Menu;
 
 const FontGenericFamilies = ['Sans-Serif', 'Serif', 'Monospace', 'Cursive', 'Fantasy'];
-const Manipulations = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
-var Tools = Object.assign({
+const Manipulation = { MOVE: 100, RESIZE: 101, MIRROR: 102 };
+var Tool = Object.assign({
     getNameOf: function(value) {
         return Object.keys(this).find(key => this[key] == value);
     }
-}, Shapes, Manipulations);
-Object.defineProperty(Tools, 'getNameOf', { enumerable: false });
+}, Shape, Manipulation);
+Object.defineProperty(Tool, 'getNameOf', { enumerable: false });
 
 // toJSON provides a string suitable for SVG color attribute whereas
 // toString provides a string suitable for displaying the color name to the user.
@@ -143,14 +144,15 @@ var DrawingArea = new Lang.Class({
         this.layerContainer.add_child(this.foreLayer);
         this.gridLayer = new DrawingLayer(this._repaintGrid.bind(this));
         this.gridLayer.hide();
+        this.gridLayer.opacity = 0;
         this.layerContainer.add_child(this.gridLayer);
         
         this.elements = [];
         this.undoneElements = [];
         this.currentElement = null;
-        this.currentTool = Shapes.NONE;
+        this.currentTool = Shape.NONE;
         this.currentImage = null;
-        this.currentTextRightAligned = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL;
+        this.currentTextAlignment = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? TextAlignment.RIGHT : TextAlignment.LEFT;
         let fontName = St.Settings && St.Settings.get().font_name || Convenience.getSettings('org.gnome.desktop.interface').get_string('font-name');
         this.currentFont = Pango.FontDescription.from_string(fontName);
         this.currentFont.unset_fields(Pango.FontMask.SIZE);
@@ -176,7 +178,7 @@ var DrawingArea = new Lang.Class({
     
     get menu() {
         if (!this._menu)
-            this._menu = new Menu.DrawingMenu(this, this.monitor, Tools, this.areaManagerUtils);
+            this._menu = new Menu.DrawingMenu(this, this.monitor, Tool, this.areaManagerUtils);
         return this._menu;
     },
     
@@ -249,7 +251,7 @@ var DrawingArea = new Lang.Class({
     
     get hasManipulationTool() {
         // No Object.values method in GS 3.24.
-        return Object.keys(Manipulations).map(key => Manipulations[key]).indexOf(this.currentTool) != -1;
+        return Object.keys(Manipulation).map(key => Manipulation[key]).indexOf(this.currentTool) != -1;
     },
     
     // Boolean wrapper for switch menu item.
@@ -315,25 +317,26 @@ var DrawingArea = new Lang.Class({
         for (let i = 0; i < this.elements.length; i++) {
             cr.save();
             
-            this.elements[i].buildCairo(cr, { showTextRectangle: this.grabbedElement && this.grabbedElement == this.elements[i],
-                                              drawTextRectangle: this.grabPoint ? true : false });
+            this.elements[i].buildCairo(cr, { showElementBounds: this.grabbedElement && this.grabbedElement == this.elements[i],
+                                              drawElementBounds: this.grabPoint ? true : false });
             
             if (this.grabPoint)
                 this._searchElementToGrab(cr, this.elements[i]);
             
             if (this.elements[i].fill && !this.elements[i].isStraightLine) {
                 cr.fillPreserve();
-                if (this.elements[i].shape == Shapes.NONE || this.elements[i].shape == Shapes.LINE)
+                if (this.elements[i].shape == Shape.NONE || this.elements[i].shape == Shape.LINE)
                     cr.closePath();
             } 
             
             cr.stroke();
+            this.elements[i]._addMarks(cr);
             cr.restore();
         }
         
         if (this.currentElement && this.currentElement.eraser) {
             this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
-                                                 showTextRectangle: this.currentElement.shape != Shapes.TEXT || !this.isWriting,
+                                                 showElementBounds: this.currentElement.shape != Shape.TEXT || !this.isWriting,
                                                  dummyStroke: this.currentElement.fill && this.currentElement.line.lineWidth == 0 });
             cr.stroke();
         }
@@ -344,7 +347,7 @@ var DrawingArea = new Lang.Class({
             return;
         
         this.currentElement.buildCairo(cr, { showTextCursor: this.textHasCursor,
-                                             showTextRectangle: this.currentElement.shape != Shapes.TEXT || !this.isWriting,
+                                             showElementBounds: this.currentElement.shape != Shape.TEXT || !this.isWriting,
                                              dummyStroke: this.currentElement.fill && this.currentElement.line.lineWidth == 0 });
         cr.stroke();
     },
@@ -377,11 +380,11 @@ var DrawingArea = new Lang.Class({
     },
     
     _getHasImageBack: function() {
-        return this.elements.some(element => element.shape == Shapes.IMAGE);
+        return this.elements.some(element => element.shape == Shape.IMAGE);
     },
     
     _getHasImageFore: function() {
-        return this.currentElement && this.currentElement.shape == Shapes.IMAGE || false;
+        return this.currentElement && this.currentElement.shape == Shape.IMAGE || false;
     },
     
     _redisplay: function() {
@@ -409,7 +412,7 @@ var DrawingArea = new Lang.Class({
         let controlPressed = event.has_control_modifier();
         let shiftPressed = event.has_shift_modifier();
         
-        if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting)
+        if (this.currentElement && this.currentElement.shape == Shape.TEXT && this.isWriting)
             // finish writing
             this._stopWriting();
         
@@ -469,7 +472,7 @@ var DrawingArea = new Lang.Class({
     },
     
     _onKeyPressed: function(actor, event) {
-        if (this.currentElement && this.currentElement.shape == Shapes.LINE &&
+        if (this.currentElement && this.currentElement.shape == Shape.LINE &&
             (event.get_key_symbol() == Clutter.KEY_Return ||
              event.get_key_symbol() == Clutter.KEY_KP_Enter ||
              event.get_key_symbol() == Clutter.KEY_Control_L)) {
@@ -483,7 +486,7 @@ var DrawingArea = new Lang.Class({
             this._redisplay();
             return Clutter.EVENT_STOP;
         } else if (this.currentElement &&
-                   (this.currentElement.shape == Shapes.POLYGON || this.currentElement.shape == Shapes.POLYLINE) &&
+                   (this.currentElement.shape == Shape.POLYGON || this.currentElement.shape == Shape.POLYLINE) &&
                    (event.get_key_symbol() == Clutter.KEY_Return || event.get_key_symbol() == Clutter.KEY_KP_Enter)) {
             
             this.currentElement.addPoint();
@@ -558,7 +561,7 @@ var DrawingArea = new Lang.Class({
         if (!success)
             return;
         
-        if (this.currentTool == Manipulations.MIRROR) {
+        if (this.currentTool == Manipulation.MIRROR) {
             this.grabbedElementLocked = !this.grabbedElementLocked;
             if (this.grabbedElementLocked) {
                 this.updatePointerCursor();
@@ -589,12 +592,12 @@ var DrawingArea = new Lang.Class({
         
         let undoable = !duplicate;
         
-        if (this.currentTool == Manipulations.MOVE)
-            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.ROTATION : Transformations.TRANSLATION, undoable);
-        else if (this.currentTool == Manipulations.RESIZE)
-            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.STRETCH : Transformations.SCALE_PRESERVE, undoable);
-         else if (this.currentTool == Manipulations.MIRROR) {
-            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformations.INVERSION : Transformations.REFLECTION, undoable);
+        if (this.currentTool == Manipulation.MOVE)
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformation.ROTATION : Transformation.TRANSLATION, undoable);
+        else if (this.currentTool == Manipulation.RESIZE)
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformation.STRETCH : Transformation.SCALE_PRESERVE, undoable);
+         else if (this.currentTool == Manipulation.MIRROR) {
+            this.grabbedElement.startTransformation(startX, startY, controlPressed ? Transformation.INVERSION : Transformation.REFLECTION, undoable);
             this._redisplay();
         }
         
@@ -614,28 +617,28 @@ var DrawingArea = new Lang.Class({
     _updateTransforming: function(x, y, controlPressed) {
         let undoable = this.grabbedElement.lastTransformation.undoable || false;
         
-        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.TRANSLATION) {
+        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformation.TRANSLATION) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.ROTATION, undoable);
-        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.ROTATION) {
+            this.grabbedElement.startTransformation(x, y, Transformation.ROTATION, undoable);
+        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformation.ROTATION) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.TRANSLATION, undoable);
+            this.grabbedElement.startTransformation(x, y, Transformation.TRANSLATION, undoable);
         }
         
-        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.SCALE_PRESERVE) {
+        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformation.SCALE_PRESERVE) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.STRETCH, undoable);
-        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.STRETCH) {
+            this.grabbedElement.startTransformation(x, y, Transformation.STRETCH, undoable);
+        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformation.STRETCH) {
             this.grabbedElement.stopTransformation();
-            this.grabbedElement.startTransformation(x, y, Transformations.SCALE_PRESERVE, undoable);
+            this.grabbedElement.startTransformation(x, y, Transformation.SCALE_PRESERVE, undoable);
         }
         
-        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformations.REFLECTION) {
+        if (controlPressed && this.grabbedElement.lastTransformation.type == Transformation.REFLECTION) {
             this.grabbedElement.transformations.pop();
-            this.grabbedElement.startTransformation(x, y, Transformations.INVERSION, undoable);
-        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformations.INVERSION) {
+            this.grabbedElement.startTransformation(x, y, Transformation.INVERSION, undoable);
+        } else if (!controlPressed && this.grabbedElement.lastTransformation.type == Transformation.INVERSION) {
             this.grabbedElement.transformations.pop();
-            this.grabbedElement.startTransformation(x, y, Transformations.REFLECTION, undoable);
+            this.grabbedElement.startTransformation(x, y, Transformation.REFLECTION, undoable);
         }
         
         this.grabbedElement.updateTransformation(x, y);
@@ -667,7 +670,7 @@ var DrawingArea = new Lang.Class({
             this._stopDrawing();
         });
         
-        if (this.currentTool == Shapes.TEXT) {
+        if (this.currentTool == Shape.TEXT) {
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
                 color: this.currentColor,
@@ -675,10 +678,10 @@ var DrawingArea = new Lang.Class({
                 font: this.currentFont.copy(),
                 // Translators: initial content of the text area
                 text: pgettext("text-area-content", "Text"),
-                textRightAligned: this.currentTextRightAligned,
+                textAlignment: this.currentTextAlignment,
                 points: []
             });
-        } else if (this.currentTool == Shapes.IMAGE) {
+        } else if (this.currentTool == Shape.IMAGE) {
             this.currentElement = new Elements.DrawingElement({
                 shape: this.currentTool,
                 color: this.currentColor,
@@ -701,8 +704,8 @@ var DrawingArea = new Lang.Class({
         
         this.currentElement.startDrawing(startX, startY);
         
-        if (this.currentTool == Shapes.POLYGON || this.currentTool == Shapes.POLYLINE) {
-            let icon = Files.Icons[this.currentTool == Shapes.POLYGON ? 'TOOL_POLYGON' : 'TOOL_POLYLINE'];
+        if (this.currentTool == Shape.POLYGON || this.currentTool == Shape.POLYLINE) {
+            let icon = Files.Icons[this.currentTool == Shape.POLYGON ? 'TOOL_POLYGON' : 'TOOL_POLYLINE'];
             // Translators: %s is a key label
             this.emit('show-osd', icon, _("Press <i>%s</i> to mark vertices")
                                         .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
@@ -725,16 +728,24 @@ var DrawingArea = new Lang.Class({
             let controlPressed = event.has_control_modifier();
             this._updateDrawing(x, y, controlPressed);
             
-            if (this.currentTool == Shapes.NONE) {
+            if (this.currentTool == Shape.NONE) {
                 let device = event.get_device();
                 let sequence = event.get_event_sequence();
                 
                 // Minimum time between two motion events is about 33 ms.
                 // Add intermediate points to make quick free drawings smoother.
                 this.motionTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, MOTION_TIME, () => {
-                    let [success, coords] = device.get_coords(sequence);
-                    if (!success)
-                        return GLib.SOURCE_CONTINUE;
+                    let success, coords;
+                    if (device.get_coords) {
+                        [success, coords] = device.get_coords(sequence);
+                        if (!success)
+                            return GLib.SOURCE_CONTINUE;
+                    } else {
+                        // GS 40+, device.get_coords() has been removed
+                        // and seat.query_state() is unusable with null sequences.
+                        let pointer = global.get_pointer();
+                        coords = { x: pointer[0], y: pointer[1] };
+                    }
                     
                     let [s, x, y] = this._transformStagePoint(coords.x, coords.y);
                     if (!s)
@@ -779,14 +790,14 @@ var DrawingArea = new Lang.Class({
         }
         
         // skip when a polygon has not at least 3 points
-        if (this.currentElement && this.currentElement.shape == Shapes.POLYGON && this.currentElement.points.length < 3)
+        if (this.currentElement && this.currentElement.shape == Shape.POLYGON && this.currentElement.points.length < 3)
             this.currentElement = null;
         
         if (this.currentElement)
             this.currentElement.stopDrawing();
         
         if (this.currentElement && this.currentElement.points.length >= 2) {
-            if (this.currentElement.shape == Shapes.TEXT && !this.isWriting) {
+            if (this.currentElement.shape == Shape.TEXT && !this.isWriting) {
                 this._startWriting();
                 return;
             }
@@ -806,12 +817,14 @@ var DrawingArea = new Lang.Class({
         this.currentElement.cursorPosition = 0;
         // Translators: %s is a key label
         this.emit('show-osd', Files.Icons.TOOL_TEXT, _("Press <i>%s</i>\nto start a new line")
-                                                     .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 1)), "", -1, true);
+                                                     .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
         this._updateTextCursorTimeout();
         this.textHasCursor = true;
         this._redisplay();
         
-        // Do not hide and do not set opacity to 0 because ibusCandidatePopup need a mapped text entry to init correctly its position.
+        // Do not hide and do not set opacity to 0 because:
+        // 1. ibusCandidatePopup need a mapped text entry to init correctly its position.
+        // 2. 'cursor-changed' signal is no emitted if the text entry is not visible.
         this.textEntry = new St.Entry({ opacity: 1, x: stageX + x, y: stageY + y });
         this.insert_child_below(this.textEntry, null);
         this.textEntry.grab_key_focus();
@@ -830,17 +843,27 @@ var DrawingArea = new Lang.Class({
             this.textEntry.connect('destroy', () => ibusCandidatePopup.disconnect(this.ibusHandler));
         }
         
+        this.textEntry.clutterText.set_single_line_mode(false);
+        this.textEntry.clutterText.set_activatable(false);
         this.textEntry.clutterText.connect('activate', (clutterText) => {
             this._stopWriting();
         });
         
-        this.textEntry.clutterText.connect('text-changed', (clutterText) => {
-            GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                this.currentElement.text = clutterText.text;
-                this.currentElement.cursorPosition = clutterText.cursorPosition;
-                this._updateTextCursorTimeout();
-                this._redisplay();
-            });
+        let showCursorOnPositionChanged = true;
+        this.textEntry.clutterText.connect('text-changed', clutterText => {
+            this.textEntry.y = stageY + y + (this.textEntry.clutterText.get_layout().get_line_count() - 1) * this.currentElement.height;
+            this.currentElement.text = clutterText.text;
+            showCursorOnPositionChanged = false;
+            this._redisplay();
+        });
+        
+        this.textEntry.clutterText.connect('cursor-changed', clutterText => {
+            this.currentElement.cursorPosition = clutterText.cursorPosition;
+            this._updateTextCursorTimeout();
+            let cursorPosition = clutterText.cursorPosition == -1 ? clutterText.text.length : clutterText.cursorPosition;
+            this.textHasCursor = showCursorOnPositionChanged || GLib.unichar_isspace(clutterText.text.charAt(cursorPosition - 1));
+            showCursorOnPositionChanged = true;
+            this._redisplay();
         });
         
         this.textEntry.clutterText.connect('key-press-event', (clutterText, event) => {
@@ -848,56 +871,23 @@ var DrawingArea = new Lang.Class({
                 this.currentElement.text = "";
                 this._stopWriting();
                 return Clutter.EVENT_STOP;
-            } else if (event.has_shift_modifier() &&
-                       (event.get_key_symbol() == Clutter.KEY_Return ||
-                        event.get_key_symbol() == Clutter.KEY_KP_Enter)) {
-                let startNewLine = true;
-                this._stopWriting(startNewLine);
-                clutterText.text = "";
-                return Clutter.EVENT_STOP;
-            }
-            
-            // 'cursor-changed' signal is not emitted if the text entry is not visible.
-            // So key events related to the cursor must be listened.
-            if (event.get_key_symbol() == Clutter.KEY_Left || event.get_key_symbol() == Clutter.KEY_Right ||
-                event.get_key_symbol() == Clutter.KEY_Home || event.get_key_symbol() == Clutter.KEY_End) {
-                GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                    this.currentElement.cursorPosition = clutterText.cursorPosition;
-                    this._updateTextCursorTimeout();
-                    this.textHasCursor = true;
-                    this._redisplay();
-                });
             }
             
             return Clutter.EVENT_PROPAGATE;
         });
     },
     
-    _stopWriting: function(startNewLine) {
+    _stopWriting: function() {
         if (this.currentElement.text.length > 0)
             this.elements.push(this.currentElement);
             
-        if (startNewLine && this.currentElement.points.length == 2) {
-            this.currentElement.lineIndex = this.currentElement.lineIndex || 0;
-            // copy object, the original keep existing in this.elements
-            this.currentElement = Object.create(this.currentElement);
-            this.currentElement.lineIndex ++;
-            // define a new 'points' array, the original keep existing in this.elements
-            this.currentElement.points = [
-                [this.currentElement.points[0][0], this.currentElement.points[0][1] + this.currentElement.height],
-                [this.currentElement.points[1][0], this.currentElement.points[1][1] + this.currentElement.height]
-            ];
-            this.currentElement.text = "";
-            this.textEntry.set_y(this.currentElement.y);
-        } else {
-            this.currentElement = null;
-            this._stopTextCursorTimeout();
-            this.textEntry.destroy();
-            delete this.textEntry;
-            this.grab_key_focus();
-            this.updateActionMode();
-            this.updatePointerCursor();
-        }
+        this.currentElement = null;
+        this._stopTextCursorTimeout();
+        this.textEntry.destroy();
+        delete this.textEntry;
+        this.grab_key_focus();
+        this.updateActionMode();
+        this.updatePointerCursor();
         
         this._redisplay();
     },
@@ -910,15 +900,15 @@ var DrawingArea = new Lang.Class({
     },
     
     updatePointerCursor: function(controlPressed) {
-        if (this.currentTool == Manipulations.MIRROR && this.grabbedElementLocked)
+        if (this.currentTool == Manipulation.MIRROR && this.grabbedElementLocked)
             this.setPointerCursor('CROSSHAIR');
         else if (this.hasManipulationTool)
             this.setPointerCursor(this.grabbedElement ? 'MOVE_OR_RESIZE_WINDOW' : 'DEFAULT');
-        else if (this.currentElement && this.currentElement.shape == Shapes.TEXT && this.isWriting)
+        else if (this.currentElement && this.currentElement.shape == Shape.TEXT && this.isWriting)
             this.setPointerCursor('IBEAM');
         else if (!this.currentElement)
-            this.setPointerCursor(this.currentTool == Shapes.NONE ? 'POINTING_HAND' : 'CROSSHAIR');
-        else if (this.currentElement.shape != Shapes.NONE && controlPressed)
+            this.setPointerCursor(this.currentTool == Shape.NONE ? 'POINTING_HAND' : 'CROSSHAIR');
+        else if (this.currentElement.shape != Shape.NONE && controlPressed)
             this.setPointerCursor('MOVE_OR_RESIZE_WINDOW');
     },
     
@@ -1007,7 +997,7 @@ var DrawingArea = new Lang.Class({
     },
     
     smoothLastElement: function() {
-        if (this.elements.length > 0 && this.elements[this.elements.length - 1].shape == Shapes.NONE) {
+        if (this.elements.length > 0 && this.elements[this.elements.length - 1].shape == Shape.NONE) {
             this.elements[this.elements.length - 1].smoothAll();
             this._redisplay();
         }
@@ -1015,7 +1005,16 @@ var DrawingArea = new Lang.Class({
     
     toggleBackground: function() {
         this.hasBackground = !this.hasBackground;
-        this.set_background_color(this.hasBackground ? this.areaBackgroundColor : null);
+        let backgroundColor = this.hasBackground ? this.areaBackgroundColor : Clutter.Color.get_static(Clutter.StaticColor.TRANSPARENT);
+        
+        if (this.ease) {
+            this.remove_all_transitions();
+            this.ease({ backgroundColor,
+                        duration: TOGGLE_ANIMATION_DURATION,
+                        transition: Clutter.AnimationMode.EASE_IN_OUT_QUAD });
+        } else {
+            this.set_background_color(backgroundColor);
+        }
     },
     
     get hasGrid() {
@@ -1024,19 +1023,43 @@ var DrawingArea = new Lang.Class({
     
     toggleGrid: function() {
         // The grid layer is repainted when the visibility changes.
-        this.gridLayer.visible = !this.gridLayer.visible;
+        if (this.gridLayer.ease) {
+            this.gridLayer.remove_all_transitions();
+            let visible = !this.gridLayer.visible;
+            this.gridLayer.visible = true;
+            this.gridLayer.ease({ opacity: visible ? 255 : 0,
+                                  duration: TOGGLE_ANIMATION_DURATION,
+                                  transition: Clutter.AnimationMode.EASE_IN_OUT_QUAD,
+                                  onStopped: () => this.gridLayer.visible = visible });
+        } else {
+            this.gridLayer.visible = !this.gridLayer.visible;
+        }
     },
     
     toggleSquareArea: function() {
         this.isSquareArea = !this.isSquareArea;
+        let x, y, width, height, onComplete;
+        
         if (this.isSquareArea) {
-            this.layerContainer.set_position((this.monitor.width - this.squareAreaSize) / 2, (this.monitor.height - this.squareAreaSize) / 2);
-            this.layerContainer.set_size(this.squareAreaSize, this.squareAreaSize);
             this.layerContainer.add_style_class_name('draw-on-your-screen-square-area');
+            [x, y] = [(this.monitor.width - this.squareAreaSize) / 2, (this.monitor.height - this.squareAreaSize) / 2];
+            width = height = this.squareAreaSize;
+            onComplete = () => {};
         } else {
-            this.layerContainer.set_position(0, 0);
-            this.layerContainer.set_size(this.monitor.width, this.monitor.height);
-            this.layerContainer.remove_style_class_name('draw-on-your-screen-square-area');
+            x = y = 0;
+            [width, height] = [this.monitor.width, this.monitor.height];
+            onComplete = () => this.layerContainer.remove_style_class_name('draw-on-your-screen-square-area');
+        }
+        
+        if (this.layerContainer.ease) {
+            this.layerContainer.remove_all_transitions();
+            this.layerContainer.ease({ x, y, width, height, onComplete,
+                                       duration: TOGGLE_ANIMATION_DURATION,
+                                       transition: Clutter.AnimationMode.EASE_OUT_QUAD });
+        } else {
+            this.layerContainer.set_position(x, y);
+            this.layerContainer.set_size(width, height);
+            onComplete();
         }
     },
     
@@ -1055,7 +1078,7 @@ var DrawingArea = new Lang.Class({
     
     selectTool: function(tool) {
         this.currentTool = tool;
-        this.emit('show-osd', Files.Icons[`TOOL_${Tools.getNameOf(tool)}`] || null, DisplayStrings.Tool[tool], "", -1, false);
+        this.emit('show-osd', Files.Icons[`TOOL_${Tool.getNameOf(tool)}`] || null, DisplayStrings.Tool[tool], "", -1, false);
         this.updatePointerCursor();
     },
     
@@ -1137,13 +1160,13 @@ var DrawingArea = new Lang.Class({
     },
     
     switchTextAlignment: function() {
-        this.currentTextRightAligned = !this.currentTextRightAligned;
-        if (this.currentElement && this.currentElement.textRightAligned !== undefined) {
-            this.currentElement.textRightAligned = this.currentTextRightAligned;
+        this.currentTextAlignment = this.currentTextAlignment == 2 ? 0 : this.currentTextAlignment + 1;
+        if (this.currentElement && this.currentElement.textAlignment != this.currentTextAlignment) {
+            this.currentElement.textAlignment = this.currentTextAlignment;
             this._redisplay();
         }
-        let icon = Files.Icons[this.currentTextRightAligned ? 'RIGHT_ALIGNED' : 'LEFT_ALIGNED'];
-        this.emit('show-osd', icon, DisplayStrings.getTextAlignment(this.currentTextRightAligned), "", -1, false);
+        let icon = Files.Icons[this.currentTextAlignment == TextAlignment.RIGHT ? 'RIGHT_ALIGNED' : this.currentTextAlignment == TextAlignment.CENTER ? 'CENTERED' : 'LEFT_ALIGNED'];
+        this.emit('show-osd', icon, DisplayStrings.TextAlignment[this.currentTextAlignment], "", -1, false);
     },
     
     switchImageFile: function(reverse) {
@@ -1155,7 +1178,7 @@ var DrawingArea = new Lang.Class({
     pasteImageFiles: function() {
         Files.Images.addImagesFromClipboard(lastImage => {
             this.currentImage = lastImage;
-            this.currentTool = Shapes.IMAGE;
+            this.currentTool = Shape.IMAGE;
             this.updatePointerCursor();
             this.emit('show-osd', this.currentImage.gicon, this.currentImage.toString(), "", -1, false);
         });
@@ -1355,7 +1378,7 @@ var DrawingArea = new Lang.Class({
         this._stopAll();
         
         let prefixes = 'xmlns="http://www.w3.org/2000/svg"';
-        if (this.elements.some(element => element.shape == Shapes.IMAGE))
+        if (this.elements.some(element => element.shape == Shape.IMAGE))
             prefixes += ' xmlns:xlink="http://www.w3.org/1999/xlink"';
         let content = `<svg viewBox="0 0 ${this.layerContainer.width} ${this.layerContainer.height}" ${prefixes}>`;
         let backgroundColorString = this.hasBackground ? String(this.areaBackgroundColor) : 'transparent';
