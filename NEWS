@@ -1,3 +1,14 @@
+v11 - February 2021
+===================
+
+* GS 40 compatibility (40.beta)
+* Gtk4 port (preferences)
+* Toggle animations (background, grid and square area)
+* Multi-line text elements
+* Start a new line with "Enter" (text tool)
+* Add "centered" text alignment
+* Convenient marks for rotation and stretch transformations
+
 v10 - October 2020
 ==================
 
