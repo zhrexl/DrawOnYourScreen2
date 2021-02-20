@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen 6.1\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2020-09-19 15:32+0200\n"
-"PO-Revision-Date: 2020-10-21 09:23+0200\n"
+"POT-Creation-Date: 2021-02-17 14:14+0100\n"
+"PO-Revision-Date: 2021-02-20 01:06+0100\n"
 "Last-Translator: Abakkk\n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -226,12 +226,14 @@ msgstr "Biseauté"
 msgid "%f px"
 msgstr "%f px"
 
-#. Translators: text alignment
-msgid "Right aligned"
-msgstr "Aligné à droite"
-
 msgid "Left aligned"
 msgstr "Aligné à gauche"
+
+msgid "Centered"
+msgstr "Centré"
+
+msgid "Right aligned"
+msgstr "Aligné à droite"
 
 msgctxt "drawing-tool"
 msgid "Free drawing"
@@ -276,12 +278,6 @@ msgstr "Redimensionner"
 msgctxt "drawing-tool"
 msgid "Mirror"
 msgstr "Miroir"
-
-msgid "Undo"
-msgstr "Retirer"
-
-msgid "Redo"
-msgstr "Rétablir"
 
 msgid "Erase"
 msgstr "Effacer"
@@ -601,8 +597,8 @@ msgstr "Ouvrir le dessin précédent"
 msgid "Add images from the clipboard"
 msgstr "Ajouter des images depuis le presse-papiers"
 
-msgid "Redo last brushstroke"
-msgstr "Rétablir le dernier tracé"
+msgid "Redo"
+msgstr "Rétablir"
 
 msgid "Save drawing"
 msgstr "Enregistrer le dessin"
@@ -706,8 +702,8 @@ msgstr "Modifier la forme de l’extrémité des lignes"
 msgid "Change linejoin"
 msgstr "Modifier la jointure des segments de ligne"
 
-msgid "Toggle text alignment"
-msgstr "Alterner l’alignement du texte"
+msgid "Change text alignment"
+msgstr "Modifier l’alignement du texte"
 
 msgid "Add a drawing background"
 msgstr "Ajouter une couleur de fond au dessin"
@@ -725,5 +721,5 @@ msgstr "Cacher le panneau et le dock"
 msgid "Square drawing area"
 msgstr "Rendre la zone de dessin carrée"
 
-msgid "Undo last brushstroke"
-msgstr "Retirer le dernier tracé"
+msgid "Undo"
+msgstr "Retirer"
