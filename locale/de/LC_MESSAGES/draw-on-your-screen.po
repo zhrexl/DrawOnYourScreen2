@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Listed translators
 #
 # This file is distributed under the same license as Draw On Your Screen.
-# Onno Giesmann <nutzer3105@gmail.com>, 2020.
+# Onno Giesmann <nutzer3105@gmail.com>, 2020-2021.
 #
 # Some words refer to SVG attributes (font, line, fill rule ...).
 # You are free to translate them or not.
@@ -10,15 +10,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen\n"
 "Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
-"POT-Creation-Date: 2020-10-04 22:45+0200\n"
-"PO-Revision-Date: 2020-10-15 13:46+0200\n"
+"POT-Creation-Date: 2021-02-17 14:14+0100\n"
+"PO-Revision-Date: 2021-03-04 08:21+0100\n"
 "Last-Translator: Onno Giesmann <nutzer3105@gmail.com>\n"
 "Language-Team: \n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 2.4.1\n"
+"X-Generator: Poedit 2.4.2\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. Translators: %s is a key label
@@ -224,12 +224,14 @@ msgstr "Abgeschrägte Ecken"
 msgid "%f px"
 msgstr "%f px"
 
-#. Translators: text alignment
-msgid "Right aligned"
-msgstr "Rechtsbündig"
-
 msgid "Left aligned"
 msgstr "Linksbündig"
+
+msgid "Centered"
+msgstr "Zentriert"
+
+msgid "Right aligned"
+msgstr "Rechtsbündig"
 
 msgctxt "drawing-tool"
 msgid "Free drawing"
@@ -704,8 +706,8 @@ msgstr "Linien-Kappenstil ändern"
 msgid "Change linejoin"
 msgstr "Linienverbindung ändern"
 
-msgid "Toggle text alignment"
-msgstr "Textausrichtung umschalten"
+msgid "Change text alignment"
+msgstr "Textausrichtung ändern"
 
 msgid "Add a drawing background"
 msgstr "Zeichnungshintergrund hinzufügen"
