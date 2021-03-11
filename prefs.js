@@ -612,7 +612,7 @@ const PrefRow = new GObject.Class({
     }
 });
 
-const PixelSpinButton = new GObject.Class(Object.assign({
+const PixelSpinButton = new GObject.Class({
     Name: `${UUID}-PixelSpinButton`,
     Extends: Gtk.SpinButton,
     Properties: {
@@ -638,22 +638,24 @@ const PixelSpinButton = new GObject.Class(Object.assign({
         this.adjustment.set_page_increment(step * 10);
     },
     
-    vfunc_constructed() {
-        this.parent();
+    on_output: function() {
+        this.text = _("%f px").format(Number(this.value).toFixed(2));
+        return true;
+    },
+    
+    // Prevent accidental scrolling (GTK 3).
+    on_scroll_event: function(event) {
+        if (this.has_focus) {
+            try {
+                GObject.signal_chain_from_overridden([this, event], false);
+            } catch(e) { }
+            
+            return Gdk.EVENT_STOP;
+        }
         
-        // No virtual functions with Gtk4 :/.
-        // Add 'px' unit.
-        this.connect('output', spinButton => {
-            this.text = _("%f px").format(Number(spinButton.value).toFixed(2));
-            return true;
-        });
+        return Gdk.EVENT_PROPAGATE;
     }
-}, IS_GTK3 ? {
-    // Prevent accidental scrolling.
-    vfunc_scroll_event: function(event) {
-        return this.has_focus ? this.parent(event) : Gdk.EVENT_PROPAGATE;
-    }
-} : {}));
+});
 
 // A color button that can be easily bound with a color string setting.
 const ColorStringButton = new GObject.Class({
@@ -676,20 +678,15 @@ const ColorStringButton = new GObject.Class({
         this.set_rgba(newRgba);
     },
     
-    vfunc_constructed() {
-        this.parent();
+    on_color_set: function() {
+        let oldRgba = new Gdk.RGBA();
+        oldRgba.parse(this.color_string);
         
-        // No virtual functions with Gtk4 :/.
         // Do nothing if the new color is equivalent to the old color (e.g. "black" and "rgb(0,0,0)").
-        this.connect('color-set', colorButton => {
-            let oldRgba = new Gdk.RGBA();
-            oldRgba.parse(colorButton.color_string);
-            
-            if (!this.rgba.equal(oldRgba)) {
-                this._color_string = colorButton.rgba.to_string();
-                this.notify('color-string');
-            }
-        });
+        if (!this.rgba.equal(oldRgba)) {
+            this._color_string = this.rgba.to_string();
+            this.notify('color-string');
+        }
     }
 });
 
