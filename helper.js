@@ -73,8 +73,13 @@ var DrawingHelper = new Lang.Class({
     },
     
     _updateHelpKeyLabel: function() {
-        let [keyval, mods] = Gtk.accelerator_parse(Me.internalShortcutSettings.get_strv('toggle-help')[0] || '');
-        this._helpKeyLabel = Gtk.accelerator_get_label(keyval, mods);
+        try {
+            let [keyval, mods] = Gtk.accelerator_parse(Me.internalShortcutSettings.get_strv('toggle-help')[0] || '');
+            this._helpKeyLabel = Gtk.accelerator_get_label(keyval, mods);
+        } catch(e) {
+            logError(e);
+            this._helpKeyLabel = " ";
+        }
     },
     
     get helpKeyLabel() {
@@ -172,10 +177,11 @@ var DrawingHelper = new Lang.Class({
         this.set_position(Math.floor(this.monitor.width / 2 - this.width / 2),
                           Math.floor(this.monitor.height / 2 - this.height / 2));
                           
+        // St.PolicyType: GS 3.32+
         if (this.height == maxHeight)
-            this.vscrollbar_policy = Gtk.PolicyType.ALWAYS;
+            this.vscrollbar_policy = St.PolicyType ? St.PolicyType.ALWAYS : Gtk.PolicyType.ALWAYS;
         else
-            this.vscrollbar_policy = Gtk.PolicyType.NEVER;
+            this.vscrollbar_policy = St.PolicyType ? St.PolicyType.NEVER : Gtk.PolicyType.NEVER;
         
         if (Tweener) {
             Tweener.removeTweens(this);

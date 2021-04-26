@@ -845,9 +845,6 @@ var DrawingArea = new Lang.Class({
         
         this.textEntry.clutterText.set_single_line_mode(false);
         this.textEntry.clutterText.set_activatable(false);
-        this.textEntry.clutterText.connect('activate', (clutterText) => {
-            this._stopWriting();
-        });
         
         let showCursorOnPositionChanged = true;
         this.textEntry.clutterText.connect('text-changed', clutterText => {
@@ -868,7 +865,6 @@ var DrawingArea = new Lang.Class({
         
         this.textEntry.clutterText.connect('key-press-event', (clutterText, event) => {
             if (event.get_key_symbol() == Clutter.KEY_Escape) {
-                this.currentElement.text = "";
                 this._stopWriting();
                 return Clutter.EVENT_STOP;
             }
