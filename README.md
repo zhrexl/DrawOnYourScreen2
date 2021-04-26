@@ -38,7 +38,7 @@ Then save your beautiful work by taking a screenshot.
 
  Intersect two lines and curve the second thanks to the `Ctrl` key.
 
- ![How to draw an arrow](https://framagit.org/abakkk/DrawOnYourScreen/uploads/af8f96d33cfeff49bb922a1ef9f4a4ce/arrow-screencast.webm)
+ ![How to draw an arrow](https://framagit.org/abakkk/DrawOnYourScreen/-/raw/media/arrow.webm)
 
 * Duplicate an element:
 
