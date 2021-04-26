@@ -65,19 +65,10 @@ const setAccessibleDescription = function(widget, description) {
 };
 
 const getChildrenOf = function(widget) {
-    if (IS_GTK3) {
+    if (IS_GTK3)
         return widget.get_children();
-    } else {
-        let listModel = widget.observe_children();
-        let i = 0;
-        let children = [];
-        let child;
-        while (!!(child = listModel.get_item(i))) {
-            children.push(child);
-            i++;
-        }
-        return children;
-    }
+    else
+        return [...widget];
 };
 
 function init() {
