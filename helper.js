@@ -1,15 +1,9 @@
-/* jslint esversion: 6 */
-/* exported DrawingHelper */
-
 /*
  * Copyright 2019 Abakkk
  *
- * This file is part of DrawOnYourScreen, a drawing extension for GNOME Shell.
- * https://framagit.org/abakkk/DrawOnYourScreen
- *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -19,7 +13,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * SPDX-FileCopyrightText: 2019 Abakkk
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
+
+/* jslint esversion: 6 */
+/* exported DrawingHelper */
 
 const Clutter = imports.gi.Clutter;
 const Gtk = imports.gi.Gtk;
