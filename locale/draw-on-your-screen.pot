@@ -9,7 +9,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Draw On Your Screen\n"
-"Report-Msgid-Bugs-To: https://framagit.org/abakkk/DrawOnYourScreen/issues\n"
+"Report-Msgid-Bugs-To: https://codeberg.org/som/DrawOnYourScreen/issues\n"
 "POT-Creation-Date: 2021-02-17 14:14+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"

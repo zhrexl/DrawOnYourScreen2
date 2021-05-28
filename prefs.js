@@ -144,7 +144,7 @@ const AboutPage = new GObject.Class({
         leftBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.END, justify: Gtk.Justification.RIGHT,
                                        use_markup: true, label: "<small>" + _GTK("Created by") + "</small>" }));
         rightBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.START, justify: Gtk.Justification.LEFT,
-                                        use_markup: true, label: "<small><a href=\"https://framagit.org/abakkk\">Abakkk</a></small>" }));
+                                        use_markup: true, label: "<small><a href=\"https://codeber.org/abak\">Abakkk</a></small>" }));
         creditBox.append(leftBox);
         creditBox.append(rightBox);
         vbox.append(creditBox);

@@ -1,11 +1,11 @@
 {
     "name": "Draw On You Screen",
     "description": "Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot",
-    "uuid": "drawOnYourScreen@abakkk.framagit.org",
-    "url": "https://framagit.org/abakkk/DrawOnYourScreen",
+    "uuid": "draw-on-your-screen@som.codeberg.org",
+    "url": "https://codeberg.org/som/DrawOnYourScreen",
     "settings-schema": "org.gnome.shell.extensions.draw-on-your-screen",
     "gettext-domain": "draw-on-your-screen",
-    "data-dir": "drawOnYourScreen",
+    "data-dir": "draw-on-your-screen",
     "persistent-file-name": "persistent",
     "svg-file-name": "DrawOnYourScreen",
     "shell-version": [

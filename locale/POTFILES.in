@@ -1,4 +1,4 @@
-# xgettext --from-code=UTF-8 --add-comments="Translators: " --no-location --package-name="Draw On Your Screen" --msgid-bugs-address="https://framagit.org/abakkk/DrawOnYourScreen/issues" -f locale/POTFILES.in
+# xgettext --from-code=UTF-8 --add-comments="Translators: " --no-location --package-name="Draw On Your Screen" --msgid-bugs-address="https://codeberg.org/som/DrawOnYourScreen/issues" -f locale/POTFILES.in
 area.js
 extension.js
 helper.js

@@ -3,7 +3,7 @@
 Start drawing with Super+Alt+D.
 Then save your beautiful work by taking a screenshot.
 
-![](https://framagit.org/abakkk/DrawOnYourScreen/raw/media/screenshot.jpg)
+![](https://codeberg.org/som/DrawOnYourScreen/raw/branch/media/screenshot.jpg)
 
 ## Features
 
@@ -19,12 +19,12 @@ Then save your beautiful work by taking a screenshot.
 
 1. Download and decompress or clone the repository
 2. Place the resulting directory in `~/.local/share/gnome-shell/extensions`
-3. **Change the directory name** to `drawOnYourScreen@abakkk.framagit.org`
+3. **Change the directory name** to `draw-on-your-screen@som.codeberg.org`
 4. Xorg: type `alt + F2` and `r` to restart gnome-shell  
    Wayland: restart or re-login
-5. Enable the extension in gnome-tweaks or gnome-shell-extension-prefs
+5. Enable the extension with GNOME Extensions or GNOME Tweaks application
 6. `Super + Alt + D` to test
-7. [https://framagit.org/abakkk/DrawOnYourScreen/issues](https://framagit.org/abakkk/DrawOnYourScreen/issues) to say it doesn't work
+7. [https://codeberg.org/som/DrawOnYourScreen/issues](https://codeberg.org/som/DrawOnYourScreen/issues) to say it doesn't work
 
 ## Tips and tricks
 
@@ -32,25 +32,25 @@ Then save your beautiful work by taking a screenshot.
 
  The `Ctrl` key provides an extra functionality for each tool.
 
- ![Range of Ctrl key possibilities](https://framagit.org/abakkk/DrawOnYourScreen/-/raw/media/ctrl.webm)
+ [Range of Ctrl key possibilities](https://codeberg.org/som/DrawOnYourScreen/src/branch/media/ctrl.webm)
 
 * Draw arrows:
 
  Intersect two lines and curve the second thanks to the `Ctrl` key.
 
- ![How to draw an arrow](https://framagit.org/abakkk/DrawOnYourScreen/-/raw/media/arrow.webm)
+ [How to draw an arrow](https://codeberg.org/som/DrawOnYourScreen/src/branch/media/arrow.webm)
 
 * Duplicate an element:
 
  Hold the `Shift` key while starting moving.
  
- ![How to duplicate an element](https://framagit.org/abakkk/DrawOnYourScreen/-/raw/media/duplicate.webm)
+ [How to duplicate an element](https://codeberg.org/som/DrawOnYourScreen/src/branch/media/duplicate.webm)
 
 * Insertable images:
 
- You can insert images (jpeg, png, svg) in your drawings. By default images are sought in `~/.local/share/drawOnYourScreen/images/` but the location is configurable in the preferences. Another way is to copy-past the images from Nautilus or any clipboard source by using the usual `Ctrl + V` shortcut inside the drawing mode.
+ You can insert images (jpeg, png, svg) in your drawings. By default images are sought in `~/.local/share/draw-on-your-screen/images/` but the location is configurable in the preferences. Another way is to copy-past the images from Nautilus or any clipboard source by using the usual `Ctrl + V` shortcut inside the drawing mode.
  
- ![How to add images from Nautilus](https://framagit.org/abakkk/DrawOnYourScreen/-/raw/media/ctrl-plus-v.webm)
+ [How to add images from Nautilus](https://codeberg.org/som/DrawOnYourScreen/src/branch/media/ctrl-plus-v.webm)
 
 * Eraser and SVG:
 
@@ -64,5 +64,5 @@ Then save your beautiful work by taking a screenshot.
 
  If the GNOME Shell built-in color picker is too basic for you, have a look at the [Color Picker extension](https://extensions.gnome.org/extension/3396/color-picker), which let's you select the pixel accurately, preview the color and adjust its values. Once installed and enabled, it will be transparently integrated into DrawOnYourScreen.
 
- ![Color Picker extension in action](https://framagit.org/abakkk/DrawOnYourScreen/-/raw/media/color-picker-extension.jpg)
+ ![Color Picker extension in action](https://codeberg.org/som/DrawOnYourScreen/raw/branch/media/color-picker-extension.jpg)
 
