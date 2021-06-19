@@ -18,7 +18,7 @@ Then save your beautiful work by taking a screenshot.
 ## Install
 
 1. Download and decompress or clone the repository
-2. Place the resulting directory in `~/.local/share/gnome-shell/extensions`
+2. Place the directory (the one that contains `metadata.json`) in `~/.local/share/gnome-shell/extensions`
 3. **Change the directory name** to `draw-on-your-screen@som.codeberg.org`
 4. Xorg: type `alt + F2` and `r` to restart gnome-shell  
    Wayland: restart or re-login
