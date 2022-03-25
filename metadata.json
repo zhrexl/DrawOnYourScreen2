@@ -1,7 +1,7 @@
 {
     "name": "Draw On You Screen 2",
     "description": "Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot",
-    "uuid": "draw-on-your-screen-2@zhrexl.github.com",
+    "uuid": "draw-on-your-screen2@zhrexl.github.com",
     "url": "https://github.com/zhrexl/DrawOnYourScreen2",
     "settings-schema": "org.gnome.shell.extensions.draw-on-your-screen",
     "gettext-domain": "draw-on-your-screen",
