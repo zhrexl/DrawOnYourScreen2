@@ -728,10 +728,10 @@ var DrawingArea = new Lang.Class({
             let controlPressed = event.has_control_modifier();
             this._updateDrawing(x, y, controlPressed);
             
-            if (this.currentTool == Shape.NONE) {
+            /*if (this.currentTool == Shape.NONE) {
                 let device = event.get_device();
                 let sequence = event.get_event_sequence();
-                
+                log(device);
                 // Minimum time between two motion events is about 33 ms.
                 // Add intermediate points to make quick free drawings smoother.
                 this.motionTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, MOTION_TIME, () => {
@@ -758,7 +758,7 @@ var DrawingArea = new Lang.Class({
                     
                     return GLib.SOURCE_CONTINUE;
                 });
-            }
+            }*/
         });
     },
     
