@@ -1,3 +1,9 @@
+v12 - March 2021
+==================
+
+* Removed Intermediate Points (Improved Perfomance)
+* Fixed broken stylus/two cursors on Wayland 
+
 v11.1 - April 2021
 ==================
 
