@@ -1,4 +1,6 @@
-# Draw On Your Screen
+# Draw On Your Screen 2
+
+Orginally forked from: https://codeberg.org/som/DrawOnYourScreen
 
 Start drawing with Super+Alt+D.
 Then save your beautiful work by taking a screenshot.
@@ -19,12 +21,12 @@ Then save your beautiful work by taking a screenshot.
 
 1. Download and decompress or clone the repository
 2. Place the directory (the one that contains `metadata.json`) in `~/.local/share/gnome-shell/extensions`
-3. **Change the directory name** to `draw-on-your-screen@som.codeberg.org`
+3. **Change the directory name** to `draw-on-your-screen2@zhrexl.github.com`
 4. Xorg: type `alt + F2` and `r` to restart gnome-shell  
-   Wayland: restart or re-login
+   Wayland: restart session
 5. Enable the extension with GNOME Extensions or GNOME Tweaks application
 6. `Super + Alt + D` to test
-7. [https://codeberg.org/som/DrawOnYourScreen/issues](https://codeberg.org/som/DrawOnYourScreen/issues) to say it doesn't work
+7. [https://github.com/zhrexl/DrawOnYourScreen2/issues](https://github.com/zhrexl/DrawOnYourScreen2/issues) to say it doesn't work
 
 ## Tips and tricks
 
