@@ -15,7 +15,14 @@ Then save your beautiful work by taking a screenshot.
 * Draw over applications
 * Keep drawings on desktop background with persistence (notes, children's art ...)
 * Multi-monitor support
+* Initial stylus support
 * Export to SVG
+
+## Development Goals
+
+* Better support for tablet, stylus and touchscreen
+* Migrate to GTK4 and libadwaita
+* Improve Perfomance
 
 ## Install
 
