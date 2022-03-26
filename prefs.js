@@ -123,7 +123,7 @@ const AboutPage = new GObject.Class({
         this.set_child(vbox);
         
         // Translators: you are free to translate the extension name, that is displayed in About page, or not
-        let name = "<b> " + _("Draw On You Screen") + "</b>";
+        let name = "<b> " + _("Draw On You Screen 2") + "</b>";
         // Translators: version number in "About" page
         let version = _("Version %f").format(Me.metadata.version);
         // Translators: you are free to translate the extension description, that is displayed in About page, or not
@@ -144,7 +144,13 @@ const AboutPage = new GObject.Class({
         leftBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.END, justify: Gtk.Justification.RIGHT,
                                        use_markup: true, label: "<small>" + _GTK("Created by") + "</small>" }));
         rightBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.START, justify: Gtk.Justification.LEFT,
-                                        use_markup: true, label: "<small><a href=\"https://codeber.org/abak\">Abakkk</a></small>" }));
+                                        use_markup: true, label: "<small><a href=\"https://codeberg.org/abak\">Abakkk</a></small>" }));
+                                        
+        leftBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.END, justify: Gtk.Justification.RIGHT,
+                                       use_markup: true, label: "<small>" + _GTK("Forked by") + "</small>" }));
+        rightBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.START, justify: Gtk.Justification.LEFT,
+                                        use_markup: true, label: "<small><a href=\"https://github.com/zhrexl\">zhrexl</a></small>" }));
+                                                                        
         creditBox.append(leftBox);
         creditBox.append(rightBox);
         vbox.append(creditBox);
