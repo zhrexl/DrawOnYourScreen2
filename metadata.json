@@ -1,8 +1,8 @@
 {
-    "name": "Draw On You Screen",
+    "name": "Draw On You Screen 2",
     "description": "Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot",
-    "uuid": "draw-on-your-screen@som.codeberg.org",
-    "url": "https://codeberg.org/som/DrawOnYourScreen",
+    "uuid": "draw-on-your-screen2@zhrexl.github.com",
+    "url": "https://github.com/zhrexl/DrawOnYourScreen2",
     "settings-schema": "org.gnome.shell.extensions.draw-on-your-screen",
     "gettext-domain": "draw-on-your-screen",
     "data-dir": "draw-on-your-screen",
@@ -17,7 +17,8 @@
         "3.34",
         "3.36",
         "3.38",
-        "40"
+        "40",
+        "41"
     ],
     "version": 11.1
 }

@@ -427,7 +427,7 @@ var DrawingArea = new Lang.Class({
                 if (this.grabbedElement)
                     this._startTransforming(x, y, controlPressed, shiftPressed);
             } else {
-                this._startDrawing(x, y, shiftPressed);
+                this._startDrawing(x, y, shiftPressed, event.get_device());
             }
             return Clutter.EVENT_STOP;
         } else if (button == 2) {
@@ -660,9 +660,10 @@ var DrawingArea = new Lang.Class({
         this.grabbedElementLocked = false;
         this._redisplay();
     },
-    
-    _startDrawing: function(stageX, stageY, shiftPressed) {
+
+    _startDrawing: function(stageX, stageY, shiftPressed, clickedDevice) {
         let [success, startX, startY] = this._transformStagePoint(stageX, stageY);
+
         if (!success)
             return;
         
@@ -710,12 +711,20 @@ var DrawingArea = new Lang.Class({
             this.emit('show-osd', icon, _("Press <i>%s</i> to mark vertices")
                                         .format(Gtk.accelerator_get_label(Clutter.KEY_Return, 0)), "", -1, true);
         }
-        
+        // Wayland supports two cursors so its important to disconnect motionhandler to avoid broken two cursors drawing
+        if (this.motionHandler)
+        {
+            this.disconnect(this.motionHandler);
+            this.motionHandler = null;
+        }
+
         this.motionHandler = this.connect('motion-event', (actor, event) => {
-            if (this.motionTimeout) {
-                GLib.source_remove(this.motionTimeout);
-                this.motionTimeout = null;
-            }
+            // To avoid painting due to the wrong device (2 cursors wayland support)
+            if (clickedDevice != event.get_device())
+                return;
+
+           // log('clickedDevige: '+ clickedDevice);
+            log('motionDevice: ' + event.get_device());
             
             if (this.spaceKeyPressed)
                 return;
@@ -727,38 +736,7 @@ var DrawingArea = new Lang.Class({
             
             let controlPressed = event.has_control_modifier();
             this._updateDrawing(x, y, controlPressed);
-            
-            if (this.currentTool == Shape.NONE) {
-                let device = event.get_device();
-                let sequence = event.get_event_sequence();
-                
-                // Minimum time between two motion events is about 33 ms.
-                // Add intermediate points to make quick free drawings smoother.
-                this.motionTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, MOTION_TIME, () => {
-                    let success, coords;
-                    if (device.get_coords) {
-                        [success, coords] = device.get_coords(sequence);
-                        if (!success)
-                            return GLib.SOURCE_CONTINUE;
-                    } else {
-                        // GS 40+, device.get_coords() has been removed
-                        // and seat.query_state() is unusable with null sequences.
-                        let pointer = global.get_pointer();
-                        coords = { x: pointer[0], y: pointer[1] };
-                    }
-                    
-                    let [s, x, y] = this._transformStagePoint(coords.x, coords.y);
-                    if (!s)
-                        return GLib.SOURCE_CONTINUE;
-                    
-                    // Important: do not call this._updateDrawing because the area MUST NOT BE REDISPLAYED at this step.
-                    // It would lead to critical issues (bad performances and shell crashes).
-                    // The area will be redisplayed, including the intermediate points, at the next motion event.
-                    this.currentElement.addIntermediatePoint(x, y, controlPressed);
-                    
-                    return GLib.SOURCE_CONTINUE;
-                });
-            }
+
         });
     },
     
@@ -776,10 +754,6 @@ var DrawingArea = new Lang.Class({
     },
     
     _stopDrawing: function() {
-        if (this.motionTimeout) {
-            GLib.source_remove(this.motionTimeout);
-            this.motionTimeout = null;
-        }
         if (this.motionHandler) {
             this.disconnect(this.motionHandler);
             this.motionHandler = null;
