@@ -25,7 +25,6 @@ const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
-const Lang = imports.lang;
 const St = imports.gi.St;
 
 const BoxPointer = imports.ui.boxpointer;
@@ -143,10 +142,11 @@ var DisplayStrings = {
     }
 };
 
-var DrawingMenu = new Lang.Class({
-    Name: `${UUID}-DrawingMenu`,
-    
-    _init: function(area, monitor, DrawingTool, areaManagerUtils) {
+var DrawingMenu = GObject.registerClass({
+    GTypeName: `${UUID}-DrawingMenu`,
+}, class DrawingMenu extends GObject.Object {
+    _init(area, monitor, DrawingTool, areaManagerUtils) {
+        super._init({});
         this.area = area;
         this.monitor = monitor;
         this.DrawingTool = DrawingTool;
@@ -178,18 +178,18 @@ var DrawingMenu = new Lang.Class({
                 this.saveDrawingSubMenu.close();
             menuCloseFunc.bind(this.menu)(animate);
         };
-    },
+    }
     
-    disable: function() {
+    disable() {
         delete this.area;
         delete this.DrawingTool;
         delete this.areaManagerUtils;
         this.menuManager.removeMenu(this.menu);
         Main.layoutManager.uiGroup.remove_actor(this.menu.actor);
         this.menu.destroy();
-    },
+    }
     
-    _onMenuOpenStateChanged: function(menu, open) {
+    _onMenuOpenStateChanged(menu, open) {
         if (open) {
             this.area.setPointerCursor('DEFAULT');
         } else {
@@ -203,18 +203,18 @@ var DrawingMenu = new Lang.Class({
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         let maxHeight = Math.round(workArea.height / scaleFactor);
         this.menu.actor.set_style(`max-height:${maxHeight}px;`);
-    },
+    }
     
-    popup: function() {
+    popup() {
         if (this.menu.isOpen) {
             this.close();
         } else {
             this.open();
             this.menu.actor.navigate_focus(null, Gtk.DirectionType.TAB_FORWARD, false);
         }
-    },
+    }
     
-    open: function(x, y) {
+    open(x, y) {
         if (this.menu.isOpen)
             return;
         if (x === undefined || y === undefined)
@@ -225,14 +225,14 @@ var DrawingMenu = new Lang.Class({
         this.menu._arrowAlignment = (y - monitor.y) / monitor.height;
         this.menu.open(BoxPointer.PopupAnimation.NONE);
         this.menuManager.ignoreRelease();
-    },
+    }
     
-    close: function() {
+    close() {
         if (this.menu.isOpen)
             this.menu.close();
-    },
+    }
     
-    _redisplay: function() {
+    _redisplay() {
         this.menu.removeAll();
         
         let groupItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, style_class: 'draw-on-your-screen-menu-group-item' });
@@ -309,9 +309,9 @@ var DrawingMenu = new Lang.Class({
         
         this._updateActionSensitivity();
         this._updateSectionVisibility();
-    },
+    }
     
-    _updateActionSensitivity: function() {
+    _updateActionSensitivity() {
         this.undoButton.child.reactive = this.area.elements.length > 0;
         this.redoButton.child.reactive = this.area.undoneElements.length > 0 || (this.area.elements.length && this.area.elements[this.area.elements.length - 1].canUndo);
         this.eraseButton.child.reactive = this.area.elements.length > 0;
@@ -319,9 +319,9 @@ var DrawingMenu = new Lang.Class({
         this.saveButton.child.reactive = this.area.elements.length > 0;
         this.svgButton.child.reactive = this.area.elements.length > 0;
         this.saveDrawingSubMenuItem.setSensitive(this.area.elements.length > 0);
-    },
+    }
     
-    _updateSectionVisibility: function() {
+    _updateSectionVisibility() {
         let [isText, isImage] = [this.area.currentTool == this.DrawingTool.TEXT, this.area.currentTool == this.DrawingTool.IMAGE];
         this.lineSection.actor.visible = !isText && !isImage;
         this.fontSection.actor.visible = isText;
@@ -333,9 +333,9 @@ var DrawingMenu = new Lang.Class({
             this.fillSection.actor.show();
         else
             this.fillSection.actor.hide();
-    },
+    }
     
-    _addSwitchItem: function(menu, label, iconFalse, iconTrue, target, targetProperty, onToggled) {
+    _addSwitchItem(menu, label, iconFalse, iconTrue, target, targetProperty, onToggled) {
         let item = new PopupMenu.PopupSwitchMenuItem(label, target[targetProperty]);
         
         item.icon = new St.Icon({ style_class: 'popup-menu-icon' });
@@ -354,15 +354,15 @@ var DrawingMenu = new Lang.Class({
         });
         menu.addMenuItem(item);
         return item;
-    },
+    }
     
-    _addSimpleSwitchItem: function(menu, label, active, onToggled) {
+    _addSimpleSwitchItem(menu, label, active, onToggled) {
         let item = new PopupMenu.PopupSwitchMenuItem(label, active);
         item.connect('toggled', onToggled);
         menu.addMenuItem(item);
-    },
+    }
     
-    _addSliderItem: function(menu, target, targetProperty) {
+    _addSliderItem(menu, target, targetProperty) {
         let item = new PopupMenu.PopupBaseMenuItem({ activate: false });
         let label = new St.Label({ text: DisplayStrings.getPixels(target[targetProperty]), style_class: 'draw-on-your-screen-menu-slider-label' });
         let slider = new Slider.Slider(target[targetProperty] / 50);
@@ -393,9 +393,9 @@ var DrawingMenu = new Lang.Class({
         if (slider.onKeyPressEvent)
             getActor(item).connect('key-press-event', slider.onKeyPressEvent.bind(slider));
         menu.addMenuItem(item);
-    },
+    }
     
-    _addSubMenuItem: function(menu, icon, obj, target, targetProperty) {
+    _addSubMenuItem(menu, icon, obj, target, targetProperty) {
         let item = new PopupMenu.PopupSubMenuMenuItem(String(obj[target[targetProperty]]), icon ? true : false);
         
         item.icon.set_gicon(icon);
@@ -419,9 +419,9 @@ var DrawingMenu = new Lang.Class({
         });
         
         menu.addMenuItem(item);
-    },
+    }
     
-    _addToolSubMenuItem: function(menu, callback) {
+    _addToolSubMenuItem(menu, callback) {
         let item = new PopupMenu.PopupSubMenuMenuItem('', true);
         item.update = () => {
             item.label.set_text(DisplayStrings.Tool[this.area.currentTool]);
@@ -457,9 +457,9 @@ var DrawingMenu = new Lang.Class({
         
         menu.addMenuItem(item);
         return item;
-    },
+    }
     
-    _addPaletteSubMenuItem: function(menu, icon) {
+    _addPaletteSubMenuItem(menu, icon) {
         let text = _(this.area.currentPalette[0] || "Palette");
         let item = new PopupMenu.PopupSubMenuMenuItem(text, true);
         item.icon.set_gicon(icon);
@@ -484,9 +484,9 @@ var DrawingMenu = new Lang.Class({
         
         menu.addMenuItem(item);
         return item;
-    },
+    }
     
-    _addColorSubMenuItem: function(menu, icon) {
+    _addColorSubMenuItem(menu, icon) {
         let item = new PopupMenu.PopupSubMenuMenuItem(_("Color"), true);
         this.colorSubMenu = item.menu;
         item.icon.set_gicon(icon);
@@ -508,9 +508,9 @@ var DrawingMenu = new Lang.Class({
         this._populateColorSubMenu();
         menu.addMenuItem(item);
         return item;
-    },
+    }
     
-    _populateColorSubMenu: function() {
+    _populateColorSubMenu() {
         this.colorSubMenu.removeAll();
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             this.area.colors.forEach(color => {
@@ -525,9 +525,9 @@ var DrawingMenu = new Lang.Class({
             });
             return GLib.SOURCE_REMOVE;
         });
-    },
+    }
     
-    _addFontFamilySubMenuItem: function(menu, icon) {
+    _addFontFamilySubMenuItem(menu, icon) {
         let item = new PopupMenu.PopupSubMenuMenuItem(DisplayStrings.getFontFamily(this.area.currentFontFamily), true);
         item.icon.set_gicon(icon);
         
@@ -555,9 +555,9 @@ var DrawingMenu = new Lang.Class({
         };
         
         menu.addMenuItem(item);
-    },
+    }
     
-    _addTextAlignmentSubMenuItem: function(menu) {
+    _addTextAlignmentSubMenuItem(menu) {
         let item = new PopupMenu.PopupSubMenuMenuItem(DisplayStrings.TextAlignment[this.area.currentTextAlignment], true);
         item.icon.set_gicon(TextAlignmentIcon[this.area.currentTextAlignment]);
         
@@ -577,9 +577,9 @@ var DrawingMenu = new Lang.Class({
         });
         
         menu.addMenuItem(item);
-    },
+    }
     
-    _addImageSubMenuItem: function(menu, images) {
+    _addImageSubMenuItem(menu, images) {
         let item = new PopupMenu.PopupSubMenuMenuItem('', true);
         item.update = () => {
             item.label.set_text(this.area.currentImage.toString());
@@ -612,26 +612,26 @@ var DrawingMenu = new Lang.Class({
         
         menu.addMenuItem(item);
         return item;
-    },
+    }
     
-    _addDrawingNameItem: function(menu) {
+    _addDrawingNameItem(menu) {
         this.drawingNameMenuItem = new PopupMenu.PopupMenuItem('', { reactive: false, activate: false });
         this.drawingNameMenuItem.setSensitive(false);
         getActor(this.drawingNameMenuItem).add_style_class_name('draw-on-your-screen-menu-ellipsized');
         menu.addMenuItem(this.drawingNameMenuItem);
         this._updateDrawingNameMenuItem();
-    },
+    }
     
-    _updateDrawingNameMenuItem: function() {
+    _updateDrawingNameMenuItem() {
         getActor(this.drawingNameMenuItem).visible = this.area.currentJson ? true : false;
         if (this.area.currentJson) {
             let prefix = this.area.drawingContentsHasChanged ? "* " : "";
             this.drawingNameMenuItem.label.set_text(`<i>${prefix}${this.area.currentJson.name}</i>`);
             this.drawingNameMenuItem.label.get_clutter_text().set_use_markup(true);
         }
-    },
+    }
     
-    _addOpenDrawingSubMenuItem: function(menu, label, icon) {
+    _addOpenDrawingSubMenuItem(menu, label, icon) {
         let item = new PopupMenu.PopupSubMenuMenuItem(label, true);
         this.openDrawingSubMenuItem = item;
         this.openDrawingSubMenu = item.menu;
@@ -649,9 +649,9 @@ var DrawingMenu = new Lang.Class({
         };
         
         menu.addMenuItem(item);
-    },
+    }
     
-    _populateOpenDrawingSubMenu: function() {
+    _populateOpenDrawingSubMenu() {
         this.openDrawingSubMenu.removeAll();
         Files.Jsons.getSorted().forEach(json => {
             if (!json.gicon)
@@ -698,9 +698,9 @@ var DrawingMenu = new Lang.Class({
         });
         
         this.openDrawingSubMenuItem.setSensitive(!this.openDrawingSubMenu.isEmpty());
-    },
+    }
     
-    _addSaveDrawingSubMenuItem: function(menu, label, icon) {
+    _addSaveDrawingSubMenuItem(menu, label, icon) {
         let item = new PopupMenu.PopupSubMenuMenuItem(label, true);
         this.saveDrawingSubMenuItem = item;
         this.saveDrawingSubMenu = item.menu;
@@ -715,18 +715,18 @@ var DrawingMenu = new Lang.Class({
             item.menu.openOld();
         };
         menu.addMenuItem(item);
-    },
+    }
     
-    _updateSaveDrawingSubMenuItemSensitivity: function() {
+    _updateSaveDrawingSubMenuItemSensitivity() {
         this.saveDrawingSubMenuItem.setSensitive(this.area.elements.length > 0);
-    },
+    }
     
     _onDrawingSaved() {
         this._updateDrawingNameMenuItem();
         this.openDrawingSubMenuItem.setSensitive(true);
-    },
+    }
     
-    _populateSaveDrawingSubMenu: function() {
+    _populateSaveDrawingSubMenu() {
         this.saveDrawingSubMenu.removeAll();
         let saveEntry = new Entry({ initialTextGetter: () => this.area.currentJson ? this.area.currentJson.name : "",
                                     hint_text: _("Type a name"),
@@ -737,9 +737,9 @@ var DrawingMenu = new Lang.Class({
                                     invalidStrings: [Me.metadata['persistent-file-name'], '/'],
                                     primaryIconName: 'insert-text' });
         this.saveDrawingSubMenu.addMenuItem(saveEntry.item);
-    },
+    }
     
-    _addSeparator: function(menu, thin) {
+    _addSeparator(menu, thin) {
         if (this.hasSeparators) {
             let separatorItem = new PopupMenu.PopupSeparatorMenuItem(' ');
             getActor(separatorItem).add_style_class_name('draw-on-your-screen-menu-separator-item');
@@ -768,17 +768,16 @@ const updateSubMenuAdjustment = function(itemActor) {
 };
 
 // An action button that uses upstream dash item tooltips.
-const ActionButton = new Lang.Class({
-    Name: `${UUID}-DrawingMenuActionButton`,
-    Extends: St.Bin,
+const ActionButton = GObject.registerClass ({
+    GTypeName: `${UUID}-DrawingMenuActionButton`,
     _labelShowing: false,
     _resetHoverTimeoutId: 0,
     _showLabelTimeoutId: 0,
     showLabel: Dash.DashItemContainer.prototype.showLabel,
     hideLabel: Dash.DashItemContainer.prototype.hideLabel,
     _syncLabel: Dash.Dash.prototype._syncLabel,
-    
-    _init: function(name, icon, callback, callbackAfter, inline) {
+}, class ActionButton extends St.Bin {
+    _init(name, icon, callback, callbackAfter, inline) {
         this._labelText = name;
         
         let button = new St.Button({ track_hover: true,
@@ -798,8 +797,8 @@ const ActionButton = new Lang.Class({
         button.bind_property('reactive', button, 'can_focus', GObject.BindingFlags.DEFAULT);
         button.connect('notify::hover', () => this._syncLabel(this));
         
-        this.parent({ child: button, x_expand: inline ? false : true });
-    },
+        super._init({ child: button, x_expand: inline ? false : true });
+    }
     
     get label() {
         if (!this._label) {
@@ -813,10 +812,11 @@ const ActionButton = new Lang.Class({
 });
 
 // based on searchItem.js, https://github.com/leonardo-bartoli/gnome-shell-extension-Recents
-const Entry = new Lang.Class({
-    Name: `${UUID}-DrawingMenuEntry`,
-    
-    _init: function(params) {
+// zhrexl: Registered as if it needed to extend Object but I might change that in the future
+const Entry = GObject.registerClass({
+    GTypeName: `${UUID}-DrawingMenuEntry`,
+}, class Entry extends GObject.Object{
+    _init(params) {
         this.params = params;
         this.item = new PopupMenu.PopupBaseMenuItem({ style_class: 'draw-on-your-screen-menu-entry-item',
                                                       activate: false,
@@ -853,23 +853,23 @@ const Entry = new Lang.Class({
                 this.entry.clutter_text.grab_key_focus();
             }
         });
-    },
+    }
     
-    _setError: function(hasError) {
+    _setError(hasError) {
         if (hasError)
             this.entry.add_style_class_name('draw-on-your-screen-menu-entry-error');
         else
             this.entry.remove_style_class_name('draw-on-your-screen-menu-entry-error');
-    },
+    }
     
-    _reset: function() {
+    _reset() {
         this.entry.text = '';
         this.entry.clutter_text.set_cursor_visible(true);
         this.entry.clutter_text.set_selection(0, 0);
         this._setError(false);
-    },
+    }
     
-    _onTextActivated: function(clutterText) {
+    _onTextActivated(clutterText) {
         let text = clutterText.get_text();
         if (text.length == 0)
             return;
@@ -877,17 +877,17 @@ const Entry = new Lang.Class({
             return;
         this._reset();
         this.params.entryActivateCallback(text);
-    },
+    }
     
-    _onTextChanged: function(clutterText) {
+    _onTextChanged(clutterText) {
         let text = clutterText.get_text();
         this.entry.set_secondary_icon(text.length ? this.clearIcon : null);
         
         if (text.length)
             this._setError(this._getIsInvalid());
-    },
+    }
     
-    _getIsInvalid: function() {
+    _getIsInvalid() {
         for (let i = 0; i < this.params.invalidStrings.length; i++) {
             if (this.entry.text.indexOf(this.params.invalidStrings[i]) != -1)
                 return true;
