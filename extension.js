@@ -21,7 +21,7 @@
 /* jslint esversion: 6 */
 /* exported init */
 
-const Lang = imports.lang;
+const GObject = imports.gi.GObject;
 const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
 const St = imports.gi.St;
@@ -53,12 +53,12 @@ function init() {
     return new Extension();
 }
 
-const Extension = new Lang.Class({
-    Name: `${UUID}-Extension`,
-    
-    _init: function() {
+const Extension = GObject.registerClass({
+    GTypeName: `${UUID}-Extension`,
+}, class Extension extends GObject.Object{
+    _init() {
         Convenience.initTranslations();
-    },
+    }
 
     enable() {
         if (ExtensionUtils.isOutOfDate(Me))
@@ -68,7 +68,7 @@ const Extension = new Lang.Class({
         Me.internalShortcutSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
         Me.drawingSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.drawing');
         this.areaManager = new AreaManager();
-    },
+    }
 
     disable() {
         this.areaManager.disable();
@@ -81,10 +81,10 @@ const Extension = new Lang.Class({
 // AreaManager assigns one DrawingArea per monitor (updateAreas()),
 // distributes keybinding callbacks to the active area
 // and handles stylesheet and monitor changes.
-const AreaManager = new Lang.Class({
-    Name: `${UUID}-AreaManager`,
-
-    _init: function() {
+const AreaManager = GObject.registerClass({
+    GTypeName: `${UUID}-AreaManager`,
+}, class AreaManager extends GObject.Object{
+    _init() {
         this.areas = [];
         this.activeArea = null;
         
@@ -115,50 +115,50 @@ const AreaManager = new Lang.Class({
         this.desktopSettingHandler = Me.settings.connect('changed::drawing-on-desktop', this.onDesktopSettingChanged.bind(this));
         this.persistentOverRestartsSettingHandler = Me.settings.connect('changed::persistent-over-restarts', this.onPersistentOverRestartsSettingChanged.bind(this));
         this.persistentOverTogglesSettingHandler = Me.settings.connect('changed::persistent-over-toggles', this.onPersistentOverTogglesSettingChanged.bind(this));
-    },
+    }
     
     get persistentOverToggles() {
         return Me.settings.get_boolean('persistent-over-toggles');
-    },
+    }
     
     get persistentOverRestarts() {
         return Me.settings.get_boolean('persistent-over-toggles') && Me.settings.get_boolean('persistent-over-restarts');
-    },
+    }
     
     get onDesktop() {
         return Me.settings.get_boolean('persistent-over-toggles') && Me.settings.get_boolean('drawing-on-desktop');
-    },
+    }
     
-    onDesktopSettingChanged: function() {
+    onDesktopSettingChanged() {
         if (this.onDesktop)
             this.areas.forEach(area => area.show());
         else
             this.areas.forEach(area => area.hide());
-    },
+    }
     
-    onPersistentOverRestartsSettingChanged: function() {
+    onPersistentOverRestartsSettingChanged() {
         if (this.persistentOverRestarts)
             this.areas[Main.layoutManager.primaryIndex].syncPersistent();
-    },
+    }
     
-    onPersistentOverTogglesSettingChanged: function() {
+    onPersistentOverTogglesSettingChanged() {
         if (!this.persistentOverToggles && !this.activeArea)
             this.eraseDrawings();
             
         this.onPersistentOverRestartsSettingChanged();
         this.onDesktopSettingChanged();
-    },
+    }
     
-    updateIndicator: function() {
+    updateIndicator() {
         if (this.indicator) {
             this.indicator.disable();
             this.indicator = null;
         }
         if (!Me.settings.get_boolean('indicator-disabled'))
             this.indicator = new DrawingIndicator();
-    },
+    }
     
-    updateAreas: function() {
+    updateAreas() {
         if (this.activeArea)
             this.toggleDrawing();
         this.removeAreas();
@@ -189,9 +189,9 @@ const AreaManager = new Lang.Class({
             area.showOsdHandler = area.connect('show-osd', this.showOsd.bind(this));
             this.areas.push(area);
         }
-    },
+    }
     
-    addInternalKeybindings: function() {
+    addInternalKeybindings() {
         // unavailable when writing
         this.internalKeybindings1 = {
             'undo': this.activeArea.undo.bind(this.activeArea),
@@ -269,9 +269,9 @@ const AreaManager = new Lang.Class({
                                   DRAWING_ACTION_MODE | WRITING_ACTION_MODE,
                                   this.activeArea.selectColor.bind(this.activeArea, iCaptured - 1));
         }
-    },
+    }
     
-    removeInternalKeybindings: function() {
+    removeInternalKeybindings() {
         for (let key in this.internalKeybindings1)
             Main.wm.removeKeybinding(key);
         
@@ -280,25 +280,25 @@ const AreaManager = new Lang.Class({
         
         for (let i = 1; i < 10; i++)
             Main.wm.removeKeybinding('select-color' + i);
-    },
+    }
     
-    openPreferences: function() {
+    openPreferences() {
         // since GS 3.36
         if (ExtensionUtils.openPrefs) {
             if (this.activeArea)
                 this.toggleDrawing();
             ExtensionUtils.openPrefs();
         }
-    },
+    }
     
-    eraseDrawings: function() {
+    eraseDrawings() {
         for (let i = 0; i < this.areas.length; i++)
             this.areas[i].erase();
         if (this.persistentOverRestarts)
             this.areas[Main.layoutManager.primaryIndex].savePersistent();
-    },
+    }
     
-    togglePanelAndDockOpacity: function() {
+    togglePanelAndDockOpacity() {
         if (this.hiddenList) {
             for (let i = 0; i < this.hiddenList.length; i++) {
                 this.hiddenList[i].actor.set_opacity(this.hiddenList[i].oldOpacity);
@@ -334,9 +334,9 @@ const AreaManager = new Lang.Class({
                 actorToHide[i].set_opacity(0);
             }
         }
-    },
+    }
     
-    toggleArea: function() {
+    toggleArea() {
         if (!this.activeArea)
             return;
         
@@ -355,9 +355,9 @@ const AreaManager = new Lang.Class({
             this.oldKeyboardIndex = Main.uiGroup.get_children().indexOf(Main.layoutManager.keyboardBox);
             Main.uiGroup.set_child_above_sibling(Main.layoutManager.keyboardBox, this.activeArea);
         }
-    },
+    }
     
-    toggleModal: function(source) {
+    toggleModal(source) {
         if (!this.activeArea)
             return;
         
@@ -384,9 +384,9 @@ const AreaManager = new Lang.Class({
         }
         
         return true;
-    },
+    }
     
-    toggleDrawing: function() {
+    toggleDrawing() {
         if (this.activeArea) {
             let activeIndex = this.areas.indexOf(this.activeArea);
             let save = activeIndex == Main.layoutManager.primaryIndex && this.persistentOverRestarts;
@@ -422,14 +422,14 @@ const AreaManager = new Lang.Class({
         
         if (this.indicator)
             this.indicator.sync(Boolean(this.activeArea));
-    },
+    }
     
-    updateActionMode: function() {
+    updateActionMode() {
         Main.actionMode = (this.activeArea.isWriting ? WRITING_ACTION_MODE : DRAWING_ACTION_MODE) | Shell.ActionMode.NORMAL;
-    },
+    }
     
     // Use level -1 to set no level through a signal.
-    showOsd: function(emitter, icon, label, color, level, long) {
+    showOsd(emitter, icon, label, color, level, long) {
         let activeIndex = this.areas.indexOf(this.activeArea);
         if (activeIndex == -1 || this.osdDisabled)
             return;
@@ -504,17 +504,17 @@ const AreaManager = new Lang.Class({
         
         if (hideTimeoutSave)
             OsdWindow.HIDE_TIMEOUT = hideTimeoutSave;
-    },
+    }
     
-    setCursor: function(sourceActor_, cursorName) {
+    setCursor(sourceActor_, cursorName) {
         // check display or screen (API changes)
         if (global.display.set_cursor)
             global.display.set_cursor(Meta.Cursor[cursorName]);
         else if (global.screen && global.screen.set_cursor)
             global.screen.set_cursor(Meta.Cursor[cursorName]);
-    },
+    }
     
-    removeAreas: function() {
+    removeAreas() {
         for (let i = 0; i < this.areas.length; i++) {
             let area = this.areas[i];
             area.disconnect(area.leaveDrawingHandler);
@@ -523,9 +523,9 @@ const AreaManager = new Lang.Class({
             area.destroy();
         }
         this.areas = [];
-    },
+    }
     
-    disable: function() {
+    disable() {
         if (this.monitorChangedHandler) {
             Main.layoutManager.disconnect(this.monitorChangedHandler);
             this.monitorChangedHandler = null;
@@ -561,11 +561,11 @@ const AreaManager = new Lang.Class({
 });
 
 // The same as the original, without forcing a ratio of 1.
-const OsdWindowConstraint = new Lang.Class({
-    Name: `${UUID}-OsdWindowConstraint`,
-    Extends: OsdWindow.OsdWindowConstraint,
+const OsdWindowConstraint = GObject.registerClass({
+    GTypeName: `${UUID}-OsdWindowConstraint`,
+}, class OsdWindowConstraint extends OsdWindow.OsdWindowConstraint{
 
-    vfunc_update_allocation: function(actor, actorBox) {
+    vfunc_update_allocation(actor, actorBox) {
         // Clutter will adjust the allocation for margins,
         // so add it to our minimum size
         let minSize = this._minSize + actor.margin_top + actor.margin_bottom;
@@ -583,10 +583,11 @@ const OsdWindowConstraint = new Lang.Class({
     }
 });
 
-const DrawingIndicator = new Lang.Class({
-    Name: `${UUID}-Indicator`,
+const DrawingIndicator = GObject.registerClass({
+    GTypeName: `${UUID}-Indicator`,
+}, class DrawingIndicator extends GObject.Object{
 
-    _init: function() {
+    _init() {
         let [menuAlignment, dontCreateMenu] = [0, true];
         this.button = new PanelMenu.Button(menuAlignment, "Drawing Indicator", dontCreateMenu);
         this.buttonActor = GS_VERSION < '3.33.0' ? this.button.actor: this.button;
@@ -596,13 +597,13 @@ const DrawingIndicator = new Lang.Class({
                                   style_class: 'system-status-icon screencast-indicator' });
         this.buttonActor.add_child(this.icon);
         this.buttonActor.visible = false;
-    },
+    }
 
-    sync: function(visible) {
+    sync(visible) {
         this.buttonActor.visible = visible;
-    },
+    }
     
-    disable: function() {
+    disable() {
         this.button.destroy();
     }
 });
