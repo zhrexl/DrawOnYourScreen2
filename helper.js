@@ -23,9 +23,8 @@
 
 const Clutter = imports.gi.Clutter;
 const Gtk = imports.gi.Gtk;
-const Lang = imports.lang;
 const St = imports.gi.St;
-
+const GObject = imports.gi.GObject;
 const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
 
@@ -44,13 +43,14 @@ const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
 // DrawingHelper provides the "help osd" (Ctrl + F1)
 // It uses the same texts as in prefs
-var DrawingHelper = new Lang.Class({
-    Name: `${UUID}-DrawingHelper`,
-    Extends: St.ScrollView,
+//TODO: Review this class later
+var DrawingHelper = GObject.registerClass({
+    GTypeName: `${UUID}-DrawingHelper`,
+}, class DrawingHelper  extends St.ScrollView {
     
-    _init: function(params, monitor) {
+    _init(params, monitor) {
         params.style_class = 'osd-window draw-on-your-screen-helper';
-        this.parent(params);
+        super._init(params);
         this.monitor = monitor;
         this.hide();
         
@@ -60,9 +60,9 @@ var DrawingHelper = new Lang.Class({
             Me.settings.disconnect(this.settingsHandler);
             Me.internalShortcutSettings.disconnect(this.internalShortcutsettingsHandler);
         });
-    },
+    }
     
-    _onSettingsChanged: function(settings, key) {
+    _onSettingsChanged(settings, key) {
         if (key == 'toggle-help')
             this._updateHelpKeyLabel();
         
@@ -70,9 +70,9 @@ var DrawingHelper = new Lang.Class({
             this.vbox.destroy();
             delete this.vbox;
         }
-    },
+    }
     
-    _updateHelpKeyLabel: function() {
+    _updateHelpKeyLabel() {
         try {
             let [keyval, mods] = Gtk.accelerator_parse(Me.internalShortcutSettings.get_strv('toggle-help')[0] || '');
             this._helpKeyLabel = Gtk.accelerator_get_label(keyval, mods);
@@ -80,16 +80,16 @@ var DrawingHelper = new Lang.Class({
             logError(e);
             this._helpKeyLabel = " ";
         }
-    },
+    }
     
     get helpKeyLabel() {
         if (!this._helpKeyLabel)
             this._updateHelpKeyLabel();
         
         return this._helpKeyLabel;
-    },
+    }
     
-    _populate: function() {
+    _populate() {
         this.vbox = new St.BoxLayout({ vertical: true });
         this.add_actor(this.vbox);
         this.vbox.add_child(new St.Label({ text: _("Global") }));
@@ -163,9 +163,9 @@ var DrawingHelper = new Lang.Class({
             hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));
             this.vbox.add_child(hbox);
         }
-    },
+    }
     
-    showHelp: function() {
+    showHelp() {
         if (!this.vbox)
             this._populate();
         
@@ -194,9 +194,9 @@ var DrawingHelper = new Lang.Class({
                         duration: HELPER_ANIMATION_TIME * 1000,
                         transition: Clutter.AnimationMode.EASE_OUT_QUAD });
         }
-    },
+    }
     
-    hideHelp: function() {
+    hideHelp() {
         if (Tweener) {
             Tweener.removeTweens(this);
             Tweener.addTween(this, { opacity: 0,
