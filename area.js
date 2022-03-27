@@ -721,9 +721,6 @@ var DrawingArea = GObject.registerClass({
             // To avoid painting due to the wrong device (2 cursors wayland support)
             if (clickedDevice != event.get_device())
                 return;
-
-           // log('clickedDevige: '+ clickedDevice);
-            log('motionDevice: ' + event.get_device());
             
             if (this.spaceKeyPressed)
                 return;
