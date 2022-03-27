@@ -9,16 +9,8 @@
     "persistent-file-name": "persistent",
     "svg-file-name": "DrawOnYourScreen",
     "shell-version": [
-        "3.24",
-        "3.26",
-        "3.28",
-        "3.30",
-        "3.32",
-        "3.34",
-        "3.36",
-        "3.38",
         "40",
         "41"
     ],
-    "version": 12.0
+    "version": 12.1
 }
