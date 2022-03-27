@@ -26,7 +26,7 @@ const Gdk = imports.gi.Gdk;
 const GdkPixbuf = imports.gi.GdkPixbuf;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
-const Lang = imports.lang;
+const GObject = imports.gi.GObject;
 const St = imports.gi.St;
 
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -98,71 +98,71 @@ const replaceColor = function (contents, color) {
 
 // Wrapper around image data. If not subclassed, it is used when loading in the area an image element for a drawing file (.json)
 // and it takes { displayName, contentType, base64, hash } as params.
-var Image = new Lang.Class({
-    Name: `${UUID}-Image`,
-    
-    _init: function(params) {
+var Image = GObject.registerClass({
+    GTypeName: `${UUID}-Image`,
+}, class Image extends GObject.Object { 
+    _init(params) {
         for (let key in params)
             this[key] = params[key];
-    },
+    }
     
-    toString: function() {
+    toString() {
         return this.displayName;
-    },
+    }
     
-    toJSON: function() {
+    toJSON() {
         return {
             displayName: this.displayName,
             contentType: this.contentType,
             base64: this.base64,
             hash: this.hash
         };
-    },
+    }
     
     get bytes() {
         if (!this._bytes)
             this._bytes = new GLib.Bytes(GLib.base64_decode(this.base64));
         return this._bytes;
-    },
+    }
     
     get base64() {
         if (!this._base64)
             this._base64 = GLib.base64_encode(this.bytes.get_data());
         return this._base64;
-    },
+    }
     
     set base64(base64) {
         this._base64 = base64;
-    },
+    }
     
-    getBase64ForColor: function(color) {
+    getBase64ForColor(color) {
         if (!color || this.contentType != 'image/svg+xml')
             return this.base64;
         
         let contents = GLib.base64_decode(this.base64);
         return GLib.base64_encode(replaceColor(contents, color));
-    },
+    }
     
     // hash is not used
     get hash() {
         if (!this._hash)
             this._hash = this.bytes.hash();
         return this._hash;
-    },
+    }
     
     set hash(hash) {
         this._hash = hash;
-    },
+    }
     
-    getBytesForColor: function(color) {
+    getBytesForColor(color) {
         if (!color || this.contentType != 'image/svg+xml')
             return this.bytes;
         
         let contents = this.bytes.get_data();
         return new GLib.Bytes(replaceColor(contents, color));
-    },
+    }
     
-    getPixbuf: function(color) {
+    getPixbuf(color) {
         if (color) {
             let stream = Gio.MemoryInputStream.new_from_bytes(this.getBytesForColor(color));
             let pixbuf = GdkPixbuf.Pixbuf.new_from_stream(stream, null);
@@ -176,16 +176,16 @@ var Image = new Lang.Class({
             stream.close(null);
         }
         return this._pixbuf;
-    },
+    }
     
-    getPixbufAtScale: function(width, height, color) {
+    getPixbufAtScale(width, height, color) {
         let stream = Gio.MemoryInputStream.new_from_bytes(this.getBytesForColor(color));
         let pixbuf = GdkPixbuf.Pixbuf.new_from_stream_at_scale(stream, width, height, true, null);
         stream.close(null);
         return pixbuf;
-    },
+    }
     
-    setCairoSource: function(cr, x, y, width, height, preserveAspectRatio, color) {
+    setCairoSource(cr, x, y, width, height, preserveAspectRatio, color) {
         let pixbuf = preserveAspectRatio ? this.getPixbufAtScale(width, height, color)
                                          : this.getPixbuf(color).scale_simple(width, height, GdkPixbuf.InterpType.BILINEAR);
         Gdk.cairo_set_source_pixbuf(cr, pixbuf, x, y);
@@ -193,17 +193,17 @@ var Image = new Lang.Class({
 });
 
 // Add a gicon generator to Image. It is used with image files and it takes { file, info } as params.
-const ImageWithGicon = new Lang.Class({
-    Name: `${UUID}-ImageWithGicon`,
-    Extends: Image,
+const ImageWithGicon = GObject.registerClass({
+    GTypeName: `${UUID}-ImageWithGicon`,
+}, class ImageWithGicon extends Image{
     
     get displayName() {
         return this.info.get_display_name();
-    },
+    }
     
     get contentType() {
         return this.info.get_content_type();
-    },
+    }
     
     get thumbnailFile() {
         if (!this._thumbnailFile) {
@@ -213,13 +213,13 @@ const ImageWithGicon = new Lang.Class({
             }
         }
         return this._thumbnailFile || null;
-    },
+    }
     
     get gicon() {
         if (!this._gicon)
             this._gicon = new Gio.FileIcon({ file: this.thumbnailFile || this.file });
         return this._gicon;
-    },
+    }
     
     // use only thumbnails in menu (memory)
     get thumbnailGicon() {
@@ -227,7 +227,7 @@ const ImageWithGicon = new Lang.Class({
             return null;
         
         return this.gicon;
-    },
+    }
     
     get bytes() {
         if (!this._bytes) {
@@ -247,14 +247,13 @@ const ImageWithGicon = new Lang.Class({
 });
 
 // It is directly generated from a Json object, without an image file. It takes { bytes, displayName, gicon } as params.
-const ImageFromJson = new Lang.Class({
-    Name: `${UUID}-ImageFromJson`,
-    Extends: Image,
+const ImageFromJson = GObject.registerClass({
+    GTypeName: `${UUID}-ImageFromJson`,
     contentType: 'image/svg+xml',
-    
+}, class ImageFromJson extends Image{
     get bytes() {
         return this._bytes;
-    },
+    }
     
     set bytes(bytes) {
         this._bytes = bytes;
@@ -394,36 +393,36 @@ var Images = {
 };
 
 // Wrapper around a json file (drawing saves).
-var Json = new Lang.Class({
-    Name: `${UUID}-Json`,
-    
-    _init: function(params) {
+var Json = new GObject.registerClass({
+    GTypeName: `${UUID}-Json`,
+}, class Json extends GObject.Object{ 
+    _init(params) {
         for (let key in params)
             this[key] = params[key];
-    },
+    }
     
     get isPersistent() {
         return this.name == Me.metadata['persistent-file-name'];
-    },
+    }
     
-    toString: function() {
+    toString() {
         return this.displayName || this.name;
-    },
+    }
     
-    delete: function() {
+    delete() {
         this.file.delete(null);
-    },
+    }
     
     get file() {
         if (!this._file) 
             this._file = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), Me.metadata['data-dir'], `${this.name}.json`]));
         
         return this._file;
-    },
+    }
     
     set file(file) {
         this._file = file;
-    },
+    }
     
     get contents() {
         if (this._contents === undefined) {
@@ -437,7 +436,7 @@ var Json = new Lang.Class({
         }
         
         return this._contents;
-    },
+    }
     
     set contents(contents) {
         if (this.isPersistent && (this.contents == contents || !this.contents && contents == '[]'))
@@ -451,13 +450,13 @@ var Json = new Lang.Class({
         }
         
         this._contents = contents;
-    },
+    }
     
-    addSvgContents: function(getGiconSvgContent, getImageSvgContent) {
+    addSvgContents(getGiconSvgContent, getImageSvgContent) {
         let giconSvgBytes = new GLib.Bytes(getGiconSvgContent());
         this.gicon = Gio.BytesIcon.new(giconSvgBytes);
         this.getImageSvgBytes = () => new GLib.Bytes(getImageSvgContent());
-    },
+    }
     
     get image() {
         if (!this._image)
