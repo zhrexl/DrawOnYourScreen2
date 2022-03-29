@@ -25,6 +25,9 @@ Then save your beautiful work by taking a screenshot.
 * Improve Perfomance
 
 ## Install
+1. Install it from [GNOME Extensions](https://extensions.gnome.org/extension/4937/draw-on-you-screen-2/)
+
+## Manually Install
 
 1. Download and decompress or clone the repository
 2. Place the directory (the one that contains `metadata.json`) in `~/.local/share/gnome-shell/extensions`
