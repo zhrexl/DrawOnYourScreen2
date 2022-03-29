@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Listed translators
 #
 # This file is distributed under the same license as Draw On Your Screen.
-# Onno Giesmann <nutzer3105@gmail.com>, 2020-2021.
+# Onno Giesmann <nutzer3105@gmail.com>, 2020-2022.
 #
 # Some words refer to SVG attributes (font, line, fill rule ...).
 # You are free to translate them or not.
@@ -11,15 +11,15 @@ msgstr ""
 "Project-Id-Version: Draw On Your Screen\n"
 "Report-Msgid-Bugs-To: https://codeberg.org/som/DrawOnYourScreen/issues\n"
 "POT-Creation-Date: 2021-02-17 14:14+0100\n"
-"PO-Revision-Date: 2021-03-04 08:21+0100\n"
+"PO-Revision-Date: 2022-03-29 21:26+0200\n"
 "Last-Translator: Onno Giesmann <nutzer3105@gmail.com>\n"
 "Language-Team: \n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 2.4.2\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.0.1\n"
 
 #. Translators: %s is a key label
 #, javascript-format
@@ -27,8 +27,8 @@ msgid ""
 "Press <i>%s</i> to get\n"
 "a fourth control point"
 msgstr ""
-"<i>%s</i> drücken, um einen\n"
-"vierten Kontrollpunkt zu erhalten"
+"<i>%s</i> drücken\n"
+"für vierten Kontrollpunkt"
 
 msgid "Mark a point of symmetry"
 msgstr "Symmetriepunkt markieren"
@@ -54,8 +54,8 @@ msgid ""
 "Press <i>%s</i>\n"
 "to start a new line"
 msgstr ""
-"<i>%s</i> drücken, um\n"
-"neue Zeile zu beginnen"
+"Für neue Zeile\n"
+"<i>%s</i> drücken"
 
 #. Translators: It is displayed in an OSD notification to ask the user to start picking, so it should use the imperative mood.
 msgctxt "osd-notification"
@@ -70,7 +70,7 @@ msgid "Keyboard and pointer grabbed"
 msgstr "Tastatur und Zeiger gekoppelt"
 
 msgid "Leaving drawing mode"
-msgstr "Verlasse Zeichnungsmodus"
+msgstr "Verlasse Zeichnen-Modus"
 
 #. Translators: %s is a key label
 #, javascript-format
@@ -78,7 +78,7 @@ msgid "Press <i>%s</i> for help"
 msgstr "Für Hilfe <i>%s</i> drücken"
 
 msgid "Entering drawing mode"
-msgstr "Beginne Zeichnungsmodus"
+msgstr "Beginne Zeichnen-Modus"
 
 msgid "Global"
 msgstr "Global"
@@ -322,7 +322,7 @@ msgstr "Info"
 
 #. Translators: you are free to translate the extension name, that is displayed in About page, or not
 msgid "Draw On You Screen"
-msgstr "Zeichnungen auf Ihrem Bildschirm"
+msgstr "Zeichnen auf Ihrem Bildschirm"
 
 #. Translators: version number in "About" page
 #, javascript-format
@@ -343,7 +343,7 @@ msgstr ""
 #. "<a href=\"mailto:translator2@mail.org\">translator2</a>\n"
 #. "<a href=\"https://...\">translator3</a>"
 msgid "translator-credits"
-msgstr "Onno Giesmann, Oktober 2020"
+msgstr "Onno Giesmann"
 
 msgid "Palettes"
 msgstr "Farbpaletten"
@@ -380,7 +380,7 @@ msgid "New palette"
 msgstr "Neue Farbpalette"
 
 msgid "In drawing mode"
-msgstr "Im Zeichnungsmodus"
+msgstr "Im Zeichnen-Modus"
 
 msgid "Draw"
 msgstr "Zeichnen"
@@ -455,11 +455,11 @@ msgid "Inverse <span alpha=\"50%\">(while mirroring)</span>"
 msgstr "Umkehren <span alpha=\"50%\">(während dem Spiegeln)</span>"
 
 msgid "Drawing on the desktop"
-msgstr "Zeichnen auf dem Schreibtisch"
+msgstr "Zeichnung auf dem Schreibtisch"
 
 msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
 msgstr ""
-"<i>Zeichnungen auf Ihrem Bildschirm</i> wird zu <i>Zeichnungen auf Ihrem "
+"Aus <i>Zeichnen auf Ihrem Bildschirm</i> wird <i>Zeichnen auf Ihrem "
 "Schreibtisch</i>"
 
 msgid "Erase all drawings"
@@ -476,7 +476,7 @@ msgstr "Nach Umschalten beibehalten"
 
 msgid "Drawing remains when toggling drawing mode"
 msgstr ""
-"Die Zeichnung bleibt erhalten, wenn der Zeichnungsmodus an- oder "
+"Die Zeichnung bleibt erhalten, wenn der Zeichnen-Modus an- und "
 "ausgeschaltet wird"
 
 msgid "Persistent over restarts"
@@ -486,7 +486,7 @@ msgid "Drawing is automatically saved to a file"
 msgstr "Die Zeichnung wird automatisch in eine Datei gespeichert"
 
 msgid "Enter/leave drawing mode"
-msgstr "Zeichnungsmodus starten/beenden"
+msgstr "Zeichnen-Modus starten/beenden"
 
 #. Translators: there is a similar text in GNOME Boxes (https://gitlab.gnome.org/GNOME/gnome-boxes/tree/master/po)
 msgid "Grab/ungrab keyboard and pointer"
@@ -496,7 +496,7 @@ msgid "Background color"
 msgstr "Hintergrundfarbe"
 
 msgid "The color of the drawing area background"
-msgstr "Hintergrundfarbe der Zeichenfläche"
+msgstr "Hintergrundfarbe der Zeichnungsfläche"
 
 msgid "Automatic dash array"
 msgstr "Automatische Strichdichte"
@@ -683,16 +683,16 @@ msgid "Toggle fill rule"
 msgstr "Füll-Regel umschalten"
 
 msgid "Change font family"
-msgstr "Schriftenfamilie ändern"
+msgstr "Schriftfamilie ändern"
 
 msgid "Change font family (reverse)"
-msgstr "Schriftenfamilie ändern (rückwärts)"
+msgstr "Schriftfamilie ändern (rückwärts)"
 
 msgid "Change font style"
-msgstr "Schriftart ändern"
+msgstr "Schriftstil ändern"
 
 msgid "Change font weight"
-msgstr "Schriftgröße ändern"
+msgstr "Schriftstärke ändern"
 
 msgid "Change image"
 msgstr "Bild ändern"
