@@ -1,0 +1,721 @@
+# <language> translations for Draw On Your Screen.
+# Copyright (C) 2019 Listed translators
+#
+# This file is distributed under the same license as Draw On Your Screen.
+#
+# Some words refer to SVG attributes (font, line, fill rule ...).
+# You are free to translate them or not.
+# Heimen Stoffels <vistausss@fastmail.com>, 2022.
+msgid ""
+msgstr ""
+"Project-Id-Version: Draw On Your Screen\n"
+"Report-Msgid-Bugs-To: https://codeberg.org/som/DrawOnYourScreen/issues\n"
+"POT-Creation-Date: 2021-02-17 14:14+0100\n"
+"PO-Revision-Date: 2022-05-13 18:27+0200\n"
+"Last-Translator: Heimen Stoffels <vistausss@fastmail.com>\n"
+"Language-Team: Dutch <kde-i18n-nl@kde.org>\n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Lokalize 22.04.0\n"
+
+#. Translators: %s is a key label
+#, javascript-format
+msgid ""
+"Press <i>%s</i> to get\n"
+"a fourth control point"
+msgstr ""
+"Druk op <i>%s</i> om een\n"
+"vierde controlepunt op te roepen"
+
+msgid "Mark a point of symmetry"
+msgstr "Markeer een symmetrisch punt"
+
+msgid "Draw a line of symmetry"
+msgstr "Teken een symmetrische lijn"
+
+#. Translators: initial content of the text area
+msgctxt "text-area-content"
+msgid "Text"
+msgstr "Tekst"
+
+#. Translators: %s is a key label
+#, javascript-format
+msgid "Press <i>%s</i> to mark vertices"
+msgstr "Druk op <i>%s</i> om hoekpunten aan te stippen"
+
+#. Translators: %s is a key label
+#, javascript-format
+msgid ""
+"Press <i>%s</i>\n"
+"to start a new line"
+msgstr ""
+"Druk op <i>%s</i>\n"
+"om een nieuwe regel te beginnen"
+
+#. Translators: It is displayed in an OSD notification to ask the user to start picking, so it should use the imperative mood.
+msgctxt "osd-notification"
+msgid "Pick a color"
+msgstr "Kies een kleur"
+
+#. Translators: "released" as the opposite of "grabbed"
+msgid "Keyboard and pointer released"
+msgstr "Het toetsenbord en de muis zijn losgelaten"
+
+msgid "Keyboard and pointer grabbed"
+msgstr "Het toetsenbord en de muis zijn in gebruik"
+
+msgid "Leaving drawing mode"
+msgstr "Bezig met verlaten van tekenmodus…"
+
+#. Translators: %s is a key label
+#, javascript-format
+msgid "Press <i>%s</i> for help"
+msgstr "Druk op <i>%s</i> om de hulppagina te openen"
+
+msgid "Entering drawing mode"
+msgstr "Bezig met starten van van tekenmodus…"
+
+msgid "Global"
+msgstr "Algemeen"
+
+msgid "Internal"
+msgstr "Intern"
+
+msgid "System"
+msgstr "Systeem"
+
+msgid "Dashed line"
+msgstr "Stippellijn"
+
+#. Translators: as the alternative to "Dashed line"
+msgid "Full line"
+msgstr "Doorgetrokken lijn"
+
+msgid "Fill"
+msgstr "Vullen"
+
+#. Translators: as the alternative to "Fill"
+msgid "Outline"
+msgstr "Contour"
+
+#. Translators: fill-rule SVG attribute
+msgid "Nonzero"
+msgstr "Niet-nul"
+
+msgid "Evenodd"
+msgstr "Even/Oneven"
+
+#. Translators: generic font-family SVG attribute
+msgctxt "font-family"
+msgid "Sans-Serif"
+msgstr "Zonder schreef"
+
+msgctxt "font-family"
+msgid "Serif"
+msgstr "Met schreef"
+
+msgctxt "font-family"
+msgid "Monospace"
+msgstr "Vaste breedte"
+
+msgctxt "font-family"
+msgid "Cursive"
+msgstr "Cursief"
+
+msgctxt "font-family"
+msgid "Fantasy"
+msgstr "Fantasie"
+
+#. Translators: font-style SVG attribute
+msgctxt "font-style"
+msgid "Normal"
+msgstr "Normaal"
+
+msgctxt "font-style"
+msgid "Oblique"
+msgstr "Vet-cursief"
+
+msgctxt "font-style"
+msgid "Italic"
+msgstr "Cursief"
+
+#. Translators: font-weight SVG attribute
+msgctxt "font-weight"
+msgid "Thin"
+msgstr "Dun"
+
+msgctxt "font-weight"
+msgid "Ultra Light"
+msgstr "Erg licht"
+
+msgctxt "font-weight"
+msgid "Light"
+msgstr "Licht"
+
+msgctxt "font-weight"
+msgid "Semi Light"
+msgstr "Enigszins licht"
+
+msgctxt "font-weight"
+msgid "Book"
+msgstr "Boek"
+
+msgctxt "font-weight"
+msgid "Normal"
+msgstr "Normaal"
+
+msgctxt "font-weight"
+msgid "Medium"
+msgstr "Gemiddeld"
+
+msgctxt "font-weight"
+msgid "Semi Bold"
+msgstr "Enigszins vetgedrukt"
+
+msgctxt "font-weight"
+msgid "Bold"
+msgstr "Vetgedrukt"
+
+msgctxt "font-weight"
+msgid "Ultra Bold"
+msgstr "Erg vetgedrukt"
+
+msgctxt "font-weight"
+msgid "Heavy"
+msgstr "Zwaar aangedikt"
+
+msgctxt "font-weight"
+msgid "Ultra Heavy"
+msgstr "Zeer zwaar aangedikt"
+
+#. Translators: stroke-linecap SVG attribute
+msgctxt "stroke-linecap"
+msgid "Butt"
+msgstr "Butt"
+
+msgctxt "stroke-linecap"
+msgid "Round"
+msgstr "Rond"
+
+msgctxt "stroke-linecap"
+msgid "Square"
+msgstr "Vierkant"
+
+#. Translators: stroke-linejoin SVG attribute
+msgctxt "stroke-linejoin"
+msgid "Miter"
+msgstr "Mijter"
+
+msgctxt "stroke-linejoin"
+msgid "Round"
+msgstr "Rond"
+
+msgctxt "stroke-linejoin"
+msgid "Bevel"
+msgstr "Afgeschuind"
+
+#. Translators: value in pixel unit (e.g. "5 px")
+#, javascript-format
+msgid "%f px"
+msgstr "%f px"
+
+msgid "Left aligned"
+msgstr "Links uitlijnen"
+
+msgid "Centered"
+msgstr "Centreren"
+
+msgid "Right aligned"
+msgstr "Rechts uitljnen"
+
+msgctxt "drawing-tool"
+msgid "Free drawing"
+msgstr "Vrij tekenen"
+
+msgctxt "drawing-tool"
+msgid "Line"
+msgstr "Lijn"
+
+msgctxt "drawing-tool"
+msgid "Ellipse"
+msgstr "Ovaal"
+
+msgctxt "drawing-tool"
+msgid "Rectangle"
+msgstr "Rechthoek"
+
+msgctxt "drawing-tool"
+msgid "Text"
+msgstr "Tekst"
+
+msgctxt "drawing-tool"
+msgid "Polygon"
+msgstr "Polygoon"
+
+msgctxt "drawing-tool"
+msgid "Polyline"
+msgstr "Veelhoek"
+
+msgctxt "drawing-tool"
+msgid "Image"
+msgstr "Afbeelding"
+
+msgctxt "drawing-tool"
+msgid "Move"
+msgstr "Verplaatsen"
+
+msgctxt "drawing-tool"
+msgid "Resize"
+msgstr "Grootte aanpassen"
+
+msgctxt "drawing-tool"
+msgid "Mirror"
+msgstr "Spiegelen"
+
+msgid "Erase"
+msgstr "Wissen"
+
+msgid "Smooth"
+msgstr "Gladstrijken"
+
+msgid "Open drawing"
+msgstr "Tekening openen"
+
+msgid "Save drawing as…"
+msgstr "Tekening opslaan als…"
+
+msgid "Palette"
+msgstr "Palet"
+
+msgid "Color"
+msgstr "Kleur"
+
+#. Translators: It is displayed in a menu button tooltip or as a shortcut action description, so it should NOT use the imperative mood.
+msgid "Pick a color"
+msgstr "Kies een kleur"
+
+msgid "Add to images"
+msgstr "Toevoegen aan afbeeldingen"
+
+msgid "Delete"
+msgstr "Verwijderen"
+
+msgid "Type a name"
+msgstr "Voer een naam in"
+
+#. Translators: "Preferences" page in preferences
+msgid "Preferences"
+msgstr "Voorkeuren"
+
+#. Translators: "Drawing" page in preferences
+msgid "Drawing"
+msgstr "Tekenen"
+
+#. Translators: "About" page in preferences
+msgid "About"
+msgstr "Over"
+
+#. Translators: you are free to translate the extension name, that is displayed in About page, or not
+msgid "Draw On You Screen"
+msgstr "Teken op uw scherm"
+
+#. Translators: version number in "About" page
+#, javascript-format
+msgid "Version %f"
+msgstr "Versie %f"
+
+#. Translators: you are free to translate the extension description, that is displayed in About page, or not
+msgid ""
+"Start drawing with Super+Alt+D and save your beautiful work by taking a "
+"screenshot"
+msgstr ""
+"U kunt tekenen door Super+Alt+D in te drukken en opslaan door een schermfoto "
+"te maken"
+
+#. Translators: add your name here or keep it empty, it will be displayed in about page, e.g.
+#. msgstr ""
+#. "translator1\n"
+#. "<a href=\"mailto:translator2@mail.org\">translator2</a>\n"
+#. "<a href=\"https://...\">translator3</a>"
+msgid "translator-credits"
+msgstr "Heimen Stoffels <vistausss@fastmail.com>"
+
+msgid "Palettes"
+msgstr "Paletten"
+
+msgid "Add a new palette"
+msgstr "Palet toevoegen"
+
+msgid "Area"
+msgstr "Blad"
+
+msgid "Auto"
+msgstr "Automatisch"
+
+msgid "Grid overlay line"
+msgstr "Rooster tonen"
+
+msgid "Tools"
+msgstr "Gereedschap"
+
+msgid "Dash array"
+msgstr "Streepjesreeks"
+
+msgid "Reset settings"
+msgstr "Standaardwaarden"
+
+msgid "Rename the palette"
+msgstr "Paletnaam wijzigen"
+
+msgid "Remove the palette"
+msgstr "Palet verwijderen"
+
+#. Translators: default name of a new palette
+msgid "New palette"
+msgstr "Nieuw palet"
+
+msgid "In drawing mode"
+msgstr "In tekenmodus"
+
+msgid "Draw"
+msgstr "Tekenen"
+
+msgid "Left click"
+msgstr "Linkermuisknop"
+
+msgid "Menu"
+msgstr "Menu"
+
+msgid "Right click"
+msgstr "Rechtermuisknop"
+
+msgid "Center click"
+msgstr "Middelste muisknop"
+
+msgid "Increment/decrement line width"
+msgstr "Dikkere/Dunnere lijn"
+
+msgid "Scroll"
+msgstr "Scrollen"
+
+#. Translators: %s are key labels (Ctrl+F1 and Ctrl+F9)
+msgid "Select color"
+msgstr "Kies een kleur"
+
+#, javascript-format
+msgid "%s … %s"
+msgstr "%s … %s"
+
+#. Translators: %s is a key label
+msgid "Ignore pointer movement"
+msgstr "Cursorverplaatsingen negeren"
+
+#, javascript-format
+msgid "%s held"
+msgstr "%s is ingedrukt"
+
+msgid "Leave"
+msgstr "Verlaten"
+
+msgid "Select eraser <span alpha=\"50%\">(while starting drawing)</span>"
+msgstr "Kies de gum <span alpha=\"50%\">(tijdens tekenen)</span>"
+
+msgid "Duplicate <span alpha=\"50%\">(while starting handling)</span>"
+msgstr "Klonen <span alpha=\"50%\">(tijdens tekenen)</span>"
+
+msgid "Rotate rectangle, polygon, polyline"
+msgstr "Rechthoek, polygoon of veelhoek draaien"
+
+msgid "Extend circle to ellipse"
+msgstr "Cirkel omvormen tot ovaal"
+
+msgid "Curve line"
+msgstr "Lijn verkrommen"
+
+msgid "Smooth free drawing outline"
+msgstr "Gladgestreken contour uittekenen"
+
+msgid "Do not preserve image ratio"
+msgstr "Beeldverhouding niet onthouden"
+
+msgid "Rotate <span alpha=\"50%\">(while moving)</span>"
+msgstr "Draaien <span alpha=\"50%\">(tijdens verplaatsen)</span>"
+
+msgid "Stretch <span alpha=\"50%\">(while resizing)</span>"
+msgstr "Uitrekken <span alpha=\"50%\">(tijdens aanpassen van grootte)</span>"
+
+msgid "Inverse <span alpha=\"50%\">(while mirroring)</span>"
+msgstr "Omdraaien <span alpha=\"50%\">(tijdens spiegelen)</span>"
+
+msgid "Drawing on the desktop"
+msgstr "Tekenen op het bureaublad"
+
+msgid "<i>Draw On Your Screen</i> becomes <i>Draw On Your Desktop</i>"
+msgstr "<i>Teken op uw scherm</i> wordt <i>Teken op uw bureaublad</i>"
+
+msgid "Erase all drawings"
+msgstr "Alle tekeningen wissen"
+
+msgid "Disable panel indicator"
+msgstr "Bovenbalkindicator verbergen"
+
+msgid "Disable on-screen notifications"
+msgstr "Meldingen uitschakelen"
+
+msgid "Persistent over toggles"
+msgstr "Tekening bewaren"
+
+msgid "Drawing remains when toggling drawing mode"
+msgstr ""
+"De tekening wordt bewaard tijdens het schakelen van en naar de tekenmodus"
+
+msgid "Persistent over restarts"
+msgstr "Tekening automatisch opslaan"
+
+msgid "Drawing is automatically saved to a file"
+msgstr "De tekening wordt automatisch opgeslagen naar een bestand"
+
+msgid "Enter/leave drawing mode"
+msgstr "Tekenmodus starten/verlaten"
+
+#. Translators: there is a similar text in GNOME Boxes (https://gitlab.gnome.org/GNOME/gnome-boxes/tree/master/po)
+msgid "Grab/ungrab keyboard and pointer"
+msgstr "Toetsenbord en muis overnemen/loslaten"
+
+msgid "Background color"
+msgstr "Achtergrondkleur"
+
+msgid "The color of the drawing area background"
+msgstr "De achtergrondkleur van het tekenblad"
+
+msgid "Automatic dash array"
+msgstr "Automatische streepjes"
+
+msgid "Compute the lengths from the line width"
+msgstr "Bereken de lengtes op basis van de lijndikte"
+
+msgid "Dash array on"
+msgstr "Streepjesreeks ingeschakeld"
+
+msgid "The dash length in pixels"
+msgstr "De streepjesreekslengte (in pixels)"
+
+msgid "Dash array off"
+msgstr "Streepjesreeks uitgeschakeld"
+
+msgid "The gap between the dashes in pixels"
+msgstr "De ruimte tussen de streepjes (in pixels)"
+
+msgid "Dash offset"
+msgstr "Streepjesverschuiving"
+
+msgid "The dash offset in pixels"
+msgstr "De streepjesverschuiving (in pixels)"
+
+msgid "Grid overlay color"
+msgstr "Roosterkleur"
+
+msgid "The color of the lines"
+msgstr "De kleur van de roosterlijnen"
+
+msgid "Automatic grid overlay line"
+msgstr "Automatische roosterlijnen"
+
+msgid "Compute the lengths from the screen size"
+msgstr "Bereken de lengtes op basis van de schermgrootte"
+
+msgid "Grid overlay line spacing"
+msgstr "Ruimte tussen roosterlijnen"
+
+msgid "The gap between lines in pixels"
+msgstr "De ruimte tussen de roosterlijnen (in pixels)"
+
+msgid "Grid overlay line width"
+msgstr "Roosterlijndikte"
+
+msgid "The line width in pixels"
+msgstr "De lijndikte (in pixels)"
+
+msgid "Image location"
+msgstr "Afbeeldingslocatie"
+
+msgid "The location of the directory in which the image tool picks"
+msgstr "De locatie waaruit afbeeldingen wordt geladen"
+
+msgid "Color palettes"
+msgstr "Paletten"
+
+msgid "The palettes of drawing colors"
+msgstr "De paletten van de gebruikte kleuren"
+
+msgid "Automatic square area size"
+msgstr "Automatische bladomvang"
+
+msgid "Compute the area size from the screen size"
+msgstr "Bereken de bladomvang op basis van de schermgrootte"
+
+msgid "Square area size"
+msgstr "Bladomvang"
+
+msgid "The size of the area in pixels"
+msgstr "De bladomvang (in pixels)"
+
+msgid "Decrement line width"
+msgstr "Dunnere lijn"
+
+msgid "Decrement line width even more"
+msgstr "Maak de lijnen nóg dunner"
+
+msgid "Erase last brushstroke"
+msgstr "Vorige penseelstreek wissen"
+
+msgid "Export drawing to a SVG file"
+msgstr "Tekening exporteren naar svg-bestand"
+
+msgid "Increment line width"
+msgstr "Dikkere lijn"
+
+msgid "Increment line width even more"
+msgstr "Maak de lijnen nóg dikker"
+
+msgid "Open next drawing"
+msgstr "Volgende tekening openen"
+
+msgid "Open preferences"
+msgstr "Voorkeuren openen"
+
+msgid "Open previous drawing"
+msgstr "Vorige tekening openen"
+
+msgid "Add images from the clipboard"
+msgstr "Afbeeldingen openen van klembord"
+
+msgid "Redo"
+msgstr "Opnieuw uitvoeren"
+
+msgid "Save drawing"
+msgstr "Tekening opslaan"
+
+msgid "Select color 1"
+msgstr "Kies kleur 1"
+
+msgid "Select color 2"
+msgstr "Kies kleur 2"
+
+msgid "Select color 3"
+msgstr "Kies kleur 3"
+
+msgid "Select color 4"
+msgstr "Kies kleur 4"
+
+msgid "Select color 5"
+msgstr "Kies kleur 5"
+
+msgid "Select color 6"
+msgstr "Kies kleur 6"
+
+msgid "Select color 7"
+msgstr "Kies kleur 7"
+
+msgid "Select color 8"
+msgstr "Kies kleur 8"
+
+msgid "Select color 9"
+msgstr "Kies kleur 9"
+
+msgid "Select ellipse tool"
+msgstr "Kies het ovaalgereedschap"
+
+msgid "Select image tool"
+msgstr "Kies het afbeeldingsgereedschap"
+
+msgid "Select line tool"
+msgstr "Kies het lijngereedschap"
+
+msgid "Select mirror tool"
+msgstr "Kies het spiegelgereedschap"
+
+msgid "Select move tool"
+msgstr "Kies het verplaatsgereedschap"
+
+msgid "Select free drawing"
+msgstr "Kies voor vrij tekenen"
+
+msgid "Select polygon tool"
+msgstr "Kies het polygoongereedschap"
+
+msgid "Select polyline tool"
+msgstr "Kies het veelhoekgereedschap"
+
+msgid "Select rectangle tool"
+msgstr "Kies het rechthoekgereedschap"
+
+msgid "Select resize tool"
+msgstr "Kies het grootte-aanpassingsgereedschap"
+
+msgid "Select text tool"
+msgstr "Kies het tekstgereedschap"
+
+msgid "Smooth last brushstroke"
+msgstr "Vorige penseelstreek gladstrijken"
+
+msgid "Change color palette"
+msgstr "Palet aanpassen"
+
+msgid "Change color palette (reverse)"
+msgstr "Palet aanpassen (omgekeerd)"
+
+msgid "Toggle fill/outline"
+msgstr "Schakelen tussen vullen en contour"
+
+msgid "Toggle fill rule"
+msgstr "Schakelen tussen vulmethoden"
+
+msgid "Change font family"
+msgstr "Lettertype wijzigen"
+
+msgid "Change font family (reverse)"
+msgstr "Lettertype wijzigen (omgekeerd)"
+
+msgid "Change font style"
+msgstr "Tekststijl wijzigen"
+
+msgid "Change font weight"
+msgstr "Tekstdikte wijzigen"
+
+msgid "Change image"
+msgstr "Afbeelding wijzigen"
+
+msgid "Change image (reverse)"
+msgstr "Afbeelding wijzigen (omgekeerd)"
+
+msgid "Change linecap"
+msgstr "Lijnafbreking wijzigen"
+
+msgid "Change linejoin"
+msgstr "Lijnsamenvoeging wijzigen"
+
+msgid "Change text alignment"
+msgstr "Tekst anders uitlijnen"
+
+msgid "Add a drawing background"
+msgstr "Bladachtergrond toevoegen"
+
+msgid "Add a grid overlay"
+msgstr "Rooster tonen"
+
+msgid "Show help"
+msgstr "Hulppagina openen"
+
+msgid "Hide panel and dock"
+msgstr "Bovenbalk en dock verbergen"
+
+#. Translators: It is an action: "Make the drawing area a square"
+msgid "Square drawing area"
+msgstr "Vierkant tekenblad"
+
+msgid "Undo"
+msgstr "Ongedaan maken"
