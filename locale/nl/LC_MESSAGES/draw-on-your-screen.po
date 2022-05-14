@@ -23,12 +23,8 @@ msgstr ""
 
 #. Translators: %s is a key label
 #, javascript-format
-msgid ""
-"Press <i>%s</i> to get\n"
-"a fourth control point"
-msgstr ""
-"Druk op <i>%s</i> om een\n"
-"vierde controlepunt op te roepen"
+msgid "Press <i>%s</i> to get\n a fourth control point"
+msgstr "Druk op <i>%s</i> om een\n vierde controlepunt op te roepen"
 
 msgid "Mark a point of symmetry"
 msgstr "Markeer een symmetrisch punt"
@@ -48,12 +44,8 @@ msgstr "Druk op <i>%s</i> om hoekpunten aan te stippen"
 
 #. Translators: %s is a key label
 #, javascript-format
-msgid ""
-"Press <i>%s</i>\n"
-"to start a new line"
-msgstr ""
-"Druk op <i>%s</i>\n"
-"om een nieuwe regel te beginnen"
+msgid "Press <i>%s</i>\n to start a new line"
+msgstr "Druk op <i>%s</i>\n om een nieuwe regel te beginnen"
 
 #. Translators: It is displayed in an OSD notification to ask the user to start picking, so it should use the imperative mood.
 msgctxt "osd-notification"
@@ -328,12 +320,8 @@ msgid "Version %f"
 msgstr "Versie %f"
 
 #. Translators: you are free to translate the extension description, that is displayed in About page, or not
-msgid ""
-"Start drawing with Super+Alt+D and save your beautiful work by taking a "
-"screenshot"
-msgstr ""
-"U kunt tekenen door Super+Alt+D in te drukken en opslaan door een schermfoto "
-"te maken"
+msgid "Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot"
+msgstr "U kunt tekenen door Super+Alt+D in te drukken en opslaan door een schermfoto te maken"
 
 #. Translators: add your name here or keep it empty, it will be displayed in about page, e.g.
 #. msgstr ""
@@ -469,8 +457,7 @@ msgid "Persistent over toggles"
 msgstr "Tekening bewaren"
 
 msgid "Drawing remains when toggling drawing mode"
-msgstr ""
-"De tekening wordt bewaard tijdens het schakelen van en naar de tekenmodus"
+msgstr "De tekening wordt bewaard tijdens het schakelen van en naar de tekenmodus"
 
 msgid "Persistent over restarts"
 msgstr "Tekening automatisch opslaan"
