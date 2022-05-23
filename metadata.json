@@ -10,7 +10,8 @@
     "svg-file-name": "DrawOnYourScreen",
     "shell-version": [
         "40",
-        "41"
+        "41",
+        "42"
     ],
-    "version": 12.1
+    "version": 12.2
 }

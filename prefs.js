@@ -21,11 +21,8 @@
 /* jslint esversion: 6 */
 /* exported init, buildPrefsWidget */
 
-const Gdk = imports.gi.Gdk;
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
-const Gtk = imports.gi.Gtk;
+const { Adw, Gdk, GLib, Gtk, GObject, Gio } = imports.gi;
+
 const IS_GTK3 = Gtk.get_major_version() == 3;
 
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -93,6 +90,27 @@ function buildPrefsWidget() {
     return topStack;
 }
 
+//function fillPreferencesWindow(window) {
+
+  //  let page1 = Adw.PreferencesPage.new();
+    //page1.set_title(_("Preferences"));
+    //page1.set_name('prefs');
+
+
+    //let page2 = Adw.PreferencesPage.new();
+    //page2.set_title( _("Drawing"));
+    //page2.set_name('drawing');
+
+
+    //let page3 = Adw.PreferencesPage.new();
+   // page3.set_title( _("About"));
+   // page3.set_name('about');
+
+
+   // window.add(page1);
+   // window.add(page2);
+    //window.add(page3);
+//}
 const TopStack = new GObject.Class({
     Name: `${UUID}-TopStack`,
     Extends: Gtk.Stack,

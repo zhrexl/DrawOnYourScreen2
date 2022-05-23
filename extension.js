@@ -25,6 +25,7 @@ const GObject = imports.gi.GObject;
 const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
 const St = imports.gi.St;
+const Clutter = imports.gi.Clutter;
 
 const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -87,6 +88,7 @@ const AreaManager = GObject.registerClass({
     _init() {
         this.areas = [];
         this.activeArea = null;
+        this.grab = null;
         
         Main.wm.addKeybinding('toggle-drawing',
                               Me.settings,
@@ -360,22 +362,28 @@ const AreaManager = GObject.registerClass({
     toggleModal(source) {
         if (!this.activeArea)
             return;
-        
+
         this.activeArea.closeMenu();
-        
-        if (Main._findModal(this.activeArea) != -1) {
-            Main.popModal(this.activeArea);
+
+        if (Main._findModal(this.grab) != -1) {
+            Main.popModal(this.grab);
             if (source && source == global.display)
+              this.showOsd(null, Files.Icons.UNGRAB, _("Keyboard and pointer released"), null, null, false);
                 // Translators: "released" as the opposite of "grabbed"
-                this.showOsd(null, Files.Icons.UNGRAB, _("Keyboard and pointer released"), null, null, false);
+
+
             this.setCursor(null, 'DEFAULT');
             this.activeArea.reactive = false;
             this.removeInternalKeybindings();
+
         } else {
             // add Shell.ActionMode.NORMAL to keep system keybindings enabled (e.g. Alt + F2 ...)
             let actionMode = (this.activeArea.isWriting ? WRITING_ACTION_MODE : DRAWING_ACTION_MODE) | Shell.ActionMode.NORMAL;
-            if (!Main.pushModal(this.activeArea, { actionMode: actionMode }))
+            this.grab = Main.pushModal(this.activeArea, { actionMode: actionMode });
+            if (this.grab.get_seat_state() === Clutter.GrabState.NONE) {
+                Main.popModal(this.grab);
                 return false;
+            }
             this.addInternalKeybindings();
             this.activeArea.reactive = true;
             this.activeArea.initPointerCursor();
@@ -391,14 +399,16 @@ const AreaManager = GObject.registerClass({
             let activeIndex = this.areas.indexOf(this.activeArea);
             let save = activeIndex == Main.layoutManager.primaryIndex && this.persistentOverRestarts;
             let erase = !this.persistentOverToggles;
-            
+
             this.showOsd(null, Files.Icons.LEAVE, _("Leaving drawing mode"));
             this.activeArea.leaveDrawingMode(save, erase);
+
             if (this.hiddenList)
                 this.togglePanelAndDockOpacity();
             
-            if (Main._findModal(this.activeArea) != -1)
+            if (Main._findModal(this.grab) != -1)
                 this.toggleModal();
+
             this.toggleArea();
             this.activeArea = null;
         } else {
@@ -455,31 +465,7 @@ const AreaManager = GObject.registerClass({
             icon = Files.Icons.ENTER;
         
         let osdWindow = Main.osdWindowManager._osdWindows[activeIndex];
-        
-        try {
-            if (!this.osdWindowConstraint)
-                this.osdWindowConstraint = new OsdWindowConstraint();
-            
-            if (!osdWindow._box.get_constraint(this.osdWindowConstraint.constructor.name)) {
-                osdWindow._box.remove_constraint(osdWindow._boxConstraint);
-                osdWindow._box.add_constraint_with_name(this.osdWindowConstraint.constructor.name, this.osdWindowConstraint);
-                this.osdWindowConstraint._minSize = osdWindow._boxConstraint._minSize;
-                osdWindow._boxConstraintOld = osdWindow._boxConstraint;
-                osdWindow._boxConstraint = this.osdWindowConstraint;
-                let osdConstraintHandler = osdWindow._box.connect('notify::mapped', (box) => {
-                    if (!box.mapped) {
-                        osdWindow._boxConstraint = osdWindow._boxConstraintOld;
-                        osdWindow._boxConstraint._minSize = this.osdWindowConstraint._minSize;
-                        osdWindow._box.remove_constraint(this.osdWindowConstraint);
-                        osdWindow._box.add_constraint(osdWindow._boxConstraint);
-                        osdWindow._box.disconnect(osdConstraintHandler);
-                    }
-                });
-            }
-        } catch(e) {
-            logError(e);
-        }
-        
+
         Main.osdWindowManager.show(activeIndex, icon, label, level, maxLevel);
         osdWindow._label.get_clutter_text().set_use_markup(true);
         
@@ -560,29 +546,6 @@ const AreaManager = GObject.registerClass({
     }
 });
 
-// The same as the original, without forcing a ratio of 1.
-const OsdWindowConstraint = GObject.registerClass({
-    GTypeName: `${UUID}-OsdWindowConstraint`,
-}, class OsdWindowConstraint extends OsdWindow.OsdWindowConstraint{
-
-    vfunc_update_allocation(actor, actorBox) {
-        // Clutter will adjust the allocation for margins,
-        // so add it to our minimum size
-        let minSize = this._minSize + actor.margin_top + actor.margin_bottom;
-        let [width, height] = actorBox.get_size();
-
-        // DO NOT Enforce a ratio of 1
-        let newWidth = Math.ceil(Math.max(minSize, width, height));
-        let newHeight = Math.ceil(Math.max(minSize, height));
-        actorBox.set_size(newWidth, newHeight);
-
-        // Recenter
-        let [x, y] = actorBox.get_origin();
-        actorBox.set_origin(Math.ceil(x + width / 2 - newWidth / 2),
-                            Math.ceil(y + height / 2 - newHeight / 2));
-    }
-});
-
 const DrawingIndicator = GObject.registerClass({
     GTypeName: `${UUID}-Indicator`,
 }, class DrawingIndicator extends GObject.Object{
@@ -607,4 +570,5 @@ const DrawingIndicator = GObject.registerClass({
         this.button.destroy();
     }
 });
+
 
