@@ -8,8 +8,8 @@
 # Heimen Stoffels <vistausss@fastmail.com>, 2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: Draw On Your Screen\n"
-"Report-Msgid-Bugs-To: https://codeberg.org/som/DrawOnYourScreen/issues\n"
+"Project-Id-Version: Draw On Your Screen 2\n"
+"Report-Msgid-Bugs-To: https://github.com/zhrexl/DrawOnYourScreen2/issues\n"
 "POT-Creation-Date: 2021-02-17 14:14+0100\n"
 "PO-Revision-Date: 2022-05-13 18:27+0200\n"
 "Last-Translator: Heimen Stoffels <vistausss@fastmail.com>\n"
