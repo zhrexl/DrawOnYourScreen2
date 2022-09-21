@@ -378,7 +378,7 @@ const AreaManager = GObject.registerClass({
 
         } else {
             // add Shell.ActionMode.NORMAL to keep system keybindings enabled (e.g. Alt + F2 ...)
-            let actionMode = (this.activeArea.isWriting ? WRITING_ACTION_MODE : DRAWING_ACTION_MODE) | Shell.ActionMode.NORMAL;
+            let actionMode = (this.activeArea.isWriting ? WRITING_ACTION_MODE : DRAWING_ACTION_MODE) | Shell.ActionMode.NORMAL  | Shell.ActionMode.OVERVIEW;
             this.grab = Main.pushModal(this.activeArea, { actionMode: actionMode });
             if (this.grab.get_seat_state() === Clutter.GrabState.NONE) {
                 Main.popModal(this.grab);

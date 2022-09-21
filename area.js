@@ -455,6 +455,7 @@ var DrawingArea = GObject.registerClass({
                 this.toggleHelp();
             else
                 this.emit('leave-drawing-mode');
+            return Clutter.EVENT_STOP;
         } else if (event.get_key_symbol() == Clutter.KEY_space) {
             this.spaceKeyPressed = true;
         }
