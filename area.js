@@ -455,6 +455,7 @@ var DrawingArea = GObject.registerClass({
                 this.toggleHelp();
             else
                 this.emit('leave-drawing-mode');
+            return Clutter.EVENT_STOP;
         } else if (event.get_key_symbol() == Clutter.KEY_space) {
             this.spaceKeyPressed = true;
         }
@@ -470,6 +471,14 @@ var DrawingArea = GObject.registerClass({
     }
     
     _onKeyPressed(actor, event) {
+        if (event.get_key_symbol() == Clutter.KEY_Escape) {
+            if (this.helper.visible) {
+                this.toggleHelp();
+            } else
+                this.emit('leave-drawing-mode');
+            return Clutter.EVENT_STOP;
+        }
+
         if (this.currentElement && this.currentElement.shape == Shape.LINE &&
             (event.get_key_symbol() == Clutter.KEY_Return ||
              event.get_key_symbol() == Clutter.KEY_KP_Enter ||
