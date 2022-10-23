@@ -22,8 +22,6 @@
 
 const { Adw, Gdk, GLib, Gtk, GObject, Gio } = imports.gi;
 
-const IS_GTK3 = Gtk.get_major_version() == 3;
-
 const ExtensionUtils  = imports.misc.extensionUtils;
 const Me              = ExtensionUtils.getCurrentExtension();
 const Prefs           = Me.imports.ui.preferencespage;
@@ -37,8 +35,6 @@ const _ = function(string) {
         return "";
     return gettext(string);
 };
-
-const _GTK = imports.gettext.domain(IS_GTK3 ? 'gtk30' : 'gtk40').gettext;
 
 const MARGIN = 10;
 const ROWBOX_MARGIN_PARAMS = { margin_top: MARGIN / 2, margin_bottom: MARGIN / 2, margin_start: MARGIN, margin_end: MARGIN, spacing: 4 };
@@ -96,9 +92,9 @@ const AboutPage = new GObject.Class({
         // Translators: you are free to translate the extension description, that is displayed in About page, or not
         let description = _("This is a forked from Abakkk original Draw On Your Screen Extension.\nStart drawing with Super+Alt+D and save your beautiful work by taking a screenshot");
         let link = "<span><a href=\"" + Me.metadata.url + "\">" + Me.metadata.url + "</a></span>";
-        let licenseName = _GTK("GNU General Public License, version 3 or later");
+        let licenseName = _("GNU General Public License, version 3 or later");
         let licenseLink = "https://www.gnu.org/licenses/gpl-3.0.html";
-        let license = "<small>" + _GTK("This program comes with absolutely no warranty.\nSee the <a href=\"%s\">%s</a> for details.").format(licenseLink, licenseName) + "</small>";
+        let license = "<small>" + _("This program comes with absolutely no warranty.\nSee the <a href=\"%s\">%s</a> for details.").format(licenseLink, licenseName) + "</small>";
         
         let aboutLabel = new Gtk.Label({ wrap: true, justify: Gtk.Justification.CENTER, use_markup: true, label:
             name + "\n\n" + version + "\n\n" + description + "\n\n" + link + "\n\n" + license + "\n" });
@@ -109,12 +105,12 @@ const AboutPage = new GObject.Class({
         let leftBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, hexpand: true });
         let rightBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, hexpand: true });
         leftBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.END, justify: Gtk.Justification.RIGHT,
-                                       use_markup: true, label: "<small>" + _GTK("Created by") + "</small>" }));
+                                       use_markup: true, label: "<small>" + _("Created by") + "</small>" }));
         rightBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.START, justify: Gtk.Justification.LEFT,
                                         use_markup: true, label: "<small><a href=\"https://codeberg.org/abak\">Abakkk</a></small>" }));
                                         
         leftBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.END, justify: Gtk.Justification.RIGHT,
-                                       use_markup: true, label: "<small>" + _GTK("Forked by") + "</small>" }));
+                                       use_markup: true, label: "<small>" + _("Forked by") + "</small>" }));
         rightBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.START, justify: Gtk.Justification.LEFT,
                                         use_markup: true, label: "<small><a href=\"https://github.com/zhrexl\">zhrexl</a></small>" }));
                                                                         
@@ -130,7 +126,7 @@ const AboutPage = new GObject.Class({
         if (_("translator-credits") != "translator-credits" && _("translator-credits") != "") {
             leftBox.append(new Gtk.Label());
             rightBox.append(new Gtk.Label());
-            leftBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.END, justify: 1, use_markup: true, label: "<small>" + _GTK("Translated by") + "</small>" }));
+            leftBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.END, justify: 1, use_markup: true, label: "<small>" + _("Translated by") + "</small>" }));
             rightBox.append(new Gtk.Label({ wrap: true, valign: Gtk.Align.START, halign: Gtk.Align.START, justify: 0, use_markup: true, label: "<small>" + _("translator-credits") + "</small>" }));
         }
     }

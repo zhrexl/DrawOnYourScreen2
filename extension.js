@@ -34,7 +34,6 @@ const OsdWindow = imports.ui.osdWindow;
 const PanelMenu = imports.ui.panelMenu;
 
 const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
 const Area = Me.imports.area;
 const Files = Me.imports.files;
 const Helper = Me.imports.helper;
@@ -58,16 +57,16 @@ const Extension = GObject.registerClass({
     GTypeName: `${UUID}-Extension`,
 }, class Extension extends GObject.Object{
     _init() {
-        Convenience.initTranslations();
+        ExtensionUtils.initTranslations();
     }
 
     enable() {
         if (ExtensionUtils.isOutOfDate(Me))
             log(`${Me.metadata.uuid}: GNOME Shell ${Number.parseFloat(GS_VERSION)} is not supported.`);
         
-        Me.settings = Convenience.getSettings();
-        Me.internalShortcutSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
-        Me.drawingSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.drawing');
+        Me.settings = ExtensionUtils.getSettings();
+        Me.internalShortcutSettings = ExtensionUtils.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
+        Me.drawingSettings = ExtensionUtils.getSettings(Me.metadata['settings-schema'] + '.drawing');
         this.areaManager = new AreaManager();
     }
 
@@ -285,12 +284,13 @@ const AreaManager = GObject.registerClass({
     }
     
     openPreferences() {
+        //log ('Called ExtensionUtils.openPrefs()');
         // since GS 3.36
-        if (ExtensionUtils.openPrefs) {
+        //if (ExtensionUtils.openPrefs) {
             if (this.activeArea)
                 this.toggleDrawing();
             ExtensionUtils.openPrefs();
-        }
+       // }
     }
     
     eraseDrawings() {
