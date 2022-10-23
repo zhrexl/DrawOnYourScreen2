@@ -38,6 +38,7 @@ var Preferences = GObject.registerClass({
 
         this.set_title("Preferences");
         this.set_name('prefs');
+        this.set_icon_name("preferences-system-symbolic");
         let settings = Convenience.getSettings();
         let schema = settings.settings_schema;
 
