@@ -2,6 +2,8 @@
 
 Orginally forked from: https://codeberg.org/som/DrawOnYourScreen
 
+Please help-me test the [libadwaita](https://github.com/zhrexl/DrawOnYourScreen2/tree/libadwaita) branch and report the issues you find!
+
 Start drawing with Super+Alt+D.
 Then save your beautiful work by taking a screenshot.
 
