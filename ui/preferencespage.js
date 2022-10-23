@@ -17,10 +17,8 @@
  */
 const { Adw, Gdk, GLib, Gtk, GObject, Gio } = imports.gi;
 
-
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
 const Shortcuts = Me.imports.shortcuts;
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 const gettext = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
@@ -42,7 +40,7 @@ var Preferences = GObject.registerClass({
         this.set_title("Preferences");
         this.set_name('prefs');
         this.set_icon_name("preferences-system-symbolic");
-        let settings = Convenience.getSettings();
+        let settings = ExtensionUtils.getSettings();
         let schema = settings.settings_schema;
 
 
@@ -83,7 +81,7 @@ var Preferences = GObject.registerClass({
         let grp_Internal = Adw.PreferencesGroup.new();
         grp_Internal.set_title("Internal");
 
-        let internalShortcutSettings = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
+        let internalShortcutSettings = ExtensionUtils.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
 
         // TODO: Improve Shortcut Widget
         Shortcuts.INTERNAL_KEYBINDINGS.forEach((settingKeys) => {

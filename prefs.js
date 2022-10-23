@@ -1,5 +1,6 @@
 /*
- * Copyright 2019 Abakkk
+ * Copyright 2022 zhrexl
+ * Originally Forked from Abakkk
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,8 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * SPDX-FileCopyrightText: 2019 Abakkk
- * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 /* jslint esversion: 6 */
@@ -25,53 +24,29 @@ const { Adw, Gdk, GLib, Gtk, GObject, Gio } = imports.gi;
 
 const IS_GTK3 = Gtk.get_major_version() == 3;
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const Prefs = Me.imports.ui.preferencespage;
-const Drawpage = Me.imports.ui.drawingpage;
-const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
+const ExtensionUtils  = imports.misc.extensionUtils;
+const Me              = ExtensionUtils.getCurrentExtension();
+const Prefs           = Me.imports.ui.preferencespage;
+const Drawpage        = Me.imports.ui.drawingpage;
 const GimpPaletteParser = Me.imports.gimpPaletteParser;
-const Shortcuts = Me.imports.shortcuts;
-const gettext = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+const Shortcuts         = Me.imports.shortcuts;
+const gettext           = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+
 const _ = function(string) {
     if (!string)
         return "";
     return gettext(string);
 };
+
 const _GTK = imports.gettext.domain(IS_GTK3 ? 'gtk30' : 'gtk40').gettext;
 
 const MARGIN = 10;
 const ROWBOX_MARGIN_PARAMS = { margin_top: MARGIN / 2, margin_bottom: MARGIN / 2, margin_start: MARGIN, margin_end: MARGIN, spacing: 4 };
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
-if (IS_GTK3) {
-    Gtk.Container.prototype.append = Gtk.Container.prototype.add;
-    Gtk.Bin.prototype.set_child = Gtk.Container.prototype.add;
-}
-
-const setAccessibleLabel = function(widget, label) {
-    if (IS_GTK3)
-        widget.get_accessible().set_name(label);
-    else
-        widget.update_property([Gtk.AccessibleProperty.LABEL], [label]);
-};
-
-const setAccessibleDescription = function(widget, description) {
-    if (IS_GTK3)
-        widget.get_accessible().set_description(description);
-    else
-        widget.update_property([Gtk.AccessibleProperty.DESCRIPTION], [description]);
-};
-
-const getChildrenOf = function(widget) {
-    if (IS_GTK3)
-        return widget.get_children();
-    else
-        return [...widget];
-};
 
 function init() {
-    Convenience.initTranslations();
+    ExtensionUtils.initTranslations();
 }
 
 
@@ -119,7 +94,7 @@ const AboutPage = new GObject.Class({
         // Translators: version number in "About" page
         let version = _("Version %f").format(Me.metadata.version);
         // Translators: you are free to translate the extension description, that is displayed in About page, or not
-        let description = _("Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot");
+        let description = _("This is a forked from Abakkk original Draw On Your Screen Extension.\nStart drawing with Super+Alt+D and save your beautiful work by taking a screenshot");
         let link = "<span><a href=\"" + Me.metadata.url + "\">" + Me.metadata.url + "</a></span>";
         let licenseName = _GTK("GNU General Public License, version 3 or later");
         let licenseLink = "https://www.gnu.org/licenses/gpl-3.0.html";

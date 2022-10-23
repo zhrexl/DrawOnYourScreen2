@@ -1,7 +1,7 @@
 {
     "uuid": "draw-on-your-screen2@zhrexl.github.com",
     "name": "Draw On Your Screen 2",
-    "description": "Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot",
+    "description": "This is a fork from Abakk Draw On Your Screen. Start drawing with Super+Alt+D and save your beautiful work by taking a screenshot",
     "url": "https://github.com/zhrexl/DrawOnYourScreen2",
     "settings-schema": "org.gnome.shell.extensions.draw-on-your-screen",
     "gettext-domain": "draw-on-your-screen",
@@ -9,8 +9,6 @@
     "persistent-file-name": "persistent",
     "svg-file-name": "DrawOnYourScreen",
     "shell-version": [
-        "40",
-        "41",
         "42"
     ],
     "version": 12.3

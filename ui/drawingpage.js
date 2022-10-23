@@ -22,7 +22,6 @@ const { Adw, Gdk, GLib, Gtk, GObject, Gio } = imports.gi;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
 const Shortcuts = Me.imports.shortcuts;
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 const gettext = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
@@ -49,7 +48,7 @@ var DrawingPage = GObject.registerClass({
         this.set_name('drawing');
         this.set_icon_name("applications-graphics-symbolic");
 
-        this.settings = Convenience.getSettings(Me.metadata['settings-schema'] + '.drawing');
+        this.settings = ExtensionUtils.getSettings(Me.metadata['settings-schema'] + '.drawing');
         this.schema = this.settings.settings_schema;
 
         let adw_group = Adw.PreferencesGroup.new()
