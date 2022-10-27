@@ -16,18 +16,15 @@
  *
  */
 const { Adw, Gtk, GObject }= imports.gi;
-
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-
 const gettext = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+const _ = gettext;
 
 const MARGIN = 10;
 const ROWBOX_MARGIN_PARAMS = { margin_top: MARGIN / 2, margin_bottom: MARGIN / 2, margin_start: MARGIN, margin_end: MARGIN, spacing: 4 };
 
-const _ = gettext;
-
-
+//TODO: Follow GNOME HIG for About Pages
 var AboutPage = GObject.registerClass({
     GTypeName: 'About'
 }, class AboutPage extends Adw.PreferencesPage {
