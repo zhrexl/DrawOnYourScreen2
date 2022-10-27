@@ -43,7 +43,6 @@ var Preferences = GObject.registerClass({
         let settings = ExtensionUtils.getSettings();
         let schema = settings.settings_schema;
 
-
         let grp_Global = Adw.PreferencesGroup.new();
         grp_Global.set_title("Global");
 
