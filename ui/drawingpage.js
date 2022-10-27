@@ -69,7 +69,6 @@ var DrawingPage = GObject.registerClass({
         let adw_groupArea = Adw.PreferencesGroup.new()
         adw_groupArea.set_title(_("Area"));
 
-
         let squareAreaRow = Adw.ActionRow.new();
         squareAreaRow.set_title(this.schema.get_key('square-area-size').get_summary());
         let squareAreaAutoButton = new Gtk.CheckButton({ label: _("Auto"),
@@ -82,7 +81,6 @@ var DrawingPage = GObject.registerClass({
         this.settings.bind('square-area-auto', squareAreaAutoButton, 'active', 0);
         this.settings.bind('square-area-size', squareAreaSizeButton, 'value', 0);
         squareAreaAutoButton.bind_property('active', squareAreaSizeButton, 'sensitive', GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN);
-
 
         squareAreaAutoButton.valign = Gtk.Align.CENTER;
         squareAreaSizeButton.valign = Gtk.Align.CENTER;
@@ -132,7 +130,6 @@ var DrawingPage = GObject.registerClass({
         gridLineRow.add_suffix(gridLineWidthButton);
         gridLineRow.add_suffix(gridLineSpacingButton);
 
-
         let gridColorRow = Adw.ActionRow.new();
         gridColorRow.set_title(this.schema.get_key('grid-color').get_summary());
 
@@ -147,7 +144,6 @@ var DrawingPage = GObject.registerClass({
         adw_groupArea.add(backgroundColorRow);
         adw_groupArea.add(gridLineRow);
         adw_groupArea.add(gridColorRow);
-
 
         /* End of Area Group */
 
