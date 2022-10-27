@@ -23,8 +23,6 @@ const Prefs           = Me.imports.ui.preferencespage;
 const Drawpage        = Me.imports.ui.drawingpage;
 const AboutPage        = Me.imports.ui.about;
 
-
-
 function init()
 {
     ExtensionUtils.initTranslations(Me.metadata.uuid);
