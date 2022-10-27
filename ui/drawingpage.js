@@ -14,29 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * SPDX-FileCopyrightText: 2022 zhrexl
- * SPDX-License-Identifier: GPL-3.0-or-later
  */
 const { Adw, Gdk, GLib, Gtk, GObject, Gio } = imports.gi;
 
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Shortcuts = Me.imports.shortcuts;
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
-const gettext = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const GimpPaletteParser = Me.imports.gimpPaletteParser;
 
 const MARGIN = 10;
 const ROWBOX_MARGIN_PARAMS = { margin_top: MARGIN / 2, margin_bottom: MARGIN / 2, margin_start: MARGIN, margin_end: MARGIN, spacing: 4 };
-const IS_GTK3 = Gtk.get_major_version() == 3;
-
-const _ = function(string) {
-    if (!string)
-        return "";
-    return gettext(string);
-};
-const _GTK = imports.gettext.domain(IS_GTK3 ? 'gtk30' : 'gtk40').gettext;
 
 var DrawingPage = GObject.registerClass({
     GTypeName: 'Drawing'
@@ -64,7 +53,7 @@ var DrawingPage = GObject.registerClass({
         addButton.connect('clicked', this._addNewPalette.bind(this));
 
         let importButton = Gtk.Button.new_from_icon_name('document-open-symbolic');
-        importButton.set_tooltip_text(_GTK("Select a File"));
+        importButton.set_tooltip_text(_("Select a File"));
         importButton.valign = Gtk.Align.CENTER;
         importButton.connect('clicked', this._importPalette.bind(this));
 
@@ -261,12 +250,12 @@ var DrawingPage = GObject.registerClass({
 
     _importPalette() {
         let dialog = new Gtk.FileChooserDialog({
-            title: _GTK("Select a File"),
+            title: _("Select a File"),
             action: Gtk.FileChooserAction.OPEN,
             modal: true,
         });
-        dialog.add_button(_GTK("_Cancel"), Gtk.ResponseType.CANCEL);
-        dialog.add_button(_GTK("_Open"), Gtk.ResponseType.ACCEPT);
+        dialog.add_button(_("_Cancel"), Gtk.ResponseType.CANCEL);
+        dialog.add_button(_("_Open"), Gtk.ResponseType.ACCEPT);
 
         let filter = new Gtk.FileFilter();
         filter.set_name("GIMP Palette (*.gpl)");
@@ -392,7 +381,7 @@ const FileChooserButton = new GObject.Class({
             this._location = location;
             this.label = location ?
                          Gio.File.new_for_commandline_arg(location).query_info('standard::display-name', Gio.FileQueryInfoFlags.NONE, null).get_display_name() :
-                         _GTK("(None)");
+                         _("(None)");
 
             this.notify('location');
         }
@@ -404,8 +393,8 @@ const FileChooserButton = new GObject.Class({
             action: this.action,
             modal: true,
         });
-        dialog.add_button(_GTK("_Cancel"), Gtk.ResponseType.CANCEL);
-        dialog.add_button(_GTK("_Select"), Gtk.ResponseType.ACCEPT);
+        dialog.add_button(_("_Cancel"), Gtk.ResponseType.CANCEL);
+        dialog.add_button(_("_Select"), Gtk.ResponseType.ACCEPT);
 
         if (this.location)
             dialog.set_file(Gio.File.new_for_commandline_arg(this.location));
