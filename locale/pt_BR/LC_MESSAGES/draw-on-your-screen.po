@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Draw On Your Screen 2\n"
 "Report-Msgid-Bugs-To: https://github.com/zhrexl/DrawOnYourScreen2/issues\n"
 "POT-Creation-Date: 2022-11-01 23:33-0300\n"
-"PO-Revision-Date: 2022-11-02 00:03-0300\n"
+"PO-Revision-Date: 2022-11-02 00:22-0300\n"
 "Last-Translator: Douglas <dferracz@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <dferracz@gmail.com>\n"
 "Language: pt_BR\n"
@@ -146,15 +146,15 @@ msgstr "Fina"
 
 msgctxt "font-weight"
 msgid "Ultra Light"
-msgstr ""
+msgstr "Ultra Leve"
 
 msgctxt "font-weight"
 msgid "Light"
-msgstr ""
+msgstr "Leve"
 
 msgctxt "font-weight"
 msgid "Semi Light"
-msgstr ""
+msgstr "Semi Leve"
 
 msgctxt "font-weight"
 msgid "Book"
@@ -170,15 +170,15 @@ msgstr "Médio"
 
 msgctxt "font-weight"
 msgid "Semi Bold"
-msgstr ""
+msgstr "Semi Negrito"
 
 msgctxt "font-weight"
 msgid "Bold"
-msgstr ""
+msgstr "Negrito"
 
 msgctxt "font-weight"
 msgid "Ultra Bold"
-msgstr ""
+msgstr "Ultra Negrito"
 
 msgctxt "font-weight"
 msgid "Heavy"
@@ -186,7 +186,7 @@ msgstr "Pesado"
 
 msgctxt "font-weight"
 msgid "Ultra Heavy"
-msgstr ""
+msgstr "Ultra Pesada"
 
 #. Translators: stroke-linecap SVG attribute
 msgctxt "stroke-linecap"
@@ -442,10 +442,10 @@ msgid "Area"
 msgstr "Área"
 
 msgid "Auto"
-msgstr ""
+msgstr "Automático"
 
 msgid "Grid overlay line"
-msgstr ""
+msgstr "Linha de Grade"
 
 msgid "Tools"
 msgstr "Ferramentas"
@@ -514,7 +514,7 @@ msgid "Background color"
 msgstr "Cor de fundo"
 
 msgid "The color of the drawing area background"
-msgstr ""
+msgstr "A cor do fundo da área de desenho"
 
 msgid "Automatic dash array"
 msgstr ""
@@ -541,19 +541,19 @@ msgid "The dash offset in pixels"
 msgstr ""
 
 msgid "Grid overlay color"
-msgstr ""
+msgstr "Cor da Grade"
 
 msgid "The color of the lines"
-msgstr ""
+msgstr "A cor das linhas"
 
 msgid "Automatic grid overlay line"
-msgstr ""
+msgstr "Linha de Grade Automática"
 
 msgid "Compute the lengths from the screen size"
 msgstr ""
 
 msgid "Grid overlay line spacing"
-msgstr ""
+msgstr "Espaçamento entrelinhas da Grade"
 
 msgid "The gap between lines in pixels"
 msgstr ""
@@ -562,133 +562,133 @@ msgid "Grid overlay line width"
 msgstr ""
 
 msgid "The line width in pixels"
-msgstr ""
+msgstr "Largura da linha em pixeis"
 
 msgid "Image location"
-msgstr ""
+msgstr "Local da Imagem"
 
 msgid "The location of the directory in which the image tool picks"
 msgstr ""
 
 msgid "Color palettes"
-msgstr ""
+msgstr "Paletas de Cor"
 
 msgid "The palettes of drawing colors"
 msgstr ""
 
 msgid "Automatic square area size"
-msgstr ""
+msgstr "Área do quadrado automática"
 
 msgid "Compute the area size from the screen size"
 msgstr ""
 
 msgid "Square area size"
-msgstr ""
+msgstr "Área do quadrado"
 
 msgid "The size of the area in pixels"
 msgstr ""
 
 msgid "Decrement line width"
-msgstr ""
+msgstr "Decrementar largura da linha"
 
 msgid "Decrement line width even more"
 msgstr ""
 
 msgid "Erase last brushstroke"
-msgstr ""
+msgstr "Apagar último rabisco"
 
 msgid "Export drawing to a SVG file"
-msgstr ""
+msgstr "Exportar desenho para arquivo SVG"
 
 msgid "Increment line width"
-msgstr ""
+msgstr "Incrementar largura da linha"
 
 msgid "Increment line width even more"
 msgstr ""
 
 msgid "Open next drawing"
-msgstr ""
+msgstr "Abrir próximo desenho"
 
 msgid "Open preferences"
-msgstr ""
+msgstr "Abrir preferências"
 
 msgid "Open previous drawing"
-msgstr ""
+msgstr "Abrir Desenho Anterior"
 
 msgid "Add images from the clipboard"
-msgstr ""
+msgstr "Inserir Imagem da área de transferência"
 
 msgid "Redo"
-msgstr ""
+msgstr "Refazer"
 
 msgid "Save drawing"
-msgstr ""
+msgstr "Salvar Desenho"
 
 msgid "Select color 1"
-msgstr ""
+msgstr "Selecionar cor 1"
 
 msgid "Select color 2"
-msgstr ""
+msgstr "Selecionar cor 2"
 
 msgid "Select color 3"
-msgstr ""
+msgstr "Selecionar cor 3"
 
 msgid "Select color 4"
-msgstr ""
+msgstr "Selecionar cor 4"
 
 msgid "Select color 5"
-msgstr ""
+msgstr "Selecionar cor 5"
 
 msgid "Select color 6"
-msgstr ""
+msgstr "Selecionar cor 6"
 
 msgid "Select color 7"
-msgstr ""
+msgstr "Selecionar cor 7"
 
 msgid "Select color 8"
-msgstr ""
+msgstr "Selecionar cor 8"
 
 msgid "Select color 9"
-msgstr ""
+msgstr "Selecionar cor 9"
 
 msgid "Select ellipse tool"
-msgstr ""
+msgstr "Selecionar ferramenta de elipse"
 
 msgid "Select image tool"
-msgstr ""
+msgstr "Selecionar ferramenta de imagem"
 
 msgid "Select line tool"
-msgstr ""
+msgstr "Selecionar ferramenta de linha"
 
 msgid "Select mirror tool"
-msgstr ""
+msgstr "Selecionar ferramenta de espelho"
 
 msgid "Select move tool"
-msgstr ""
+msgstr "Selecionar ferramenta de mover"
 
 msgid "Select free drawing"
-msgstr ""
+msgstr "Selecionar desenho à mão livre"
 
 msgid "Select polygon tool"
-msgstr ""
+msgstr "Selecionar ferramenta de polígono"
 
 msgid "Select polyline tool"
 msgstr ""
 
 msgid "Select rectangle tool"
-msgstr ""
+msgstr "Selecionar ferramenta de retângulo"
 
 msgid "Select resize tool"
-msgstr ""
+msgstr "Selecionar ferramenta de redimensionar"
 
 msgid "Select text tool"
-msgstr ""
+msgstr "Selecionar ferramenta de texto"
 
 msgid "Smooth last brushstroke"
 msgstr ""
 
 msgid "Change color palette"
-msgstr ""
+msgstr "Mudar paleta de cor"
 
 msgid "Change color palette (reverse)"
 msgstr ""
@@ -712,7 +712,7 @@ msgid "Change font weight"
 msgstr ""
 
 msgid "Change image"
-msgstr ""
+msgstr "Alterar Imagem"
 
 msgid "Change image (reverse)"
 msgstr ""
@@ -727,20 +727,20 @@ msgid "Change text alignment"
 msgstr ""
 
 msgid "Add a drawing background"
-msgstr ""
+msgstr "Adicionar um desenho de fundo"
 
 msgid "Add a grid overlay"
 msgstr ""
 
 msgid "Show help"
-msgstr ""
+msgstr "Mostrar ajuda"
 
 msgid "Hide panel and dock"
-msgstr ""
+msgstr "Esconder painel e dock"
 
 #. Translators: It is an action: "Make the drawing area a square"
 msgid "Square drawing area"
 msgstr ""
 
 msgid "Undo"
-msgstr ""
+msgstr "Desfazer"
