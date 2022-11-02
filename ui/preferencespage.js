@@ -51,6 +51,11 @@ var Preferences = GObject.registerClass({
             let name = settings.settings_schema.get_key(settingKeys).get_summary()
             globalKeybindingsRow.set_title(name);
             let globalKeybindingsWidget = new KeybindingsWidget(settingKeys, settings);
+            //let globalKeybindingsWidget = new ShortCutWidget(window, settings.get_strv(settingKeys)[0]);//Gtk.ShortcutLabel.new(settings.get_strv(settingKeys)[0]);
+            /*globalKeybindingsWidget.connect('key-press-event', (widget, event) => {
+                  log('Key-Pressed!!!');
+                  return Clutter.EVENT_PROPAGATE;
+            });*/
             globalKeybindingsRow.add_suffix(globalKeybindingsWidget);
             globalKeybindingsWidget.valign = Gtk.Align.CENTER;
             //globalKeybindingsRow.set_activatable_widget(globalKeybindingsRow);
@@ -108,6 +113,30 @@ var Preferences = GObject.registerClass({
         grp_Internal.add(resetButton);
     }
   });
+//TODO: ShortCutWidget is a Work in Progress
+const ShortCutWidget = GObject.registerClass({
+    GTypeName: 'ShortCutWidget'
+}, class ShortCutWidget extends Gtk.Button {
+    constructor(key) {
+          super({});
+          this.shortcutlabel = Gtk.ShortcutLabel.new(key);
+          this.set_label(_("Press the new shortcut..."));
+          this.get_style_context().add_class('background');
+          this.set_child(this.shortcutlabel);
+          this.connect('clicked',this.clicked.bind(this));
+        }
+    clicked()
+    {
+        this.shortcutlabel.set_visible(false);
+        this.set_label(_("Press the new shortcut..."));
+        global.connect('key-press-event',this.key_pressed.bind(this));
+        this.grab_focus(true);
+    }
+    key_pressed(widget, event, user_data)
+    {
+        log('Key Pressed! =D');
+    }
+});
 
   // From Sticky Notes View by Sam Bull, https://extensions.gnome.org/extension/568/notes/
 const KeybindingsWidget = new GObject.Class({
