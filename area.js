@@ -37,7 +37,6 @@ const Main = imports.ui.main;
 const Screenshot = imports.ui.screenshot;
 
 const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
 const Elements = Me.imports.elements;
 const Files = Me.imports.files;
 const Menu = Me.imports.menu;
@@ -151,7 +150,7 @@ var DrawingArea = GObject.registerClass({
         this.currentTool = Shape.NONE;
         this.currentImage = null;
         this.currentTextAlignment = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? TextAlignment.RIGHT : TextAlignment.LEFT;
-        let fontName = St.Settings && St.Settings.get().font_name || Convenience.getSettings('org.gnome.desktop.interface').get_string('font-name');
+        let fontName = St.Settings && St.Settings.get().font_name || ExtensionUtils.getSettings('org.gnome.desktop.interface').get_string('font-name');
         this.currentFont = Pango.FontDescription.from_string(fontName);
         this.currentFont.unset_fields(Pango.FontMask.SIZE);
         this.defaultFontFamily = this.currentFont.get_family();
