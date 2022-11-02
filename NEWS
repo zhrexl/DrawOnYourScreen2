@@ -1,4 +1,19 @@
-v12 - March 2021
+v12.3 - October 2023
+==================
+* Settings Rewritten with libadwaita
+* Fix some settings bugs
+* Dropped gtk3 support and GNOME Shell < v42
+* Translation files improved
+* Uses Gettext and InitTranslations() from ExtensionsUtils()
+* Remove convenience.js usage
+* Initial GNOME Shell v43 Support
+
+v12.2 - April 2022
+==================
+
+* Initial Support for GNOME v42
+
+v12 - March 2022
 ==================
 
 * Removed Intermediate Points (Improved Perfomance)

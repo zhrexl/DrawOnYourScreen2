@@ -27,10 +27,9 @@ const IS_GTK3 = Gtk.get_major_version() == 3;
 const GS_VERSION = imports.misc.config.PACKAGE_VERSION;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = ExtensionUtils.getSettings && ExtensionUtils.initTranslations ? ExtensionUtils : Me.imports.convenience;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
  
-const internalShortcutsSchema = Convenience.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts').settings_schema;
+const internalShortcutsSchema = ExtensionUtils.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts').settings_schema;
 
 const getKeyLabel = function(accel) {
     let success_, keyval, mods;
@@ -43,21 +42,23 @@ const getKeyLabel = function(accel) {
 
 // The setting keys of the "org.gnome.shell.extensions.draw-on-your-screen" schema.
 var GLOBAL_KEYBINDINGS = [
-    ['toggle-drawing', 'toggle-modal', 'erase-drawings'],
+    'toggle-drawing', 'toggle-modal', 'erase-drawings',
 ];
-
+var GLOBAL_KEYBINDINGS_SWITCHES = [
+    'persistent-over-toggles', 'persistent-over-restarts', 'drawing-on-desktop', 'osd-disabled', 'indicator-disabled',
+];
 // The setting keys of the "org.gnome.shell.extensions.draw-on-your-screen.internal-shortcuts" schema.
 var INTERNAL_KEYBINDINGS = [
-    ['undo', 'redo', 'delete-last-element', 'smooth-last-element'],
-    ['select-none-shape', 'select-line-shape', 'select-ellipse-shape', 'select-rectangle-shape', 'select-polygon-shape', 'select-polyline-shape',
-     'select-text-shape', 'select-image-shape', 'select-move-tool', 'select-resize-tool', 'select-mirror-tool'],
-    ['switch-fill', 'switch-fill-rule', 'switch-color-palette', 'switch-color-palette-reverse', 'pick-color'],
-    ['increment-line-width', 'increment-line-width-more', 'decrement-line-width', 'decrement-line-width-more',
-     'switch-linejoin', 'switch-linecap', 'switch-dash'],
-    ['switch-font-family', 'switch-font-family-reverse', 'switch-font-weight', 'switch-font-style', 'switch-text-alignment'],
-    ['switch-image-file', 'switch-image-file-reverse', 'paste-image-files'],
-    ['toggle-panel-and-dock-visibility', 'toggle-background', 'toggle-grid', 'toggle-square-area'],
-    ['open-next-json', 'open-previous-json', 'save-as-json', 'export-to-svg', 'open-preferences', 'toggle-help'],
+    'undo', 'redo', 'delete-last-element', 'smooth-last-element',
+    'select-none-shape', 'select-line-shape', 'select-ellipse-shape', 'select-rectangle-shape', 'select-polygon-shape', 'select-polyline-shape',
+     'select-text-shape', 'select-image-shape', 'select-move-tool', 'select-resize-tool', 'select-mirror-tool',
+    'switch-fill', 'switch-fill-rule', 'switch-color-palette', 'switch-color-palette-reverse', 'pick-color',
+    'increment-line-width', 'increment-line-width-more', 'decrement-line-width', 'decrement-line-width-more',
+     'switch-linejoin', 'switch-linecap', 'switch-dash',
+    'switch-font-family', 'switch-font-family-reverse', 'switch-font-weight', 'switch-font-style', 'switch-text-alignment',
+    'switch-image-file', 'switch-image-file-reverse', 'paste-image-files',
+    'toggle-panel-and-dock-visibility', 'toggle-background', 'toggle-grid', 'toggle-square-area',
+    'open-next-json', 'open-previous-json', 'save-as-json', 'export-to-svg', 'open-preferences', 'toggle-help',
 ];
 
 if (GS_VERSION < '3.30') {

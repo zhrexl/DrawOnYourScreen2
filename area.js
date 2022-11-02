@@ -37,7 +37,6 @@ const Main = imports.ui.main;
 const Screenshot = imports.ui.screenshot;
 
 const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
 const Elements = Me.imports.elements;
 const Files = Me.imports.files;
 const Menu = Me.imports.menu;
@@ -151,7 +150,7 @@ var DrawingArea = GObject.registerClass({
         this.currentTool = Shape.NONE;
         this.currentImage = null;
         this.currentTextAlignment = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? TextAlignment.RIGHT : TextAlignment.LEFT;
-        let fontName = St.Settings && St.Settings.get().font_name || Convenience.getSettings('org.gnome.desktop.interface').get_string('font-name');
+        let fontName = St.Settings && St.Settings.get().font_name || ExtensionUtils.getSettings('org.gnome.desktop.interface').get_string('font-name');
         this.currentFont = Pango.FontDescription.from_string(fontName);
         this.currentFont.unset_fields(Pango.FontMask.SIZE);
         this.defaultFontFamily = this.currentFont.get_family();
@@ -455,6 +454,7 @@ var DrawingArea = GObject.registerClass({
                 this.toggleHelp();
             else
                 this.emit('leave-drawing-mode');
+            return Clutter.EVENT_STOP;
         } else if (event.get_key_symbol() == Clutter.KEY_space) {
             this.spaceKeyPressed = true;
         }
@@ -470,6 +470,14 @@ var DrawingArea = GObject.registerClass({
     }
     
     _onKeyPressed(actor, event) {
+        if (event.get_key_symbol() == Clutter.KEY_Escape) {
+            if (this.helper.visible) {
+                this.toggleHelp();
+            } else
+                this.emit('leave-drawing-mode');
+            return Clutter.EVENT_STOP;
+        }
+
         if (this.currentElement && this.currentElement.shape == Shape.LINE &&
             (event.get_key_symbol() == Clutter.KEY_Return ||
              event.get_key_symbol() == Clutter.KEY_KP_Enter ||

@@ -29,7 +29,6 @@ const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = ExtensionUtils.getSettings ? ExtensionUtils : Me.imports.convenience;
 const Shortcuts = Me.imports.shortcuts;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 
@@ -94,20 +93,20 @@ var DrawingHelper = GObject.registerClass({
         this.add_actor(this.vbox);
         this.vbox.add_child(new St.Label({ text: _("Global") }));
         
-        Shortcuts.GLOBAL_KEYBINDINGS.forEach((settingKeys, index) => {
-            if (index)
-                this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
+        Shortcuts.GLOBAL_KEYBINDINGS.forEach((settingKeys) => {
+            //if (index)
+            this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
             
-            settingKeys.forEach(settingKey => {
-                if (!Me.settings.get_strv(settingKey)[0])
+            //settingKeys.forEach(settingKey => {
+                if (!Me.settings.get_strv(settingKeys)[0])
                     return;
                 
                 let hbox = new St.BoxLayout({ vertical: false });
-                let [keyval, mods] = Gtk.accelerator_parse(Me.settings.get_strv(settingKey)[0] || '');
-                hbox.add_child(new St.Label({ text: Me.settings.settings_schema.get_key(settingKey).get_summary() }));
+                let [keyval, mods] = Gtk.accelerator_parse(Me.settings.get_strv(settingKeys)[0] || '');
+                hbox.add_child(new St.Label({ text: Me.settings.settings_schema.get_key(settingKeys).get_summary() }));
                 hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));
                 this.vbox.add_child(hbox);
-            });
+          //  });
         });
         
         this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
@@ -129,24 +128,24 @@ var DrawingHelper = GObject.registerClass({
         
         this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
         
-        Shortcuts.INTERNAL_KEYBINDINGS.forEach((settingKeys, index) => {
-            if (index)
-                this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
+        Shortcuts.INTERNAL_KEYBINDINGS.forEach((settingKeys) => {
+            //if (index)
+              this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
             
-            settingKeys.forEach(settingKey => {
-                if (!Me.internalShortcutSettings.get_strv(settingKey)[0])
+            //settingKeys.forEach(settingKey => {
+                if (!Me.internalShortcutSettings.get_strv(settingKeys)[0])
                     return;
                 
                 let hbox = new St.BoxLayout({ vertical: false });
-                let [keyval, mods] = Gtk.accelerator_parse(Me.internalShortcutSettings.get_strv(settingKey)[0] || '');
-                hbox.add_child(new St.Label({ text: Me.internalShortcutSettings.settings_schema.get_key(settingKey).get_summary() }));
+                let [keyval, mods] = Gtk.accelerator_parse(Me.internalShortcutSettings.get_strv(settingKeys)[0] || '');
+                hbox.add_child(new St.Label({ text: Me.internalShortcutSettings.settings_schema.get_key(settingKeys).get_summary() }));
                 hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));
                 this.vbox.add_child(hbox);
-            });
+            //});
         });
         
         let mediaKeysSettings;
-        try { mediaKeysSettings = Convenience.getSettings(MEDIA_KEYS_SCHEMA); } catch(e) { return; }
+        try { mediaKeysSettings = ExtensionUtils.getSettings(MEDIA_KEYS_SCHEMA); } catch(e) { return; }
         
         this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
         this.vbox.add_child(new St.Label({ text: _("System") }));

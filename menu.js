@@ -795,7 +795,7 @@ const ActionButton = GObject.registerClass ({
                 callbackAfter();
         });
         button.bind_property('reactive', button, 'can_focus', GObject.BindingFlags.DEFAULT);
-        button.connect('notify::hover', () => this._syncLabel(this));
+        //button.connect('notify::hover', () => this._syncLabel(this));
         
         super._init({ child: button, x_expand: inline ? false : true });
     }
