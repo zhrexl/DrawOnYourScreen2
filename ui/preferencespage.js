@@ -47,18 +47,14 @@ var Preferences = GObject.registerClass({
         grp_Global.set_title("Global");
 
         Shortcuts.GLOBAL_KEYBINDINGS.forEach((settingKeys) => {
-            let globalKeybindingsRow = new Adw.ActionRow();
-            let name = settings.settings_schema.get_key(settingKeys).get_summary()
+            let globalKeybindingsRow    = new Adw.ActionRow();
+            let globalKeybindingsWidget = new ShortCutWidget(settings, settingKeys);
+            let name = settings.settings_schema.get_key(settingKeys).get_summary();
+
             globalKeybindingsRow.set_title(name);
-            let globalKeybindingsWidget = new KeybindingsWidget(settingKeys, settings);
-            //let globalKeybindingsWidget = new ShortCutWidget(window, settings.get_strv(settingKeys)[0]);//Gtk.ShortcutLabel.new(settings.get_strv(settingKeys)[0]);
-            /*globalKeybindingsWidget.connect('key-press-event', (widget, event) => {
-                  log('Key-Pressed!!!');
-                  return Clutter.EVENT_PROPAGATE;
-            });*/
             globalKeybindingsRow.add_suffix(globalKeybindingsWidget);
             globalKeybindingsWidget.valign = Gtk.Align.CENTER;
-            //globalKeybindingsRow.set_activatable_widget(globalKeybindingsRow);
+
             grp_Global.add(globalKeybindingsRow);
         });
 
@@ -89,13 +85,14 @@ var Preferences = GObject.registerClass({
 
         // TODO: Improve Shortcut Widget
         Shortcuts.INTERNAL_KEYBINDINGS.forEach((settingKeys) => {
-            let globalKeybindingsRow = new Adw.ActionRow();
-            let name = internalShortcutSettings.settings_schema.get_key(settingKeys).get_summary()
+            let globalKeybindingsRow    = new Adw.ActionRow();
+            let globalKeybindingsWidget = new ShortCutWidget(internalShortcutSettings, settingKeys);
+            let name = internalShortcutSettings.settings_schema.get_key(settingKeys).get_summary();
+
             globalKeybindingsRow.set_title(name);
-            let globalKeybindingsWidget = new KeybindingsWidget(settingKeys, internalShortcutSettings);
             globalKeybindingsRow.add_suffix(globalKeybindingsWidget);
             globalKeybindingsWidget.valign = Gtk.Align.CENTER;
-            //globalKeybindingsRow.set_activatable_widget(globalKeybindingsRow);
+
             grp_Internal.add(globalKeybindingsRow);
         });
 
@@ -113,147 +110,66 @@ var Preferences = GObject.registerClass({
         grp_Internal.add(resetButton);
     }
   });
-//TODO: ShortCutWidget is a Work in Progress
+
+//TODO: ShortCutWidget should not allow two identicals shortcuts
 const ShortCutWidget = GObject.registerClass({
     GTypeName: 'ShortCutWidget'
 }, class ShortCutWidget extends Gtk.Button {
-    constructor(key) {
+    constructor(settings, settingsKeys) {
           super({});
+          this._settings     = settings;
+          this._settingsKeys = settingsKeys;
+
+          let key            = settings.get_strv(settingsKeys)[0];
           this.shortcutlabel = Gtk.ShortcutLabel.new(key);
-          this.set_label(_("Press the new shortcut..."));
-          this.get_style_context().add_class('background');
-          this.set_child(this.shortcutlabel);
+          this.evck          = Gtk.EventControllerKey.new();
+          this.allow_changes = false;
+
+          this.add_controller(this.evck);
+
+          //TODO: This needs testing
+          if (key == null)
+            this.set_label(_("Click here to set new shortcut..."));
+          else
+            this.set_child(this.shortcutlabel);
+
+          this.get_style_context().add_class('flat');
           this.connect('clicked',this.clicked.bind(this));
-        }
+          this.evck.connect('key-pressed', this.key_pressed.bind(this));
+          this.evck.connect('key-released', this.key_released.bind(this));
+          this._settings.connect('changed', this.on_settings_changed.bind(this));
+    }
+    on_settings_changed()
+    {
+        let key = this._settings.get_strv(this._settingsKeys)[0];
+        this.shortcutlabel.set_accelerator(key);
+    }
     clicked()
     {
-        this.shortcutlabel.set_visible(false);
         this.set_label(_("Press the new shortcut..."));
-        global.connect('key-press-event',this.key_pressed.bind(this));
-        this.grab_focus(true);
+        this.allow_changes = true;
     }
-    key_pressed(widget, event, user_data)
+    key_released(widget, keyval, keycode, state)
     {
-        log('Key Pressed! =D');
+        if (this.allow_changes == false)
+          return Gdk.EVENT_STOP;
+        else
+          this.allow_changes = false;
+
+        let value = this.shortcutlabel.get_accelerator();
+        this._settings.set_strv(this._settingsKeys, [value]);
     }
-});
+    key_pressed(widget, keyval, keycode, state)
+    {
+        if (this.allow_changes == false)
+          return Gdk.EVENT_STOP;
 
-  // From Sticky Notes View by Sam Bull, https://extensions.gnome.org/extension/568/notes/
-const KeybindingsWidget = new GObject.Class({
-    Name: `${UUID}-KeybindingsWidget`,
-    Extends: Gtk.Box,
+        let mask = state & Gtk.accelerator_get_default_mod_mask();
+        let binding = Gtk.accelerator_name_with_keycode(null, keyval, keycode, mask);
 
-    _init: function(settingKeys, settings) {
-        this.parent(ROWBOX_MARGIN_PARAMS);
-        this.set_orientation(Gtk.Orientation.VERTICAL);
+        this.shortcutlabel.set_accelerator(binding);
+        this.set_child(this.shortcutlabel);
 
-        this._settingKeys = settingKeys;
-        this._settings = settings;
-
-        this._columns = {
-            NAME: 0,
-            ACCEL_NAME: 1,
-            MODS: 2,
-            KEY: 3
-        };
-
-        this._store = new Gtk.ListStore();
-        this._store.set_column_types([
-            GObject.TYPE_STRING,
-            GObject.TYPE_STRING,
-            GObject.TYPE_INT,
-            GObject.TYPE_INT
-        ]);
-
-        this._tree_view = new Gtk.TreeView({
-            model: this._store,
-            hexpand: false,
-            vexpand: false
-        });
-        this._tree_view.set_activate_on_single_click(false);
-        this._tree_view.get_selection().set_mode(Gtk.SelectionMode.SINGLE);
-
-        let keybinding_renderer = new Gtk.CellRendererAccel({
-            editable: true,
-            accel_mode: Gtk.CellRendererAccelMode.GTK,
-            xalign: 1
-        });
-        keybinding_renderer.connect('accel-edited', (renderer, iter, key, mods) => {
-            let value = Gtk.accelerator_name(key, mods);
-            let [success, iterator ] =
-                this._store.get_iter_from_string(iter);
-
-            if (!success) {
-                printerr("Can't change keybinding");
-            }
-
-            let name = this._store.get_value(iterator, 0);
-
-            this._store.set(
-                iterator,
-                [this._columns.MODS, this._columns.KEY],
-                [mods, key]
-            );
-            this._settings.set_strv(name, [value]);
-        });
-
-        let keybinding_column = new Gtk.TreeViewColumn({
-            title: "",
-        });
-        keybinding_column.pack_end(keybinding_renderer, false);
-        keybinding_column.add_attribute(
-            keybinding_renderer,
-            'accel-mods',
-            this._columns.MODS
-        );
-        keybinding_column.add_attribute(
-            keybinding_renderer,
-            'accel-key',
-            this._columns.KEY
-        );
-        this._tree_view.append_column(keybinding_column);
-        this._tree_view.columns_autosize();
-        this._tree_view.set_headers_visible(false);
-
-        this.append(this._tree_view);
-        this.keybinding_column = keybinding_column;
-
-        this._settings.connect('changed', this._onSettingsChanged.bind(this));
-        this._refresh();
-    },
-
-    // Support the case where all the settings has been reset.
-    _onSettingsChanged: function() {
-        if (this._refreshTimeout)
-            GLib.source_remove(this._refreshTimeout);
-
-        this._refreshTimeout = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-            this._refreshTimeout = 0;
-            this._refresh();
-        });
-    },
-
-    _refresh: function() {
-        this._store.clear();
-            let success_, key, mods;
-
-            [success_, key, mods] = Gtk.accelerator_parse(this._settings.get_strv(this._settingKeys)[0] || '');
-
-            let iter = this._store.append();
-            this._store.set(iter,
-                [
-                    this._columns.NAME,
-                    this._columns.ACCEL_NAME,
-                    this._columns.MODS,
-                    this._columns.KEY
-                ],
-                [
-                    this._settingKeys,
-                    this._settings.settings_schema.get_key(this._settingKeys).get_summary(),
-                    mods,
-                    key
-                ]
-            );
-
+        return Gdk.EVENT_STOP;
     }
 });
