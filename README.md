@@ -3,7 +3,8 @@
 ![image](https://user-images.githubusercontent.com/51864789/202538664-799678ae-6cd5-46e6-9907-75deeb4bf16b.png)
 
 <p align="center">
-  <a href="https://extensions.gnome.org/extension/4937/draw-on-you-screen-2/"><img src="https://img.shields.io/badge/Download-extensions.gnome.org-CB74D9.svg?logo=gnome&logoColor=lightgrey&labelColor=303030" /></a>
+  <a href="https://extensions.gnome.org/extension/4937/draw-on-you-screen-2/"><img src="https://img.shields.io/badge/Download-extensions.gnome.org-CB74D9.svg?logo=gnome&logoColor=lightgrey&labelColor=303030" /></a></br>
+  <a href="https://www.buymeacoffee.com/zhrexl" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 </p>
 
 Orginally forked from: [Abakkk](https://codeberg.org/som/DrawOnYourScreen)
