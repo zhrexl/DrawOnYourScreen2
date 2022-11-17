@@ -1,13 +1,16 @@
 # Draw On Your Screen 2
 
-Orginally forked from: https://codeberg.org/som/DrawOnYourScreen
+![image](https://user-images.githubusercontent.com/51864789/202538664-799678ae-6cd5-46e6-9907-75deeb4bf16b.png)
 
-Please help-me test the [libadwaita](https://github.com/zhrexl/DrawOnYourScreen2/tree/libadwaita) branch and report the issues you find!
+<p align="center">
+  <a href="https://extensions.gnome.org/extension/4937/draw-on-you-screen-2/"><img src="https://img.shields.io/badge/Download-extensions.gnome.org-CB74D9.svg?logo=gnome&logoColor=lightgrey&labelColor=303030" /></a>
+</p>
 
-Start drawing with Super+Alt+D.
+Orginally forked from: [Abakkk](https://codeberg.org/som/DrawOnYourScreen)
+
+Start drawing with Super+Alt+D or with your preferred shortcut!
+
 Then save your beautiful work by taking a screenshot.
-
-![](https://codeberg.org/som/DrawOnYourScreen/raw/branch/media/screenshot.jpg)
 
 ## Features
 
@@ -17,28 +20,31 @@ Then save your beautiful work by taking a screenshot.
 * Draw over applications
 * Keep drawings on desktop background with persistence (notes, children's art ...)
 * Multi-monitor support
-* Initial stylus support
+* Stylus and Multi mouse Pointers Support
 * Export to SVG
 
 ## Development Goals
 
-* Better support for tablet, stylus and touchscreen
-* Migrate to GTK4 and libadwaita
-* Improve Perfomance
+* Add Smooth Tool
+* Improve Move and Resize Stability
+* Improve UI for touch screens
+* Improve Perfomance and Stability
+* Reorganize the code for better Maintainability
 
-## Install
+## Instalation 1
+
 1. Install it from [GNOME Extensions](https://extensions.gnome.org/extension/4937/draw-on-you-screen-2/)
 
-## Manually Install
+## Instalation 2
 
-1. Download and decompress or clone the repository
+1. Clone this repository
 2. Place the directory (the one that contains `metadata.json`) in `~/.local/share/gnome-shell/extensions`
 3. **Change the directory name** to `draw-on-your-screen2@zhrexl.github.com`
 4. Xorg: type `alt + F2` and `r` to restart gnome-shell  
    Wayland: restart session
-5. Enable the extension with GNOME Extensions or GNOME Tweaks application
+5. Enable the extension with GNOME Extensions or GNOME Tweaks
 6. `Super + Alt + D` to test
-7. [https://github.com/zhrexl/DrawOnYourScreen2/issues](https://github.com/zhrexl/DrawOnYourScreen2/issues) to say it doesn't work
+7. [Click here](https://github.com/zhrexl/DrawOnYourScreen2/issues) to say it doesn't work
 
 ## Tips and tricks
 
