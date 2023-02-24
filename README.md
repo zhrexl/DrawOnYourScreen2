@@ -41,17 +41,17 @@ Then save your beautiful work by taking a screenshot.
 1. Clone this repository
 2. Place the directory (the one that contains `metadata.json`) in `~/.local/share/gnome-shell/extensions`
 3. **Change the directory name** to `draw-on-your-screen2@zhrexl.github.com`
-3.1. You might wanna save the gsettings too, running:
-```
-sudo cp ~/.local/share/gnome-shell/extensions/draw-on-your-screen2@zhrexl.github.com/schemas/org.gnome.shell.extensions.draw-on-your-screen.gschema.xml \
+4. You might wanna save the gsettings too, running:
+  ```
+  sudo cp ~/.local/share/gnome-shell/extensions/draw-on-your-screen2@zhrexl.github.com/schemas/org.gnome.shell.extensions.draw-on-your-screen.gschema.xml \
     /usr/share/glib-2.0/schemas/ &&
-sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
-```
-4. Xorg: type `alt + F2` and `r` to restart gnome-shell  
+  sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
+  ```
+5. Xorg: press `alt + F2`, type`r` and then OK to restart gnome-shell  
    Wayland: restart session
-5. Enable the extension with GNOME Extensions or GNOME Tweaks
-6. `Super + Alt + D` to test
-7. [Click here](https://github.com/zhrexl/DrawOnYourScreen2/issues) to say it doesn't work
+6. Enable the extension with GNOME Extensions or GNOME Tweaks
+7. `Super + Alt + D` to test
+8. [Click here](https://github.com/zhrexl/DrawOnYourScreen2/issues) to say it doesn't work
 
 ## Tips and tricks
 
