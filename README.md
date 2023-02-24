@@ -41,6 +41,12 @@ Then save your beautiful work by taking a screenshot.
 1. Clone this repository
 2. Place the directory (the one that contains `metadata.json`) in `~/.local/share/gnome-shell/extensions`
 3. **Change the directory name** to `draw-on-your-screen2@zhrexl.github.com`
+3.1. You might wanna save the gsettings too, running:
+```
+sudo cp ~/.local/share/gnome-shell/extensions/draw-on-your-screen2@zhrexl.github.com/schemas/org.gnome.shell.extensions.draw-on-your-screen.gschema.xml \
+    /usr/share/glib-2.0/schemas/ &&
+sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
+```
 4. Xorg: type `alt + F2` and `r` to restart gnome-shell  
    Wayland: restart session
 5. Enable the extension with GNOME Extensions or GNOME Tweaks

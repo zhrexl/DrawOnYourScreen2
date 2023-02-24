@@ -38,8 +38,11 @@ var DrawingPage = GObject.registerClass({
         this.set_icon_name("applications-graphics-symbolic");
 
         this.settings = ExtensionUtils.getSettings(Me.metadata['settings-schema'] + '.drawing');
+          
         this.schema = this.settings.settings_schema;
-
+      
+        this.palettes = this.settings.get_value('palettes').deep_unpack();
+        
         let adw_group = Adw.PreferencesGroup.new()
         adw_group.set_title(_("Palettes"));
 
