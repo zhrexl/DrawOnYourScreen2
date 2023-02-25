@@ -1,4 +1,9 @@
-v12.3 - October 2023
+v12.6 - February 2023
+==================
+* Fix palettes not being correctly initialized
+* Allow palettes colors editing on preferences page
+
+v12.3 - October 2022
 ==================
 * Settings Rewritten with libadwaita
 * Fix some settings bugs

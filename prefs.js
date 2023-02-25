@@ -34,7 +34,7 @@ function fillPreferencesWindow(window)
     window.search_enabled = true;
 
     let page1 = new Prefs.Preferences();
-    let page2 = new Drawpage.DrawingPage();
+    let page2 = new Drawpage.DrawingPage(window);
     let page3 = new AboutPage.AboutPage();
 
     window.add(page1);
