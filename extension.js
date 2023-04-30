@@ -22,16 +22,66 @@
 /* jslint esversion: 6 */
 /* exported init */
 
-const GObject = imports.gi.GObject;
+const {Gio, GObject} = imports.gi;
+const {QuickToggle, SystemIndicator} = imports.ui.quickSettings;
+const QuickSettingsMenu = imports.ui.main.panel.statusArea.quickSettings;
+const Panel             = imports.ui.main.panel;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const AreaManager = Me.imports.ui.areamanager;
 const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
 const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
+const Config = imports.misc.config;
+const GS_VERSION = Config.PACKAGE_VERSION;
+
 function init() {
     return new Extension();
 }
+
+const FeatureToggle = GObject.registerClass(
+class FeatureToggle extends QuickToggle {
+    _init() {
+        super._init({
+            title: 'Drawing Mode',
+            iconName: 'applications-graphics-symbolic',
+            toggleMode: true,
+        });
+        
+        
+        // NOTE: In GNOME 44, the `label` property must be set after
+        // construction. The newer `title` property can be set at construction.
+       // this.label = 'Feature Name';
+
+        // Binding the toggle to a GSettings key
+        //this._settings = new Gio.Settings({
+        //    schema_id: 'org.gnome.shell.extensions.example',
+        //});
+
+        //this._settings.bind('feature-enabled',
+        //    this, 'checked',
+        //    Gio.SettingsBindFlags.DEFAULT);
+    }
+});
+var Indicator = GObject.registerClass(
+class Indicator extends SystemIndicator {
+    _init() {
+        super._init();
+
+        this.toggle = new FeatureToggle();
+        this.quickSettingsItems.push(this.toggle);
+        QuickSettingsMenu._indicators.add_child(this);
+        QuickSettingsMenu._addItems(this.quickSettingsItems);
+        
+         this.connect('destroy', () => {
+            this.quickSettingsItems.forEach(item => item.destroy());
+        });
+    }
+    get_toggle()
+    {
+        return this.toggle;
+    }
+});
 
 const Extension = GObject.registerClass({
     GTypeName: `${UUID}-Extension`,
@@ -43,14 +93,28 @@ const Extension = GObject.registerClass({
     enable() {
         if (ExtensionUtils.isOutOfDate(Me))
             log(`${Me.metadata.uuid}: GNOME Shell ${Number.parseFloat(GS_VERSION)} is not supported.`);
+        this.toggle = null;
         
+        if (GS_VERSION >= '44.0') {
+            this.toggle = new Indicator();
+            this.drawingtoggle = this.toggle.get_toggle();
+            this.drawingtoggle.connect('clicked',this.toggle_drawing.bind(this));
+        }
         Me.settings = ExtensionUtils.getSettings();
         Me.internalShortcutSettings = ExtensionUtils.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
         Me.drawingSettings = ExtensionUtils.getSettings(Me.metadata['settings-schema'] + '.drawing');
         this.areaManager = new AreaManager.AreaManager();
     }
-
+    toggle_drawing()
+    {
+        Panel.closeQuickSettings();
+        this.drawingtoggle.set_checked(false);
+        this.areaManager.toggleDrawing();
+    }
     disable() {
+        if (this.toggle)
+            this.toggle.destroy();
+        
         this.areaManager.disable();
         delete this.areaManager;
         delete Me.settings;
