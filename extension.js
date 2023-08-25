@@ -73,6 +73,14 @@ class Indicator extends SystemIndicator {
         QuickSettingsMenu._indicators.add_child(this);
         QuickSettingsMenu._addItems(this.quickSettingsItems);
         
+        //Place the toggles above the background apps entry
+        if (GS_VERSION >= 44) {
+          this.quickSettingsItems.forEach((item) => {
+            QuickSettingsMenu.menu._grid.set_child_below_sibling(item,
+              QuickSettingsMenu._backgroundApps.quickSettingsItems[0]);
+          });
+        }
+        
          this.connect('destroy', () => {
             this.quickSettingsItems.forEach(item => item.destroy());
         });
