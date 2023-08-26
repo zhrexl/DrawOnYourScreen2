@@ -102,6 +102,10 @@ var AreaManager = GObject.registerClass({
         return Me.settings.get_boolean('persistent-over-toggles') && Me.settings.get_boolean('drawing-on-desktop');
     }
     
+    get toolColor() {
+        return Me.drawingSettings.get_string("tool-color")
+    }
+    
     get toolSize() {
         return Me.drawingSettings.get_int('tool-size');
     }
@@ -143,6 +147,7 @@ var AreaManager = GObject.registerClass({
         this.monitors = Main.layoutManager.monitors;
         
         let toolConf = {
+            "toolColor" : this.toolColor,
             "toolSize" : this.toolSize
         };
         

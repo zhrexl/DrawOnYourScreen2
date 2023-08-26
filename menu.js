@@ -371,7 +371,7 @@ var DrawingMenu = GObject.registerClass({
             slider.connect('value-changed', (slider, value, property) => {
                 target[targetProperty] = Math.max(Math.round(value * 50), 0);
                 label.set_text(DisplayStrings.getPixels(target[targetProperty]));
-                Me.drawingSettings.set_int("tool-size", target[targetProperty])
+                Me.drawingSettings.set_int("tool-size", target[targetProperty]);
                 if (target[targetProperty] === 0)
                     label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
                 else
@@ -381,7 +381,7 @@ var DrawingMenu = GObject.registerClass({
             slider.connect('notify::value', () => {
                 target[targetProperty] = Math.max(Math.round(slider.value * 50), 0);
                 label.set_text(DisplayStrings.getPixels(target[targetProperty]));
-                Me.drawingSettings.set_int("tool-size", target[targetProperty])
+                Me.drawingSettings.set_int("tool-size", target[targetProperty]);
                 if (target[targetProperty] === 0)
                     label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
                 else
@@ -519,6 +519,7 @@ var DrawingMenu = GObject.registerClass({
                 let text = String(color);
                 let subItem = this.colorSubMenu.addAction(text, () => {
                     this.area.currentColor = color;
+                    Me.drawingSettings.set_string("tool-color", color.to_string());
                     this.colorItem.icon.set_style(`color:${color.to_string().slice(0, 7)};`);
                 });
                 // Foreground color markup is not displayed since 3.36, use style instead but the transparency is lost.

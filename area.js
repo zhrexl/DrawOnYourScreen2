@@ -148,6 +148,9 @@ var DrawingArea = GObject.registerClass({
         this.undoneElements = [];
         this.currentElement = null;
         this.currentTool = Shape.NONE;
+        if (toolConf["toolColor"] != "") {
+            this.currentColor = getColorFromString(toolConf["toolColor"], "White");
+        }
         this.currentImage = null;
         this.currentTextAlignment = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? TextAlignment.RIGHT : TextAlignment.LEFT;
         let fontName = St.Settings && St.Settings.get().font_name || ExtensionUtils.getSettings('org.gnome.desktop.interface').get_string('font-name');
@@ -704,7 +707,6 @@ var DrawingArea = GObject.registerClass({
                 fill: this.fill,
                 fillRule: this.currentFillRule,
                 line: { lineWidth: this.currentLineWidth, lineJoin: this.currentLineJoin, lineCap: this.currentLineCap },
-                dash: { active: this.dashedLine, array: this.dashedLine ? [this.dashArray[0] || this.currentLineWidth, this.dashArray[1] || this.currentLineWidth * 3] : [0, 0] , offset: this.dashOffset },
                 points: []
             });
         }
@@ -1041,6 +1043,7 @@ var DrawingArea = GObject.registerClass({
             return;
         
         this.currentColor = this.colors[index];
+        Me.drawingSettings.set_string("tool-color", this.colors[index].to_string());
         if (this.currentElement) {
             this.currentElement.color = this.currentColor;
             this._redisplay();
@@ -1163,6 +1166,7 @@ var DrawingArea = GObject.registerClass({
             color = color.to_string().slice(0, -2);
         
         this.currentColor = getColorFromString(color);
+        Me.drawingSettings.set_string("tool-color", color);
         if (this.currentElement) {
             this.currentElement.color = this.currentColor;
             this._redisplay();
