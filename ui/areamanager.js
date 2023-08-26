@@ -102,6 +102,10 @@ var AreaManager = GObject.registerClass({
         return Me.settings.get_boolean('persistent-over-toggles') && Me.settings.get_boolean('drawing-on-desktop');
     }
     
+    get toolSize() {
+        return Me.drawingSettings.get_int('tool-size');
+    }
+    
     onDesktopSettingChanged() {
         if (this.onDesktop)
             this.areas.forEach(area => area.show());
@@ -138,6 +142,10 @@ var AreaManager = GObject.registerClass({
         
         this.monitors = Main.layoutManager.monitors;
         
+        let toolConf = {
+            "toolSize" : this.toolSize
+        };
+        
         for (let i = 0; i < this.monitors.length; i++) {
             let monitor = this.monitors[i];
             let helper = new Helper.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
@@ -148,7 +156,7 @@ var AreaManager = GObject.registerClass({
                 togglePanelAndDockOpacity: this.togglePanelAndDockOpacity.bind(this),
                 openPreferences: this.openPreferences.bind(this)
             };
-            let area = new Area.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, areaManagerUtils, loadPersistent);
+            let area = new Area.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, areaManagerUtils, loadPersistent, toolConf);
             
             Main.layoutManager._backgroundGroup.insert_child_above(area, Main.layoutManager._bgManagers[i].backgroundActor);
             if (!this.onDesktop)

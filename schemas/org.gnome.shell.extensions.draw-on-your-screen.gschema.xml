@@ -122,6 +122,11 @@
       <summary>Square area size</summary>
       <description>The size of the area in pixels</description>
     </key>
+    <key type="i" name="tool-size">
+      <default>5</default>
+      <summary>Tool size</summary>
+      <description>Size of tool brush</description>
+    </key>
   </schema>
   <schema path="/org/gnome/shell/extensions/draw-on-your-screen/internal-shortcuts/" id="org.gnome.shell.extensions.draw-on-your-screen.internal-shortcuts">
     <key type="as" name="decrement-line-width">

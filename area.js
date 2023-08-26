@@ -125,7 +125,7 @@ var DrawingArea = GObject.registerClass({
                'leave-drawing-mode': {} },
 }, class DrawingArea extends St.Widget{
 
-    _init(params, monitor, helper, areaManagerUtils, loadPersistent) {
+    _init(params, monitor, helper, areaManagerUtils, loadPersistent, toolConf) {
         super._init({ style_class: 'draw-on-your-screen', name: params.name});
         this.monitor = monitor;
         this.helper = helper;
@@ -154,7 +154,7 @@ var DrawingArea = GObject.registerClass({
         this.currentFont = Pango.FontDescription.from_string(fontName);
         this.currentFont.unset_fields(Pango.FontMask.SIZE);
         this.defaultFontFamily = this.currentFont.get_family();
-        this.currentLineWidth = 5;
+        this.currentLineWidth = toolConf["toolSize"];
         this.currentLineJoin = Cairo.LineJoin.ROUND;
         this.currentLineCap = Cairo.LineCap.ROUND;
         this.currentFillRule = Cairo.FillRule.WINDING;
@@ -1085,6 +1085,7 @@ var DrawingArea = GObject.registerClass({
     incrementLineWidth(increment) {
         this.currentLineWidth = Math.max(this.currentLineWidth + increment, 0);
         this.emit('show-osd', null, DisplayStrings.getPixels(this.currentLineWidth), "", 2 * this.currentLineWidth, false);
+        Me.drawingSettings.set_int("tool-size", this.currentLineWidth)
     }
     
     switchLineJoin() {
