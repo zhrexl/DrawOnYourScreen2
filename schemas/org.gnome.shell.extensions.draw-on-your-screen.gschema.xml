@@ -122,6 +122,11 @@
       <summary>Square area size</summary>
       <description>The size of the area in pixels</description>
     </key>
+    <key type="(sas)" name="tool-palette">
+      <default>('',[])</default>
+      <summary>Tool palette</summary>
+      <description>Color palette of tool</description>
+    </key>
     <key type="s" name="tool-color">
       <default>""</default>
       <summary>Tool color</summary>

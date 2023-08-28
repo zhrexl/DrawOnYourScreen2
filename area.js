@@ -148,6 +148,9 @@ var DrawingArea = GObject.registerClass({
         this.undoneElements = [];
         this.currentElement = null;
         this.currentTool = Shape.NONE;
+        if (toolConf["toolPalette"][0] != "") {
+            this.currentPalette = toolConf["toolPalette"]
+        }
         if (toolConf["toolColor"] != "") {
             this.currentColor = getColorFromString(toolConf["toolColor"], "White");
         }
@@ -212,6 +215,7 @@ var DrawingArea = GObject.registerClass({
         this.colors = palette[1].map(colorString => getColorFromString(colorString, 'White'));
         if (!this.colors[0])
             this.colors.push(Clutter.Color.get_static(Clutter.StaticColor.WHITE));
+        Me.drawingSettings.set_value("tool-palette", new GLib.Variant('(sas)', palette))
     }
     
     get currentImage() {
