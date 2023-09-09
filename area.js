@@ -125,7 +125,7 @@ var DrawingArea = GObject.registerClass({
                'leave-drawing-mode': {} },
 }, class DrawingArea extends St.Widget{
 
-    _init(params, monitor, helper, areaManagerUtils, loadPersistent) {
+    _init(params, monitor, helper, areaManagerUtils, loadPersistent, toolConf) {
         super._init({ style_class: 'draw-on-your-screen', name: params.name});
         this.monitor = monitor;
         this.helper = helper;
@@ -148,13 +148,19 @@ var DrawingArea = GObject.registerClass({
         this.undoneElements = [];
         this.currentElement = null;
         this.currentTool = Shape.NONE;
+        if (toolConf["toolPalette"][0] != "") {
+            this.currentPalette = toolConf["toolPalette"]
+        }
+        if (toolConf["toolColor"] != "") {
+            this.currentColor = getColorFromString(toolConf["toolColor"], "White");
+        }
         this.currentImage = null;
         this.currentTextAlignment = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL ? TextAlignment.RIGHT : TextAlignment.LEFT;
         let fontName = St.Settings && St.Settings.get().font_name || ExtensionUtils.getSettings('org.gnome.desktop.interface').get_string('font-name');
         this.currentFont = Pango.FontDescription.from_string(fontName);
         this.currentFont.unset_fields(Pango.FontMask.SIZE);
         this.defaultFontFamily = this.currentFont.get_family();
-        this.currentLineWidth = 5;
+        this.currentLineWidth = toolConf["toolSize"];
         this.currentLineJoin = Cairo.LineJoin.ROUND;
         this.currentLineCap = Cairo.LineCap.ROUND;
         this.currentFillRule = Cairo.FillRule.WINDING;
@@ -209,6 +215,7 @@ var DrawingArea = GObject.registerClass({
         this.colors = palette[1].map(colorString => getColorFromString(colorString, 'White'));
         if (!this.colors[0])
             this.colors.push(Clutter.Color.get_static(Clutter.StaticColor.WHITE));
+        Me.drawingSettings.set_value("tool-palette", new GLib.Variant('(sas)', palette))
     }
     
     get currentImage() {
@@ -704,7 +711,6 @@ var DrawingArea = GObject.registerClass({
                 fill: this.fill,
                 fillRule: this.currentFillRule,
                 line: { lineWidth: this.currentLineWidth, lineJoin: this.currentLineJoin, lineCap: this.currentLineCap },
-                dash: { active: this.dashedLine, array: this.dashedLine ? [this.dashArray[0] || this.currentLineWidth, this.dashArray[1] || this.currentLineWidth * 3] : [0, 0] , offset: this.dashOffset },
                 points: []
             });
         }
@@ -1041,6 +1047,7 @@ var DrawingArea = GObject.registerClass({
             return;
         
         this.currentColor = this.colors[index];
+        Me.drawingSettings.set_string("tool-color", this.colors[index].to_string());
         if (this.currentElement) {
             this.currentElement.color = this.currentColor;
             this._redisplay();
@@ -1085,6 +1092,7 @@ var DrawingArea = GObject.registerClass({
     incrementLineWidth(increment) {
         this.currentLineWidth = Math.max(this.currentLineWidth + increment, 0);
         this.emit('show-osd', null, DisplayStrings.getPixels(this.currentLineWidth), "", 2 * this.currentLineWidth, false);
+        Me.drawingSettings.set_int("tool-size", this.currentLineWidth)
     }
     
     switchLineJoin() {
@@ -1162,6 +1170,7 @@ var DrawingArea = GObject.registerClass({
             color = color.to_string().slice(0, -2);
         
         this.currentColor = getColorFromString(color);
+        Me.drawingSettings.set_string("tool-color", color);
         if (this.currentElement) {
             this.currentElement.color = this.currentColor;
             this._redisplay();
