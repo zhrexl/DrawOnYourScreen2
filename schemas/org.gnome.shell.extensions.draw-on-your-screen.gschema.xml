@@ -30,6 +30,11 @@
       <summary>Persistent over restarts</summary>
       <description>Drawing is automatically saved to a file</description>
     </key>
+    <key type="b" name="copy-picked-hex">
+      <default>false</default>
+      <summary>Copy picked color to clipboard</summary>
+      <description>After using color picker, the picked value is saved to clipboard</description>
+    </key>
     <key type="as" name="toggle-drawing">
       <default>["&lt;Alt&gt;&lt;Super&gt;d"]</default>
       <summary>Enter/leave drawing mode</summary>

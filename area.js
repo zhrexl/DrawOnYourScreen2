@@ -1177,6 +1177,10 @@ var DrawingArea = GObject.registerClass({
         }
         this.emit('show-osd', Files.Icons.COLOR, String(this.currentColor), this.currentColor.to_string().slice(0, 7), -1, false);
         this.initPointerCursor();
+        
+        if (Me.settings.get_boolean("copy-picked-hex")) {
+            St.Clipboard.get_default().set_text(St.ClipboardType.CLIPBOARD, color);
+        }
     }
     
     pickColor() {
