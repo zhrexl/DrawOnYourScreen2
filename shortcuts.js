@@ -45,7 +45,7 @@ var GLOBAL_KEYBINDINGS = [
     'toggle-drawing', 'toggle-modal', 'erase-drawings',
 ];
 var GLOBAL_KEYBINDINGS_SWITCHES = [
-    'persistent-over-toggles', 'persistent-over-restarts', 'drawing-on-desktop', 'osd-disabled', 'indicator-disabled', 'copy-picked-hex',
+    'persistent-over-toggles', 'persistent-over-restarts', 'drawing-on-desktop', 'osd-disabled', 'indicator-disabled', 'quicktoggle-disabled', 'copy-picked-hex',
 ];
 // The setting keys of the "org.gnome.shell.extensions.draw-on-your-screen.internal-shortcuts" schema.
 var INTERNAL_KEYBINDINGS = [

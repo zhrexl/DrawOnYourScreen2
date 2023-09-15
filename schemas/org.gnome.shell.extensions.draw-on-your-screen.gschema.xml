@@ -16,6 +16,10 @@
       <default>false</default>
       <summary>Disable panel indicator</summary>
     </key>
+    <key type="b" name="quicktoggle-disabled">
+      <default>false</default>
+      <summary>Disable quick settings toggle</summary>
+    </key>
     <key type="b" name="osd-disabled">
       <default>false</default>
       <summary>Disable on-screen notifications</summary>

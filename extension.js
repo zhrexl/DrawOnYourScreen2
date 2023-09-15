@@ -98,20 +98,32 @@ const Extension = GObject.registerClass({
         ExtensionUtils.initTranslations();
     }
 
+    create_toggle() {
+        if (GS_VERSION >= '44.0') {
+            if (!Me.settings.get_boolean("quicktoggle-disabled") && !this.toggle) {
+                this.toggle = new Indicator();
+                this.drawingtoggle = this.toggle.get_toggle();
+                this.drawingtoggle.connect('clicked',this.toggle_drawing.bind(this));
+            } else if (Me.settings.get_boolean("quicktoggle-disabled") && this.toggle) {
+                this.toggle.destroy();
+                this.toggle = null;
+            }
+        }
+    }
+
     enable() {
         if (ExtensionUtils.isOutOfDate(Me))
             log(`${Me.metadata.uuid}: GNOME Shell ${Number.parseFloat(GS_VERSION)} is not supported.`);
-        this.toggle = null;
         
-        if (GS_VERSION >= '44.0') {
-            this.toggle = new Indicator();
-            this.drawingtoggle = this.toggle.get_toggle();
-            this.drawingtoggle.connect('clicked',this.toggle_drawing.bind(this));
-        }
         Me.settings = ExtensionUtils.getSettings();
         Me.internalShortcutSettings = ExtensionUtils.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
         Me.drawingSettings = ExtensionUtils.getSettings(Me.metadata['settings-schema'] + '.drawing');
         this.areaManager = new AreaManager.AreaManager();
+        
+        this.toggle = null;
+        this.create_toggle();
+        
+        Me.settings.connect('changed', this._onSettingsChanged.bind(this));
     }
     toggle_drawing()
     {
@@ -127,6 +139,10 @@ const Extension = GObject.registerClass({
         delete this.areaManager;
         delete Me.settings;
         delete Me.internalShortcutSettings;
+    }
+    
+    _onSettingsChanged() {
+        this.create_toggle()
     }
 });
 
