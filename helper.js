@@ -21,16 +21,16 @@
 /* jslint esversion: 6 */
 /* exported DrawingHelper */
 
-const Clutter = imports.gi.Clutter;
-const Gtk = imports.gi.Gtk;
-const St = imports.gi.St;
-const GObject = imports.gi.GObject;
-const Config = imports.misc.config;
-const ExtensionUtils = imports.misc.extensionUtils;
+import Clutter from 'gi://Clutter';
+import Gtk from 'gi://Gtk';
+import St from 'gi://St';
+import GObject from 'gi://GObject';
+import * as Config from 'resource:///org/gnome/shell/misc/config.js'
+import * as Shortcuts from './shortcuts.js';
+import { gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const Me = ExtensionUtils.getCurrentExtension();
-const Shortcuts = Me.imports.shortcuts;
-const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+import { CURATED_UUID as UUID } from './utils.js';
+
 
 const GS_VERSION = Config.PACKAGE_VERSION;
 const Tweener = GS_VERSION < '3.33.0' ? imports.ui.tweener : null;
@@ -38,26 +38,26 @@ const Tweener = GS_VERSION < '3.33.0' ? imports.ui.tweener : null;
 const HELPER_ANIMATION_TIME = 0.25;
 const MEDIA_KEYS_SCHEMA = 'org.gnome.settings-daemon.plugins.media-keys';
 const MEDIA_KEYS_KEYS = ['screenshot', 'screenshot-clip', 'area-screenshot', 'area-screenshot-clip'];
-const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
 
 // DrawingHelper provides the "help osd" (Ctrl + F1)
 // It uses the same texts as in prefs
 //TODO: Review this class later
-var DrawingHelper = GObject.registerClass({
+export const DrawingHelper = GObject.registerClass({
     GTypeName: `${UUID}-DrawingHelper`,
 }, class DrawingHelper  extends St.ScrollView {
     
-    _init(params, monitor) {
+    _init(extension, params, monitor) {
         params.style_class = 'osd-window draw-on-your-screen-helper';
         super._init(params);
+        this._extension = extension;
         this.monitor = monitor;
         this.hide();
         
-        this.settingsHandler = Me.settings.connect('changed', this._onSettingsChanged.bind(this));
-        this.internalShortcutsettingsHandler = Me.internalShortcutSettings.connect('changed', this._onSettingsChanged.bind(this));
+        this.settingsHandler = this._extension.settings.connect('changed', this._onSettingsChanged.bind(this));
+        this.internalShortcutsettingsHandler = this._extension.internalShortcutSettings.connect('changed', this._onSettingsChanged.bind(this));
         this.connect('destroy', () => {
-            Me.settings.disconnect(this.settingsHandler);
-            Me.internalShortcutSettings.disconnect(this.internalShortcutsettingsHandler);
+            this._extension.settings.disconnect(this.settingsHandler);
+            this._extension.internalShortcutSettings.disconnect(this.internalShortcutsettingsHandler);
         });
     }
     
@@ -73,7 +73,7 @@ var DrawingHelper = GObject.registerClass({
     
     _updateHelpKeyLabel() {
         try {
-            let [keyval, mods] = Gtk.accelerator_parse(Me.internalShortcutSettings.get_strv('toggle-help')[0] || '');
+            let [keyval, mods] = Gtk.accelerator_parse(this._extension.internalShortcutSettings.get_strv('toggle-help')[0] || '');
             this._helpKeyLabel = Gtk.accelerator_get_label(keyval, mods);
         } catch(e) {
             logError(e);
@@ -98,12 +98,12 @@ var DrawingHelper = GObject.registerClass({
             this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
             
             //settingKeys.forEach(settingKey => {
-                if (!Me.settings.get_strv(settingKeys)[0])
+                if (!this._extension.settings.get_strv(settingKeys)[0])
                     return;
                 
                 let hbox = new St.BoxLayout({ vertical: false });
-                let [keyval, mods] = Gtk.accelerator_parse(Me.settings.get_strv(settingKeys)[0] || '');
-                hbox.add_child(new St.Label({ text: Me.settings.settings_schema.get_key(settingKeys).get_summary() }));
+                let [keyval, mods] = Gtk.accelerator_parse(this._extension.settings.get_strv(settingKeys)[0] || '');
+                hbox.add_child(new St.Label({ text: this._extension.settings.settings_schema.get_key(settingKeys).get_summary() }));
                 hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));
                 this.vbox.add_child(hbox);
           //  });
@@ -133,19 +133,19 @@ var DrawingHelper = GObject.registerClass({
               this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
             
             //settingKeys.forEach(settingKey => {
-                if (!Me.internalShortcutSettings.get_strv(settingKeys)[0])
+                if (!this._extension.internalShortcutSettings.get_strv(settingKeys)[0])
                     return;
                 
                 let hbox = new St.BoxLayout({ vertical: false });
-                let [keyval, mods] = Gtk.accelerator_parse(Me.internalShortcutSettings.get_strv(settingKeys)[0] || '');
-                hbox.add_child(new St.Label({ text: Me.internalShortcutSettings.settings_schema.get_key(settingKeys).get_summary() }));
+                let [keyval, mods] = Gtk.accelerator_parse(this._extension.internalShortcutSettings.get_strv(settingKeys)[0] || '');
+                hbox.add_child(new St.Label({ text: this._extension.internalShortcutSettings.settings_schema.get_key(settingKeys).get_summary() }));
                 hbox.add_child(new St.Label({ text: Gtk.accelerator_get_label(keyval, mods), x_expand: true }));
                 this.vbox.add_child(hbox);
             //});
         });
         
         let mediaKeysSettings;
-        try { mediaKeysSettings = ExtensionUtils.getSettings(MEDIA_KEYS_SCHEMA); } catch(e) { return; }
+        try { mediaKeysSettings = this._extension.getSettings(MEDIA_KEYS_SCHEMA); } catch(e) { return; }
         
         this.vbox.add_child(new St.BoxLayout({ vertical: false, style_class: 'draw-on-your-screen-helper-separator' }));
         this.vbox.add_child(new St.Label({ text: _("System") }));

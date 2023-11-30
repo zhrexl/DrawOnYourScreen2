@@ -17,29 +17,30 @@
  *
  */
 
-const ExtensionUtils  = imports.misc.extensionUtils;
-const Me              = ExtensionUtils.getCurrentExtension();
-const Prefs           = Me.imports.ui.preferencespage;
-const Drawpage        = Me.imports.ui.drawingpage;
-const AboutPage        = Me.imports.ui.about;
+import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-function init()
-{
-    ExtensionUtils.initTranslations(Me.metadata.uuid);
+import PreferencesPage from './ui/preferencespage.js';
+import DrawingPage from './ui/drawingpage.js';
+import AboutPage from './ui/about.js';
+
+
+export default class DrawOnYourScreenExtensionPreferences extends ExtensionPreferences {
+
+    constructor(metadata) {
+        super(metadata);
+        this.initTranslations();
+    }
+    
+    fillPreferencesWindow(window) {
+        window._settings = this.getSettings();
+        window.search_enabled = true;
+
+        let page1 = new PreferencesPage(this);
+        let page2 = new DrawingPage(this, window);
+        let page3 = new AboutPage(this);
+
+        window.add(page1);
+        window.add(page2);
+        window.add(page3);
+    }
 }
-
-
-function fillPreferencesWindow(window)
-{
-    window.search_enabled = true;
-
-    let page1 = new Prefs.Preferences();
-    let page2 = new Drawpage.DrawingPage(window);
-    let page3 = new AboutPage.AboutPage();
-
-    window.add(page1);
-    window.add(page2);
-    window.add(page3);
-}
-
-

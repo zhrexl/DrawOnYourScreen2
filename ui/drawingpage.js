@@ -15,22 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-const { Adw, Gdk, GLib, Gtk, GObject, Gio } = imports.gi;
 
+import Adw from 'gi://Adw';
+import Gdk from 'gi://Gdk';
+import GLib from 'gi://GLib';
+import Gtk from 'gi://Gtk';
+import GObject from 'gi://GObject';
+import Gio from 'gi://Gio';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
-const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
-const GimpPaletteParser = Me.imports.gimpPaletteParser;
+import {gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+
+import * as GimpPaletteParser from '../gimpPaletteParser.js';
+import { CURATED_UUID as UUID } from '../utils.js';
+
 
 const MARGIN = 10;
 const ROWBOX_MARGIN_PARAMS = { margin_top: MARGIN / 2, margin_bottom: MARGIN / 2, margin_start: MARGIN, margin_end: MARGIN, spacing: 4 };
 
-var DrawingPage = GObject.registerClass({
-    GTypeName: 'Drawing'
+const DrawingPage = GObject.registerClass({
+    GTypeName: `${UUID}-Drawing`
 }, class DrawingPage extends Adw.PreferencesPage {
-    constructor(window) {
+    constructor(extensionPreferences, window) {
         super({});
         
         this.window = window;
@@ -38,7 +43,7 @@ var DrawingPage = GObject.registerClass({
         this.set_name('drawing');
         this.set_icon_name("applications-graphics-symbolic");
 
-        this.settings = ExtensionUtils.getSettings(Me.metadata['settings-schema'] + '.drawing');
+        this.settings = extensionPreferences.getSettings(extensionPreferences.metadata['settings-schema'] + '.drawing');
           
         this.schema = this.settings.settings_schema;
       
@@ -370,6 +375,7 @@ var DrawingPage = GObject.registerClass({
     }
   });
 
+
 const PixelSpinButton = new GObject.Class({
     Name: `${UUID}-PixelSpinButton2`,
     Extends: Gtk.SpinButton,
@@ -415,6 +421,7 @@ const PixelSpinButton = new GObject.Class({
     }
 });
 
+
 // A color button that can be easily bound with a color string setting.
 const ColorStringButton = new GObject.Class({
     Name: `${UUID}-ColorStringButton2`,
@@ -447,6 +454,7 @@ const ColorStringButton = new GObject.Class({
         }
     }
 });
+
 
 const FileChooserButton = new GObject.Class({
     Name: `${UUID}-FileChooserButton2`,
@@ -497,3 +505,5 @@ const FileChooserButton = new GObject.Class({
         dialog.show();
     }
 });
+
+export default DrawingPage;

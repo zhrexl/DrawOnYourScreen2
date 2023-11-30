@@ -21,60 +21,59 @@
 /* jslint esversion: 6 */
 /* exported init */
 
-const GObject = imports.gi.GObject;
-const Meta = imports.gi.Meta;
-const Shell = imports.gi.Shell;
-const St = imports.gi.St;
-const Clutter = imports.gi.Clutter;
+import Meta from 'gi://Meta';
+import Shell from 'gi://Shell';
+import St from 'gi://St';
+import Clutter from 'gi://Clutter';
 
-const Config = imports.misc.config;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Main = imports.ui.main;
-const OsdWindow = imports.ui.osdWindow;
-const PanelMenu = imports.ui.panelMenu;
+import * as Config from 'resource:///org/gnome/shell/misc/config.js'
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as OsdWindow from 'resource:///org/gnome/shell/ui/osdWindow.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
-const Me = ExtensionUtils.getCurrentExtension();
-const Area = Me.imports.area;
-const Files = Me.imports.files;
-const Helper = Me.imports.helper;
-const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const GS_VERSION = Config.PACKAGE_VERSION;
-const HIDE_TIMEOUT_LONG = 2500; // ms, default is 1500 ms
-const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
+import * as Area from '../area.js';
+import * as Helper from '../helper.js';
 
-// custom Shell.ActionMode, assuming that they are unused
-const DRAWING_ACTION_MODE = Math.pow(2,14);
-const WRITING_ACTION_MODE = Math.pow(2,15);
-// use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
-const WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
 
 
 // AreaManager assigns one DrawingArea per monitor (updateAreas()),
 // distributes keybinding callbacks to the active area
 // and handles stylesheet and monitor changes.
-var AreaManager = GObject.registerClass({
-    GTypeName: `${UUID}-AreaManager`,
-}, class AreaManager extends GObject.Object{
-    _init() {
+export class AreaManager {
+
+    constructor(extension) {
+        this._extension = extension;
+        this._GS_VERSION = Config.PACKAGE_VERSION;
+        this._HIDE_TIMEOUT_LONG = 2500; // ms, default is 1500 ms
+        
+        // custom Shell.ActionMode, assuming that they are unused
+        this._DRAWING_ACTION_MODE = Math.pow(2,14);
+        this._WRITING_ACTION_MODE = Math.pow(2,15);
+        // use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
+        this._WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
+    }
+
+    enable() {
         this.areas = [];
         this.activeArea = null;
         this.grab = null;
         
         Main.wm.addKeybinding('toggle-drawing',
-                              Me.settings,
+                              this._extension.getSettings(),
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
                               this.toggleDrawing.bind(this));
         
         Main.wm.addKeybinding('toggle-modal',
-                              Me.settings,
+                              this._extension.getSettings(),
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
                               this.toggleModal.bind(this));
         
         Main.wm.addKeybinding('erase-drawings',
-                              Me.settings,
+                              this._extension.getSettings(),
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.ALL,
                               this.eraseDrawings.bind(this));
@@ -83,35 +82,35 @@ var AreaManager = GObject.registerClass({
         this.monitorChangedHandler = Main.layoutManager.connect('monitors-changed', this.updateAreas.bind(this));
         
         this.updateIndicator();
-        this.indicatorSettingHandler = Me.settings.connect('changed::indicator-disabled', this.updateIndicator.bind(this));
+        this.indicatorSettingHandler = this._extension.getSettings().connect('changed::indicator-disabled', this.updateIndicator.bind(this));
         
-        this.desktopSettingHandler = Me.settings.connect('changed::drawing-on-desktop', this.onDesktopSettingChanged.bind(this));
-        this.persistentOverRestartsSettingHandler = Me.settings.connect('changed::persistent-over-restarts', this.onPersistentOverRestartsSettingChanged.bind(this));
-        this.persistentOverTogglesSettingHandler = Me.settings.connect('changed::persistent-over-toggles', this.onPersistentOverTogglesSettingChanged.bind(this));
+        this.desktopSettingHandler = this._extension.getSettings().connect('changed::drawing-on-desktop', this.onDesktopSettingChanged.bind(this));
+        this.persistentOverRestartsSettingHandler = this._extension.getSettings().connect('changed::persistent-over-restarts', this.onPersistentOverRestartsSettingChanged.bind(this));
+        this.persistentOverTogglesSettingHandler = this._extension.getSettings().connect('changed::persistent-over-toggles', this.onPersistentOverTogglesSettingChanged.bind(this));
     }
     
     get persistentOverToggles() {
-        return Me.settings.get_boolean('persistent-over-toggles');
+        return this._extension.getSettings().get_boolean('persistent-over-toggles');
     }
     
     get persistentOverRestarts() {
-        return Me.settings.get_boolean('persistent-over-toggles') && Me.settings.get_boolean('persistent-over-restarts');
+        return this._extension.getSettings().get_boolean('persistent-over-toggles') && this._extension.getSettings().get_boolean('persistent-over-restarts');
     }
     
     get onDesktop() {
-        return Me.settings.get_boolean('persistent-over-toggles') && Me.settings.get_boolean('drawing-on-desktop');
+        return this._extension.getSettings().get_boolean('persistent-over-toggles') && this._extension.getSettings().get_boolean('drawing-on-desktop');
     }
     
     get toolPalette() {
-        return Me.drawingSettings.get_value('tool-palette').deep_unpack()
+        return this._extension.getSettings(this._extension.metadata['settings-schema'] + '.drawing').get_value('tool-palette').deep_unpack()
     }
     
     get toolColor() {
-        return Me.drawingSettings.get_string("tool-color")
+        return this._extension.getSettings(this._extension.metadata['settings-schema'] + '.drawing').get_string("tool-color")
     }
     
     get toolSize() {
-        return Me.drawingSettings.get_int('tool-size');
+        return this._extension.getSettings(this._extension.metadata['settings-schema'] + '.drawing').get_int('tool-size');
     }
     
     onDesktopSettingChanged() {
@@ -139,8 +138,10 @@ var AreaManager = GObject.registerClass({
             this.indicator.disable();
             this.indicator = null;
         }
-        if (!Me.settings.get_boolean('indicator-disabled'))
+        if (!this._extension.getSettings().get_boolean('indicator-disabled')) {
             this.indicator = new DrawingIndicator();
+            this.indicator.enable();
+        }
     }
     
     updateAreas() {
@@ -158,7 +159,7 @@ var AreaManager = GObject.registerClass({
         
         for (let i = 0; i < this.monitors.length; i++) {
             let monitor = this.monitors[i];
-            let helper = new Helper.DrawingHelper({ name: 'drawOnYourSreenHelper' + i }, monitor);
+            let helper = new Helper.DrawingHelper(this._extension, { name: 'drawOnYourScreenHelper' + i }, monitor);
             let loadPersistent = i == Main.layoutManager.primaryIndex && this.persistentOverRestarts;
             // Some utils for the drawing area menus.
             let areaManagerUtils = {
@@ -166,7 +167,7 @@ var AreaManager = GObject.registerClass({
                 togglePanelAndDockOpacity: this.togglePanelAndDockOpacity.bind(this),
                 openPreferences: this.openPreferences.bind(this)
             };
-            let area = new Area.DrawingArea({ name: 'drawOnYourSreenArea' + i }, monitor, helper, areaManagerUtils, loadPersistent, toolConf);
+            let area = new Area.DrawingArea(this._extension, { name: 'drawOnYourScreenArea' + i }, monitor, helper, areaManagerUtils, loadPersistent, toolConf);
             
             Main.layoutManager._backgroundGroup.insert_child_above(area, Main.layoutManager._bgManagers[i].backgroundActor);
             if (!this.onDesktop)
@@ -238,26 +239,26 @@ var AreaManager = GObject.registerClass({
         
         for (let key in this.internalKeybindings1) {
             Main.wm.addKeybinding(key,
-                                  Me.internalShortcutSettings,
+                                  this._extension.getSettings(this._extension.metadata['settings-schema'] + '.internal-shortcuts'),
                                   Meta.KeyBindingFlags.NONE,
-                                  DRAWING_ACTION_MODE,
+                                  this._DRAWING_ACTION_MODE,
                                   this.internalKeybindings1[key]);
         }
         
         for (let key in this.internalKeybindings2) {
             Main.wm.addKeybinding(key,
-                                  Me.internalShortcutSettings,
+                                  this._extension.getSettings(this._extension.metadata['settings-schema'] + '.internal-shortcuts'),
                                   Meta.KeyBindingFlags.NONE,
-                                  DRAWING_ACTION_MODE | WRITING_ACTION_MODE,
+                                  this._DRAWING_ACTION_MODE | this._WRITING_ACTION_MODE,
                                   this.internalKeybindings2[key]);
         }
         
         for (let i = 1; i < 10; i++) {
             let iCaptured = i;
             Main.wm.addKeybinding('select-color' + i,
-                                  Me.internalShortcutSettings,
+                                  this._extension.getSettings(this._extension.metadata['settings-schema'] + '.internal-shortcuts'),
                                   Meta.KeyBindingFlags.NONE,
-                                  DRAWING_ACTION_MODE | WRITING_ACTION_MODE,
+                                  this._DRAWING_ACTION_MODE | this._WRITING_ACTION_MODE,
                                   this.activeArea.selectColor.bind(this.activeArea, iCaptured - 1));
         }
     }
@@ -276,21 +277,18 @@ var AreaManager = GObject.registerClass({
     openPreferences() {
         if (this.activeArea)
             this.toggleDrawing();
-        ExtensionUtils.openPrefs();
+        this._extension.openPreferences();
     }
     
     eraseDrawings() {
-        for (let i = 0; i < this.areas.length; i++)
-            this.areas[i].erase();
+        this.areas.forEach(area => area.erase());
         if (this.persistentOverRestarts)
             this.areas[Main.layoutManager.primaryIndex].savePersistent();
     }
     
     togglePanelAndDockOpacity() {
         if (this.hiddenList) {
-            for (let i = 0; i < this.hiddenList.length; i++) {
-                this.hiddenList[i].actor.set_opacity(this.hiddenList[i].oldOpacity);
-            }
+            this.hiddenList.forEach(item => item.actor.set_opacity(item.oldOpacity));
             this.hiddenList = null;
         } else {
             let activeIndex = this.areas.indexOf(this.activeArea);
@@ -298,12 +296,11 @@ var AreaManager = GObject.registerClass({
             // dash-to-dock
             let dtdContainers = Main.uiGroup.get_children().filter((actor) => {
                 return actor.name && actor.name == 'dashtodockContainer' &&
-                       ((actor._delegate &&
-                       actor._delegate._monitorIndex !== undefined &&
-                       actor._delegate._monitorIndex == activeIndex) ||
-                       // dtd v68+
-                       (actor._monitorIndex !== undefined &&
-                       actor._monitorIndex == activeIndex));
+                       ((actor._delegate?._monitorIndex !== undefined &&
+                         actor._delegate?._monitorIndex == activeIndex) ||
+                         // dtd v68+
+                        (actor._monitorIndex !== undefined &&
+                         actor._monitorIndex == activeIndex));
             });
             
             // for simplicity, we assume that main dash-to-panel panel is displayed on primary monitor
@@ -317,10 +314,10 @@ var AreaManager = GObject.registerClass({
             
             let actorToHide = dtdContainers.concat(panelBoxes);
             this.hiddenList = [];
-            for (let i = 0; i < actorToHide.length; i++) {
-                this.hiddenList.push({ actor: actorToHide[i], oldOpacity: actorToHide[i].get_opacity() });
-                actorToHide[i].set_opacity(0);
-            }
+            actorToHide.forEach(actor => {
+                this.hiddenList.push({ actor: actor, oldOpacity: actor.get_opacity() });
+                actor.set_opacity(0);
+            });
         }
     }
     
@@ -350,11 +347,10 @@ var AreaManager = GObject.registerClass({
             return;
 
         this.activeArea.closeMenu();
-
-        if (Main._findModal(this.grab) != -1) {
+        if (this._findModal(this.grab) != -1) {
             Main.popModal(this.grab);
             if (source && source == global.display)
-              this.showOsd(null, Files.Icons.UNGRAB, _("Keyboard and pointer released"), null, null, false);
+              this.showOsd(null, this._extension.FILES.ICONS.UNGRAB, _("Keyboard and pointer released"), null, null, false);
                 // Translators: "released" as the opposite of "grabbed"
 
 
@@ -364,7 +360,7 @@ var AreaManager = GObject.registerClass({
 
         } else {
             // add Shell.ActionMode.NORMAL to keep system keybindings enabled (e.g. Alt + F2 ...)
-            let actionMode = (this.activeArea.isWriting ? WRITING_ACTION_MODE : DRAWING_ACTION_MODE) | Shell.ActionMode.NORMAL  | Shell.ActionMode.OVERVIEW;
+            let actionMode = (this.activeArea.isWriting ? this._WRITING_ACTION_MODE : this._DRAWING_ACTION_MODE) | Shell.ActionMode.NORMAL  | Shell.ActionMode.OVERVIEW;
             this.grab = Main.pushModal(this.activeArea, { actionMode: actionMode });
             if (this.grab.get_seat_state() === Clutter.GrabState.NONE) {
                 Main.popModal(this.grab);
@@ -374,7 +370,7 @@ var AreaManager = GObject.registerClass({
             this.activeArea.reactive = true;
             this.activeArea.initPointerCursor();
             if (source && source == global.display)
-                this.showOsd(null, Files.Icons.GRAB, _("Keyboard and pointer grabbed"), null, null, false);
+                this.showOsd(null, this._extension.FILES.ICONS.GRAB, _("Keyboard and pointer grabbed"), null, null, false);
         }
         
         return true;
@@ -386,13 +382,13 @@ var AreaManager = GObject.registerClass({
             let save = activeIndex == Main.layoutManager.primaryIndex && this.persistentOverRestarts;
             let erase = !this.persistentOverToggles;
 
-            this.showOsd(null, Files.Icons.LEAVE, _("Leaving drawing mode"));
+            this.showOsd(null, this._extension.FILES.ICONS.LEAVE, _("Leaving drawing mode"));
             this.activeArea.leaveDrawingMode(save, erase);
 
             if (this.hiddenList)
                 this.togglePanelAndDockOpacity();
             
-            if (Main._findModal(this.grab) != -1)
+            if (this._findModal(this.grab) != -1)
                 this.toggleModal();
 
             this.toggleArea();
@@ -409,11 +405,11 @@ var AreaManager = GObject.registerClass({
             }
             
             this.activeArea.enterDrawingMode();
-            this.osdDisabled = Me.settings.get_boolean('osd-disabled');
+            this.osdDisabled = this._extension.getSettings().get_boolean('osd-disabled');
             // <span size="medium"> is a clutter/mutter 3.38 bug workaround: https://gitlab.gnome.org/GNOME/mutter/-/issues/1467
             // Translators: %s is a key label
             let label = `<small>${_("Press <i>%s</i> for help").format(this.activeArea.helper.helpKeyLabel)}</small>\n\n<span size="medium">${_("Entering drawing mode")}</span>`;
-            this.showOsd(null, Files.Icons.ENTER, label, null, null, true);
+            this.showOsd(null, this._extension.FILES.ICONS.ENTER, label, null, null, true);
         }
         
         if (this.indicator)
@@ -421,7 +417,7 @@ var AreaManager = GObject.registerClass({
     }
     
     updateActionMode() {
-        Main.actionMode = (this.activeArea.isWriting ? WRITING_ACTION_MODE : DRAWING_ACTION_MODE) | Shell.ActionMode.NORMAL;
+        Main.actionMode = (this.activeArea.isWriting ? this._WRITING_ACTION_MODE : this._DRAWING_ACTION_MODE) | Shell.ActionMode.NORMAL;
     }
     
     // Use level -1 to set no level through a signal.
@@ -430,11 +426,11 @@ var AreaManager = GObject.registerClass({
         if (activeIndex == -1 || this.osdDisabled)
             return;
         
-        let hideTimeoutSave;
-        if (long && GS_VERSION >= '3.28.0') {
-            hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
-            OsdWindow.HIDE_TIMEOUT = HIDE_TIMEOUT_LONG;
-        }
+        // let hideTimeoutSave;
+        // if (long && this._GS_VERSION >= '3.28.0') {
+        //     hideTimeoutSave = OsdWindow.HIDE_TIMEOUT;
+        //     OsdWindow.HIDE_TIMEOUT = this._HIDE_TIMEOUT_LONG;
+        // }
         
         let maxLevel;
         if (level == -1)
@@ -444,11 +440,11 @@ var AreaManager = GObject.registerClass({
         
         // GS 3.32- : bar from 0 to 100
         // GS 3.34+ : bar from 0 to 1
-        if (level && GS_VERSION > '3.33.0')
+        if (level && this._GS_VERSION > '3.33.0')
             level = level / 100;
         
         if (!icon)
-            icon = Files.Icons.ENTER;
+            icon = this._extension.FILES.ICONS.ENTER;
         
         let osdWindow = Main.osdWindowManager._osdWindows[activeIndex];
 
@@ -466,16 +462,16 @@ var AreaManager = GObject.registerClass({
         }
         
         if (level === 0) {
-            osdWindow._label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
+            osdWindow._label.add_style_class_name(this._WARNING_COLOR_STYLE_CLASS_NAME);
             // the same label is shared by all GS OSD so the style must be removed after being used
             let osdLabelChangedHandler = osdWindow._label.connect('notify::text', () => {
-                osdWindow._label.remove_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
+                osdWindow._label.remove_style_class_name(this._WARNING_COLOR_STYLE_CLASS_NAME);
                 osdWindow._label.disconnect(osdLabelChangedHandler);
             });
         }
         
-        if (hideTimeoutSave)
-            OsdWindow.HIDE_TIMEOUT = hideTimeoutSave;
+        // if (hideTimeoutSave)
+        //     OsdWindow.HIDE_TIMEOUT = hideTimeoutSave;
     }
     
     setCursor(sourceActor_, cursorName) {
@@ -487,8 +483,7 @@ var AreaManager = GObject.registerClass({
     }
     
     removeAreas() {
-        for (let i = 0; i < this.areas.length; i++) {
-            let area = this.areas[i];
+        for (const area in  this.areas) {
             area.disconnect(area.leaveDrawingHandler);
             area.disconnect(area.updateActionModeHandler);
             area.disconnect(area.showOsdHandler);
@@ -503,19 +498,19 @@ var AreaManager = GObject.registerClass({
             this.monitorChangedHandler = null;
         }
         if (this.indicatorSettingHandler) {
-            Me.settings.disconnect(this.indicatorSettingHandler);
+            this._extension.getSettings().disconnect(this.indicatorSettingHandler);
             this.indicatorSettingHandler = null;
         }
         if (this.desktopSettingHandler) {
-            Me.settings.disconnect(this.desktopSettingHandler);
+            this._extension.getSettings().disconnect(this.desktopSettingHandler);
             this.desktopSettingHandler = null;
         }
         if (this.persistentOverTogglesSettingHandler) {
-            Me.settings.disconnect(this.persistentOverTogglesSettingHandler);
+            this._extension.getSettings().disconnect(this.persistentOverTogglesSettingHandler);
             this.persistentOverTogglesSettingHandler = null;
         }
         if (this.persistentOverRestartsSettingHandler) {
-            Me.settings.disconnect(this.persistentOverRestartsSettingHandler);
+            this._extension.getSettings().disconnect(this.persistentOverRestartsSettingHandler);
             this.persistentOverRestartsSettingHandler = null;
         }
         
@@ -525,22 +520,29 @@ var AreaManager = GObject.registerClass({
         Main.wm.removeKeybinding('toggle-modal');
         Main.wm.removeKeybinding('erase-drawings');
         this.removeAreas();
-        Files.Images.disable();
-        Files.Jsons.disable();
+        // this._extension.FILES.IMAGES.disable();
+        // this._extension.FILES.JSONS.disable();
         if (this.indicator)
             this.indicator.disable();
     }
-});
+
+    /**
+     * @private
+     * @param {Clutter.Grab} grab - grab
+     */
+    _findModal(grab) {
+        return Main.modalActorFocusStack.findIndex(modal => modal.grab === grab);
+    }
+
+};
 
 
-const DrawingIndicator = GObject.registerClass({
-    GTypeName: `${UUID}-Indicator`,
-}, class DrawingIndicator extends GObject.Object{
+export class DrawingIndicator {
 
-    _init() {
+    enable() {
         let [menuAlignment, dontCreateMenu] = [0, true];
         this.button = new PanelMenu.Button(menuAlignment, "Drawing Indicator", dontCreateMenu);
-        this.buttonActor = GS_VERSION < '3.33.0' ? this.button.actor: this.button;
+        this.buttonActor = this._GS_VERSION < '3.33.0' ? this.button.actor: this.button;
         Main.panel.addToStatusArea('draw-on-your-screen-indicator', this.button);
         
         this.icon = new St.Icon({ icon_name: 'applications-graphics-symbolic',
@@ -556,6 +558,6 @@ const DrawingIndicator = GObject.registerClass({
     disable() {
         this.button.destroy();
     }
-});
+};
 
 

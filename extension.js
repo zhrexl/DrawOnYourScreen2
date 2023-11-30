@@ -19,25 +19,24 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-/* jslint esversion: 6 */
-/* exported init */
 
-const {Gio, GObject} = imports.gi;
-const {QuickToggle, SystemIndicator} = imports.ui.quickSettings;
-const QuickSettingsMenu = imports.ui.main.panel.statusArea.quickSettings;
-const Panel             = imports.ui.main.panel;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const AreaManager = Me.imports.ui.areamanager;
-const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
-const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
+import GObject from 'gi://GObject';
 
-const Config = imports.misc.config;
+import { QuickToggle, SystemIndicator, QuickSettingsMenu } from 'resource:///org/gnome/shell/ui/quickSettings.js';
+import * as Panel from 'resource:///org/gnome/shell/ui/panel.js';
+
+import * as Config from 'resource:///org/gnome/shell/misc/config.js';
+
+import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+
+import { Files } from './files.js';
+import * as AreaManager from './ui/areamanager.js';
+
+
+
 const GS_VERSION = Config.PACKAGE_VERSION;
 
-function init() {
-    return new Extension();
-}
+
 
 const FeatureToggle = GObject.registerClass(
 class FeatureToggle extends QuickToggle {
@@ -47,39 +46,26 @@ class FeatureToggle extends QuickToggle {
             iconName: 'applications-graphics-symbolic',
             toggleMode: true,
         });
-        
-        
-        // NOTE: In GNOME 44, the `label` property must be set after
-        // construction. The newer `title` property can be set at construction.
-       // this.label = 'Feature Name';
-
-        // Binding the toggle to a GSettings key
-        //this._settings = new Gio.Settings({
-        //    schema_id: 'org.gnome.shell.extensions.example',
-        //});
-
-        //this._settings.bind('feature-enabled',
-        //    this, 'checked',
-        //    Gio.SettingsBindFlags.DEFAULT);
     }
 });
-var Indicator = GObject.registerClass(
+
+
+const Indicator = GObject.registerClass(
 class Indicator extends SystemIndicator {
     _init() {
         super._init();
 
         this.toggle = new FeatureToggle();
         this.quickSettingsItems.push(this.toggle);
-        QuickSettingsMenu._indicators.add_child(this);
-        QuickSettingsMenu._addItems(this.quickSettingsItems);
+        this._addIndicator();
         
         //Place the toggles above the background apps entry
-        if (GS_VERSION >= 44) {
-          this.quickSettingsItems.forEach((item) => {
-            QuickSettingsMenu.menu._grid.set_child_below_sibling(item,
-              QuickSettingsMenu._backgroundApps.quickSettingsItems[0]);
-          });
-        }
+        // if (GS_VERSION >= 44) {
+        //   this.quickSettingsItems.forEach((item) => {
+        //     QuickSettingsMenu.menu._grid.set_child_below_sibling(item,
+        //       QuickSettingsMenu._backgroundApps.quickSettingsItems[0]);
+        //   });
+        // }
         
          this.connect('destroy', () => {
             this.quickSettingsItems.forEach(item => item.destroy());
@@ -91,20 +77,22 @@ class Indicator extends SystemIndicator {
     }
 });
 
-const Extension = GObject.registerClass({
-    GTypeName: `${UUID}-Extension`,
-}, class Extension extends GObject.Object{
-    _init() {
-        ExtensionUtils.initTranslations();
+
+export default class DrawOnYourScreenExtension extends Extension {
+
+    constructor(metadata) {
+        super(metadata);
+        this.initTranslations();
+        this.FILES = new Files(this);
     }
 
     create_toggle() {
         if (GS_VERSION >= '44.0') {
-            if (!Me.settings.get_boolean("quicktoggle-disabled") && !this.toggle) {
+            if (!this.getSettings().get_boolean("quicktoggle-disabled") && !this.toggle) {
                 this.toggle = new Indicator();
                 this.drawingtoggle = this.toggle.get_toggle();
                 this.drawingtoggle.connect('clicked',this.toggle_drawing.bind(this));
-            } else if (Me.settings.get_boolean("quicktoggle-disabled") && this.toggle) {
+            } else if (this.getSettings().get_boolean("quicktoggle-disabled") && this.toggle) {
                 this.toggle.destroy();
                 this.toggle = null;
             }
@@ -112,39 +100,39 @@ const Extension = GObject.registerClass({
     }
 
     enable() {
-        if (ExtensionUtils.isOutOfDate(Me))
-            log(`${Me.metadata.uuid}: GNOME Shell ${Number.parseFloat(GS_VERSION)} is not supported.`);
-        
-        Me.settings = ExtensionUtils.getSettings();
-        Me.internalShortcutSettings = ExtensionUtils.getSettings(Me.metadata['settings-schema'] + '.internal-shortcuts');
-        Me.drawingSettings = ExtensionUtils.getSettings(Me.metadata['settings-schema'] + '.drawing');
-        this.areaManager = new AreaManager.AreaManager();
+        this.settings = this.getSettings();
+        this.internalShortcutSettings = this.getSettings(this.metadata['settings-schema'] + '.internal-shortcuts');
+        this.drawingSettings = this.getSettings(this.metadata['settings-schema'] + '.drawing');
+        this.areaManager = new AreaManager.AreaManager(this);
+        this.areaManager.enable();
         
         this.toggle = null;
         this.create_toggle();
         
-        Me.settings.connect('changed', this._onSettingsChanged.bind(this));
+        this.getSettings().connect('changed', this._onSettingsChanged.bind(this));
     }
-    toggle_drawing()
-    {
-        Panel.closeQuickSettings();
-        this.drawingtoggle.set_checked(false);
-        this.areaManager.toggleDrawing();
-    }
+
     disable() {
         if (this.toggle)
             this.toggle.destroy();
         
         this.areaManager.disable();
         delete this.areaManager;
-        delete Me.settings;
-        delete Me.internalShortcutSettings;
+        delete this.settings;
+        delete this.internalShortcutSettings;
+    }
+
+    toggle_drawing()
+    {
+        Panel.closeQuickSettings();
+        this.drawingtoggle.set_checked(false);
+        this.areaManager.toggleDrawing();
     }
     
     _onSettingsChanged() {
         this.create_toggle()
     }
-});
+}
 
 
 
