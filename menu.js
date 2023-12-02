@@ -189,8 +189,6 @@ export const DrawingMenu = GObject.registerClass({
             this.area.setPointerCursor('DEFAULT');
         } else {
             this.area.updatePointerCursor();
-            // actionMode has changed, set previous actionMode in order to keep internal shortcuts working
-            this.area.updateActionMode();
             this.area.grab_key_focus();
         }
         

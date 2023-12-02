@@ -109,7 +109,6 @@ export const DrawingArea = GObject.registerClass({
     Signals: {
         'show-osd': { param_types: [Gio.Icon.$gtype, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_DOUBLE, GObject.TYPE_BOOLEAN] },
         'pointer-cursor-changed': { param_types: [GObject.TYPE_STRING] },
-        'update-action-mode': {},
         'leave-drawing-mode': {}
     },
 }, class DrawingArea extends St.Widget {
@@ -806,7 +805,6 @@ export const DrawingArea = GObject.registerClass({
         this.textEntry = new St.Entry({ opacity: 1, x: stageX + x, y: stageY + y });
         this.insert_child_below(this.textEntry, null);
         this.textEntry.grab_key_focus();
-        this.updateActionMode();
         this.updatePointerCursor();
 
         let ibusCandidatePopup = Main.layoutManager.uiGroup.get_children().find(child =>
@@ -860,7 +858,6 @@ export const DrawingArea = GObject.registerClass({
         this.textEntry.destroy();
         delete this.textEntry;
         this.grab_key_focus();
-        this.updateActionMode();
         this.updatePointerCursor();
 
         this._redisplay();
@@ -1285,10 +1282,6 @@ export const DrawingArea = GObject.registerClass({
         if (this._menu)
             this._menu.disable();
         delete this.areaManagerUtils;
-    }
-
-    updateActionMode() {
-        this.emit('update-action-mode');
     }
 
     enterDrawingMode() {

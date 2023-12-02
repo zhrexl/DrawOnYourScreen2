@@ -176,7 +176,6 @@ export class AreaManager {
             area.set_position(monitor.x, monitor.y);
             area.set_size(monitor.width, monitor.height);
             area.leaveDrawingHandler = area.connect('leave-drawing-mode', this.toggleDrawing.bind(this));
-            area.updateActionModeHandler = area.connect('update-action-mode', this.updateActionMode.bind(this));
             area.pointerCursorChangedHandler = area.connect('pointer-cursor-changed', this.setCursor.bind(this));
             area.showOsdHandler = area.connect('show-osd', this.showOsd.bind(this));
             this.areas.push(area);
@@ -416,10 +415,6 @@ export class AreaManager {
             this.indicator.sync(Boolean(this.activeArea));
     }
     
-    updateActionMode() {
-        Main.actionMode = (this.activeArea.isWriting ? this._WRITING_ACTION_MODE : this._DRAWING_ACTION_MODE) | Shell.ActionMode.NORMAL;
-    }
-    
     // Use level -1 to set no level through a signal.
     showOsd(emitter, icon, label, color, level, long) {
         let activeIndex = this.areas.indexOf(this.activeArea);
@@ -485,7 +480,6 @@ export class AreaManager {
     removeAreas() {
         for (const area in  this.areas) {
             area.disconnect(area.leaveDrawingHandler);
-            area.disconnect(area.updateActionModeHandler);
             area.disconnect(area.showOsdHandler);
             area.destroy();
         }
