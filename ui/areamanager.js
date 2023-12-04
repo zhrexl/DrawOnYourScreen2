@@ -478,7 +478,7 @@ export class AreaManager {
     }
     
     removeAreas() {
-        for (const area in  this.areas) {
+        for (const area of this.areas) {
             area.disconnect(area.leaveDrawingHandler);
             area.disconnect(area.showOsdHandler);
             area.destroy();
