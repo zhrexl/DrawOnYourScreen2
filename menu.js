@@ -19,45 +19,38 @@
  */
 
 /* jslint esversion: 6 */
-/* exported DisplayStrings, DrawingMenu */
 
-const Clutter = imports.gi.Clutter;
-const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
-const Gtk = imports.gi.Gtk;
-const St = imports.gi.St;
+import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import Gtk from 'gi://Gtk';
+import St from 'gi://St';
 
-const BoxPointer = imports.ui.boxpointer;
-const Config = imports.misc.config;
-const Dash = imports.ui.dash;
-const Main = imports.ui.main;
-const PopupMenu = imports.ui.popupMenu;
-const Slider = imports.ui.slider;
+import * as BoxPointer from 'resource:///org/gnome/shell/ui/boxpointer.js';
+import * as Dash from 'resource:///org/gnome/shell/ui/dash.js';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import * as Slider from 'resource:///org/gnome/shell/ui/slider.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const Files = Me.imports.files;
-const _ = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
-const pgettext = imports.gettext.domain(Me.metadata['gettext-domain']).pgettext;
+import * as Config from 'resource:///org/gnome/shell/misc/config.js'
+
+import {gettext as _, pgettext} from 'resource:///org/gnome/shell/extensions/extension.js';
+
+import { CURATED_UUID as UUID } from './utils.js';
+
+
 
 const GS_VERSION = Config.PACKAGE_VERSION;
 // 150 labels with font-family style take ~15Mo
 const FONT_FAMILY_STYLE = true;
 // use 'login-dialog-message-warning' class in order to get GS theme warning color (default: #f57900)
 const WARNING_COLOR_STYLE_CLASS_NAME = 'login-dialog-message-warning';
-const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
-const TextAlignmentIcon = { 0: Files.Icons.LEFT_ALIGNED, 1: Files.Icons.CENTERED, 2: Files.Icons.RIGHT_ALIGNED };
 
-const getActor = function(object) {
-    return GS_VERSION < '3.33.0' ? object.actor : object;
-};
 
-const getSummary = function(settingKey) {
-    return Me.internalShortcutSettings.settings_schema.get_key(settingKey).get_summary();
-};
+
 
 // Used by both menu and osd notifications.
-var DisplayStrings = {
+export const DisplayStrings = {
     getDashedLine: function(dashed) {
         return dashed ? _("Dashed line") :
                         // Translators: as the alternative to "Dashed line"
@@ -142,11 +135,13 @@ var DisplayStrings = {
     }
 };
 
-var DrawingMenu = GObject.registerClass({
+
+export const DrawingMenu = GObject.registerClass({
     GTypeName: `${UUID}-DrawingMenu`,
 }, class DrawingMenu extends GObject.Object {
-    _init(area, monitor, DrawingTool, areaManagerUtils) {
+    _init(extension, area, monitor, DrawingTool, areaManagerUtils) {
         super._init({});
+        this._extension = extension;
         this.area = area;
         this.monitor = monitor;
         this.DrawingTool = DrawingTool;
@@ -194,8 +189,6 @@ var DrawingMenu = GObject.registerClass({
             this.area.setPointerCursor('DEFAULT');
         } else {
             this.area.updatePointerCursor();
-            // actionMode has changed, set previous actionMode in order to keep internal shortcuts working
-            this.area.updateActionMode();
             this.area.grab_key_focus();
         }
         
@@ -236,42 +229,42 @@ var DrawingMenu = GObject.registerClass({
         this.menu.removeAll();
         
         let groupItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, style_class: 'draw-on-your-screen-menu-group-item' });
-        this.undoButton = new ActionButton(getSummary('undo'), 'edit-undo-symbolic', this.area.undo.bind(this.area), this._updateActionSensitivity.bind(this));
-        this.redoButton = new ActionButton(getSummary('redo'), 'edit-redo-symbolic', this.area.redo.bind(this.area), this._updateActionSensitivity.bind(this));
+        this.undoButton = new ActionButton(this._getSummary('undo'), 'edit-undo-symbolic', this.area.undo.bind(this.area), this._updateActionSensitivity.bind(this));
+        this.redoButton = new ActionButton(this._getSummary('redo'), 'edit-redo-symbolic', this.area.redo.bind(this.area), this._updateActionSensitivity.bind(this));
         this.eraseButton = new ActionButton(_("Erase"), 'edit-clear-all-symbolic', this.area.deleteLastElement.bind(this.area), this._updateActionSensitivity.bind(this));
-        this.smoothButton = new ActionButton(_("Smooth"), Files.Icons.SMOOTH, this.area.smoothLastElement.bind(this.area), this._updateActionSensitivity.bind(this));
+        this.smoothButton = new ActionButton(_("Smooth"), this._extension.FILES.ICONS.SMOOTH, this.area.smoothLastElement.bind(this.area), this._updateActionSensitivity.bind(this));
         this.eraseButton.child.add_style_class_name('draw-on-your-screen-menu-destructive-button');
-        getActor(groupItem).add_child(this.undoButton);
-        getActor(groupItem).add_child(this.redoButton);
-        getActor(groupItem).add_child(this.eraseButton);
-        getActor(groupItem).add_child(this.smoothButton);
+        this._getActor(groupItem).add_child(this.undoButton);
+        this._getActor(groupItem).add_child(this.redoButton);
+        this._getActor(groupItem).add_child(this.eraseButton);
+        this._getActor(groupItem).add_child(this.smoothButton);
         this.menu.addMenuItem(groupItem);
         this._addSeparator(this.menu, true);
         
         this.toolItem = this._addToolSubMenuItem(this.menu, this._updateSectionVisibility.bind(this));
-        this.paletteItem = this._addPaletteSubMenuItem(this.menu, Files.Icons.PALETTE);
-        this.colorItem = this._addColorSubMenuItem(this.menu, Files.Icons.COLOR);
-        this.fillItem = this._addSwitchItem(this.menu, DisplayStrings.getFill(true), Files.Icons.STROKE, Files.Icons.FILL, this.area, 'fill', this._updateSectionVisibility.bind(this));
+        this.paletteItem = this._addPaletteSubMenuItem(this.menu, this._extension.FILES.ICONS.PALETTE);
+        this.colorItem = this._addColorSubMenuItem(this.menu, this._extension.FILES.ICONS.COLOR);
+        this.fillItem = this._addSwitchItem(this.menu, DisplayStrings.getFill(true), this._extension.FILES.ICONS.STROKE, this._extension.FILES.ICONS.FILL, this.area, 'fill', this._updateSectionVisibility.bind(this));
         this.fillSection = new PopupMenu.PopupMenuSection();
         this.fillSection.itemActivated = () => {};
-        this.fillRuleItem = this._addSwitchItem(this.fillSection, DisplayStrings.FillRule[1], Files.Icons.FILLRULE_NONZERO, Files.Icons.FILLRULE_EVENODD, this.area, 'currentEvenodd');
+        this.fillRuleItem = this._addSwitchItem(this.fillSection, DisplayStrings.FillRule[1], this._extension.FILES.ICONS.FILLRULE_NONZERO, this._extension.FILES.ICONS.FILLRULE_EVENODD, this.area, 'currentEvenodd');
         this.menu.addMenuItem(this.fillSection);
         this._addSeparator(this.menu);
         
         let lineSection = new PopupMenu.PopupMenuSection();
         this._addSliderItem(lineSection, this.area, 'currentLineWidth');
-        this._addSubMenuItem(lineSection, Files.Icons.LINEJOIN, DisplayStrings.LineJoin, this.area, 'currentLineJoin');
-        this._addSubMenuItem(lineSection, Files.Icons.LINECAP, DisplayStrings.LineCap, this.area, 'currentLineCap');
-        this._addSwitchItem(lineSection, DisplayStrings.getDashedLine(true), Files.Icons.FULL_LINE, Files.Icons.DASHED_LINE, this.area, 'dashedLine');
+        this._addSubMenuItem(lineSection, this._extension.FILES.ICONS.LINEJOIN, DisplayStrings.LineJoin, this.area, 'currentLineJoin');
+        this._addSubMenuItem(lineSection, this._extension.FILES.ICONS.LINECAP, DisplayStrings.LineCap, this.area, 'currentLineCap');
+        this._addSwitchItem(lineSection, DisplayStrings.getDashedLine(true), this._extension.FILES.ICONS.FULL_LINE, this._extension.FILES.ICONS.DASHED_LINE, this.area, 'dashedLine');
         this._addSeparator(lineSection);
         this.menu.addMenuItem(lineSection);
         lineSection.itemActivated = () => {};
         this.lineSection = lineSection;
         
         let fontSection = new PopupMenu.PopupMenuSection();
-        this._addFontFamilySubMenuItem(fontSection, Files.Icons.FONT_FAMILY);
-        this._addSubMenuItem(fontSection, Files.Icons.FONT_WEIGHT, DisplayStrings.FontWeight, this.area, 'currentFontWeight');
-        this._addSubMenuItem(fontSection, Files.Icons.FONT_STYLE, DisplayStrings.FontStyle, this.area, 'currentFontStyle');
+        this._addFontFamilySubMenuItem(fontSection, this._extension.FILES.ICONS.FONT_FAMILY);
+        this._addSubMenuItem(fontSection, this._extension.FILES.ICONS.FONT_WEIGHT, DisplayStrings.FontWeight, this.area, 'currentFontWeight');
+        this._addSubMenuItem(fontSection, this._extension.FILES.ICONS.FONT_STYLE, DisplayStrings.FontStyle, this.area, 'currentFontStyle');
         this._addTextAlignmentSubMenuItem(fontSection);
         this._addSeparator(fontSection);
         this.menu.addMenuItem(fontSection);
@@ -285,10 +278,10 @@ var DrawingMenu = GObject.registerClass({
         imageSection.itemActivated = () => {};
         this.imageSection = imageSection;
         
-        this._addSimpleSwitchItem(this.menu, getSummary('toggle-panel-and-dock-visibility'), !!this.areaManagerUtils.getHiddenList(), this.areaManagerUtils.togglePanelAndDockOpacity);
-        this._addSimpleSwitchItem(this.menu, getSummary('toggle-background'), this.area.hasBackground, this.area.toggleBackground.bind(this.area));
-        this._addSimpleSwitchItem(this.menu, getSummary('toggle-grid'), this.area.hasGrid, this.area.toggleGrid.bind(this.area));
-        this._addSimpleSwitchItem(this.menu, getSummary('toggle-square-area'), this.area.isSquareArea, this.area.toggleSquareArea.bind(this.area));
+        this._addSimpleSwitchItem(this.menu, this._getSummary('toggle-panel-and-dock-visibility'), !!this.areaManagerUtils.getHiddenList(), this.areaManagerUtils.togglePanelAndDockOpacity);
+        this._addSimpleSwitchItem(this.menu, this._getSummary('toggle-background'), this.area.hasBackground, this.area.toggleBackground.bind(this.area));
+        this._addSimpleSwitchItem(this.menu, this._getSummary('toggle-grid'), this.area.hasGrid, this.area.toggleGrid.bind(this.area));
+        this._addSimpleSwitchItem(this.menu, this._getSummary('toggle-square-area'), this.area.isSquareArea, this.area.toggleSquareArea.bind(this.area));
         this._addSeparator(this.menu);
         
         this._addDrawingNameItem(this.menu);
@@ -297,14 +290,14 @@ var DrawingMenu = GObject.registerClass({
         this._addSeparator(this.menu);
         
         groupItem = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false, style_class: 'draw-on-your-screen-menu-group-item' });
-        this.saveButton = new ActionButton(getSummary('save-as-json'), 'document-save-symbolic', this.area.saveAsJson.bind(this.area, false, this._onDrawingSaved.bind(this)), null);
-        this.svgButton = new ActionButton(getSummary('export-to-svg'), Files.Icons.DOCUMENT_EXPORT, this.area.exportToSvg.bind(this.area), null);
-        this.prefsButton = new ActionButton(getSummary('open-preferences'), 'document-page-setup-symbolic', this.areaManagerUtils.openPreferences, null);
-        this.helpButton = new ActionButton(getSummary('toggle-help'), 'preferences-desktop-keyboard-shortcuts-symbolic', () => { this.close(); this.area.toggleHelp(); }, null);
-        getActor(groupItem).add_child(this.saveButton);
-        getActor(groupItem).add_child(this.svgButton);
-        getActor(groupItem).add_child(this.prefsButton);
-        getActor(groupItem).add_child(this.helpButton);
+        this.saveButton = new ActionButton(this._getSummary('save-as-json'), 'document-save-symbolic', this.area.saveAsJson.bind(this.area, false, this._onDrawingSaved.bind(this)), null);
+        this.svgButton = new ActionButton(this._getSummary('export-to-svg'), this._extension.FILES.ICONS.DOCUMENT_EXPORT, this.area.exportToSvg.bind(this.area), null);
+        this.prefsButton = new ActionButton(this._getSummary('open-preferences'), 'document-page-setup-symbolic', this.areaManagerUtils.openPreferences, null);
+        this.helpButton = new ActionButton(this._getSummary('toggle-help'), 'preferences-desktop-keyboard-shortcuts-symbolic', () => { this.close(); this.area.toggleHelp(); }, null);
+        this._getActor(groupItem).add_child(this.saveButton);
+        this._getActor(groupItem).add_child(this.svgButton);
+        this._getActor(groupItem).add_child(this.prefsButton);
+        this._getActor(groupItem).add_child(this.helpButton);
         this.menu.addMenuItem(groupItem);
         
         this._updateActionSensitivity();
@@ -339,7 +332,7 @@ var DrawingMenu = GObject.registerClass({
         let item = new PopupMenu.PopupSwitchMenuItem(label, target[targetProperty]);
         
         item.icon = new St.Icon({ style_class: 'popup-menu-icon' });
-        getActor(item).insert_child_at_index(item.icon, 1);
+        this._getActor(item).insert_child_at_index(item.icon, 1);
         let icon = target[targetProperty] ? iconTrue : iconFalse;
         if (icon)
             item.icon.set_gicon(icon);
@@ -371,7 +364,7 @@ var DrawingMenu = GObject.registerClass({
             slider.connect('value-changed', (slider, value, property) => {
                 target[targetProperty] = Math.max(Math.round(value * 50), 0);
                 label.set_text(DisplayStrings.getPixels(target[targetProperty]));
-                Me.drawingSettings.set_int("tool-size", target[targetProperty]);
+                this._extension.drawingSettings.set_int("tool-size", target[targetProperty]);
                 if (target[targetProperty] === 0)
                     label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
                 else
@@ -381,7 +374,7 @@ var DrawingMenu = GObject.registerClass({
             slider.connect('notify::value', () => {
                 target[targetProperty] = Math.max(Math.round(slider.value * 50), 0);
                 label.set_text(DisplayStrings.getPixels(target[targetProperty]));
-                Me.drawingSettings.set_int("tool-size", target[targetProperty]);
+                this._extension.drawingSettings.set_int("tool-size", target[targetProperty]);
                 if (target[targetProperty] === 0)
                     label.add_style_class_name(WARNING_COLOR_STYLE_CLASS_NAME);
                 else
@@ -389,11 +382,11 @@ var DrawingMenu = GObject.registerClass({
             });
         }
         
-        getActor(slider).x_expand = true;
-        getActor(item).add_child(getActor(slider));
-        getActor(item).add_child(label);
+        this._getActor(slider).x_expand = true;
+        this._getActor(item).add_child(this._getActor(slider));
+        this._getActor(item).add_child(label);
         if (slider.onKeyPressEvent)
-            getActor(item).connect('key-press-event', slider.onKeyPressEvent.bind(slider));
+            this._getActor(item).connect('key-press-event', slider.onKeyPressEvent.bind(slider));
         menu.addMenuItem(item);
     }
     
@@ -415,7 +408,7 @@ var DrawingMenu = GObject.registerClass({
                 });
                 
                 subItem.label.get_clutter_text().set_use_markup(true);
-                getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+                this._getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
             });
             return GLib.SOURCE_REMOVE;
         });
@@ -428,7 +421,7 @@ var DrawingMenu = GObject.registerClass({
         item.update = () => {
             item.label.set_text(DisplayStrings.Tool[this.area.currentTool]);
             let toolName = this.DrawingTool.getNameOf(this.area.currentTool);
-            item.icon.set_gicon(Files.Icons[`TOOL_${toolName}`]);
+            item.icon.set_gicon(this._extension.FILES.ICONS[`TOOL_${toolName}`]);
         };
         item.update();
         
@@ -438,7 +431,7 @@ var DrawingMenu = GObject.registerClass({
             Object.keys(DisplayStrings.Tool).forEach(key => {
                 let text = DisplayStrings.Tool[key];
                 let toolName = this.DrawingTool.getNameOf(key);
-                let subItemIcon = Files.Icons[`TOOL_${toolName}`];
+                let subItemIcon = this._extension.FILES.ICONS[`TOOL_${toolName}`];
                 let subItem = item.menu.addAction(text, () => {
                     this.area.currentTool = Number(key);
                     item.update();
@@ -446,7 +439,7 @@ var DrawingMenu = GObject.registerClass({
                 }, subItemIcon);
                 
                 subItem.label.get_clutter_text().set_use_markup(true);
-                getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+                this._getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
                 
                 // change the display order of tools
                 if (key == this.DrawingTool.POLYGON)
@@ -479,7 +472,7 @@ var DrawingMenu = GObject.registerClass({
                     this.area.currentPalette = palette;
                     this._populateColorSubMenu();
                 });
-                getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+                this._getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
             });
             return GLib.SOURCE_REMOVE;
         });
@@ -500,9 +493,9 @@ var DrawingMenu = GObject.registerClass({
                 this.area.pickColor();
             };
             // Translators: It is displayed in a menu button tooltip or as a shortcut action description, so it should NOT use the imperative mood.
-            let colorPickerButton = new ActionButton(_("Pick a color"), Files.Icons.COLOR_PICKER, colorPickerCallback, null, true);
-            let index = getActor(item).get_children().length - 1;
-            getActor(item).insert_child_at_index(colorPickerButton, index);
+            let colorPickerButton = new ActionButton(_("Pick a color"), this._extension.FILES.ICONS.COLOR_PICKER, colorPickerCallback, null, true);
+            let index = this._getActor(item).get_children().length - 1;
+            this._getActor(item).insert_child_at_index(colorPickerButton, index);
         }
         
         item.menu.itemActivated = item.menu.close;
@@ -519,12 +512,12 @@ var DrawingMenu = GObject.registerClass({
                 let text = String(color);
                 let subItem = this.colorSubMenu.addAction(text, () => {
                     this.area.currentColor = color;
-                    Me.drawingSettings.set_string("tool-color", color.to_string());
+                    this._extension.drawingSettings.set_string("tool-color", color.to_string());
                     this.colorItem.icon.set_style(`color:${color.to_string().slice(0, 7)};`);
                 });
                 // Foreground color markup is not displayed since 3.36, use style instead but the transparency is lost.
                 subItem.label.set_style(`color:${color.to_string().slice(0, 7)};`);
-                getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+                this._getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
             });
             return GLib.SOURCE_REMOVE;
         });
@@ -551,7 +544,7 @@ var DrawingMenu = GObject.registerClass({
                             subItem.label.set_style(`font-family:${family}`);
                         });
                     
-                    getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+                    this._getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
                 });
             }
             item.menu.openOld();
@@ -562,6 +555,7 @@ var DrawingMenu = GObject.registerClass({
     
     _addTextAlignmentSubMenuItem(menu) {
         let item = new PopupMenu.PopupSubMenuMenuItem(DisplayStrings.TextAlignment[this.area.currentTextAlignment], true);
+        const TextAlignmentIcon = { 0: this._extension.FILES.ICONS.LEFT_ALIGNED, 1: this._extension.FILES.ICONS.CENTERED, 2: this._extension.FILES.ICONS.RIGHT_ALIGNED };
         item.icon.set_gicon(TextAlignmentIcon[this.area.currentTextAlignment]);
         
         item.menu.itemActivated = item.menu.close;
@@ -574,7 +568,7 @@ var DrawingMenu = GObject.registerClass({
                     item.icon.set_gicon(TextAlignmentIcon[key]);
                 });
                 
-                getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+                this._getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
             });
             return GLib.SOURCE_REMOVE;
         });
@@ -585,8 +579,10 @@ var DrawingMenu = GObject.registerClass({
     _addImageSubMenuItem(menu, images) {
         let item = new PopupMenu.PopupSubMenuMenuItem('', true);
         item.update = () => {
-            item.label.set_text(this.area.currentImage.toString());
-            item.icon.set_gicon(this.area.currentImage.gicon);
+            if (this.area.currentImage) { // null value. what consequences ?
+                item.label.set_text(this.area.currentImage.toString());
+                item.icon.set_gicon(this.area.currentImage.gicon);
+            }
         };
         item.update();
         
@@ -596,18 +592,18 @@ var DrawingMenu = GObject.registerClass({
         item.menu.openOld = item.menu.open;
         item.menu.open = (animate) => {
             if (!item.menu.isOpen && item.menu.isEmpty()) {
-                Files.Images.getSorted().forEach(image => {
+                this._extension.FILES.IMAGES.getSorted().forEach(image => {
                     let subItem = item.menu.addAction(image.toString(), () => {
                         this.area.currentImage = image;
                         item.update();
-                    }, Files.Icons.FAKE);
+                    }, this._extension.FILES.ICONS.FAKE);
                     
                     GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
                         if (subItem.setIcon && image.thumbnailGicon)
                             subItem.setIcon(image.thumbnailGicon);
                     });
                     
-                    getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+                    this._getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
                 });
             }
             item.menu.openOld();
@@ -620,13 +616,13 @@ var DrawingMenu = GObject.registerClass({
     _addDrawingNameItem(menu) {
         this.drawingNameMenuItem = new PopupMenu.PopupMenuItem('', { reactive: false, activate: false });
         this.drawingNameMenuItem.setSensitive(false);
-        getActor(this.drawingNameMenuItem).add_style_class_name('draw-on-your-screen-menu-ellipsized');
+        this._getActor(this.drawingNameMenuItem).add_style_class_name('draw-on-your-screen-menu-ellipsized');
         menu.addMenuItem(this.drawingNameMenuItem);
         this._updateDrawingNameMenuItem();
     }
     
     _updateDrawingNameMenuItem() {
-        getActor(this.drawingNameMenuItem).visible = this.area.currentJson ? true : false;
+        this._getActor(this.drawingNameMenuItem).visible = this.area.currentJson ? true : false;
         if (this.area.currentJson) {
             let prefix = this.area.drawingContentsHasChanged ? "* " : "";
             this.drawingNameMenuItem.label.set_text(`<i>${prefix}${this.area.currentJson.name}</i>`);
@@ -638,7 +634,7 @@ var DrawingMenu = GObject.registerClass({
         let item = new PopupMenu.PopupSubMenuMenuItem(label, true);
         this.openDrawingSubMenuItem = item;
         this.openDrawingSubMenu = item.menu;
-        item.setSensitive(Boolean(Files.Jsons.getSorted().length));
+        item.setSensitive(Boolean(this._extension.FILES.JSONS.getSorted().length));
         item.icon.set_icon_name(icon);
         
         item.menu.itemActivated = item.menu.close;
@@ -656,7 +652,7 @@ var DrawingMenu = GObject.registerClass({
     
     _populateOpenDrawingSubMenu() {
         this.openDrawingSubMenu.removeAll();
-        Files.Jsons.getSorted().forEach(json => {
+        this._extension.FILES.JSONS.getSorted().forEach(json => {
             if (!json.gicon)
                 json.addSvgContents(...this.area.getSvgContentsForJson(json));
             
@@ -664,7 +660,7 @@ var DrawingMenu = GObject.registerClass({
                 this.area.loadJson(json);
                 this._updateDrawingNameMenuItem();
                 this._updateActionSensitivity();
-            }, Files.Icons.FAKE);
+            }, this._extension.FILES.ICONS.FAKE);
             
             GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
                 if (subItem.setIcon)
@@ -672,13 +668,13 @@ var DrawingMenu = GObject.registerClass({
             });
             
             subItem.label.get_clutter_text().set_use_markup(true);
-            getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
+            this._getActor(subItem).connect('key-focus-in', updateSubMenuAdjustment);
             
             let expander = new St.Bin({
                 style_class: 'popup-menu-item-expander',
                 x_expand: true,
             });
-            getActor(subItem).add_child(expander);
+            this._getActor(subItem).add_child(expander);
             
             let insertCallback = () => {
                 this.area.currentImage = json.image;
@@ -688,7 +684,7 @@ var DrawingMenu = GObject.registerClass({
                 this._updateSectionVisibility();
             };
             let insertButton = new ActionButton(_("Add to images"), 'insert-image-symbolic', insertCallback, null, true);
-            getActor(subItem).add_child(insertButton);
+            this._getActor(subItem).add_child(insertButton);
             
             let deleteCallback = () => {
                 json.delete();
@@ -697,7 +693,7 @@ var DrawingMenu = GObject.registerClass({
             };
             let deleteButton = new ActionButton(_("Delete"), 'edit-delete-symbolic', deleteCallback, null, true);
             deleteButton.child.add_style_class_name('draw-on-your-screen-menu-destructive-button');
-            getActor(subItem).add_child(deleteButton);
+            this._getActor(subItem).add_child(deleteButton);
         });
         
         this.openDrawingSubMenuItem.setSensitive(!this.openDrawingSubMenu.isEmpty());
@@ -737,7 +733,7 @@ var DrawingMenu = GObject.registerClass({
                                         this.area.saveAsJsonWithName(text, this._onDrawingSaved.bind(this));
                                         this.saveDrawingSubMenu.toggle();
                                     },
-                                    invalidStrings: [Me.metadata['persistent-file-name'], '/'],
+                                    invalidStrings: [this._extension.metadata['persistent-file-name'], '/'],
                                     primaryIconName: 'insert-text' });
         this.saveDrawingSubMenu.addMenuItem(saveEntry.item);
     }
@@ -745,13 +741,24 @@ var DrawingMenu = GObject.registerClass({
     _addSeparator(menu, thin) {
         if (this.hasSeparators) {
             let separatorItem = new PopupMenu.PopupSeparatorMenuItem(' ');
-            getActor(separatorItem).add_style_class_name('draw-on-your-screen-menu-separator-item');
+            this._getActor(separatorItem).add_style_class_name('draw-on-your-screen-menu-separator-item');
             if (thin)
-                getActor(separatorItem).add_style_class_name('draw-on-your-screen-menu-thin-separator-item');
+                this._getActor(separatorItem).add_style_class_name('draw-on-your-screen-menu-thin-separator-item');
             menu.addMenuItem(separatorItem);
         }
     }
+
+    _getSummary(settingKey) {
+        return this._extension.internalShortcutSettings.settings_schema.get_key(settingKey).get_summary();
+    };
+
+    _getActor(object) {
+        return GS_VERSION < '3.33.0' ? object.actor : object;
+    };
 });
+
+
+
 
 // based on ApplicationsButton.scrollToButton , https://gitlab.gnome.org/GNOME/gnome-shell-extensions/blob/master/extensions/apps-menu/extension.js
 const updateSubMenuAdjustment = function(itemActor) {
@@ -769,6 +776,9 @@ const updateSubMenuAdjustment = function(itemActor) {
     if (newScrollValue != currentScrollValue)
         adjustment.set_value(newScrollValue);
 };
+
+
+
 
 // An action button that uses upstream dash item tooltips.
 const ActionButton = GObject.registerClass ({
@@ -849,8 +859,8 @@ const Entry = GObject.registerClass({
         });
         this.entry.connect('secondary-icon-clicked', this._reset.bind(this));
         
-        getActor(this.item).add_child(this.entry);
-        getActor(this.item).connect('notify::mapped', (actor) => {
+        this._getActor(this.item).add_child(this.entry);
+        this._getActor(this.item).connect('notify::mapped', (actor) => {
             if (actor.mapped) {
                 this.entry.set_text(this.params.initialTextGetter());
                 this.entry.clutter_text.grab_key_focus();
@@ -891,13 +901,12 @@ const Entry = GObject.registerClass({
     }
     
     _getIsInvalid() {
-        for (let i = 0; i < this.params.invalidStrings.length; i++) {
-            if (this.entry.text.indexOf(this.params.invalidStrings[i]) != -1)
-                return true;
-        }
-        
-        return false;
+        return this.params.invalidStrings.some(invalidString => this.entry.text.indexOf(invalidString) != -1);
     }
+
+    _getActor(object) {
+        return GS_VERSION < '3.33.0' ? object.actor : object;
+    };
 });
 
 

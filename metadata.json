@@ -9,8 +9,7 @@
     "persistent-file-name": "persistent",
     "svg-file-name": "DrawOnYourScreen",
     "shell-version": [
-        "43",
-        "44"
+        "45"
     ],
     "version": 12.7
 }

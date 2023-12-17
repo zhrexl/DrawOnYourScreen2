@@ -21,21 +21,21 @@
 /* jslint esversion: 6 */
 /* exported Shape, TextAlignment, Transformation, getAllFontFamilies, DrawingElement */
 
-const Cairo = imports.cairo;
-const Clutter = imports.gi.Clutter;
-const GObject = imports.gi.GObject;
+import Cairo from 'cairo';
 
-const Pango = imports.gi.Pango;
-const PangoCairo = imports.gi.PangoCairo;
+import Clutter from 'gi://Clutter';
+import GObject from 'gi://GObject';
+import Pango from 'gi://Pango';
+import PangoCairo from 'gi://PangoCairo';
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const UUID = Me.uuid.replace(/@/gi, '_at_').replace(/[^a-z0-9+_-]/gi, '_');
+import { CURATED_UUID as UUID } from './utils.js';
 
-var Shape = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
-var TextAlignment = { LEFT: 0, CENTER: 1, RIGHT: 2 };
-var Transformation = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5, SMOOTH: 100 };
 
-var getAllFontFamilies = function() {
+export const Shape = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
+export const TextAlignment = { LEFT: 0, CENTER: 1, RIGHT: 2 };
+export const Transformation = { TRANSLATION: 0, ROTATION: 1, SCALE_PRESERVE: 2, STRETCH: 3, REFLECTION: 4, INVERSION: 5, SMOOTH: 100 };
+
+export const getAllFontFamilies = function() {
     return PangoCairo.font_map_get_default().list_families().map(fontFamily => fontFamily.get_name()).sort((a,b) => a.localeCompare(b));
 };
 
@@ -67,7 +67,7 @@ const MIN_DRAWING_SIZE = 3;                 // px
 const MIN_INTERMEDIATE_POINT_DISTANCE = 1;  // px, the higher it is, the fewer points there will be
 const MARK_COLOR = Clutter.Color.get_static(Clutter.StaticColor.BLUE);
 
-var DrawingElement = function(params) {
+export const DrawingElement = function(params) {
     return params.shape == Shape.TEXT ? new TextElement(params) :
            params.shape == Shape.IMAGE ? new ImageElement(params) :
            new _DrawingElement(params);
@@ -103,7 +103,7 @@ const _DrawingElement = GObject.registerClass({
             });
         }
         
-        if (params.transform && params.transform.center) {
+        if (params.transform?.center) {
             let angle = (params.transform.angle || 0) + (params.transform.startAngle || 0);
             if (angle)
                 this.transformations.push({ type: Transformation.ROTATION, angle: angle });
@@ -150,7 +150,7 @@ const _DrawingElement = GObject.registerClass({
         if (this.fillRule)
             cr.setFillRule(this.fillRule);
         
-        if (this.dash && this.dash.active && this.dash.array && this.dash.array[0] && this.dash.array[1])
+        if (this.dash?.active && this.dash.array && this.dash.array[0] && this.dash.array[1])
             cr.setDash(this.dash.array, this.dash.offset);
         
         if (this.eraser)
