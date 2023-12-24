@@ -32,11 +32,11 @@ Then save your beautiful work by taking a screenshot.
 * Improve Perfomance and Stability
 * Reorganize the code for better Maintainability
 
-## Instalation 1
+## Installation 1
 
 1. Install it from [GNOME Extensions](https://extensions.gnome.org/extension/4937/draw-on-you-screen-2/)
 
-## Instalation 2
+## Installation 2
 
 1. Clone this repository
 2. Place the directory (the one that contains `metadata.json`) in `~/.local/share/gnome-shell/extensions`
@@ -47,7 +47,7 @@ Then save your beautiful work by taking a screenshot.
     /usr/share/glib-2.0/schemas/ &&
   sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
   ```
-5. Xorg: press `alt + F2`, type`r` and then OK to restart gnome-shell  
+5. Xorg: press `alt + F2`, type `r` and then OK to restart gnome-shell  
    Wayland: restart session
 6. Enable the extension with GNOME Extensions or GNOME Tweaks
 7. `Super + Alt + D` to test
@@ -85,7 +85,7 @@ Then save your beautiful work by taking a screenshot.
 
 * Screenshot Tool extension:
 
- [Screenshot Tool](https://extensions.gnome.org/extension/1112/screenshot-tool/) is a convenient extension to “create, copy, store and upload screenshots”. In order to select a screenshoot area with your pointer while keeping the drawing in place, you need first to tell DrawOnYourScreen to ungrab the pointer (`Ctrl + Super + Alt + D`).
+ [Screenshot Tool](https://extensions.gnome.org/extension/1112/screenshot-tool/) is a convenient extension to “create, copy, store and upload screenshots”. In order to select a screenshot area with your pointer while keeping the drawing in place, you need first to tell DrawOnYourScreen to ungrab the pointer (`Ctrl + Super + Alt + D`).
 
 * Color Picker extension:
 
