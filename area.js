@@ -203,7 +203,7 @@ export const DrawingArea = GObject.registerClass({
         this._currentPalette = palette;
         this.colors = palette[1].map(colorString => this.getColorFromString(colorString, 'White'));
         if (!this.colors[0])
-            this.colors.push(StaticColor.WHTIE);
+            this.colors.push(StaticColor.WHITE);
         this._extension.drawingSettings.set_value("tool-palette", new GLib.Variant('(sas)', palette))
     }
 
