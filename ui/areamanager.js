@@ -328,12 +328,12 @@ export class AreaManager {
         
         if (this.activeArea.get_parent() == Main.uiGroup) {
             Main.uiGroup.set_child_at_index(Main.layoutManager.keyboardBox, this.oldKeyboardIndex);
-            Main.uiGroup.remove_actor(this.activeArea);
+            Main.uiGroup.remove_child(this.activeArea);
             Main.layoutManager._backgroundGroup.insert_child_above(this.activeArea, Main.layoutManager._bgManagers[activeIndex].backgroundActor);
             if (!this.onDesktop)
                 this.activeArea.hide();
         } else {
-            Main.layoutManager._backgroundGroup.remove_actor(this.activeArea);
+            Main.layoutManager._backgroundGroup.remove_child(this.activeArea);
             Main.uiGroup.add_child(this.activeArea);
             // move the keyboard above the area to make it available with text entries
             this.oldKeyboardIndex = Main.uiGroup.get_children().indexOf(Main.layoutManager.keyboardBox);

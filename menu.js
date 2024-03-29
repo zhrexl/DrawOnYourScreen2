@@ -152,7 +152,7 @@ export const DrawingMenu = GObject.registerClass({
         this.menuManager = new PopupMenu.PopupMenuManager(GS_VERSION < '3.33.0' ? { actor: this.area } : this.area);
         this.menuManager.addMenu(this.menu);
         
-        Main.layoutManager.uiGroup.add_actor(this.menu.actor);
+        Main.layoutManager.uiGroup.add_child(this.menu.actor);
         
         this.menu.actor.add_style_class_name('background-menu draw-on-your-screen-menu');
         this.menu.actor.hide();
@@ -180,7 +180,7 @@ export const DrawingMenu = GObject.registerClass({
         delete this.DrawingTool;
         delete this.areaManagerUtils;
         this.menuManager.removeMenu(this.menu);
-        Main.layoutManager.uiGroup.remove_actor(this.menu.actor);
+        Main.layoutManager.uiGroup.remove_child(this.menu.actor);
         this.menu.destroy();
     }
     
@@ -816,7 +816,7 @@ const ActionButton = GObject.registerClass ({
     get label() {
         if (!this._label) {
             this._label = new St.Label({ style_class: 'dash-label' });
-            Main.layoutManager.uiGroup.add_actor(this._label);
+            Main.layoutManager.uiGroup.add_child(this._label);
             this.connect('destroy', () => this._label.destroy());
         }
         

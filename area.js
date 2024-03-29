@@ -51,7 +51,7 @@ const TOGGLE_ANIMATION_DURATION = 300; // ms
 const GRID_TILES_HORIZONTAL_NUMBER = 30;
 const COLOR_PICKER_EXTENSION_UUID = 'color-picker@tuberry';
 
-const { Shape, TextAlignment, Transformation } = Elements;
+const { Shape, StaticColor, TextAlignment, Transformation } = Elements;
 const { DisplayStrings } = Menu;
 
 const FontGenericFamilies = ['Sans-Serif', 'Serif', 'Monospace', 'Cursive', 'Fantasy'];
@@ -203,7 +203,7 @@ export const DrawingArea = GObject.registerClass({
         this._currentPalette = palette;
         this.colors = palette[1].map(colorString => this.getColorFromString(colorString, 'White'));
         if (!this.colors[0])
-            this.colors.push(Clutter.Color.get_static(Clutter.StaticColor.WHITE));
+            this.colors.push(StaticColor.WHTIE);
         this._extension.drawingSettings.set_value("tool-palette", new GLib.Variant('(sas)', palette))
     }
 
@@ -355,7 +355,7 @@ export const DrawingArea = GObject.registerClass({
         if (!this.reactive)
             return;
 
-        Clutter.cairo_set_source_color(cr, this.gridColor);
+        cr.setSourceColor(this.gridColor);
 
         let [gridX, gridY] = [0, 0];
         while (gridX < this.monitor.width / 2) {
@@ -976,7 +976,7 @@ export const DrawingArea = GObject.registerClass({
 
     toggleBackground() {
         this.hasBackground = !this.hasBackground;
-        let backgroundColor = this.hasBackground ? this.areaBackgroundColor : Clutter.Color.get_static(Clutter.StaticColor.TRANSPARENT);
+        let backgroundColor = this.hasBackground ? this.areaBackgroundColor : StaticColor.TRANSPARENT;
 
         if (this.ease) {
             this.remove_all_transitions();
@@ -1479,7 +1479,7 @@ export const DrawingArea = GObject.registerClass({
             return color;
 
         log(`${this._extension.metadata.uuid}: "${string}" color cannot be parsed.`);
-        color = Clutter.Color.get_static(Clutter.StaticColor[fallback.toUpperCase()]);
+        color = StaticColor[fallback.toUpperCase()];
         color.toJSON = () => fallback;
         color.toString = () => fallback;
         return color;

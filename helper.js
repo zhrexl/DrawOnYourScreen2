@@ -90,7 +90,7 @@ export const DrawingHelper = GObject.registerClass({
     
     _populate() {
         this.vbox = new St.BoxLayout({ vertical: true });
-        this.add_actor(this.vbox);
+        this.add_child(this.vbox);
         this.vbox.add_child(new St.Label({ text: _("Global") }));
         
         Shortcuts.GLOBAL_KEYBINDINGS.forEach((settingKeys) => {
