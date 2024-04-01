@@ -30,6 +30,14 @@ import PangoCairo from 'gi://PangoCairo';
 
 import { CURATED_UUID as UUID } from './utils.js';
 
+export const StaticColor = {
+    WHITE: Clutter.Color.new(255, 255, 255, 255),
+    BLUE: Clutter.Color.new(0, 0, 255, 255),
+    TRANSPARENT: Clutter.Color.new(0, 0, 0, 0),
+    BLACK: Clutter.Color.new(0, 0, 0, 255),
+    GRAY: Clutter.Color.new(160, 160, 164, 255),
+    RED: Clutter.Color.new(255, 0, 0, 255)
+}
 
 export const Shape = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
 export const TextAlignment = { LEFT: 0, CENTER: 1, RIGHT: 2 };
@@ -65,7 +73,7 @@ const MIN_TRANSLATION_DISTANCE = 1;         // px
 const MIN_ROTATION_ANGLE = Math.PI / 1000;  // rad
 const MIN_DRAWING_SIZE = 3;                 // px
 const MIN_INTERMEDIATE_POINT_DISTANCE = 1;  // px, the higher it is, the fewer points there will be
-const MARK_COLOR = Clutter.Color.get_static(Clutter.StaticColor.BLUE);
+const MARK_COLOR = StaticColor.BLUE
 
 export const DrawingElement = function(params) {
     return params.shape == Shape.TEXT ? new TextElement(params) :
@@ -139,8 +147,8 @@ const _DrawingElement = GObject.registerClass({
     
     buildCairo(cr, params) {
         if (this.color)
-            Clutter.cairo_set_source_color(cr, this.color);
-        
+            cr.setSourceColor(this.color);
+
         if (this.line) {
             cr.setLineCap(this.line.lineCap);
             cr.setLineJoin(this.line.lineJoin);
@@ -162,7 +170,7 @@ const _DrawingElement = GObject.registerClass({
             setDummyStroke(cr);
         
         if (SVG_DEBUG_SUPERPOSES_CAIRO) {
-            Clutter.cairo_set_source_color(cr, Clutter.Color.new(255, 0, 0, 255));
+            cr.setSourceColor(StaticColor.RED);
             cr.setLineWidth(this.line.lineWidth / 2 || 1);
         }
         
@@ -198,7 +206,7 @@ const _DrawingElement = GObject.registerClass({
     _addMarks(cr) {
         if (this.showSymmetryElement) {
             setDummyStroke(cr);
-            Clutter.cairo_set_source_color(cr, MARK_COLOR);
+            cr.setSourceColor(MARK_COLOR);
             
             let transformation = this.lastTransformation;
             if (transformation.type == Transformation.REFLECTION) {
@@ -212,8 +220,8 @@ const _DrawingElement = GObject.registerClass({
         
         if (this.showRotationCenter) {
             setDummyStroke(cr);
-            Clutter.cairo_set_source_color(cr, MARK_COLOR);
-            
+            cr.setSourceColor(MARK_COLOR);
+
             let center = this._getTransformedCenter(this.lastTransformation);
             cr.arc(center[0], center[1], INVERSION_CIRCLE_RADIUS, 0, 2 * Math.PI);
             cr.stroke();
@@ -221,8 +229,8 @@ const _DrawingElement = GObject.registerClass({
         
         if (this.showStretchAxes) {
             setDummyStroke(cr);
-            Clutter.cairo_set_source_color(cr, MARK_COLOR);
-            
+            cr.setSourceColor(MARK_COLOR);
+
             let center = this._getTransformedCenter(this.lastTransformation);
             for (let i = 0; i <=1; i++) {
                 cr.moveTo(center[0] - 1000 * Math.cos(i * Math.PI / 2), center[1] - 1000 * Math.sin(i * Math.PI / 2));
