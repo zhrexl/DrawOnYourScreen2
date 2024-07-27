@@ -29,7 +29,7 @@ export const GLOBAL_KEYBINDINGS_SWITCHES = [
 // The setting keys of the "org.gnome.shell.extensions.draw-on-your-screen.internal-shortcuts" schema.
 export const INTERNAL_KEYBINDINGS = [
     'undo', 'redo', 'delete-last-element', 'smooth-last-element',
-    'select-none-shape', 'select-line-shape', 'select-ellipse-shape', 'select-rectangle-shape', 'select-polygon-shape', 'select-polyline-shape',
+    'select-none-shape', 'select-line-shape', 'select-arrow-shape', 'select-ellipse-shape', 'select-rectangle-shape', 'select-polygon-shape', 'select-polyline-shape',
      'select-text-shape', 'select-image-shape', 'select-move-tool', 'select-resize-tool', 'select-mirror-tool',
     'switch-fill', 'switch-fill-rule', 'switch-color-palette', 'switch-color-palette-reverse', 'pick-color',
     'increment-line-width', 'increment-line-width-more', 'decrement-line-width', 'decrement-line-width-more',

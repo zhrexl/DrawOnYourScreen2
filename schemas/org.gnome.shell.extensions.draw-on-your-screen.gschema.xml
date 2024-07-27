@@ -249,6 +249,10 @@
       <default>["&lt;Primary&gt;l"]</default>
       <summary>Select line tool</summary>
     </key>
+    <key type="as" name="select-arrow-shape">
+      <default>["&lt;Primary&gt;a"]</default>
+      <summary>Select arrow tool</summary>
+    </key>    
     <key type="as" name="select-mirror-tool">
       <default>["&lt;Primary&gt;c"]</default>
       <summary>Select mirror tool</summary>
@@ -298,7 +302,7 @@
       <summary>Dashed line</summary>
     </key>
     <key type="as" name="switch-fill">
-      <default>["&lt;Primary&gt;a"]</default>
+      <default>["&lt;Primary&gt;&lt;Shift&gt;a"]</default>
       <summary>Toggle fill/outline</summary>
     </key>
     <key type="as" name="switch-fill-rule">

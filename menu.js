@@ -129,7 +129,7 @@ export const DisplayStrings = {
         if (!this._Tool)
             this._Tool = { 0: pgettext("drawing-tool", "Free drawing"), 1: pgettext("drawing-tool", "Line"), 2: pgettext("drawing-tool", "Ellipse"),
                            3: pgettext("drawing-tool", "Rectangle"), 4: pgettext("drawing-tool", "Text"), 5: pgettext("drawing-tool", "Polygon"),
-                           6: pgettext("drawing-tool", "Polyline"), 7: pgettext("drawing-tool", "Image"),
+                           6: pgettext("drawing-tool", "Polyline"), 7: pgettext("drawing-tool", "Image"), 8: pgettext("drawing-tool", "Arrow"),
                            100: pgettext("drawing-tool", "Move"), 101: pgettext("drawing-tool", "Resize"), 102: pgettext("drawing-tool", "Mirror") };
         return this._Tool;
     }

@@ -51,6 +51,9 @@ msgstr "Disegno libero"
 msgid "Line"
 msgstr "Linea"
 
+msgid "Arrow"
+msgstr "Freccia"
+
 msgid "Ellipse"
 msgstr "Ellisse"
 
@@ -147,6 +150,9 @@ msgstr "Liscia l'ultima pennellata"
 
 msgid "Select line"
 msgstr "Seleziona la linea"
+
+msgid "Select arrow tool"
+msgstr "Seleziona la freccia"
 
 msgid "Select ellipse"
 msgstr "Seleziona ellisse"

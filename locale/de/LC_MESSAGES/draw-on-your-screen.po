@@ -242,6 +242,10 @@ msgid "Line"
 msgstr "Linie"
 
 msgctxt "drawing-tool"
+msgid "Arrow"
+msgstr "Pfeil"
+
+msgctxt "drawing-tool"
 msgid "Ellipse"
 msgstr "Ellipse"
 
@@ -642,6 +646,9 @@ msgstr "Werkzeug Bild auswählen"
 
 msgid "Select line tool"
 msgstr "Werkzeug Linie auswählen"
+
+msgid "Select arrow tool"
+msgstr "Werkzeug Pfeil auswählen"
 
 msgid "Select mirror tool"
 msgstr "Werkzeug Spiegeln auswählen"

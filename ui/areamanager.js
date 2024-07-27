@@ -203,6 +203,7 @@ export class AreaManager {
             'switch-image-file-reverse' : this.activeArea.switchImageFile.bind(this.activeArea, true),
             'select-none-shape': () => this.activeArea.selectTool(Area.Tool.NONE),
             'select-line-shape': () => this.activeArea.selectTool(Area.Tool.LINE),
+            'select-arrow-shape': () => this.activeArea.selectTool(Area.Tool.ARROW),
             'select-ellipse-shape': () => this.activeArea.selectTool(Area.Tool.ELLIPSE),
             'select-rectangle-shape': () => this.activeArea.selectTool(Area.Tool.RECTANGLE),
             'select-text-shape': () => this.activeArea.selectTool(Area.Tool.TEXT),

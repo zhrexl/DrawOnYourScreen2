@@ -37,7 +37,7 @@ class Icons {
     constructor(extension) {
         const ICON_NAMES = [
             'arc', 'color', 'dashed-line', 'document-export', 'fillrule-evenodd', 'fillrule-nonzero', 'fill', 'full-line', 'linecap', 'linejoin', 'palette', 'smooth', 'stroke',
-            'tool-ellipse', 'tool-line', 'tool-mirror', 'tool-move', 'tool-none', 'tool-polygon', 'tool-polyline', 'tool-rectangle', 'tool-resize',
+            'tool-ellipse', 'tool-line', 'tool-mirror', 'tool-move', 'tool-none', 'tool-polygon', 'tool-polyline', 'tool-rectangle', 'tool-resize', 'tool-arrow',
         ];
         const ICON_DIR = extension.dir.get_child('data').get_child('icons');
         const THEMED_ICON_NAMES = {
