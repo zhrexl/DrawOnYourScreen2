@@ -25,6 +25,7 @@ import Cairo from 'cairo';
 import System from 'system';
 
 import Clutter from 'gi://Clutter';
+import Cogl from 'gi://Cogl'
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
@@ -1164,7 +1165,7 @@ export const DrawingArea = GObject.registerClass({
     }
 
     _onColorPicked(color) {
-        if (color instanceof Clutter.Color)
+        if (color instanceof Cogl.Color)
             color = color.to_string().slice(0, -2);
 
         this.currentColor = this.getColorFromString(color);
@@ -1209,7 +1210,7 @@ export const DrawingArea = GObject.registerClass({
 
             if (pickPixel.pickAsync) {
                 pickPixel.pickAsync().then(result => {
-                    if (result instanceof Clutter.Color) {
+                    if (result instanceof Cogl.Color) {
                         // GS 3.38+
                         this._onColorPicked(result);
                     } else {
@@ -1472,7 +1473,7 @@ export const DrawingArea = GObject.registerClass({
     // toString provides a string suitable for displaying the color name to the user.
     getColorFromString(string, fallback) {
         let [colorString, displayName] = string.split(':');
-        let [success, color] = Clutter.Color.from_string(colorString);
+        let [success, color] = Cogl.Color.from_string(colorString);
         color.toJSON = () => colorString;
         color.toString = () => displayName || colorString;
         if (success)
