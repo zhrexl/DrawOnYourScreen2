@@ -27,17 +27,20 @@ import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import Pango from 'gi://Pango';
 import PangoCairo from 'gi://PangoCairo';
+import Cogl from 'gi://Cogl';
 
 import { CURATED_UUID as UUID } from './utils.js';
 
+const Color = Clutter.Color ?? Cogl.Color;
+
 export const StaticColor = {
-    WHITE: Clutter.Color.new(255, 255, 255, 255),
-    BLUE: Clutter.Color.new(0, 0, 255, 255),
-    TRANSPARENT: Clutter.Color.new(0, 0, 0, 0),
-    BLACK: Clutter.Color.new(0, 0, 0, 255),
-    GRAY: Clutter.Color.new(160, 160, 164, 255),
-    RED: Clutter.Color.new(255, 0, 0, 255)
-}
+    WHITE: Color.from_string('#ffffff'),
+    BLUE: Color.from_string('#0000ff'),
+    TRANSPARENT: Color.from_string('#00000000'),
+    BLACK: Color.from_string('#000000'),
+    GRAY: Color.from_string('#a0a0a4'),
+    RED: Color.from_string('#ff0000')
+};
 
 export const Shape = { NONE: 0, LINE: 1, ELLIPSE: 2, RECTANGLE: 3, TEXT: 4, POLYGON: 5, POLYLINE: 6, IMAGE: 7 };
 export const TextAlignment = { LEFT: 0, CENTER: 1, RIGHT: 2 };
